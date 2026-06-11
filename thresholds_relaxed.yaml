@@ -1,0 +1,80 @@
+checkpoints:
+  max_requested_ratio: 0.99
+  critical_requested_ratio: 0.99
+  max_requested_count: 1000
+  max_requested_per_hour: 1000
+  max_write_time_sec: 1000000
+  max_write_time_per_hour_sec: 1000000
+  max_maxwritten_clean: 1000000
+
+queries:
+  max_mean_exec_ms: 1000000
+  max_max_exec_ms: 1000000
+  max_total_exec_sec: 1000000
+  min_calls_for_mean: 10
+  top_n: 10
+  include_query_preview: true
+  query_preview_chars: 120
+
+autovacuum:
+  settings:
+    max_naptime_sec: 1000000
+    min_vacuum_cost_limit: 0
+    max_vacuum_cost_delay_ms: 1000000
+    max_work_mem_kb: 1000000000
+  tables:
+    min_live_tup: 1000000000
+    max_dead_pct: 100.0
+    min_dead_tup: 1000000000
+    max_mods_pct: 1000.0
+    stale_autovacuum_hours: 1000000
+    top_n: 10
+    exclude_schemas:
+      - pg_toast
+      - pg_catalog
+      - information_schema
+
+wal:
+  max_wal_buffers_full: 1000000
+  max_wal_mb_per_sec: 1000000
+  min_max_wal_size_mb: 0
+  warn_backend_writes_ratio: 100.0
+
+cache:
+  min_blks_hit_pct: 0.0
+  min_slru_hit_pct: 0.0
+  max_blk_read_time_sec: 1000000
+  min_table_io_hit_pct: 0.0
+
+sessions:
+  max_idle_in_transaction_sec: 1000000000
+  max_idle_in_transaction_per_hour: 1000000000
+  max_rollback_pct: 100.0
+  warn_on_disabled_idle_timeout: false
+
+memory:
+  max_work_mem_kb: 1000000000
+  warn_work_mem_x_connections_gb: 1000000
+  min_shared_buffers_mb: 0
+  warn_statement_timeout_zero: false
+  warn_lock_timeout_zero: false
+
+io:
+  queries:
+    max_io_time_ms: 1000000
+    max_wal_bytes_gb: 1000000
+    max_temp_blks_written: 1000000000
+    top_n: 10
+  tables:
+    min_seq_scan: 1000000000
+    max_seq_scan_to_idx_scan_ratio: 1000000.0
+    min_heap_blks_read: 1000000000
+    top_n: 10
+  indexes:
+    min_unused_index_size_mb: 1000000
+    top_n: 10
+    exclude_schemas:
+      - pg_catalog
+
+locks:
+  max_deadlocks: 1000000

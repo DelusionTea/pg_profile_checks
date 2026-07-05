@@ -11,6 +11,7 @@
 | `compare_settings.py` | Сравнивает **Defined settings** между двумя отчётами (НТ и ПРОМ) |
 | `check_report.py` | Анализирует **один** отчёт и выводит предупреждения о возможных проблемах производительности |
 | `compare_runs.py` | Сравнивает **метрики производительности** двух тестовых прогонов (DML, checkpoints, SQL и др.) |
+| `analyze_pgprofile.py` | **Оркестратор**: запускает анализы, пишет JSON + `brief.md` для LLM (offline) |
 
 ---
 
@@ -291,9 +292,17 @@ pg_profile_checks/
 ├── compare_settings.py      # CLI: сравнение настроек НТ vs ПРОМ
 ├── compare_runs.py          # CLI: сравнение метрик двух прогонов
 ├── check_report.py          # CLI: проверка одного отчёта
+├── analyze_pgprofile.py     # CLI: оркестратор + вывод для LLM
 ├── pgprofile_parser.py      # Парсинг HTML → JSON data
 ├── pgprofile_health.py      # Логика проверок одного отчёта
 ├── pgprofile_compare.py     # Логика сравнения двух прогонов
+├── pgprofile_findings.py    # Нормализация warnings → finding IDs
+├── pgprofile_advisor.py     # Рекомендации из knowledge/
+├── pgprofile_confluence.py  # Confluence Wiki Markup (stub + prompt)
+├── pgprofile_output.py      # JSON output helpers
+├── merge_confluence.py      # CLI: stub + LLM body → confluence_page.wiki
+├── knowledge/               # Локальная база знаний (offline)
+├── prompts/                 # Промпты для LLM
 ├── thresholds.yaml          # Пороги по умолчанию
 ├── thresholds_relaxed.yaml  # Пороги для тестов (все завышены)
 ├── requirements.txt         # PyYAML
@@ -341,6 +350,128 @@ python compare_settings.py nt.html prod.html --exit-code
 # Упасть, если в отчёте есть предупреждения
 python check_report.py report.html --config thresholds.yaml --exit-code
 ```
+
+---
+
+## Offline-анализ с LLM (банк, без интернета)
+
+Для слабых локальных моделей (например, DeepSeek V4 Flash) анализ разделён на два слоя:
+
+1. **Python (детерминированно)** — парсинг, пороги, сравнения, рекомендации из локальной базы знаний
+2. **LLM (опционально)** — только оформляет готовый `brief.md` в человекочитаемый отчёт
+
+### Быстрый старт
+
+```bash
+python analyze_pgprofile.py \
+  --report load_test.html \
+  --output-dir ./analysis_out/ \
+  --exit-code
+```
+
+В каталоге `analysis_out/`:
+
+| Файл | Назначение |
+|------|------------|
+| `findings.json` | Все находки в машиночитаемом виде |
+| `advisor.json` | Находки + рекомендации из `knowledge/recommendations.yaml` |
+| `brief.md` | Краткий brief для модели |
+| `summary_prompt.txt` | Готовый промпт (`prompts/analyst.md` + brief) |
+| `confluence_stub.wiki` | Заголовок, метаданные и таблица находок (Wiki Markup) — в Confluence без ИИ |
+| `confluence_prompt.txt` | Промпт для gigacli: ИИ пишет ответ в Confluence Wiki Markup |
+
+Передайте `summary_prompt.txt` в DeepSeek — модель **не парсит HTML** и **не вычисляет пороги**.
+
+### Публикация в Confluence
+
+Схема: **Python формирует точную шапку и таблицу**, **ИИ — только текстовые разделы** в Wiki Markup.
+
+**Шаг 1.** Сгенерируйте артефакты:
+
+```bash
+python analyze_pgprofile.py \
+  --report load_test.html \
+  --output-dir ./analysis_out/ \
+  --confluence-title "НТ sprint-42: pg_profile"
+```
+
+**Шаг 2.** В gigacli (DeepSeek V4 Flash) передайте `analysis_out/confluence_prompt.txt`:
+
+```text
+Прочитай analysis_out/confluence_prompt.txt и выполни инструкции.
+Сохрани ответ в analysis_out/confluence_body.wiki
+```
+
+**Шаг 3.** Соберите страницу:
+
+```bash
+python merge_confluence.py analysis_out/confluence_stub.wiki \
+  --body analysis_out/confluence_body.wiki \
+  -o analysis_out/confluence_page.wiki
+```
+
+Или через pipe:
+
+```bash
+gigacli < analysis_out/confluence_prompt.txt > analysis_out/confluence_body.wiki
+python merge_confluence.py analysis_out/confluence_stub.wiki -b analysis_out/confluence_body.wiki
+```
+
+**Шаг 4.** Вставка в Confluence:
+
+| Версия Confluence | Действие |
+|-------------------|----------|
+| Server / Data Center | Создать страницу → **Вставить** → **Разметка Wiki** → вставить содержимое `confluence_page.wiki` |
+| Cloud (новый редактор) | Вставить как текст; если макросы не распознались — использовать [Wiki Markup macro](https://confluence.atlassian.com/doc/confluence-wiki-markup-251003035.html) или приложение «Markdown/Wiki» вашего инстанса |
+
+`confluence_stub.wiki` можно публиковать **сразу** (таблица находок уже готова) и дополнить разделами ИИ позже.
+
+Формат вывода ИИ: `{warning}`, `{note}`, `{info}`, `{status}`, `{expand}` — см. [`prompts/analyst_confluence.md`](prompts/analyst_confluence.md).
+
+### Полный pipeline (отчёт + сравнение прогонов + настройки)
+
+```bash
+python analyze_pgprofile.py \
+  --report sprint42.html \
+  --compare-run sprint43.html \
+  --run-a-id sprint42 \
+  --run-b-id sprint43 \
+  --compare-settings prod.html \
+  --settings-a-id NT \
+  --settings-b-id PROD \
+  --output-dir ./analysis_out/
+```
+
+### JSON из отдельных скриптов
+
+```bash
+python check_report.py report.html --format json -o health.json
+python compare_runs.py a.html b.html --run-a-id v1 --run-b-id v2 --format json -o runs.json
+python compare_settings.py nt.html prod.html --format json -o settings.json
+```
+
+### Локальная база знаний
+
+| Файл | Содержимое |
+|------|------------|
+| [`knowledge/recommendations.yaml`](knowledge/recommendations.yaml) | Правила: finding ID → рекомендация, actions, ссылки на PostgreSQL docs/wiki |
+| [`knowledge/guc_guidance.yaml`](knowledge/guc_guidance.yaml) | Подсказки по GUC для `compare_settings` |
+| [`prompts/analyst.md`](prompts/analyst.md) | Системный промпт для LLM |
+| [`prompts/analyst_confluence.md`](prompts/analyst_confluence.md) | Промпт: вывод в Confluence Wiki Markup |
+
+Базу знаний обновляет команда DBA (раз в квартал) на машине с доступом к документации, затем переносит в git-репозиторий в банк.
+
+### Принцип работы
+
+```
+HTML → Python scripts → findings.json
+                      → advisor.json (knowledge base)
+                      → confluence_stub.wiki → Confluence (таблицы)
+                      → confluence_prompt.txt → gigacli → confluence_body.wiki
+                      → merge_confluence.py → confluence_page.wiki
+```
+
+CI и аудит опираются на Python (`--exit-code`), не на LLM.
 
 ---
 

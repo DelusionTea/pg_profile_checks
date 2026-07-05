@@ -1,0 +1,364 @@
+# Offline playbook: PostgreSQL community recommendations mapped to finding IDs.
+# Sources: PostgreSQL official docs, wiki.postgresql.org (Tuning), common DBA practice.
+
+recommendations:
+  - id: checkpoints.high_requested_ratio
+    severity: high
+    title: High ratio of requested checkpoints
+    recommendation: |
+      Большая доля requested checkpoints означает, что WAL заполняется быстрее,
+      чем срабатывают плановые checkpoints. Это типичный признак слишком малого
+      max_wal_size или высокой write-нагрузки.
+    actions:
+      - Увеличить max_wal_size (часто 1–4 GB+ для OLTP под нагрузкой)
+      - Проверить wal_buffers_full и общий объём WAL за интервал
+      - Сопоставить с checkpoint_timeout — не уменьшать timeout вместо max_wal_size
+    references:
+      - "PostgreSQL Documentation: Write Ahead Log"
+      - "PostgreSQL Documentation: Checkpoints"
+      - "PostgreSQL Wiki: Tuning Your PostgreSQL Server"
+
+  - id: checkpoints.high_requested_count
+    severity: medium
+    title: High absolute count of requested checkpoints
+    recommendation: |
+      За интервал отчёта зафиксировано много requested checkpoints.
+      Сравните нормализованное значение /час с предыдущими прогонами.
+    actions:
+      - Проверить max_wal_size и рост WAL
+      - Оценить пики INSERT/UPDATE и wal-heavy запросы
+    references:
+      - "PostgreSQL Documentation: WAL Configuration"
+
+  - id: checkpoints.high_requested_per_hour
+    severity: medium
+    title: High requested checkpoints per hour
+    recommendation: |
+      Частые requested checkpoints в пересчёте на час указывают на устойчивое
+      давление на подсистему записи.
+    actions:
+      - Увеличить max_wal_size
+      - Проверить дисковую подсистему и synchronous_commit
+    references:
+      - "PostgreSQL Documentation: Resource Consumption"
+
+  - id: checkpoints.high_write_time
+    severity: high
+    title: Long total checkpoint write time
+    recommendation: |
+      Длительная запись checkpoint увеличивает IO latency и может влиять на
+      время отклика запросов во время checkpoint.
+    actions:
+      - Проверить производительность диска (IOPS, latency)
+      - Оценить checkpoint_completion_target
+      - Снизить write-нагрузку или распределить её во времени
+    references:
+      - "PostgreSQL Documentation: Checkpoints"
+
+  - id: checkpoints.maxwritten_clean
+    severity: medium
+    title: Bgwriter interrupts (maxwritten_clean)
+    recommendation: |
+      Bgwriter часто прерывается из-за max_write_pages — буферы сбрасываются
+      медленнее, чем backend их загрязняет.
+    actions:
+      - Увеличить shared_buffers при низком cache hit
+      - Настроить bgwriter (в новых версиях часто autotune)
+      - Проверить checkpoint и WAL pressure
+    references:
+      - "PostgreSQL Wiki: Tuning Your PostgreSQL Server"
+
+  - id: wal.buffers_full
+    severity: high
+    title: WAL buffers frequently full
+    recommendation: |
+      wal_buffers переполняется — процессы ждут освобождения WAL buffer.
+      Типичная рекомендация коммьюнити: увеличить wal_buffers (часто 64MB на busy systems).
+    actions:
+      - Увеличить wal_buffers (единицы 8kB в pg_profile settings)
+      - Проверить пики WAL generation
+    references:
+      - "PostgreSQL Documentation: wal_buffers"
+
+  - id: wal.low_max_wal_size
+    severity: medium
+    title: max_wal_size below recommended minimum
+    recommendation: |
+      Слишком малый max_wal_size приводит к частым requested checkpoints.
+    actions:
+      - Увеличить max_wal_size согласно нагрузке и доступному диску
+    references:
+      - "PostgreSQL Documentation: max_wal_size"
+
+  - id: wal.high_generation_rate
+    severity: medium
+    title: High WAL generation rate
+    recommendation: |
+      Высокая скорость генерации WAL — ожидаемо при массовых DML, но требует
+      достаточного max_wal_size и мониторинга диска.
+    actions:
+      - Найти wal-heavy запросы и таблицы
+      - Проверить архивацию/replication lag при наличии
+    references:
+      - "PostgreSQL Documentation: Write Ahead Log"
+
+  - id: queries.slow_execution
+    severity: high
+    title: Slow SQL queries detected
+    recommendation: |
+      Запросы с высоким mean/max/total execution time — кандидаты на оптимизацию
+      плана, индексов или переписывания SQL.
+    actions:
+      - Выполнить EXPLAIN (ANALYZE, BUFFERS) для топ-запросов
+      - Проверить индексы и статистику (ANALYZE)
+      - Оценить work_mem при temp spills
+    references:
+      - "PostgreSQL Documentation: Using EXPLAIN"
+      - "PostgreSQL Wiki: Performance Optimization"
+
+  - id: autovacuum.disabled
+    severity: critical
+    title: Autovacuum is disabled
+    recommendation: |
+      autovacuum=off — критическая misconfiguration для production OLTP.
+      Коммьюнити однозначно рекомендует держать autovacuum включённым.
+    actions:
+      - Включить autovacuum немедленно
+      - Проверить таблицы с bloat после включения
+    references:
+      - "PostgreSQL Documentation: Automatic Vacuuming"
+
+  - id: autovacuum.table_high_dead_pct
+    severity: high
+    title: High dead tuples ratio on table
+    recommendation: |
+      Высокий процент мёртвых строк — autovacuum не успевает или заблокирован
+      long transactions.
+    actions:
+      - Проверить idle in transaction и lock waits
+      - Настроить per-table autovacuum при необходимости
+      - Рассмотреть VACUUM (ANALYZE) в окно обслуживания
+    references:
+      - "PostgreSQL Documentation: Routine Vacuuming"
+      - "PostgreSQL Wiki: Don't Do This (long transactions)"
+
+  - id: autovacuum.naptime_high
+    severity: medium
+    title: autovacuum_naptime too high
+    recommendation: |
+      Большой naptime замедляет реакцию autovacuum на bloat.
+      Для OLTP часто используют 15–60 сек, не минуты.
+    actions:
+      - Уменьшить autovacuum_naptime
+      - Мониторить dead tuples после изменения
+    references:
+      - "PostgreSQL Documentation: Cost-Based Vacuum Delay"
+
+  - id: sessions.high_idle_in_transaction
+    severity: critical
+    title: High idle in transaction time
+    recommendation: |
+      Долгие idle in transaction сессии держат snapshots, блокируют vacuum
+      и увеличивают bloat — одна из самых частых рекомендаций коммьюнити.
+    actions:
+      - Установить idle_in_transaction_session_timeout
+      - Исправить application connection pooling / missing COMMIT
+      - Найти источник зависших транзакций в pg_stat_activity
+    references:
+      - "PostgreSQL Documentation: idle_in_transaction_session_timeout"
+      - "PostgreSQL Wiki: Lock Monitoring"
+
+  - id: sessions.idle_timeout_disabled
+    severity: critical
+    title: idle_in_transaction_session_timeout is zero
+    recommendation: |
+      Таймаут отключён при наличии idle in transaction — нет защиты от утечки сессий.
+    actions:
+      - Установить idle_in_transaction_session_timeout (например 60s–300s)
+    references:
+      - "PostgreSQL Documentation: Client Connection Defaults"
+
+  - id: memory.statement_timeout_zero
+    severity: medium
+    title: statement_timeout is disabled
+    recommendation: |
+      Без statement_timeout runaway-запросы могут выполняться бесконечно.
+      Коммьюнити рекомендует задавать разумный timeout на уровне роли/БД.
+    actions:
+      - Установить statement_timeout для application roles
+      - Отдельный лимит для batch/ETL при необходимости
+    references:
+      - "PostgreSQL Documentation: statement_timeout"
+
+  - id: memory.lock_timeout_zero
+    severity: medium
+    title: lock_timeout is disabled
+    recommendation: |
+      Без lock_timeout приложение может бесконечно ждать блокировку,
+      создавая каскадные задержки.
+    actions:
+      - Установить lock_timeout для OLTP workload
+    references:
+      - "PostgreSQL Documentation: lock_timeout"
+
+  - id: memory.work_mem_connections_risk
+    severity: high
+    title: work_mem * max_connections memory risk
+    recommendation: |
+      Теоретический пик памяти при одновременных sort/hash операциях =
+      work_mem × connections. Коммьюнити предупреждает об OOM на таких конфигурациях.
+    actions:
+      - Снизить work_mem или max_connections
+      - Использовать connection pooler (PgBouncer)
+      - Задать work_mem на уровне роли для тяжёлых запросов
+    references:
+      - "PostgreSQL Wiki: Tuning Your PostgreSQL Server"
+      - "PostgreSQL Documentation: work_mem"
+
+  - id: cache.low_hit_ratio
+    severity: high
+    title: Low buffer cache hit ratio
+    recommendation: |
+      Низкий blks_hit_pct — данные часто читаются с диска. Проверьте размер
+      shared_buffers и working set БД.
+    actions:
+      - Увеличить shared_buffers (ориентир 25% RAM, с учётом политики банка)
+      - Проверить effective_cache_size для планировщика
+      - Найти таблицы с высоким physical read
+    references:
+      - "PostgreSQL Wiki: Tuning Your PostgreSQL Server"
+      - "PostgreSQL Documentation: shared_buffers"
+
+  - id: io.high_seq_scan
+    severity: medium
+    title: High sequential scans on table
+    recommendation: |
+      Много seq scan при низком idx_scan — возможно отсутствует индекс
+      или планировщик выбирает seq scan из-за статистики/настроек.
+    actions:
+      - EXPLAIN проблемных запросов
+      - Добавить индекс или обновить статистику (ANALYZE)
+    references:
+      - "PostgreSQL Documentation: Indexes"
+
+  - id: io.unused_index
+    severity: low
+    title: Unused index
+    recommendation: |
+      Неиспользуемый индекс замедляет INSERT/UPDATE/DELETE и vacuum без пользы для чтения.
+      Коммьюнити рекомендует периодически удалять unused indexes.
+    actions:
+      - Подтвердить отсутствие использования на длинном интервале
+      - Удалить индекс в согласованное окно
+    references:
+      - "PostgreSQL Wiki: Index Maintenance"
+
+  - id: io.wal_heavy_query
+    severity: medium
+    title: WAL-heavy SQL query
+    recommendation: |
+      Запрос генерирует много WAL — типично для массовых INSERT/UPDATE.
+      Проверьте batch size и индексы на горячих таблицах.
+    actions:
+      - Оптимизировать batch DML
+      - Проверить fillfactor и индексы на целевых таблицах
+    references:
+      - "PostgreSQL Documentation: Write Ahead Log"
+
+  - id: locks.deadlocks
+    severity: critical
+    title: Deadlocks detected
+    recommendation: |
+      Deadlocks указывают на несогласованный порядок блокировок в приложении.
+    actions:
+      - Анализировать deadlock graph в логах
+      - Унифицировать порядок UPDATE таблиц в транзакциях
+    references:
+      - "PostgreSQL Documentation: Deadlocks"
+
+  - id: settings.generic
+    severity: medium
+    title: PostgreSQL setting differs between environments
+    recommendation: |
+      Параметр явно задан (Defined) в одной среде и отличается от другой.
+      Убедитесь, что расхождение намеренное и соответствует политике банка.
+    actions:
+      - Сверить с guc_guidance.yaml для данного параметра
+      - Документировать обоснование расхождения
+    references:
+      - "PostgreSQL Documentation: Runtime Configuration"
+
+  - id: checkpoints.generic
+    severity: medium
+    title: Checkpoint metric anomaly
+    recommendation: Review checkpoint-related metrics against WAL and storage tuning guides.
+    actions:
+      - Compare with previous test runs using compare_runs.py
+    references:
+      - "PostgreSQL Documentation: Checkpoints"
+
+  - id: autovacuum.generic
+    severity: medium
+    title: Autovacuum-related finding
+    recommendation: Review autovacuum GUC and table bloat metrics.
+    actions:
+      - Check autovacuum settings and long-running transactions
+    references:
+      - "PostgreSQL Documentation: Automatic Vacuuming"
+
+  - id: sessions.generic
+    severity: medium
+    title: Session/transaction anomaly
+    recommendation: Review session metrics and application transaction handling.
+    actions:
+      - Inspect pg_stat_activity patterns during load test
+    references:
+      - "PostgreSQL Documentation: Monitoring"
+
+  - id: memory.generic
+    severity: medium
+    title: Memory configuration finding
+    recommendation: Review memory-related GUC settings against hardware and workload.
+    actions:
+      - Validate work_mem, shared_buffers, maintenance_work_mem
+    references:
+      - "PostgreSQL Wiki: Tuning Your PostgreSQL Server"
+
+  - id: cache.generic
+    severity: medium
+    title: Cache or I/O read finding
+    recommendation: Review cache hit ratios and disk read patterns.
+    actions:
+      - Identify tables with high physical reads
+    references:
+      - "PostgreSQL Documentation: Resource Consumption"
+
+  - id: io.generic
+    severity: medium
+    title: I/O pattern finding
+    recommendation: Review query plans and table access patterns.
+    actions:
+      - Use EXPLAIN and pg_profile top I/O sections
+    references:
+      - "PostgreSQL Documentation: Performance Tips"
+
+  - id: wal.generic
+    severity: medium
+    title: WAL-related finding
+    recommendation: Review WAL generation and checkpoint configuration.
+    actions:
+      - Check max_wal_size and wal_buffers
+    references:
+      - "PostgreSQL Documentation: WAL Configuration"
+
+  - id: run_compare.generic
+    severity: medium
+    title: Metric changed between test runs
+    recommendation: |
+      Метрика изменилась между прогонами. При разной длительности интервалов
+      ориентируйтесь на значения /час, а не только на абсолютные счётчики.
+    actions:
+      - Сравнить per-hour значения
+      - Сопоставить с изменениями нагрузки или конфигурации
+    references:
+      - "Internal: compare_runs.py output"

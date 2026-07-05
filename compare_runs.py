@@ -7,6 +7,8 @@ import argparse
 import sys
 from pathlib import Path
 
+from pgprofile_findings import run_comparison_to_dict
+from pgprofile_output import write_json_output
 from pgprofile_compare import (
     ALL_SECTIONS,
     compare_runs,
@@ -56,6 +58,18 @@ def build_parser() -> argparse.ArgumentParser:
         "--verbose",
         action="store_true",
         help="Print full SQL text in query comparison",
+    )
+    parser.add_argument(
+        "--format",
+        choices=("text", "json"),
+        default="text",
+        help="Output format (default: text)",
+    )
+    parser.add_argument(
+        "-o",
+        "--output",
+        type=Path,
+        help="Write output to file (default: stdout)",
     )
     parser.add_argument(
         "--exit-code",
@@ -109,12 +123,27 @@ def main(argv: list[str] | None = None) -> int:
         print(f"error: {exc}", file=sys.stderr)
         return 2
 
-    print_compare_report(
-        run_a,
-        run_b,
-        result,
-        min_change_pct=args.min_change_pct,
-    )
+    if args.format == "json":
+        write_json_output(
+            run_comparison_to_dict(
+                run_a, run_b, result, min_change_pct=args.min_change_pct
+            ),
+            output=args.output,
+        )
+    else:
+        if args.output:
+            import io
+            from contextlib import redirect_stdout
+            buffer = io.StringIO()
+            with redirect_stdout(buffer):
+                print_compare_report(
+                    run_a, run_b, result, min_change_pct=args.min_change_pct
+                )
+            args.output.write_text(buffer.getvalue(), encoding="utf-8")
+        else:
+            print_compare_report(
+                run_a, run_b, result, min_change_pct=args.min_change_pct
+            )
 
     if args.exit_code and result.significant_count > 0:
         return 1

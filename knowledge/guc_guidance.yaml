@@ -1,0 +1,108 @@
+# Offline GUC guidance for settings diff findings.
+# Values are orientations for DBA review, not hard limits.
+
+guc_guidance:
+  max_wal_size:
+    unit: MB
+    typical_oltp: "1024-4096+"
+    note: |
+      Слишком малый max_wal_size вызывает частые requested checkpoints.
+      Увеличивайте с учётом дискового пространства и replication.
+
+  wal_buffers:
+    unit: "8kB blocks"
+    typical_oltp: "2048+ (16MB+)"
+    note: |
+      При высоком wal_buffers_full увеличьте wal_buffers.
+      PostgreSQL docs: auto-tune min 64kB, max on busy systems often higher.
+
+  shared_buffers:
+    unit: "8kB blocks"
+    typical_oltp: "~25% RAM (policy-dependent)"
+    note: |
+      Основной кэш страниц. Слишком низкий shared_buffers → low cache hit.
+
+  work_mem:
+    unit: kB
+    typical_oltp: "4096-32768 per operation"
+    note: |
+      Память на sort/hash в одной операции. Умножается на число операций,
+      не на connections напрямую, но риск OOM при work_mem × many sorts.
+
+  maintenance_work_mem:
+    unit: kB
+    typical_oltp: "256MB-2GB+"
+    note: |
+      Влияет на скорость VACUUM, CREATE INDEX, ALTER TABLE.
+
+  autovacuum_naptime:
+    unit: seconds
+    typical_oltp: "15-60"
+    note: |
+      Как часто autovacuum launcher просыпается. Высокие значения замедляют реакцию на bloat.
+
+  autovacuum_vacuum_cost_delay:
+    unit: ms
+    typical_oltp: "2-10"
+    note: |
+      Задержка autovacuum при превышении cost limit. Высокие значения делают vacuum медленным.
+
+  autovacuum_vacuum_cost_limit:
+    unit: arbitrary
+    typical_oltp: "200-1000+"
+    note: |
+      Бюджет IO autovacuum за цикл. Низкий limit замедляет очистку на busy systems.
+
+  max_connections:
+    unit: count
+    typical_oltp: "use pooler; avoid 500+ without sizing"
+    note: |
+      Коммьюнити рекомендует PgBouncer при большом числе клиентских соединений.
+
+  idle_in_transaction_session_timeout:
+    unit: ms
+    typical_oltp: "60000-300000"
+    note: |
+      Защита от зависших транзакций. 0 = отключено, не рекомендуется для OLTP.
+
+  statement_timeout:
+    unit: ms
+    typical_oltp: "30000-300000 (role-specific)"
+    note: |
+      Предотвращает runaway queries. 0 = без лимита.
+
+  lock_timeout:
+    unit: ms
+    typical_oltp: "5000-30000 for OLTP"
+    note: |
+      Ограничивает ожидание блокировки. 0 = ждать бесконечно.
+
+  checkpoint_timeout:
+    unit: seconds
+    typical_oltp: "900-1800"
+    note: |
+      Максимальный интервал между checkpoints. Согласовывать с max_wal_size.
+
+  checkpoint_completion_target:
+    unit: ratio
+    typical_oltp: "0.7-0.9"
+    note: |
+      Растягивает checkpoint во времени для сглаживания IO spikes.
+
+  effective_cache_size:
+    unit: "8kB blocks"
+    typical_oltp: "~50-75% RAM estimate"
+    note: |
+      Подсказка планировщику о доступном кэше ОС. Не выделяет память.
+
+  random_page_cost:
+    unit: arbitrary
+    typical_oltp: "1.1-4 (SSD lower)"
+    note: |
+      Влияет на выбор seq scan vs index scan. SSD обычно ниже default 4.
+
+  effective_io_concurrency:
+    unit: concurrent IOs
+    typical_oltp: "200+ on SSD"
+    note: |
+      Параллельные prefetch операции. Зависит от storage.

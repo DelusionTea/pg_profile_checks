@@ -9,6 +9,8 @@ from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 
+from pgprofile_findings import settings_diff_to_dict
+from pgprofile_output import write_json_output
 from pgprofile_parser import PgProfileParseError, load_settings, parse_report_meta
 
 
@@ -202,6 +204,20 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--nt", type=Path, help="Path to NT (test) report")
     parser.add_argument("--prod", type=Path, help="Path to PROD report")
+    parser.add_argument("--run-a-id", type=str, default="NT", help="Label for first report in JSON")
+    parser.add_argument("--run-b-id", type=str, default="PROD", help="Label for second report in JSON")
+    parser.add_argument(
+        "--format",
+        choices=("text", "json"),
+        default="text",
+        help="Output format (default: text)",
+    )
+    parser.add_argument(
+        "-o",
+        "--output",
+        type=Path,
+        help="Write output to file (default: stdout)",
+    )
     parser.add_argument(
         "--verbose",
         action="store_true",
@@ -253,14 +269,44 @@ def main(argv: list[str] | None = None) -> int:
         )
 
     diffs = diff_settings(nt_settings, prod_settings)
-    print_report(
-        diffs,
-        nt_meta=nt_meta,
-        prod_meta=prod_meta,
-        nt_count=len(nt_settings),
-        prod_count=len(prod_settings),
-        verbose=args.verbose,
-    )
+
+    if args.format == "json":
+        write_json_output(
+            settings_diff_to_dict(
+                label_a=args.run_a_id,
+                label_b=args.run_b_id,
+                path_a=nt_path,
+                path_b=prod_path,
+                meta_a=nt_meta,
+                meta_b=prod_meta,
+                diffs=diffs,
+            ),
+            output=args.output,
+        )
+    else:
+        if args.output:
+            import io
+            from contextlib import redirect_stdout
+            buffer = io.StringIO()
+            with redirect_stdout(buffer):
+                print_report(
+                    diffs,
+                    nt_meta=nt_meta,
+                    prod_meta=prod_meta,
+                    nt_count=len(nt_settings),
+                    prod_count=len(prod_settings),
+                    verbose=args.verbose,
+                )
+            args.output.write_text(buffer.getvalue(), encoding="utf-8")
+        else:
+            print_report(
+                diffs,
+                nt_meta=nt_meta,
+                prod_meta=prod_meta,
+                nt_count=len(nt_settings),
+                prod_count=len(prod_settings),
+                verbose=args.verbose,
+            )
 
     has_issues = any(row.status is not DiffStatus.SAME for row in diffs)
     if args.exit_code and has_issues:

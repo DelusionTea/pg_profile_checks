@@ -7,6 +7,7 @@ import argparse
 import sys
 from pathlib import Path
 
+from pgprofile_findings import health_check_to_dict
 from pgprofile_health import (
     CHECKERS,
     load_report_data,
@@ -14,6 +15,7 @@ from pgprofile_health import (
     print_report,
     run_checks,
 )
+from pgprofile_output import write_json_output
 from pgprofile_parser import PgProfileParseError
 
 DEFAULT_CONFIG = Path(__file__).resolve().parent / "thresholds.yaml"
@@ -40,6 +42,18 @@ def build_parser() -> argparse.ArgumentParser:
         "--verbose",
         action="store_true",
         help="Print full SQL text in query-related warnings",
+    )
+    parser.add_argument(
+        "--format",
+        choices=("text", "json"),
+        default="text",
+        help="Output format (default: text)",
+    )
+    parser.add_argument(
+        "-o",
+        "--output",
+        type=Path,
+        help="Write output to file (default: stdout)",
     )
     parser.add_argument(
         "--exit-code",
@@ -86,7 +100,18 @@ def main(argv: list[str] | None = None) -> int:
         print(f"error: {exc}", file=sys.stderr)
         return 2
 
-    print_report(ctx, warnings)
+    if args.format == "json":
+        write_json_output(health_check_to_dict(ctx, warnings), output=args.output)
+    else:
+        if args.output:
+            import io
+            from contextlib import redirect_stdout
+            buffer = io.StringIO()
+            with redirect_stdout(buffer):
+                print_report(ctx, warnings)
+            args.output.write_text(buffer.getvalue(), encoding="utf-8")
+        else:
+            print_report(ctx, warnings)
 
     if args.exit_code and warnings:
         return 1

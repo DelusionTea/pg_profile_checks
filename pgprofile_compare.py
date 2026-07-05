@@ -102,6 +102,15 @@ class CompareResult:
     significant_count: int = 0
 
 
+@dataclass
+class QueryCompareGroup:
+    query_key: str
+    label: str
+    preview: str
+    fields: list[MetricDiff] = field(default_factory=list)
+    score: float = 0.0
+
+
 def load_run(path: Path, run_id: str) -> RunSnapshot:
     return RunSnapshot(run_id=run_id, path=path, ctx=load_report_data(path))
 
@@ -356,6 +365,65 @@ def compare_queries(
 
     diffs.sort(key=lambda d: abs(d.delta or 0), reverse=True)
     return diffs[:top_n]
+
+
+def compare_queries_detailed(
+    run_a: RunSnapshot,
+    run_b: RunSnapshot,
+    *,
+    top_n: int,
+    min_change_pct: float,
+    verbose: bool = False,
+) -> list[QueryCompareGroup]:
+    """Compare matched SQL statements field-by-field (calls, times, wal_bytes, ...)."""
+    map_a = {_stmt_key(s): s for s in run_a.ctx.top_statements if _stmt_key(s)}
+    map_b = {_stmt_key(s): s for s in run_b.ctx.top_statements if _stmt_key(s)}
+    groups: list[QueryCompareGroup] = []
+
+    for key in set(map_a) | set(map_b):
+        stmt_a = map_a.get(key, {})
+        stmt_b = map_b.get(key, {})
+        dbname = stmt_b.get("dbname") or stmt_a.get("dbname") or "?"
+        username = stmt_b.get("username") or stmt_a.get("username") or "?"
+        label = f"{dbname}/{username}"
+        text = run_b.ctx.queries_by_id.get(key) or run_a.ctx.queries_by_id.get(key, "")
+        preview = ""
+        if text:
+            limit = len(text) if verbose else 100
+            preview = text if len(text) <= limit else text[: max(limit - 3, 0)] + "..."
+
+        fields: list[MetricDiff] = []
+        score = 0.0
+        for field, unit, normalize in QUERY_FIELDS:
+            diff = _make_diff(
+                "queries",
+                field,
+                _to_float(stmt_a.get(field)),
+                _to_float(stmt_b.get(field)),
+                unit=unit,
+                normalize=normalize,
+                hours_a=run_a.ctx.interval_hours,
+                hours_b=run_b.ctx.interval_hours,
+            )
+            if _is_significant(diff, min_change_pct):
+                fields.append(diff)
+                score = max(score, abs(diff.delta_pct or 0), abs(diff.delta or 0))
+
+        if not fields:
+            continue
+
+        groups.append(
+            QueryCompareGroup(
+                query_key=key,
+                label=label,
+                preview=preview,
+                fields=fields,
+                score=score,
+            )
+        )
+
+    groups.sort(key=lambda g: g.score, reverse=True)
+    return groups[:top_n]
 
 
 def compare_sessions(run_a: RunSnapshot, run_b: RunSnapshot) -> list[MetricDiff]:

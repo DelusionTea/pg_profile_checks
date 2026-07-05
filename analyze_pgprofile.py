@@ -15,7 +15,11 @@ from pgprofile_advisor import (
     build_brief,
     build_llm_prompt,
 )
-from pgprofile_confluence import build_confluence_llm_prompt, build_confluence_stub
+from pgprofile_confluence import (
+    build_confluence_llm_prompt,
+    build_confluence_stub,
+    write_nt_prod_confluence_outputs,
+)
 from pgprofile_compare import compare_runs, load_run
 from pgprofile_findings import (
     health_check_to_dict,
@@ -24,6 +28,7 @@ from pgprofile_findings import (
 )
 from pgprofile_health import load_report_data, load_thresholds, run_checks
 from pgprofile_parser import PgProfileParseError, load_settings, parse_report_meta
+from pgprofile_nt_prod import nt_prod_validation_to_dict, validate_nt_prod
 
 from compare_settings import diff_settings
 
@@ -44,6 +49,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--run-a-id", type=str, default="run_a")
     parser.add_argument("--run-b-id", type=str, default="run_b")
     parser.add_argument("--compare-settings", type=Path, help="Second report for settings diff")
+    parser.add_argument(
+        "--compare-prod",
+        type=Path,
+        help="PROD report for NT vs PROD validation (--report = NT); writes nt_prod_confluence_*",
+    )
     parser.add_argument("--settings-a-id", type=str, default="NT")
     parser.add_argument("--settings-b-id", type=str, default="PROD")
     parser.add_argument(
@@ -131,6 +141,27 @@ def main(argv: list[str] | None = None) -> int:
             if settings.get("findings"):
                 has_issues = True
 
+        if args.report and args.compare_prod:
+            nt_prod = validate_nt_prod(
+                args.report,
+                args.compare_prod,
+                min_change_pct=args.min_change_pct,
+                top_n=args.top_n,
+                nt_label=args.settings_a_id,
+                prod_label=args.settings_b_id,
+            )
+            _save_json(
+                args.output_dir / "nt_prod_validation.json",
+                nt_prod_validation_to_dict(nt_prod),
+            )
+            write_nt_prod_confluence_outputs(
+                nt_prod,
+                args.output_dir,
+                page_title=args.confluence_title,
+            )
+            if not nt_prod.settings.valid or nt_prod.significant_count > 0:
+                has_issues = True
+
     except (PgProfileParseError, FileNotFoundError, ValueError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
@@ -183,6 +214,11 @@ def main(argv: list[str] | None = None) -> int:
     print(f"  summary_prompt.txt  (ready for DeepSeek)")
     print(f"  confluence_stub.wiki  (metadata + findings table → Confluence)")
     print(f"  confluence_prompt.txt  (gigacli → Wiki Markup for Confluence)")
+    if args.compare_prod:
+        print(f"  nt_prod_validation.json")
+        print(f"  nt_prod_confluence_stub.wiki  (НТ vs ПРОМ → Confluence)")
+        print(f"  nt_prod_confluence_prompt.txt  (gigacli → краткая сводка НТ/ПРОМ)")
+        print(f"  nt_prod_brief.md")
 
     if args.exit_code and has_issues:
         return 1

@@ -12,6 +12,7 @@ from pathlib import Path
 from pgprofile_findings import settings_diff_to_dict
 from pgprofile_output import write_json_output
 from pgprofile_parser import PgProfileParseError, load_settings, parse_report_meta
+from pgprofile_classify import split_settings_rows
 
 
 class DiffStatus(str, Enum):
@@ -98,28 +99,70 @@ def print_report(
     differ = [row for row in diffs if row.status is DiffStatus.DIFFER]
     only_nt = [row for row in diffs if row.status is DiffStatus.ONLY_NT]
     only_prod = [row for row in diffs if row.status is DiffStatus.ONLY_PROD]
-    same_count = sum(1 for row in diffs if row.status is DiffStatus.SAME)
+    same_count = sum(1 for row in diffs if row.status == DiffStatus.SAME)
+    critical_rows, informational_rows = split_settings_rows(diffs)
 
     print("pg_profile Settings diff (Defined settings only)")
     print(_format_meta_line("NT", nt_meta, nt_count))
     print(_format_meta_line("PROD", prod_meta, prod_count))
     print()
 
-    issue_count = len(differ) + len(only_nt) + len(only_prod)
-    print(f"Found {issue_count} difference(s):")
+    total_issues = len(critical_rows) + len(informational_rows)
+    print(
+        f"Found {total_issues} difference(s): "
+        f"{len(critical_rows)} critical GUC, "
+        f"{len(informational_rows)} informational (runtime metadata)"
+    )
     print()
+
+    if critical_rows:
+        _print_settings_diff_table(critical_rows, verbose=verbose, value_max_len=value_max_len)
+    else:
+        print("No critical GUC differences.")
+
+    if informational_rows:
+        print()
+        print(
+            f"Informational only ({len(informational_rows)}) — runtime metadata, "
+            f"does not invalidate NT vs PROD comparison:"
+        )
+        _print_settings_diff_table(
+            informational_rows, verbose=verbose, value_max_len=value_max_len, compact=True
+        )
+        print()
+
+    if not critical_rows and not informational_rows:
+        print("All Defined settings match.")
+        print()
+
+    print(
+        "Summary: "
+        f"{len([r for r in critical_rows if r.status == DiffStatus.DIFFER])} critical differ, "
+        f"{len([r for r in critical_rows if r.status == DiffStatus.ONLY_NT])} critical only NT, "
+        f"{len([r for r in critical_rows if r.status == DiffStatus.ONLY_PROD])} critical only PROD, "
+        f"{len(informational_rows)} informational, "
+        f"{same_count} identical (hidden)"
+    )
+
+
+def _print_settings_diff_table(
+    rows: list[DiffRow],
+    *,
+    verbose: bool,
+    value_max_len: int,
+    compact: bool = False,
+) -> None:
+    differ = [row for row in rows if row.status is DiffStatus.DIFFER]
+    only_nt = [row for row in rows if row.status is DiffStatus.ONLY_NT]
+    only_prod = [row for row in rows if row.status is DiffStatus.ONLY_PROD]
 
     if differ:
         name_width = max(len(row.name) for row in differ)
         name_width = max(name_width, len("Setting"))
 
         if verbose:
-            nt_width = max(
-                len(row.nt_value or "") for row in differ
-            )
-            prod_width = max(
-                len(row.prod_value or "") for row in differ
-            )
+            nt_width = max(len(row.nt_value or "") for row in differ)
+            prod_width = max(len(row.prod_value or "") for row in differ)
         else:
             nt_width = max(
                 len(_truncate(row.nt_value or "", value_max_len)) for row in differ
@@ -144,7 +187,8 @@ def print_report(
         print(header)
         print(separator)
 
-        for row in differ:
+        limit = 10 if compact else len(differ)
+        for row in differ[:limit]:
             nt_value = row.nt_value or ""
             prod_value = row.prod_value or ""
             if not verbose:
@@ -155,9 +199,11 @@ def print_report(
                 f"{nt_value.ljust(nt_width)} | "
                 f"{prod_value.ljust(prod_width)}"
             )
+        if len(differ) > limit:
+            print(f"  ... and {len(differ) - limit} more")
         print()
 
-    if only_nt:
+    if only_nt and not compact:
         print(f"Only in NT ({len(only_nt)}):")
         for row in only_nt:
             value = row.nt_value or ""
@@ -167,21 +213,20 @@ def print_report(
         print()
 
     if only_prod:
-        print(f"Only in PROD ({len(only_prod)}):")
-        for row in only_prod:
-            value = row.prod_value or ""
-            if not verbose:
-                value = _truncate(value, value_max_len)
-            print(f"  {row.name} = {value}")
-        print()
-
-    print(
-        "Summary: "
-        f"{len(differ)} differ, "
-        f"{len(only_nt)} only NT, "
-        f"{len(only_prod)} only PROD, "
-        f"{same_count} identical (hidden)"
-    )
+        label = "Only in PROD"
+        if compact:
+            for row in only_prod[:5]:
+                print(f"  {row.name} = {row.prod_value}")
+            if len(only_prod) > 5:
+                print(f"  ... and {len(only_prod) - 5} more")
+        else:
+            print(f"{label} ({len(only_prod)}):")
+            for row in only_prod:
+                value = row.prod_value or ""
+                if not verbose:
+                    value = _truncate(value, value_max_len)
+                print(f"  {row.name} = {value}")
+            print()
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -308,7 +353,8 @@ def main(argv: list[str] | None = None) -> int:
                 verbose=args.verbose,
             )
 
-    has_issues = any(row.status is not DiffStatus.SAME for row in diffs)
+    critical_rows, _informational = split_settings_rows(diffs)
+    has_issues = len(critical_rows) > 0
     if args.exit_code and has_issues:
         return 1
     return 0

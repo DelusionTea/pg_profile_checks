@@ -11,12 +11,10 @@ Your job: write a **short executive summary** and **interpretation** — not rec
 ## Rules (strict)
 
 1. Use **only** data from the brief and stub context below.
-2. If `settings_valid: false` — state clearly that the run is **invalid** and metrics cannot be trusted until settings are aligned.
-3. When intervals differ, refer to **per-hour** values, not only absolutes.
-4. PROD may be **faster** (negative delta %) — mention explicitly if present.
-5. Do not suggest changing PROD without change management approval.
-6. Write in Russian.
-7. If data is insufficient, write «недостаточно данных».
+2. If `settings_guc_valid: false` — run is **invalid** (critical GUC mismatch only).
+3. `settings_informational_count` and `volume_ops_diffs` are **expected** (runtime metadata, different load/period) — describe as справочная информация, not as failure.
+4. `performance_warnings` — highlight as items needing DBA review.
+5. When intervals differ, refer to **per-hour** values, not only absolutes.
 
 ## Output format: Confluence Wiki Markup only
 

@@ -1,0 +1,119 @@
+h1. Test WAL
+
+{info:title=О документе}
+Расследование симптома по pg_profile. Таблицы гипотез и план действий сформированы Python. Статус confirmed = прямые данные в отчёте; suspected = косвенные признаки; possible = типичная причина.
+{info}
+
+{warning:title=Подтверждённые гипотезы}
+В отчёте найдены прямые признаки для *2* гипотез(ы).
+{warning}
+
+h2. Параметры расследования
+
+||Параметр||Значение||
+|Дата формирования|2026-07-15 11:23|
+|Симптом|Высокая генерация WAL (high_wal)|
+|Отчётов|1|
+|Confirmed / Suspected|2 / 3|
+
+h2. Отчёты pg_profile
+
+||Метка||Файл||Интервал||
+|counteragent_prom1|counteragent_prom1.html|2026-07-01 05:00:02+03 .. 2026-07-01 21:00:01+03|
+
+h2. Гипотезы (возможные причины)
+
+||Статус||Причина||ID||Отчёты||Evidence (кратко)||
+|{status:colour=Red|title=CONFIRMED|subtle=false}|Высокая скорость генерации WAL (wal_bytes)|wal.high_generation_rate|counteragent_prom1|[counteragent_prom1] WAL generation ≈ 123028.1 MB/h|
+|{status:colour=Red|title=CONFIRMED|subtle=false}|Переполнение wal_buffers|wal.buffers_full|counteragent_prom1|[counteragent_prom1] wal_buffers_full=23440729|
+|{status:colour=Yellow|title=SUSPECTED|subtle=false}|WAL-heavy SQL|wal.wal_heavy_queries|counteragent_prom1|[counteragent_prom1] WAL-heavy SQL: wal_bytes=522 GB hex=11a74fb9c1776a85|
+|{status:colour=Yellow|title=SUSPECTED|subtle=false}|Write-heavy таблицы (DML volume)|wal.high_dml_tables|counteragent_prom1|[counteragent_prom1] DML table counteragent.t_repl_agglock_transaction: ins=5290969 upd=34407832 del=None|
+|{status:colour=Yellow|title=SUSPECTED|subtle=false}|Checkpoint pressure (requested checkpoints)|wal.checkpoint_pressure|counteragent_prom1|[counteragent_prom1] checkpoints_req=181|
+|{status:colour=Blue|title=POSSIBLE|subtle=false}|Малый max_wal_size|wal.small_max_wal_size|—|—|
+
+h2. План действий (verify)
+
+||#||Действие||
+|1|[подтвердить wal.high_generation_rate] wal_stats: wal_bytes, wal_bytes_per_sec за интервал|
+|2|[подтвердить wal.high_generation_rate] Сравнить WAL MB/h между периодами (compare_runs / compare_nt_prod)|
+|3|[опровергнуть wal.high_generation_rate] wal_bytes низкий за интервал — симптом мог быть кратковременным вне окна отчёта|
+|4|[подтвердить wal.buffers_full] wal_stats.wal_buffers_full|
+|5|[подтвердить wal.buffers_full] Увеличить wal_buffers на НТ и сравнить|
+|6|[опровергнуть wal.buffers_full] wal_buffers_full = 0 — буферы достаточны|
+|7|[подтвердить wal.wal_heavy_queries] top_statements: wal_bytes, wal_fpi для топ запросов|
+|8|[подтвердить wal.wal_heavy_queries] EXPLAIN: массовые UPDATE/INSERT, TOAST, FPI|
+|9|[опровергнуть wal.wal_heavy_queries] Топ SQL не содержит wal_bytes — WAL от batch/DDL/replication|
+|10|[подтвердить wal.high_dml_tables] top_tables: n_tup_ins, n_tup_upd, n_tup_del|
+|11|[подтвердить wal.high_dml_tables] Сопоставить таблицы с wal-heavy SQL|
+|12|[опровергнуть wal.high_dml_tables] DML counters низкие — WAL не от OLTP DML|
+|13|[подтвердить wal.checkpoint_pressure] cluster_stats: checkpoints_req/timed, checkpoint_write_time|
+|14|[подтвердить wal.checkpoint_pressure] max_wal_size vs WAL generation rate|
+|15|[опровергнуть wal.checkpoint_pressure] checkpoints_req низкий — checkpoint не лимитирует|
+|16|[подтвердить wal.small_max_wal_size] settings.max_wal_size vs wal MB/h|
+|17|[подтвердить wal.small_max_wal_size] Политика диска и replication|
+
+h2. Детали: confirm / refute
+
+h3. Высокая скорость генерации WAL (wal_bytes) (wal.high_generation_rate)
+
+*Evidence:*
+* [counteragent_prom1] WAL generation ≈ 123028.1 MB/h
+
+*Подтвердить:*
+# wal_stats: wal_bytes, wal_bytes_per_sec за интервал
+# Сравнить WAL MB/h между периодами (compare_runs / compare_nt_prod)
+
+*Опровергнуть:*
+# wal_bytes низкий за интервал — симптом мог быть кратковременным вне окна отчёта
+
+h3. Переполнение wal_buffers (wal.buffers_full)
+
+*Evidence:*
+* [counteragent_prom1] wal_buffers_full=23440729
+
+*Подтвердить:*
+# wal_stats.wal_buffers_full
+# Увеличить wal_buffers на НТ и сравнить
+
+*Опровергнуть:*
+# wal_buffers_full = 0 — буферы достаточны
+
+h3. WAL-heavy SQL (wal.wal_heavy_queries)
+
+*Evidence:*
+* [counteragent_prom1] WAL-heavy SQL: wal_bytes=522 GB hex=11a74fb9c1776a85
+
+*Подтвердить:*
+# top_statements: wal_bytes, wal_fpi для топ запросов
+# EXPLAIN: массовые UPDATE/INSERT, TOAST, FPI
+
+*Опровергнуть:*
+# Топ SQL не содержит wal_bytes — WAL от batch/DDL/replication
+
+h3. Write-heavy таблицы (DML volume) (wal.high_dml_tables)
+
+*Evidence:*
+* [counteragent_prom1] DML table counteragent.t_repl_agglock_transaction: ins=5290969 upd=34407832 del=None
+
+*Подтвердить:*
+# top_tables: n_tup_ins, n_tup_upd, n_tup_del
+# Сопоставить таблицы с wal-heavy SQL
+
+*Опровергнуть:*
+# DML counters низкие — WAL не от OLTP DML
+
+h3. Checkpoint pressure (requested checkpoints) (wal.checkpoint_pressure)
+
+*Evidence:*
+* [counteragent_prom1] checkpoints_req=181
+
+*Подтвердить:*
+# cluster_stats: checkpoints_req/timed, checkpoint_write_time
+# max_wal_size vs WAL generation rate
+
+*Опровергнуть:*
+# checkpoints_req низкий — checkpoint не лимитирует
+
+----
+
+_Ниже — вывод ИИ (Confluence Wiki Markup). Вставьте ответ gigacli или merge_confluence.py._

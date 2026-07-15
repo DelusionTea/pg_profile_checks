@@ -58,6 +58,8 @@ python analyze_pgprofile.py \
 | `check_report.py` | Health-check **одного** отчёта (checkpoints, WAL, sessions, SQL и др.) |
 | `compare_runs.py` | Сравнение **метрик** двух тестовых прогонов |
 | `compare_nt_prod.py` | **НТ vs ПРОМ**: gate по настройкам + WAL, DML, SQL по параметрам |
+| `analyze_prod_stability.py` | **Несколько PROD-отчётов**: стабильные проблемы + GUC-рекомендации |
+| `investigate_symptom.py` | **Расследование симптома**: CPU / память / WAL / медленный SQL |
 | `analyze_pgprofile.py` | **Оркестратор**: все анализы + JSON + brief + Confluence |
 | `merge_confluence.py` | Сборка `confluence_stub.wiki` + ответ ИИ → `confluence_page.wiki` |
 
@@ -261,7 +263,9 @@ python compare_nt_prod.py \
 | `--format text\|json` | Формат вывода |
 | `-o`, `--output` | Записать в файл |
 | `--exit-code` | Exit `1` при расхождении настроек **или** метрик |
-| `--exit-code-settings-only` | Exit `1` только при расхождении настроек |
+| `--exit-code-settings-only` | Exit `1` только при **критичных** расхождениях GUC |
+
+**Классификация:** runtime-метаданные (`pg_conf_load_time`, `pg_postmaster_start_time`, `in_hot_standby`) не блокируют сравнение. Отличия по объёму WAL и DML — секция «Справочно», не «ПРОГОН НЕВАЛИДЕН». Предупреждения по производительности (mean/max time, cache) — отдельно.
 
 ### Структура отчёта
 
@@ -329,7 +333,154 @@ wal_bytes       | 1.2G (80M/h)    | 900M (37.5M/h)  | -300M (-25.0%)
 
 ---
 
-## 5. Оркестратор `analyze_pgprofile.py`
+## 5. Стабильные проблемы на PROD (`analyze_prod_stability.py`)
+
+Сравнивает **два и более** PROD-отчёта за разные периоды, находит health-check находки,
+которые повторяются стабильно (по умолчанию — во **всех** отчётах), и выдаёт рекомендации
+по изменению GUC с учётом `knowledge/prod_tuning.yaml` и общих рекомендаций Postgres Pro.
+
+Каждая рекомендация маркируется **двумя осями**:
+
+| Ось | Значения | Смысл |
+|-----|----------|-------|
+| **Критичность проблемы** | `critical`, `high`, `medium`, `warning` | Насколько серьёзен стабильный симптом |
+| **Безопасность изменения** | `safe`, `cautious`, `risky`, `restart_required` | Насколько осторожно применять GUC |
+| **Влияние изменения** | `low`, `medium`, `high` | Потенциальный эффект на нагрузку при ошибке |
+
+### Запуск
+
+```bash
+# Два периода одной PROD-базы
+python analyze_prod_stability.py \
+  resources/counteragent_prom1.html \
+  resources/counteragent_prom2.html \
+  --label prom1 --label prom2
+
+# Четыре отчёта: стабильность ≥50% периодов
+python analyze_prod_stability.py \
+  resources/counteragent_prom1.html resources/counteragent_prom2.html \
+  resources/credithistory_prom1.html resources/credithistory_prom2.html \
+  --min-stability 0.5
+```
+
+### Флаги
+
+| Флаг | Описание |
+|------|----------|
+| `--label NAME` | Метка отчёта (повторять для каждого файла, в том же порядке) |
+| `--config PATH` | Пороги health-check (по умолчанию `thresholds.yaml`) |
+| `--tuning PATH` | Правила GUC (по умолчанию `knowledge/prod_tuning.yaml`) |
+| `--min-stability RATIO` | Доля отчётов, где finding должен встретиться (`1.0` = все) |
+| `--show-ephemeral` | Показать нестабильные находки (не во всех отчётах) |
+| `--format text\|json` | Формат вывода |
+| `-o`, `--output` | Записать результат в файл |
+| `--exit-code` | Exit `1`, если есть стабильные `critical` / `high` рекомендации |
+| `--confluence-dir DIR` | `stable_prod_confluence_stub.wiki`, `stable_prod_confluence_prompt.txt`, `stable_prod_brief.md` |
+| `--confluence-title` | Заголовок страницы Confluence |
+
+### Confluence + gigacli
+
+```bash
+python analyze_prod_stability.py prom1.html prom2.html \
+  --confluence-dir ./analysis_out/ \
+  --confluence-title "PROD counteragent: стабильные проблемы"
+```
+
+| Файл | Назначение |
+|------|------------|
+| `stable_prod_confluence_stub.wiki` | Таблицы отчётов, стабильных рекомендаций и GUC (Wiki Markup) |
+| `stable_prod_confluence_prompt.txt` | Промпт для gigacli — резюме и план внедрения |
+| `stable_prod_brief.md` | Данные для ИИ |
+
+```bash
+gigacli < analysis_out/stable_prod_confluence_prompt.txt > analysis_out/stable_prod_body.wiki
+
+python merge_confluence.py analysis_out/stable_prod_confluence_stub.wiki \
+  -b analysis_out/stable_prod_body.wiki \
+  -o analysis_out/stable_prod_confluence_page.wiki
+```
+
+### JSON
+
+```bash
+python analyze_prod_stability.py prom1.html prom2.html \
+  --format json -o stable_prod.json
+```
+
+Поле `recommendations[].combined_change_safety` и `combined_change_impact` — агрегат
+по всем GUC в правиле (берётся наихудший случай).
+
+---
+
+## 5a. Расследование симптома (`investigate_symptom.py`)
+
+Принимает **тип симптома** и один или несколько pg_profile HTML, возвращает список
+**возможных причин** с уровнем уверенности и **план действий** для подтверждения/опровержения.
+
+### Симптомы
+
+| ID | Описание |
+|----|----------|
+| `high_cpu` | Высокая утилизация CPU БД |
+| `high_memory` | Высокое потребление памяти БД |
+| `high_wal` | Высокая генерация WAL |
+| `slow_query` | Медленный запрос (нужен `--query-hex`, `--query-id` или `--query-text`) |
+
+Статусы причин: **confirmed** (данные в отчёте), **suspected** (косвенные признаки),
+**possible** (типичная причина без данных).
+
+### Примеры
+
+```bash
+# Высокий CPU — два периода PROD
+python investigate_symptom.py high_cpu \
+  resources/counteragent_prom1.html resources/counteragent_prom2.html \
+  --label prom1 --label prom2
+
+# Высокий WAL
+python investigate_symptom.py high_wal resources/counteragent_prom1.html
+
+# Медленный запрос по hex ID или фрагменту SQL
+python investigate_symptom.py slow_query resources/counteragent_prom1.html \
+  --query-hex 11a74fb9c1776a85
+
+python investigate_symptom.py slow_query resources/counteragent_prom1.html \
+  --query-text "t_transaction set sys_lastchangedate"
+
+# JSON
+python investigate_symptom.py high_memory report.html --format json -o symptom.json
+
+# Список симптомов
+python investigate_symptom.py --list-symptoms
+```
+
+### Confluence + gigacli
+
+```bash
+python investigate_symptom.py high_cpu prom1.html prom2.html \
+  --confluence-dir ./analysis_out/ \
+  --confluence-title "PROD: высокий CPU"
+```
+
+| Файл | Назначение |
+|------|------------|
+| `symptom_confluence_stub.wiki` | Таблицы гипотез, evidence и план verify |
+| `symptom_confluence_prompt.txt` | Промпт для gigacli — интерпретация и порядок проверок |
+| `symptom_brief.md` | Данные для ИИ |
+
+```bash
+gigacli < analysis_out/symptom_confluence_prompt.txt > analysis_out/symptom_body.wiki
+
+python merge_confluence.py analysis_out/symptom_confluence_stub.wiki \
+  -b analysis_out/symptom_body.wiki \
+  -o analysis_out/symptom_confluence_page.wiki
+```
+
+Playbook причин и шагов верификации: `knowledge/symptom_playbook.yaml`.
+
+---
+
+## 6. Оркестратор `analyze_pgprofile.py`
 
 Запускает один или несколько анализов, обогащает находки рекомендациями из `knowledge/` и пишет артефакты в каталог.
 
@@ -352,6 +503,21 @@ python analyze_pgprofile.py \
   --settings-b-id PROD \
   --output-dir ./analysis_out/ \
   --exit-code
+
+# Только стабильные проблемы PROD (2+ отчёта) + Confluence
+python analyze_pgprofile.py \
+  --stable-prod-reports resources/counteragent_prom1.html resources/counteragent_prom2.html \
+  --stable-prod-label prom1 --stable-prod-label prom2 \
+  --output-dir ./analysis_out/ \
+  --confluence-title "PROD counteragent: tuning"
+
+# Расследование симптома + Confluence
+python analyze_pgprofile.py \
+  --symptom high_cpu \
+  --symptom-reports resources/counteragent_prom1.html resources/counteragent_prom2.html \
+  --symptom-label prom1 --symptom-label prom2 \
+  --output-dir ./analysis_out/ \
+  --confluence-title "PROD: высокий CPU"
 ```
 
 ### Флаги
@@ -363,6 +529,16 @@ python analyze_pgprofile.py \
 | `--compare-run` | Второй HTML для сравнения прогонов |
 | `--run-a-id`, `--run-b-id` | Метки прогонов |
 | `--compare-settings` | Второй HTML для diff настроек (требует `--report`) |
+| `--compare-prod` | PROD HTML для НТ vs ПРОМ (требует `--report` = НТ) |
+| `--stable-prod-reports` | 2+ PROD HTML для анализа стабильных проблем |
+| `--stable-prod-label` | Метка для каждого `--stable-prod-reports` |
+| `--symptom` | Симптом: `high_cpu`, `high_memory`, `high_wal`, `slow_query` |
+| `--symptom-reports` | 1+ HTML для расследования симптома |
+| `--symptom-label` | Метка для каждого `--symptom-reports` |
+| `--query-hex`, `--query-id`, `--query-text` | Целевой SQL (для `slow_query`) |
+| `--playbook` | Playbook симптомов (`knowledge/symptom_playbook.yaml`) |
+| `--min-stability` | Доля отчётов для «стабильной» находки (default: `1.0`) |
+| `--tuning` | Правила GUC (`knowledge/prod_tuning.yaml`) |
 | `--settings-a-id`, `--settings-b-id` | Метки сред (default: `NT` / `PROD`) |
 | `--output-dir` | **Обязательный** каталог результатов |
 | `--confluence-title` | Заголовок страницы Confluence (auto по умолчанию) |
@@ -382,12 +558,20 @@ python analyze_pgprofile.py \
 | `summary_prompt.txt` | Python | Промпт для LLM (`prompts/analyst.md` + brief) |
 | `confluence_stub.wiki` | Python | Шапка + таблица находок (Wiki Markup) |
 | `confluence_prompt.txt` | Python | Промпт для gigacli (Wiki Markup) |
+| `stable_prod.json` | Python | Стабильные PROD-проблемы (если `--stable-prod-reports`) |
+| `stable_prod_confluence_stub.wiki` | Python | Таблицы стабильных GUC-рекомендаций |
+| `stable_prod_confluence_prompt.txt` | Python | Промпт gigacli для stable PROD |
+| `stable_prod_brief.md` | Python | Brief для stable PROD |
+| `symptom_investigation.json` | Python | Расследование симптома (если `--symptom`) |
+| `symptom_confluence_stub.wiki` | Python | Таблицы гипотез и план verify |
+| `symptom_confluence_prompt.txt` | Python | Промпт gigacli для симптома |
+| `symptom_brief.md` | Python | Brief для симптома |
 | `confluence_body.wiki` | **ИИ** | Текстовые разделы (резюме, рекомендации) |
 | `confluence_page.wiki` | `merge_confluence.py` | Готовая страница |
 
 ---
 
-## 6. Публикация в Confluence (GigaIDE + gigacli)
+## 7. Публикация в Confluence (GigaIDE + gigacli)
 
 Схема: **Python — точные таблицы**, **ИИ — только narrative** в Confluence Wiki Markup.
 
@@ -532,17 +716,25 @@ pg_profile_checks/
 ├── compare_runs.py          # CLI: метрики двух прогонов
 ├── check_report.py          # CLI: health-check одного отчёта
 ├── compare_nt_prod.py       # CLI: валидация НТ vs ПРОМ
+├── analyze_prod_stability.py # CLI: стабильные PROD-проблемы + GUC
+├── investigate_symptom.py   # CLI: расследование симптома
 ├── analyze_pgprofile.py     # CLI: оркестратор
 ├── merge_confluence.py      # CLI: stub + body → confluence_page.wiki
 ├── pgprofile_parser.py      # Парсинг HTML → JSON
 ├── pgprofile_health.py      # Логика health-check
 ├── pgprofile_compare.py     # Логика сравнения прогонов
 ├── pgprofile_nt_prod.py     # НТ vs ПРОМ: settings gate + отчёт
+├── pgprofile_stable_prod.py # N PROD-отчётов: стабильность + tuning
+├── pgprofile_symptoms.py    # Расследование симптомов (CPU/RAM/WAL/SQL)
 ├── pgprofile_findings.py    # warnings → finding IDs
 ├── pgprofile_advisor.py     # knowledge/ → рекомендации
 ├── pgprofile_confluence.py  # Confluence Wiki Markup
 ├── pgprofile_output.py      # JSON output helpers
 ├── knowledge/               # YAML playbook (offline)
+│   ├── recommendations.yaml
+│   ├── guc_guidance.yaml
+│   ├── prod_tuning.yaml     # finding → GUC tuning (PROD stability)
+│   └── symptom_playbook.yaml # симптом → причины + verify steps
 ├── prompts/                 # Промпты для gigacli
 ├── thresholds.yaml
 ├── thresholds_relaxed.yaml

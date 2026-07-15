@@ -151,7 +151,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.exit_code:
         if not validation.settings.valid:
             return 1
-        if validation.significant_count > 0:
+        if validation.warning_count > 0:
             return 1
     return 0
 

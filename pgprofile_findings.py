@@ -245,21 +245,25 @@ def settings_diff_to_dict(
     diffs: list[Any],
 ) -> dict[str, Any]:
     from compare_settings import DiffStatus
+    from pgprofile_classify import classify_setting_name, split_settings_rows
 
+    critical, informational = split_settings_rows(diffs)
     findings = []
-    for row in diffs:
+    for row in critical + informational:
         if row.status is DiffStatus.SAME:
             continue
+        level = classify_setting_name(row.name)
         findings.append(
             {
                 "id": f"settings.{row.status.value.lower()}.{row.name}",
                 "category": "settings",
-                "severity": "warning",
+                "severity": "warning" if level.value == "critical" else "info",
                 "message": row.name,
                 "details": {
                     "status": row.status.value,
                     "value_a": row.nt_value,
                     "value_b": row.prod_value,
+                    "issue_level": level.value,
                 },
             }
         )
@@ -288,5 +292,8 @@ def settings_diff_to_dict(
             "only_a": only_a,
             "only_b": only_b,
             "total_issues": differ + only_a + only_b,
+            "critical_count": len(critical),
+            "informational_count": len(informational),
+            "settings_valid": len(critical) == 0,
         },
     }

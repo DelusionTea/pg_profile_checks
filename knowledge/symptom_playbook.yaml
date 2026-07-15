@@ -1,0 +1,280 @@
+# Symptom investigation playbook: possible causes and verification steps.
+# Used by pgprofile_symptoms.py — evidence from pg_profile augments these templates.
+
+symptoms:
+  high_cpu:
+    title: Высокая утилизация CPU БД
+    description: |
+      Симптом: высокая загрузка CPU процессами PostgreSQL. pg_profile показывает CPU через
+      pg_stat_kcache (top_rusage_statements) и active_time на уровне БД.
+    causes:
+      - id: cpu.dominant_queries
+        title: Доминирующие SQL по CPU (pg_stat_kcache)
+        description: Несколько запросов потребляют большую долю user/system CPU за интервал.
+        confirm_actions:
+          - "EXPLAIN (ANALYZE, BUFFERS) для топ-3 SQL по sum_cpu_time из отчёта"
+          - "Сопоставить pg_stat_statements (calls, mean_exec_time) с pg_stat_kcache (sum_cpu_time)"
+          - "Проверить, совпадает ли пик CPU на OS с интервалом отчёта pg_profile"
+        refute_actions:
+          - "Если sum_cpu_time топ-запросов <5% интервала — CPU уходит не в SQL (фон, autovacuum, checkpoint)"
+          - "Сравнить топ CPU между двумя периодами: запрос исчез из топа — не корневая причина текущего пика"
+
+      - id: cpu.high_call_volume
+        title: Высокий объём вызовов (CPU × calls)
+        description: Умеренное mean_exec_time при очень большом calls даёт высокий суммарный CPU.
+        confirm_actions:
+          - "Проверить calls и total_exec_time в top_statements для топ CPU запросов"
+          - "Найти источник частых вызовов (ORM N+1, polling, отсутствие pool)"
+        refute_actions:
+          - "Если calls низкий при высоком CPU — причина не в частоте, а в тяжёлом плане/функции"
+
+      - id: cpu.jit_overhead
+        title: JIT-компиляция запросов
+        description: JIT включён и топ SQL имеет заметный jit_total_time.
+        confirm_actions:
+          - "Проверить jit_* поля в top_statements для медленных/тяжёлых запросов"
+          - "Сравнить plan time vs exec time; jit_generation_time в pg_profile"
+          - "Тест с SET jit=off для подозрительного запроса на НТ"
+        refute_actions:
+          - "jit_total_time отсутствует или << total_exec_time — JIT не доминирует"
+
+      - id: cpu.autovacuum_pressure
+        title: Autovacuum / analyze во время нагрузки
+        description: Bloat, stale vacuum, высокий mods/dead_pct — autovacuum конкурирует за CPU.
+        confirm_actions:
+          - "Проверить top_tbl_last_sample: dead_pct, mods_pct, last_autovacuum"
+          - "pg_stat_activity: autovacuum workers в пик CPU"
+          - "Логи autovacuum (log_autovacuum_min_duration)"
+        refute_actions:
+          - "Нет таблиц с высоким dead_pct и autovacuum свежий — маловероятно"
+
+      - id: cpu.checkpoint_bgwriter
+        title: Checkpoint / bgwriter / IO wait в kernel CPU
+        description: Высокий system_time, checkpoint write, maxwritten_clean — kernel CPU на запись.
+        confirm_actions:
+          - "cluster_stats: checkpoints_req, checkpoint_write_time, maxwritten_clean"
+          - "Сопоставить system_time_pct в top_rusage с WAL/checkpoint метриками"
+        refute_actions:
+          - "checkpoints_req низкий и checkpoint_write_time мал — не checkpoint"
+
+      - id: cpu.parallel_workers
+        title: Параллельные запросы / max_parallel_workers
+        description: Много parallel workers увеличивают суммарный CPU.
+        confirm_actions:
+          - "EXPLAIN: Gather / Parallel Seq Scan в топ SQL"
+          - "Проверить max_parallel_workers_per_gather и load"
+        refute_actions:
+          - "Планы без parallel nodes при высоком CPU — ищите другие причины"
+
+  high_memory:
+    title: Высокое потребление памяти БД
+    description: |
+      Симптом: рост RSS PostgreSQL, OOM risk, swap. pg_profile: temp spill, work_mem × connections,
+      shared_buffers, bloat.
+    causes:
+      - id: memory.work_mem_risk
+        title: work_mem × max_connections (OOM risk)
+        description: Высокий work_mem при большом числе connections — риск исчерпания RAM.
+        confirm_actions:
+          - "Сверить work_mem и max_connections из settings с политикой банка"
+          - "Оценить peak connections (pg_stat_activity / dbstat.sessions)"
+          - "Мониторинг RSS postgres процессов vs work_mem × active queries"
+        refute_actions:
+          - "work_mem умеренный и connections стабильно ниже max — риск ниже"
+
+      - id: memory.temp_spill
+        title: Spill в temp files (sort/hash на диск)
+        description: temp_blks_written / temp_bytes — запросы превышают work_mem.
+        confirm_actions:
+          - "top_statements: temp_blks_written, temp_blk_write_time для топ SQL"
+          - "dbstat.temp_bytes / temp_files за интервал"
+          - "EXPLAIN (ANALYZE): Sort/Hash batches to disk"
+        refute_actions:
+          - "temp_bytes и temp_blks_written минимальны — spill не причина"
+
+      - id: memory.shared_buffers_pressure
+        title: Недостаточный shared_buffers / cache miss
+        description: Низкий blks_hit_pct — частые чтения с диска, давление на page cache.
+        confirm_actions:
+          - "dbstat.blks_hit_pct, top_io_tables.heap_blks_read"
+          - "Сравнить shared_buffers с RAM и working set"
+        refute_actions:
+          - "blks_hit_pct >99% — память БД скорее в connections/temp, не в buffer cache"
+
+      - id: memory.maintenance_bloat
+        title: Bloat / dead tuples / maintenance_work_mem
+        description: Крупные таблицы с bloat увеличивают memory footprint vacuum и scans.
+        confirm_actions:
+          - "top_tbl_last_sample: dead_pct, n_dead_tup, table size"
+          - "pgstattuple / pg_stat_user_tables на подозрительных таблицах"
+        refute_actions:
+          - "dead_pct низкий на крупных таблицах — bloat маловероятен"
+
+      - id: memory.idle_in_transaction
+        title: Idle in transaction (утечка snapshots / памяти)
+        description: Долгие idle in transaction держат память и блокируют cleanup.
+        confirm_actions:
+          - "dbstat.idle_in_transaction_time, sessions idle in pg_stat_activity"
+          - "Проверить idle_in_transaction_session_timeout"
+        refute_actions:
+          - "idle_in_transaction_time ≈ 0 — не эта причина"
+
+      - id: memory.connection_leak
+        title: Избыточные подключения / без pooler
+        description: Высокий sessions за интервал при высоком max_connections.
+        confirm_actions:
+          - "dbstat.sessions vs max_connections"
+          - "PgBouncer/pool mode, idle connections в pg_stat_activity"
+        refute_actions:
+          - "sessions стабильно низкий — не connection leak"
+
+  high_wal:
+    title: Высокая генерация WAL
+    description: |
+      Симптом: быстрый рост WAL, wal_buffers_full, частые checkpoints, replication lag.
+    causes:
+      - id: wal.high_generation_rate
+        title: Высокая скорость генерации WAL (wal_bytes)
+        description: wal_bytes / interval выше порога — общая write-нагрузка.
+        confirm_actions:
+          - "wal_stats: wal_bytes, wal_bytes_per_sec за интервал"
+          - "Сравнить WAL MB/h между периодами (compare_runs / compare_nt_prod)"
+        refute_actions:
+          - "wal_bytes низкий за интервал — симптом мог быть кратковременным вне окна отчёта"
+
+      - id: wal.wal_heavy_queries
+        title: WAL-heavy SQL
+        description: Топ SQL с высоким wal_bytes, wal_records, shared_blks_dirtied.
+        confirm_actions:
+          - "top_statements: wal_bytes, wal_fpi для топ запросов"
+          - "EXPLAIN: массовые UPDATE/INSERT, TOAST, FPI"
+        refute_actions:
+          - "Топ SQL не содержит wal_bytes — WAL от batch/DDL/replication"
+
+      - id: wal.high_dml_tables
+        title: Write-heavy таблицы (DML volume)
+        description: top_tables с высоким n_tup_ins/upd/del генерируют WAL.
+        confirm_actions:
+          - "top_tables: n_tup_ins, n_tup_upd, n_tup_del"
+          - "Сопоставить таблицы с wal-heavy SQL"
+        refute_actions:
+          - "DML counters низкие — WAL не от OLTP DML"
+
+      - id: wal.buffers_full
+        title: Переполнение wal_buffers
+        description: wal_buffers_full > 0 — процессы ждут WAL buffer.
+        confirm_actions:
+          - "wal_stats.wal_buffers_full"
+          - "Увеличить wal_buffers на НТ и сравнить"
+        refute_actions:
+          - "wal_buffers_full = 0 — буферы достаточны"
+
+      - id: wal.checkpoint_pressure
+        title: Checkpoint pressure (requested checkpoints)
+        description: Частые requested checkpoints из-за max_wal_size / write burst.
+        confirm_actions:
+          - "cluster_stats: checkpoints_req/timed, checkpoint_write_time"
+          - "max_wal_size vs WAL generation rate"
+        refute_actions:
+          - "checkpoints_req низкий — checkpoint не лимитирует"
+
+      - id: wal.small_max_wal_size
+        title: Малый max_wal_size
+        description: max_wal_size ниже рекомендуемого при текущей write-нагрузке.
+        confirm_actions:
+          - "settings.max_wal_size vs wal MB/h"
+          - "Политика диска и replication"
+        refute_actions:
+          - "max_wal_size уже большой — причина в объёме записи, не в лимите"
+
+  slow_query:
+    title: Медленная работа запроса
+    description: |
+      Симптом: конкретный SQL выполняется медленно. Требуется указать запрос (hex ID, queryid или фрагмент текста).
+    causes:
+      - id: query.high_exec_time
+        title: Высокое mean/max execution time
+        description: Запрос найден в top_statements с elevated mean_exec_time или max_exec_time.
+        confirm_actions:
+          - "EXPLAIN (ANALYZE, BUFFERS) для целевого queryid"
+          - "Сравнить mean_exec_time между периодами (compare_runs)"
+        refute_actions:
+          - "mean_exec_time низкий при жалобе — проблема intermittent или другой queryid"
+
+      - id: query.io_bound
+        title: I/O bound (shared read / io_time)
+        description: Высокий shared_blks_read или io_time — чтение с диска доминирует.
+        confirm_actions:
+          - "top_statements: shared_blks_read, io_time, reads"
+          - "top_io_tables / top_tables: seq_scan vs idx_scan на затронутых таблицах"
+          - "Проверить индексы и ANALYZE статистику"
+        refute_actions:
+          - "shared_blks_read низкий при медленном запросе — не disk read bound"
+
+      - id: query.seq_scan
+        title: Sequential scan на большой таблице
+        description: Запрос или связанные таблицы с высоким seq_scan.
+        confirm_actions:
+          - "EXPLAIN: Seq Scan на крупных таблицах"
+          - "top_tables seq_scan vs idx_scan ratio"
+          - "CREATE INDEX CONCURRENTLY на НТ"
+        refute_actions:
+          - "План использует Index Scan/Bitmap — seq scan не причина"
+
+      - id: query.temp_spill
+        title: Temp spill (sort/hash)
+        description: temp_blks_written > 0 у целевого запроса.
+        confirm_actions:
+          - "EXPLAIN (ANALYZE): external sort/hash batches"
+          - "Увеличить work_mem на роли для теста на НТ"
+        refute_actions:
+          - "temp_blks_written = 0 — не spill"
+
+      - id: query.plan_regression
+        title: Regression плана / высокий plan time
+        description: Высокий mean_plan_time или частые replans (plans ≈ calls).
+        confirm_actions:
+          - "top_statements: mean_plan_time, plans vs calls"
+          - "Проверить pg_stat_statements plans, generic vs custom plan"
+          - "ANALYZE таблиц, сравнить план до/после"
+        refute_actions:
+          - "plan time << exec time — план стабилен"
+
+      - id: query.cpu_bound
+        title: CPU bound (kcache user/system time)
+        description: Высокий sum_cpu_time на вызов в top_rusage_statements.
+        confirm_actions:
+          - "top_rusage_statements для hexqueryid: exec_user_time, exec_system_time"
+          - "Профилирование функций, JIT, сложные expressions"
+        refute_actions:
+          - "sum_cpu_time низкий при долгом wall time — ждёт IO/lock"
+
+      - id: query.wal_write_overhead
+        title: Write-heavy (WAL / dirtied blocks)
+        description: Запрос с высоким wal_bytes или shared_blks_dirtied.
+        confirm_actions:
+          - "wal_bytes, shared_blks_dirtied/written в top_statements"
+          - "Batch size UPDATE/INSERT, триггеры"
+        refute_actions:
+          - "Read-only SELECT с высоким exec time — WAL не причина"
+
+thresholds:
+  high_cpu:
+    min_sum_cpu_sec_suspected: 300
+    min_sum_cpu_sec_confirmed: 1200
+    min_user_time_pct: 3.0
+    top_n: 5
+    min_calls_volume: 100000
+  high_memory:
+    temp_bytes_mb_suspected: 100
+    temp_blks_written_suspected: 10000
+    min_work_mem_connections_gb: 8
+  high_wal:
+    wal_mb_per_hour_suspected: 500
+    wal_mb_per_hour_confirmed: 2000
+    wal_heavy_gb_suspected: 1
+  slow_query:
+    mean_exec_ms_suspected: 100
+    mean_exec_ms_confirmed: 1000
+    io_time_ms_suspected: 500
+    shared_blks_read_suspected: 100000

@@ -8,12 +8,16 @@ from pathlib import Path
 from typing import Any, TextIO
 
 from compare_settings import DiffRow, DiffStatus, diff_settings
+from pgprofile_classify import (
+    MetricIssueLevel,
+    classify_metric_diff,
+    split_settings_rows,
+)
 from pgprofile_compare import (
     ALL_SECTIONS,
     MetricDiff,
     QueryCompareGroup,
     RunSnapshot,
-    SECTION_LABELS,
     compare_queries_detailed,
     compare_runs,
     format_delta,
@@ -38,6 +42,8 @@ class SettingsSummary:
     only_prod: int
     same: int
     rows: list[DiffRow]
+    critical_count: int = 0
+    informational_count: int = 0
 
 
 @dataclass
@@ -46,9 +52,15 @@ class NtProdValidation:
     run_prod: RunSnapshot
     settings: SettingsSummary
     metric_diffs: list[MetricDiff]
+    metric_diffs_info: list[MetricDiff]
+    metric_diffs_warning: list[MetricDiff]
     query_groups: list[QueryCompareGroup]
+    query_groups_info: list[QueryCompareGroup]
+    query_groups_warning: list[QueryCompareGroup]
     total_compared: int
     significant_count: int
+    info_count: int
+    warning_count: int
     min_change_pct: float
     sections: list[str] = field(default_factory=list)
 
@@ -83,15 +95,54 @@ def summarize_settings(nt_settings: dict[str, str], prod_settings: dict[str, str
     only_nt = sum(1 for r in rows if r.status is DiffStatus.ONLY_NT)
     only_prod = sum(1 for r in rows if r.status is DiffStatus.ONLY_PROD)
     same = sum(1 for r in rows if r.status is DiffStatus.SAME)
-    issues = differ + only_nt + only_prod
+    critical, informational = split_settings_rows(rows)
     return SettingsSummary(
-        valid=issues == 0,
+        valid=len(critical) == 0,
         differ=differ,
         only_nt=only_nt,
         only_prod=only_prod,
         same=same,
         rows=rows,
+        critical_count=len(critical),
+        informational_count=len(informational),
     )
+
+
+def _split_query_groups(
+    groups: list[QueryCompareGroup],
+) -> tuple[list[QueryCompareGroup], list[QueryCompareGroup]]:
+    info_groups: list[QueryCompareGroup] = []
+    warn_groups: list[QueryCompareGroup] = []
+    for group in groups:
+        info_fields = [
+            f for f in group.fields
+            if classify_metric_diff(f) is MetricIssueLevel.INFORMATIONAL
+        ]
+        warn_fields = [
+            f for f in group.fields
+            if classify_metric_diff(f) is MetricIssueLevel.WARNING
+        ]
+        if info_fields:
+            info_groups.append(
+                QueryCompareGroup(
+                    query_key=group.query_key,
+                    label=group.label,
+                    preview=group.preview,
+                    fields=info_fields,
+                    score=group.score,
+                )
+            )
+        if warn_fields:
+            warn_groups.append(
+                QueryCompareGroup(
+                    query_key=group.query_key,
+                    label=group.label,
+                    preview=group.preview,
+                    fields=warn_fields,
+                    score=group.score,
+                )
+            )
+    return info_groups, warn_groups
 
 
 def validate_nt_prod(
@@ -138,14 +189,30 @@ def validate_nt_prod(
         )
 
     metric_diffs = [d for d in result.diffs if _is_significant(d, min_change_pct)]
+    metric_diffs_info = [
+        d for d in metric_diffs if classify_metric_diff(d) is MetricIssueLevel.INFORMATIONAL
+    ]
+    metric_diffs_warning = [
+        d for d in metric_diffs if classify_metric_diff(d) is MetricIssueLevel.WARNING
+    ]
+    query_groups_info, query_groups_warning = _split_query_groups(query_groups)
+    info_count = len(metric_diffs_info) + sum(len(g.fields) for g in query_groups_info)
+    warning_count = len(metric_diffs_warning) + sum(len(g.fields) for g in query_groups_warning)
+
     return NtProdValidation(
         run_nt=run_nt,
         run_prod=run_prod,
         settings=settings,
         metric_diffs=metric_diffs,
+        metric_diffs_info=metric_diffs_info,
+        metric_diffs_warning=metric_diffs_warning,
         query_groups=query_groups,
+        query_groups_info=query_groups_info,
+        query_groups_warning=query_groups_warning,
         total_compared=result.total_compared,
         significant_count=len(metric_diffs) + sum(len(g.fields) for g in query_groups),
+        info_count=info_count,
+        warning_count=warning_count,
         min_change_pct=min_change_pct,
         sections=selected,
     )
@@ -210,7 +277,7 @@ def _print_metric_table(
 
 def _print_settings_banner(validation: NtProdValidation, *, color: bool, out: TextIO) -> None:
     s = validation.settings
-    if s.valid:
+    if s.valid and s.informational_count == 0:
         print(_green("=" * 78, color=color), file=out)
         print(
             _green(
@@ -223,10 +290,30 @@ def _print_settings_banner(validation: NtProdValidation, *, color: bool, out: Te
         print(file=out)
         return
 
-    total = s.differ + s.only_nt + s.only_prod
+    if s.valid and s.informational_count > 0:
+        print(_yellow("=" * 78, color=color), file=out)
+        print(
+            _yellow(
+                f"  Конфигурация GUC совпадает. Справочно: {s.informational_count} отличий "
+                f"runtime-метаданных (pg_conf_load_time, postmaster_start, in_hot_standby и т.п.)",
+                color=color,
+            ),
+            file=out,
+        )
+        print(
+            _yellow(
+                "  Сравнение метрик допустимо — это не расхождение конфигурации.",
+                color=color,
+            ),
+            file=out,
+        )
+        print(_yellow("=" * 78, color=color), file=out)
+        print(file=out)
+        return
+
+    total = s.critical_count
     msg = (
-        f"  ПРОГОН НЕВАЛИДЕН: Defined settings НТ и ПРОМ расходятся "
-        f"({total} отличий: {s.differ} differ, {s.only_nt} only NT, {s.only_prod} only PROD)"
+        f"  ПРОГОН НЕВАЛИДЕН: Defined settings GUC расходятся ({total} критичных отличий)"
     )
     print(_red("=" * 78, color=color), file=out)
     print(_red(msg, color=color), file=out)
@@ -243,12 +330,22 @@ def _print_settings_banner(validation: NtProdValidation, *, color: bool, out: Te
 
 def _print_settings_compact(validation: NtProdValidation, *, verbose: bool, out: TextIO) -> None:
     s = validation.settings
-    if s.valid:
-        return
+    critical, informational = split_settings_rows(s.rows)
 
-    issues = [r for r in s.rows if r.status is not DiffStatus.SAME]
-    print("== Расхождения настроек (Defined settings) ==", file=out)
+    if critical:
+        print("== Критичные расхождения настроек (GUC) ==", file=out)
+        _print_settings_table(critical, verbose=verbose, out=out)
+
+    if informational:
+        print("== Справочно: runtime / метаданные (не блокируют сравнение) ==", file=out)
+        _print_settings_table(informational, verbose=verbose, out=out)
+
+
+def _print_settings_table(issues: list[DiffRow], *, verbose: bool, out: TextIO) -> None:
     differ = [r for r in issues if r.status is DiffStatus.DIFFER]
+    only_nt = [r for r in issues if r.status is DiffStatus.ONLY_NT]
+    only_prod = [r for r in issues if r.status is DiffStatus.ONLY_PROD]
+
     if differ:
         name_w = max(len(r.name) for r in differ)
         name_w = max(name_w, 7)
@@ -266,7 +363,6 @@ def _print_settings_compact(validation: NtProdValidation, *, verbose: bool, out:
             print(f"  ... и ещё {len(differ) - 20} differ", file=out)
         print(file=out)
 
-    only_nt = [r for r in issues if r.status is DiffStatus.ONLY_NT]
     if only_nt:
         print(f"Only in NT ({len(only_nt)}):", file=out)
         for row in only_nt[:10]:
@@ -275,7 +371,6 @@ def _print_settings_compact(validation: NtProdValidation, *, verbose: bool, out:
             print(f"  ... и ещё {len(only_nt) - 10}", file=out)
         print(file=out)
 
-    only_prod = [r for r in issues if r.status is DiffStatus.ONLY_PROD]
     if only_prod:
         print(f"Only in PROD ({len(only_prod)}):", file=out)
         for row in only_prod[:10]:
@@ -292,11 +387,13 @@ def _print_query_groups(
     *,
     show_per_hour: bool,
     out: TextIO,
+    heading: str | None = None,
 ) -> None:
     if not groups:
         return
 
-    print(f"== SQL: сравнение по параметрам ({len(groups)} запросов) ==", file=out)
+    title = heading or f"== SQL: сравнение по параметрам ({len(groups)} запросов) =="
+    print(title, file=out)
     print(
         "  Сопоставление по query id. PROD может быть быстрее (отрицательный Delta %).",
         file=out,
@@ -386,56 +483,75 @@ def print_nt_prod_report(
     print(file=stream)
     print("== Краткая сводка ==", file=stream)
     if validation.settings.valid:
-        print("  Настройки: OK (Defined settings совпадают)", file=stream)
+        if validation.settings.informational_count:
+            print(
+                "  Настройки GUC: OK (есть справочные отличия runtime-метаданных)",
+                file=stream,
+            )
+        else:
+            print("  Настройки GUC: OK", file=stream)
     else:
         print(
-            _red("  Настройки: НЕВАЛИДНО — есть расхождения", color=use_color),
+            _red(
+                f"  Настройки GUC: НЕВАЛИДНО ({validation.settings.critical_count} критичных)",
+                color=use_color,
+            ),
             file=stream,
         )
-    sig = validation.significant_count
-    if sig == 0:
+    if validation.info_count:
+        print(
+            f"  Объём WAL/операций: {validation.info_count} отличий (справочно, ожидаемо при разной нагрузке)",
+            file=stream,
+        )
+    if validation.warning_count:
+        print(
+            f"  Производительность: {validation.warning_count} предупреждений (>= {validation.min_change_pct:g}%)",
+            file=stream,
+        )
+    elif validation.info_count == 0:
         print("  Метрики: значимых расхождений нет", file=stream)
-    else:
+
+    if validation.settings.valid and validation.warning_count == 0:
         print(
-            f"  Метрики: {sig} значимых расхождений (>= {validation.min_change_pct:g}%)",
-            file=stream,
-        )
-    if validation.settings.valid and sig == 0:
-        print(
-            _green("  Вывод: НТ отражает ПРОМ — можно экспериментировать на НТ стенде", color=use_color),
+            _green(
+                "  Вывод: конфигурация совпадает — можно сравнивать и экспериментировать на НТ",
+                color=use_color,
+            ),
             file=stream,
         )
     elif validation.settings.valid:
         print(
-            "  Вывод: настройки совпадают, но метрики различаются — проверьте нагрузку и интервалы",
+            "  Вывод: конфигурация совпадает, но есть отличия по производительности — проверьте детали",
             file=stream,
         )
     else:
         print(
-            _red("  Вывод: сначала выровняйте настройки, затем повторите сравнение", color=use_color),
+            _red("  Вывод: сначала выровняйте GUC, затем повторите сравнение", color=use_color),
             file=stream,
         )
     print(file=stream)
 
     _print_settings_compact(validation, verbose=verbose, out=stream)
 
-    grouped: dict[str, list[MetricDiff]] = {key: [] for key in SECTION_LABELS}
-    for diff in validation.metric_diffs:
-        grouped.setdefault(diff.section, []).append(diff)
+    grouped_info: dict[str, list[MetricDiff]] = {}
+    for diff in validation.metric_diffs_info:
+        grouped_info.setdefault(diff.section, []).append(diff)
+    grouped_warn: dict[str, list[MetricDiff]] = {}
+    for diff in validation.metric_diffs_warning:
+        grouped_warn.setdefault(diff.section, []).append(diff)
 
-    priority_sections = [
-        ("wal", "WAL / скорость генерации"),
-        ("dml", "DML операции"),
-        ("cluster", "Checkpoints / cluster"),
-        ("tables", "DML по таблицам"),
-        ("sessions", "Sessions"),
-        ("cache", "Cache и I/O"),
+    info_section_titles = [
+        ("wal", "Справочно: WAL / объём записи"),
+        ("dml", "Справочно: DML операции"),
+        ("cluster", "Справочно: checkpoints (объём)"),
+        ("tables", "Справочно: DML по таблицам"),
+        ("sessions", "Справочно: sessions (объём)"),
+        ("cache", "Справочно: cache I/O (объём)"),
     ]
-
-    for section, title in priority_sections:
+    for section, title in info_section_titles:
         if section not in validation.sections:
             continue
-        items = grouped.get(section, [])
+        items = grouped_info.get(section, [])
         if not items:
             continue
         if section == "wal":
@@ -446,20 +562,47 @@ def print_nt_prod_report(
         _print_metric_table(items, run_nt, run_prod, show_per_hour=show_per_hour, out=stream)
         print(file=stream)
 
-    if "queries" in validation.sections:
+    if "queries" in validation.sections and validation.query_groups_info:
         _print_query_groups(
-            validation.query_groups,
+            validation.query_groups_info,
             run_nt,
             run_prod,
             show_per_hour=show_per_hour,
             out=stream,
+            heading=f"== Справочно: SQL — объём и calls ({len(validation.query_groups_info)} запросов) ==",
+        )
+
+    warn_section_titles = [
+        ("wal", "WAL — предупреждения"),
+        ("cluster", "Checkpoints / cluster — предупреждения"),
+        ("sessions", "Sessions — предупреждения"),
+        ("cache", "Cache — предупреждения"),
+    ]
+    for section, title in warn_section_titles:
+        if section not in validation.sections:
+            continue
+        items = grouped_warn.get(section, [])
+        if not items:
+            continue
+        print(f"== {title} ({len(items)} rows) ==", file=stream)
+        _print_metric_table(items, run_nt, run_prod, show_per_hour=show_per_hour, out=stream)
+        print(file=stream)
+
+    if "queries" in validation.sections and validation.query_groups_warning:
+        _print_query_groups(
+            validation.query_groups_warning,
+            run_nt,
+            run_prod,
+            show_per_hour=show_per_hour,
+            out=stream,
+            heading=f"== SQL — производительность (mean/max time) ({len(validation.query_groups_warning)} запросов) ==",
         )
 
     print(
-        f"Summary: settings {'OK' if validation.settings.valid else 'INVALID'}, "
-        f"{validation.total_compared} metrics compared, "
-        f"{validation.significant_count} significant differences "
-        f"(>= {validation.min_change_pct:g}%)",
+        f"Summary: settings GUC {'OK' if validation.settings.valid else 'INVALID'}, "
+        f"{validation.info_count} informational (volume/ops), "
+        f"{validation.warning_count} warnings, "
+        f"threshold >= {validation.min_change_pct:g}%",
         file=stream,
     )
 
@@ -472,9 +615,11 @@ def build_nt_prod_brief(validation: NtProdValidation, *, max_settings: int = 15,
     lines: list[str] = [
         "# NT vs PROD Validation Brief",
         "",
-        f"settings_valid: {str(s.valid).lower()}",
-        f"settings_issues: {s.differ} differ, {s.only_nt} only NT, {s.only_prod} only PROD",
-        f"significant_metric_diffs: {validation.significant_count} (threshold >= {validation.min_change_pct:g}%)",
+        f"settings_guc_valid: {str(s.valid).lower()}",
+        f"settings_critical_count: {s.critical_count}",
+        f"settings_informational_count: {s.informational_count}",
+        f"volume_ops_diffs: {validation.info_count} (informational — WAL/DML volume, expected with different load)",
+        f"performance_warnings: {validation.warning_count} (threshold >= {validation.min_change_pct:g}%)",
         "",
     ]
 
@@ -492,55 +637,52 @@ def build_nt_prod_brief(validation: NtProdValidation, *, max_settings: int = 15,
         lines.append(f"- interval_mismatch: {diff_h:.1f} h — compare per-hour values")
     lines.append("")
 
-    if not s.valid:
-        lines.append("## Settings issues (Defined settings)")
-        issues = [r for r in s.rows if r.status is not DiffStatus.SAME]
-        for row in issues[:max_settings]:
+    critical, informational = split_settings_rows(s.rows)
+    if critical:
+        lines.append("## Critical GUC differences")
+        for row in critical[:max_settings]:
             if row.status is DiffStatus.DIFFER:
                 lines.append(f"- DIFFER `{row.name}`: NT={row.nt_value!r} PROD={row.prod_value!r}")
             elif row.status is DiffStatus.ONLY_NT:
                 lines.append(f"- ONLY_NT `{row.name}`: {row.nt_value!r}")
             else:
                 lines.append(f"- ONLY_PROD `{row.name}`: {row.prod_value!r}")
-        if len(issues) > max_settings:
-            lines.append(f"- ... and {len(issues) - max_settings} more")
+        if len(critical) > max_settings:
+            lines.append(f"- ... and {len(critical) - max_settings} more critical")
         lines.append("")
 
-    grouped: dict[str, list[MetricDiff]] = {}
-    for diff in validation.metric_diffs:
-        grouped.setdefault(diff.section, []).append(diff)
+    if informational:
+        lines.append("## Informational settings (runtime metadata — not blocking)")
+        for row in informational[:max_settings]:
+            if row.status is DiffStatus.DIFFER:
+                lines.append(f"- DIFFER `{row.name}`: NT={row.nt_value!r} PROD={row.prod_value!r}")
+            elif row.status is DiffStatus.ONLY_NT:
+                lines.append(f"- ONLY_NT `{row.name}`: {row.nt_value!r}")
+            else:
+                lines.append(f"- ONLY_PROD `{row.name}`: {row.prod_value!r}")
+        lines.append("")
 
-    section_titles = {
-        "wal": "WAL metrics",
-        "dml": "DML operations",
-        "cluster": "Cluster / checkpoints",
-        "tables": "Tables",
-        "sessions": "Sessions",
-        "cache": "Cache / I/O",
-    }
     show_ph = True
-    for section, title in section_titles.items():
-        items = grouped.get(section, [])
-        if not items:
-            continue
-        lines.append(f"## {title}")
-        for diff in items[:20]:
+    if validation.metric_diffs_info:
+        lines.append("## Volume / operations (informational)")
+        for diff in validation.metric_diffs_info[:30]:
             nt_v = format_value_cell(diff, "a", show_per_hour=show_ph)
             prod_v = format_value_cell(diff, "b", show_per_hour=show_ph)
             lines.append(f"- `{diff.key}`: NT={nt_v} PROD={prod_v} delta={format_delta(diff)}")
-            if diff.key == "wal_bytes":
-                ph_a = diff.per_hour_a
-                ph_b = diff.per_hour_b
-                if ph_a is not None or ph_b is not None:
-                    nt_mb = f"{ph_a / 1_048_576:.2f} MB/h" if ph_a else "-"
-                    prod_mb = f"{ph_b / 1_048_576:.2f} MB/h" if ph_b else "-"
-                    lines.append(f"  wal_throughput: NT={nt_mb} PROD={prod_mb}")
         lines.append("")
 
-    if validation.query_groups:
-        lines.append("## SQL by parameter")
-        for group in validation.query_groups[:max_queries]:
-            lines.append(f"### {group.label} (id={group.query_key[:20]}...)")
+    if validation.metric_diffs_warning:
+        lines.append("## Performance warnings")
+        for diff in validation.metric_diffs_warning[:20]:
+            nt_v = format_value_cell(diff, "a", show_per_hour=show_ph)
+            prod_v = format_value_cell(diff, "b", show_per_hour=show_ph)
+            lines.append(f"- `{diff.key}`: NT={nt_v} PROD={prod_v} delta={format_delta(diff)}")
+        lines.append("")
+
+    if validation.query_groups_info:
+        lines.append("## SQL volume (informational)")
+        for group in validation.query_groups_info[:max_queries]:
+            lines.append(f"### {group.label}")
             if group.preview:
                 lines.append(f"SQL: {group.preview}")
             for diff in group.fields:
@@ -549,15 +691,25 @@ def build_nt_prod_brief(validation: NtProdValidation, *, max_settings: int = 15,
                 lines.append(f"- {diff.key}: NT={nt_v} PROD={prod_v} delta={format_delta(diff)}")
             lines.append("")
 
-    if s.valid and validation.significant_count == 0:
+    if validation.query_groups_warning:
+        lines.append("## SQL performance warnings")
+        for group in validation.query_groups_warning[:max_queries]:
+            lines.append(f"### {group.label}")
+            for diff in group.fields:
+                nt_v = format_value_cell(diff, "a", show_per_hour=show_ph)
+                prod_v = format_value_cell(diff, "b", show_per_hour=show_ph)
+                lines.append(f"- {diff.key}: NT={nt_v} PROD={prod_v} delta={format_delta(diff)}")
+            lines.append("")
+
+    if s.valid and validation.warning_count == 0:
         lines.append("## Verdict")
-        lines.append("NT reflects PROD — safe to experiment on NT stand.")
+        lines.append("GUC configuration matches — safe to compare and experiment on NT stand.")
     elif s.valid:
         lines.append("## Verdict")
-        lines.append("Settings match but metrics differ — review workload and intervals.")
+        lines.append("GUC matches; review performance warnings. Volume/WAL differences are informational.")
     else:
         lines.append("## Verdict")
-        lines.append("INVALID — align Defined settings before trusting metrics.")
+        lines.append("INVALID — align GUC Defined settings before trusting metrics.")
 
     return "\n".join(lines).rstrip() + "\n"
 
@@ -565,16 +717,7 @@ def build_nt_prod_brief(validation: NtProdValidation, *, max_settings: int = 15,
 def nt_prod_validation_to_dict(validation: NtProdValidation) -> dict[str, Any]:
     from pgprofile_findings import _json_safe
 
-    settings_issues = [
-        {
-            "name": r.name,
-            "status": r.status.value,
-            "nt_value": r.nt_value,
-            "prod_value": r.prod_value,
-        }
-        for r in validation.settings.rows
-        if r.status is not DiffStatus.SAME
-    ]
+    critical, informational = split_settings_rows(validation.settings.rows)
 
     return {
         "type": "nt_prod_validation",
@@ -584,8 +727,27 @@ def nt_prod_validation_to_dict(validation: NtProdValidation) -> dict[str, Any]:
             "only_nt": validation.settings.only_nt,
             "only_prod": validation.settings.only_prod,
             "same": validation.settings.same,
+            "critical_count": validation.settings.critical_count,
+            "informational_count": validation.settings.informational_count,
         },
-        "settings_issues": settings_issues,
+        "settings_issues_critical": [
+            {
+                "name": r.name,
+                "status": r.status.value,
+                "nt_value": r.nt_value,
+                "prod_value": r.prod_value,
+            }
+            for r in critical
+        ],
+        "settings_issues_informational": [
+            {
+                "name": r.name,
+                "status": r.status.value,
+                "nt_value": r.nt_value,
+                "prod_value": r.prod_value,
+            }
+            for r in informational
+        ],
         "run_nt": {
             "run_id": validation.run_nt.run_id,
             "path": str(validation.run_nt.path),
@@ -603,18 +765,30 @@ def nt_prod_validation_to_dict(validation: NtProdValidation) -> dict[str, Any]:
         "interval_diff_hours": round(
             interval_diff_hours(validation.run_nt, validation.run_prod), 2
         ),
-        "metric_diffs": [_json_safe(d) for d in validation.metric_diffs],
-        "query_comparisons": [
+        "metric_diffs_info": [_json_safe(d) for d in validation.metric_diffs_info],
+        "metric_diffs_warning": [_json_safe(d) for d in validation.metric_diffs_warning],
+        "query_comparisons_info": [
             {
                 "query_key": g.query_key,
                 "label": g.label,
                 "preview": g.preview,
                 "fields": [_json_safe(f) for f in g.fields],
             }
-            for g in validation.query_groups
+            for g in validation.query_groups_info
+        ],
+        "query_comparisons_warning": [
+            {
+                "query_key": g.query_key,
+                "label": g.label,
+                "preview": g.preview,
+                "fields": [_json_safe(f) for f in g.fields],
+            }
+            for g in validation.query_groups_warning
         ],
         "summary": {
             "significant_count": validation.significant_count,
+            "info_count": validation.info_count,
+            "warning_count": validation.warning_count,
             "total_compared": validation.total_compared,
             "min_change_pct": validation.min_change_pct,
             "can_trust_metrics": validation.settings.valid,

@@ -62,6 +62,8 @@ class ReportContext:
     top_io_tables: list[dict[str, Any]]
     top_io_indexes: list[dict[str, Any]]
     top_indexes: list[dict[str, Any]]
+    top_rusage_statements: list[dict[str, Any]]
+    statements_dbstats: list[dict[str, Any]]
     interval_hours: float
     report_end: datetime | None = None
 
@@ -152,6 +154,8 @@ def load_report_data(html_path: Path) -> ReportContext:
         top_io_tables=list(datasets.get("top_io_tables", [])),
         top_io_indexes=list(datasets.get("top_io_indexes", [])),
         top_indexes=list(datasets.get("top_indexes", [])),
+        top_rusage_statements=list(datasets.get("top_rusage_statements", [])),
+        statements_dbstats=list(datasets.get("statements_dbstats", [])),
         interval_hours=interval_hours,
         report_end=parse_report_datetime(properties.get("report_end1")),
     )

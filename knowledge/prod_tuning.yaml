@@ -1,0 +1,320 @@
+# Stable PROD findings → GUC tuning recommendations (PostgreSQL / Postgres Pro).
+# change_safety: safe | cautious | risky | restart_required
+# change_impact: low | medium | high — potential effect on workload if misapplied
+
+tuning_rules:
+  - id: tune_checkpoints_wal
+    finding_ids:
+      - checkpoints.high_requested_ratio
+      - checkpoints.high_requested_count
+      - checkpoints.high_requested_per_hour
+      - wal.low_max_wal_size
+      - wal.high_generation_rate
+    problem_severity: high
+    title: Частые requested checkpoints / давление WAL
+    guc_recommendations:
+      - guc: max_wal_size
+        direction: increase
+        change_safety: cautious
+        change_impact: medium
+        reload: false
+        postgres_pro: |
+          Postgres Pro / PostgreSQL: увеличение max_wal_size снижает частоту requested checkpoints.
+          Согласуйте с политикой диска и replication. Типично 1–4 GB+ для OLTP под нагрузкой.
+        rationale: Малый max_wal_size — частая причина requested checkpoints при стабильной write-нагрузке.
+      - guc: checkpoint_completion_target
+        direction: review_increase
+        change_safety: safe
+        change_impact: low
+        reload: false
+        postgres_pro: |
+          Значение 0.7–0.9 растягивает checkpoint во времени (PostgreSQL docs).
+        rationale: Сглаживает IO-пики при длинных checkpoint write.
+    operational:
+      - Сравнить WAL MB/h между периодами (compare_nt_prod / compare_runs)
+      - Проверить wal-heavy SQL в pg_profile
+
+  - id: tune_wal_buffers
+    finding_ids:
+      - wal.buffers_full
+    problem_severity: high
+    title: Переполнение wal_buffers
+    guc_recommendations:
+      - guc: wal_buffers
+        direction: increase
+        change_safety: cautious
+        change_impact: medium
+        reload: false
+        postgres_pro: |
+          Postgres Pro: при высоком wal_buffers_full увеличьте wal_buffers (единицы 8kB).
+          На busy OLTP часто 16MB+; учитывайте autotune min.
+        rationale: Процессы ждут освобождения WAL buffer — стабильный симптом нехватки.
+    operational:
+      - Проверить пики WAL generation и batch DML
+
+  - id: tune_autovacuum_off
+    finding_ids:
+      - autovacuum.disabled
+    problem_severity: critical
+    title: Autovacuum отключён
+    guc_recommendations:
+      - guc: autovacuum
+        direction: enable
+        change_safety: safe
+        change_impact: high
+        reload: false
+        postgres_pro: |
+          Postgres Pro: autovacuum=on обязателен для production OLTP (официальная документация).
+        rationale: Критическая misconfiguration — bloat и wraparound risk.
+    operational:
+      - После включения мониторить dead tuples и vacuum lag
+
+  - id: tune_autovacuum_bloat
+    finding_ids:
+      - autovacuum.table_high_dead_pct
+      - autovacuum.table_high_mods_pct
+      - autovacuum.table_many_dead_tuples
+      - autovacuum.stale_vacuum
+      - autovacuum.naptime_high
+      - autovacuum.cost_delay_high
+      - autovacuum.cost_limit_low
+    problem_severity: high
+    title: Autovacuum не успевает / bloat
+    guc_recommendations:
+      - guc: autovacuum_naptime
+        direction: decrease
+        change_safety: cautious
+        change_impact: medium
+        reload: false
+        postgres_pro: |
+          Для OLTP часто 15–60 с. Уменьшение ускоряет реакцию на bloat, но повышает фоновый IO.
+        rationale: Высокий naptime замедляет запуск vacuum на «горячих» таблицах.
+      - guc: autovacuum_vacuum_cost_delay
+        direction: decrease
+        change_safety: cautious
+        change_impact: medium
+        reload: false
+        postgres_pro: |
+          Снижение cost_delay ускоряет vacuum ценой IO (PostgreSQL cost-based vacuum delay).
+        rationale: Autovacuum «ползёт» при высоком cost_delay.
+      - guc: autovacuum_vacuum_cost_limit
+        direction: increase
+        change_safety: cautious
+        change_impact: medium
+        reload: false
+        postgres_pro: |
+          Увеличение cost_limit даёт vacuum больший IO-бюджет за цикл.
+        rationale: Низкий limit — типичная причина медленного autovacuum.
+      - guc: maintenance_work_mem
+        direction: increase
+        change_safety: cautious
+        change_impact: medium
+        reload: false
+        postgres_pro: |
+          Больше maintenance_work_mem ускоряет VACUUM и CREATE INDEX (PostgreSQL docs).
+        rationale: Ускоряет очистку при стабильном bloat.
+    operational:
+      - Проверить idle in transaction (блокирует vacuum)
+      - Per-table autovacuum для hot tables
+
+  - id: tune_idle_in_transaction
+    finding_ids:
+      - sessions.high_idle_in_transaction
+      - sessions.idle_timeout_disabled
+    problem_severity: critical
+    title: Idle in transaction / нет таймаута
+    guc_recommendations:
+      - guc: idle_in_transaction_session_timeout
+        direction: set_nonzero
+        change_safety: cautious
+        change_impact: medium
+        reload: false
+        postgres_pro: |
+          Postgres Pro / PostgreSQL: 60s–300s типично для OLTP. Защита от утечки snapshots и bloat.
+          Согласовать с приложением (длинные batch-транзакции).
+        rationale: Стабильный idle in transaction без таймаута — классический production risk.
+    operational:
+      - "Исправить application: COMMIT/ROLLBACK, pool settings"
+      - Найти источник в pg_stat_activity
+
+  - id: tune_timeouts
+    finding_ids:
+      - memory.statement_timeout_zero
+      - memory.lock_timeout_zero
+    problem_severity: medium
+    title: Отключены statement/lock timeout
+    guc_recommendations:
+      - guc: statement_timeout
+        direction: set_nonzero
+        change_safety: safe
+        change_impact: low
+        reload: false
+        postgres_pro: |
+          Рекомендуется role-level timeout (30s–300s OLTP). Postgres Pro Enterprise — через ALTER ROLE.
+        rationale: Защита от runaway queries без restart.
+      - guc: lock_timeout
+        direction: set_nonzero
+        change_safety: safe
+        change_impact: low
+        reload: false
+        postgres_pro: |
+          lock_timeout 5–30s для OLTP предотвращает каскадные ожидания.
+        rationale: Без lock_timeout приложение может ждать блокировку бесконечно.
+
+  - id: tune_memory
+    finding_ids:
+      - memory.work_mem_connections_risk
+      - memory.work_mem_high
+      - memory.shared_buffers_low
+      - cache.low_hit_ratio
+      - cache.low_table_hit_ratio
+    problem_severity: high
+    title: Память / cache hit
+    guc_recommendations:
+      - guc: shared_buffers
+        direction: increase
+        change_safety: restart_required
+        change_impact: high
+        reload: false
+        postgres_pro: |
+          Postgres Pro: shared_buffers ~25% RAM (политика банка). Требует restart.
+          Перед изменением — baseline cache hit и working set.
+        rationale: Низкий cache hit при стабильном паттерне — кандидат на увеличение буферов.
+      - guc: effective_cache_size
+        direction: review_increase
+        change_safety: safe
+        change_impact: low
+        reload: false
+        postgres_pro: |
+          Подсказка планировщику (~50–75% RAM). Не выделяет память — безопасно для reload.
+        rationale: Помогает планировщику при низком blks_hit_pct.
+      - guc: work_mem
+        direction: review_decrease_or_role_level
+        change_safety: risky
+        change_impact: high
+        reload: false
+        postgres_pro: |
+          work_mem × параллельные sorts = риск OOM. Postgres Pro: задавать на уровне роли для тяжёлых запросов.
+        rationale: Стабильный риск OOM при высоком work_mem и connections.
+    operational:
+      - Connection pooler (PgBouncer)
+      - Таблицы с высоким physical read
+
+  - id: tune_checkpoints_write
+    finding_ids:
+      - checkpoints.high_write_time
+      - checkpoints.high_write_time_per_hour
+      - checkpoints.maxwritten_clean
+    problem_severity: high
+    title: Длительная запись checkpoint / bgwriter
+    guc_recommendations:
+      - guc: checkpoint_completion_target
+        direction: review_increase
+        change_safety: safe
+        change_impact: low
+        reload: false
+        postgres_pro: |
+          Растягивание checkpoint (0.7–0.9) снижает latency spikes.
+        rationale: Длинный checkpoint write time стабильно на PROD.
+      - guc: shared_buffers
+        direction: review_increase
+        change_safety: restart_required
+        change_impact: high
+        reload: false
+        postgres_pro: |
+          maxwritten_clean часто связан с давлением на buffer pool.
+        rationale: Bgwriter не успевает при maxwritten_clean.
+    operational:
+      - Проверить IO latency диска, iostat
+      - Согласовать max_wal_size / checkpoint_timeout
+
+  - id: tune_queries
+    finding_ids:
+      - queries.slow_execution
+      - io.high_io_wait_query
+      - io.temp_spill_query
+    problem_severity: high
+    title: Медленные / spill SQL (не GUC-only)
+    guc_recommendations:
+      - guc: work_mem
+        direction: review_increase_role_level
+        change_safety: risky
+        change_impact: high
+        reload: false
+        postgres_pro: |
+          temp_blks_written — кандидат на role-level work_mem, не глобальное увеличение.
+        rationale: Temp spill стабильно на PROD — точечная настройка безопаснее глобальной.
+    operational:
+      - EXPLAIN (ANALYZE, BUFFERS) топ SQL
+      - Индексы, статистика ANALYZE
+      - Не менять GUC без анализа планов
+
+  - id: tune_io_planner
+    finding_ids:
+      - io.high_seq_scan
+    problem_severity: medium
+    title: Высокий seq scan
+    guc_recommendations:
+      - guc: random_page_cost
+        direction: review_decrease_ssd
+        change_safety: cautious
+        change_impact: medium
+        reload: false
+        postgres_pro: |
+          На SSD random_page_cost 1.1–2 (PostgreSQL docs). Влияет на выбор index vs seq scan.
+        rationale: Стабильный seq scan может быть из-за planner costs.
+      - guc: effective_io_concurrency
+        direction: increase
+        change_safety: cautious
+        change_impact: low
+        reload: false
+        postgres_pro: |
+          SSD: 200+ (PostgreSQL 15+). Улучшает prefetch.
+        rationale: Низкий effective_io_concurrency на быстром storage.
+    operational:
+      - EXPLAIN, индексы, ANALYZE
+
+  - id: tune_deadlocks
+    finding_ids:
+      - locks.deadlocks
+    problem_severity: critical
+    title: Deadlocks
+    guc_recommendations: []
+    operational:
+      - Анализ deadlock graph в логах
+      - Унифицировать порядок UPDATE в транзакциях
+      - Настройки GUC не заменяют исправление приложения
+
+  - id: tune_generic_wal
+    finding_ids:
+      - wal.generic
+      - checkpoints.generic
+    problem_severity: medium
+    title: WAL/checkpoint (общее)
+    guc_recommendations:
+      - guc: max_wal_size
+        direction: review
+        change_safety: cautious
+        change_impact: medium
+        reload: false
+        postgres_pro: Review WAL metrics against Postgres Pro tuning guide.
+        rationale: Стабильная WAL-аномалия без точного sub-rule.
+
+severity_order:
+  critical: 4
+  high: 3
+  medium: 2
+  low: 1
+  warning: 2
+  info: 0
+
+safety_order:
+  safe: 1
+  cautious: 2
+  risky: 3
+  restart_required: 4
+
+impact_order:
+  low: 1
+  medium: 2
+  high: 3

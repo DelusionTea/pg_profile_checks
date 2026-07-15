@@ -19,6 +19,8 @@ from pgprofile_confluence import (
     build_confluence_llm_prompt,
     build_confluence_stub,
     write_nt_prod_confluence_outputs,
+    write_stable_prod_confluence_outputs,
+    write_symptom_confluence_outputs,
 )
 from pgprofile_compare import compare_runs, load_run
 from pgprofile_findings import (
@@ -29,10 +31,14 @@ from pgprofile_findings import (
 from pgprofile_health import load_report_data, load_thresholds, run_checks
 from pgprofile_parser import PgProfileParseError, load_settings, parse_report_meta
 from pgprofile_nt_prod import nt_prod_validation_to_dict, validate_nt_prod
+from pgprofile_stable_prod import analyze_stable_prod, stable_prod_to_dict
+from pgprofile_symptoms import QueryTarget, investigate_symptom, symptom_investigation_to_dict
 
 from compare_settings import diff_settings
 
 DEFAULT_CONFIG = Path(__file__).resolve().parent / "thresholds.yaml"
+DEFAULT_TUNING = Path(__file__).resolve().parent / "knowledge" / "prod_tuning.yaml"
+DEFAULT_PLAYBOOK = Path(__file__).resolve().parent / "knowledge" / "symptom_playbook.yaml"
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -53,6 +59,72 @@ def build_parser() -> argparse.ArgumentParser:
         "--compare-prod",
         type=Path,
         help="PROD report for NT vs PROD validation (--report = NT); writes nt_prod_confluence_*",
+    )
+    parser.add_argument(
+        "--stable-prod-reports",
+        nargs="+",
+        type=Path,
+        metavar="HTML",
+        help="Two or more PROD reports for stable-problem analysis; writes stable_prod_*",
+    )
+    parser.add_argument(
+        "--stable-prod-label",
+        action="append",
+        default=[],
+        metavar="NAME",
+        help="Label for --stable-prod-reports (repeat per file, same order)",
+    )
+    parser.add_argument(
+        "--min-stability",
+        type=float,
+        default=1.0,
+        help="Min fraction of PROD reports for stable finding (default: 1.0 = all)",
+    )
+    parser.add_argument(
+        "--tuning",
+        type=Path,
+        default=DEFAULT_TUNING,
+        help=f"PROD tuning rules YAML (default: {DEFAULT_TUNING.name})",
+    )
+    parser.add_argument(
+        "--symptom",
+        type=str,
+        help="Symptom to investigate: high_cpu | high_memory | high_wal | slow_query",
+    )
+    parser.add_argument(
+        "--symptom-reports",
+        nargs="+",
+        type=Path,
+        metavar="HTML",
+        help="pg_profile HTML for symptom investigation (1+ files); writes symptom_*",
+    )
+    parser.add_argument(
+        "--symptom-label",
+        action="append",
+        default=[],
+        metavar="NAME",
+        help="Label for --symptom-reports (repeat per file, same order)",
+    )
+    parser.add_argument(
+        "--query-hex",
+        type=str,
+        help="Target query hexqueryid (required for --symptom slow_query)",
+    )
+    parser.add_argument(
+        "--query-id",
+        type=str,
+        help="Target query queryid (for --symptom slow_query)",
+    )
+    parser.add_argument(
+        "--query-text",
+        type=str,
+        help="SQL text substring (for --symptom slow_query)",
+    )
+    parser.add_argument(
+        "--playbook",
+        type=Path,
+        default=DEFAULT_PLAYBOOK,
+        help=f"Symptom playbook YAML (default: {DEFAULT_PLAYBOOK.name})",
     )
     parser.add_argument("--settings-a-id", type=str, default="NT")
     parser.add_argument("--settings-b-id", type=str, default="PROD")
@@ -86,12 +158,46 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
-    if not args.report and not args.compare_settings:
-        print("error: provide --report and/or --compare-settings", file=sys.stderr)
+    if (
+        not args.report
+        and not args.compare_settings
+        and not args.stable_prod_reports
+        and not (args.symptom and args.symptom_reports)
+    ):
+        print(
+            "error: provide --report, --compare-settings, --stable-prod-reports, "
+            "and/or --symptom with --symptom-reports",
+            file=sys.stderr,
+        )
+        return 2
+
+    if args.symptom and not args.symptom_reports:
+        print("error: --symptom requires --symptom-reports", file=sys.stderr)
+        return 2
+    if args.symptom_reports and not args.symptom:
+        print("error: --symptom-reports requires --symptom", file=sys.stderr)
+        return 2
+    if args.symptom_label and len(args.symptom_label) != len(args.symptom_reports or []):
+        print("error: --symptom-label count must match --symptom-reports", file=sys.stderr)
+        return 2
+
+    if args.stable_prod_reports and len(args.stable_prod_reports) < 2:
+        print("error: --stable-prod-reports requires at least two HTML files", file=sys.stderr)
+        return 2
+    if args.min_stability <= 0 or args.min_stability > 1:
+        print("error: --min-stability must be in (0, 1]", file=sys.stderr)
+        return 2
+    if args.stable_prod_label and len(args.stable_prod_label) != len(args.stable_prod_reports or []):
+        print(
+            "error: --stable-prod-label count must match --stable-prod-reports",
+            file=sys.stderr,
+        )
         return 2
 
     analyses: list[dict[str, Any]] = []
     has_issues = False
+    stable_prod_analysis = None
+    symptom_investigation = None
 
     try:
         if args.report:
@@ -139,7 +245,11 @@ def main(argv: list[str] | None = None) -> int:
             analyses.append(settings)
             _save_json(args.output_dir / "settings_diff.json", settings)
             if settings.get("findings"):
-                has_issues = True
+                critical = settings.get("summary", {}).get("critical_count")
+                if critical is None:
+                    has_issues = True
+                elif critical > 0:
+                    has_issues = True
 
         if args.report and args.compare_prod:
             nt_prod = validate_nt_prod(
@@ -159,7 +269,63 @@ def main(argv: list[str] | None = None) -> int:
                 args.output_dir,
                 page_title=args.confluence_title,
             )
-            if not nt_prod.settings.valid or nt_prod.significant_count > 0:
+            if not nt_prod.settings.valid or nt_prod.warning_count > 0:
+                has_issues = True
+
+        if args.stable_prod_reports:
+            labels = args.stable_prod_label if args.stable_prod_label else None
+            for path in args.stable_prod_reports:
+                if not path.exists():
+                    raise FileNotFoundError(f"stable PROD report not found: {path}")
+            stable_prod_analysis = analyze_stable_prod(
+                args.stable_prod_reports,
+                labels=labels,
+                thresholds_path=args.config,
+                min_stability_ratio=args.min_stability,
+                tuning_path=args.tuning,
+            )
+            stable_dict = stable_prod_to_dict(stable_prod_analysis)
+            analyses.append(stable_dict)
+            _save_json(args.output_dir / "stable_prod.json", stable_dict)
+            write_stable_prod_confluence_outputs(
+                stable_prod_analysis,
+                args.output_dir,
+                page_title=args.confluence_title,
+            )
+            critical_severities = {"critical", "high"}
+            if any(
+                r.problem_severity in critical_severities
+                for r in stable_prod_analysis.recommendations
+            ):
+                has_issues = True
+
+        if args.symptom and args.symptom_reports:
+            for path in args.symptom_reports:
+                if not path.exists():
+                    raise FileNotFoundError(f"symptom report not found: {path}")
+            query_target = QueryTarget(
+                hexqueryid=args.query_hex,
+                queryid=args.query_id,
+                query_text=args.query_text,
+            )
+            labels = args.symptom_label if args.symptom_label else None
+            symptom_investigation = investigate_symptom(
+                args.symptom,
+                args.symptom_reports,
+                labels=labels,
+                query_target=query_target,
+                playbook_path=args.playbook,
+                health_thresholds_path=args.config,
+            )
+            symptom_dict = symptom_investigation_to_dict(symptom_investigation)
+            analyses.append(symptom_dict)
+            _save_json(args.output_dir / "symptom_investigation.json", symptom_dict)
+            write_symptom_confluence_outputs(
+                symptom_investigation,
+                args.output_dir,
+                page_title=args.confluence_title,
+            )
+            if symptom_dict.get("summary", {}).get("confirmed_count", 0) > 0:
                 has_issues = True
 
     except (PgProfileParseError, FileNotFoundError, ValueError) as exc:
@@ -181,7 +347,12 @@ def main(argv: list[str] | None = None) -> int:
     }
     _save_json(args.output_dir / "findings.json", combined)
 
-    advisor_reports = [advise_findings(a) for a in analyses]
+    advisor_analyses = [
+        a
+        for a in analyses
+        if a.get("type") not in ("stable_prod_analysis", "symptom_investigation")
+    ]
+    advisor_reports = [advise_findings(a) for a in advisor_analyses]
     combined_advisor = {
         "type": "combined_advisor",
         "reports": [advisor_report_to_dict(r) for r in advisor_reports],
@@ -190,30 +361,74 @@ def main(argv: list[str] | None = None) -> int:
             "reports": len(advisor_reports),
         },
     }
+    if stable_prod_analysis is not None:
+        combined_advisor["stable_prod"] = stable_prod_to_dict(stable_prod_analysis)
+    if symptom_investigation is not None:
+        combined_advisor["symptom_investigation"] = symptom_investigation_to_dict(
+            symptom_investigation
+        )
     _save_json(args.output_dir / "advisor.json", combined_advisor)
 
-    brief_parts = [build_brief(r) for r in advisor_reports]
-    brief = "\n\n---\n\n".join(brief_parts)
-    (args.output_dir / "brief.md").write_text(brief, encoding="utf-8")
+    brief_parts = [build_brief(r) for r in advisor_reports if r.advised_findings]
+    if stable_prod_analysis is not None:
+        from pgprofile_stable_prod import build_stable_prod_brief
 
-    prompt = build_llm_prompt(brief)
-    (args.output_dir / "summary_prompt.txt").write_text(prompt, encoding="utf-8")
+        brief_parts.append(build_stable_prod_brief(stable_prod_analysis))
+    if symptom_investigation is not None:
+        from pgprofile_symptoms import build_symptom_brief
 
-    confluence_stub = build_confluence_stub(
-        advisor_reports, page_title=args.confluence_title
-    )
-    (args.output_dir / "confluence_stub.wiki").write_text(confluence_stub, encoding="utf-8")
+        brief_parts.append(build_symptom_brief(symptom_investigation))
+    brief = "\n\n---\n\n".join(brief_parts) if brief_parts else ""
+    if brief:
+        (args.output_dir / "brief.md").write_text(brief, encoding="utf-8")
 
-    confluence_prompt = build_confluence_llm_prompt(brief)
-    (args.output_dir / "confluence_prompt.txt").write_text(confluence_prompt, encoding="utf-8")
+        prompt = build_llm_prompt(brief)
+        (args.output_dir / "summary_prompt.txt").write_text(prompt, encoding="utf-8")
+
+    if advisor_reports:
+        confluence_stub = build_confluence_stub(
+            advisor_reports, page_title=args.confluence_title
+        )
+        (args.output_dir / "confluence_stub.wiki").write_text(
+            confluence_stub, encoding="utf-8"
+        )
+
+        confluence_prompt = build_confluence_llm_prompt(brief)
+        (args.output_dir / "confluence_prompt.txt").write_text(
+            confluence_prompt, encoding="utf-8"
+        )
 
     print(f"Analysis written to {args.output_dir}/")
+    if args.report:
+        print(f"  health_check.json")
+    if args.compare_run:
+        print(f"  run_comparison.json")
+    if args.compare_settings:
+        print(f"  settings_diff.json")
+    if stable_prod_analysis is not None:
+        print(
+            f"  stable_prod.json  ({len(stable_prod_analysis.recommendations)} recommendations)"
+        )
+        print(f"  stable_prod_confluence_stub.wiki  (стабильные PROD → Confluence)")
+        print(f"  stable_prod_confluence_prompt.txt  (gigacli → план GUC)")
+        print(f"  stable_prod_brief.md")
+    if symptom_investigation is not None:
+        summary = symptom_investigation_to_dict(symptom_investigation)["summary"]
+        print(
+            f"  symptom_investigation.json  "
+            f"({summary['confirmed_count']} confirmed, {summary['suspected_count']} suspected)"
+        )
+        print(f"  symptom_confluence_stub.wiki  (расследование симптома → Confluence)")
+        print(f"  symptom_confluence_prompt.txt  (gigacli → диагностика)")
+        print(f"  symptom_brief.md")
     print(f"  findings.json  ({len(combined_findings)} findings)")
     print(f"  advisor.json")
-    print(f"  brief.md")
-    print(f"  summary_prompt.txt  (ready for DeepSeek)")
-    print(f"  confluence_stub.wiki  (metadata + findings table → Confluence)")
-    print(f"  confluence_prompt.txt  (gigacli → Wiki Markup for Confluence)")
+    if brief:
+        print(f"  brief.md")
+        print(f"  summary_prompt.txt  (ready for DeepSeek)")
+    if advisor_reports:
+        print(f"  confluence_stub.wiki  (metadata + findings table → Confluence)")
+        print(f"  confluence_prompt.txt  (gigacli → Wiki Markup for Confluence)")
     if args.compare_prod:
         print(f"  nt_prod_validation.json")
         print(f"  nt_prod_confluence_stub.wiki  (НТ vs ПРОМ → Confluence)")

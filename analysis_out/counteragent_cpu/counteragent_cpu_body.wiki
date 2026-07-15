@@ -1,0 +1,106 @@
+h2. Краткое резюме
+
+{warning:title=Высокий CPU на PROD counteragent — критический паттерн, стабилен prom1/prom2}
+* Два отчёта pg_profile (01.07 16 ч и 04.07 13 ч): *подтверждён* доминирующий SQL по CPU и *подтверждён* высокий объём вызовов.
+* Главный потребитель CPU: {{UPDATE counteragent.t_transaction ...}} (hex {{11a74fb9c1776a85}}) — *6050–6905 s CPU* за интервал, *28–35 млн calls*, *522–563 GB WAL* за период.
+* Сопутствующая нагрузка: массовые SELECT/UPDATE replication и {{t_feedbackwaitinglist}} (~25–46 млн calls каждый).
+* Фон усиливает CPU/IO: *requested checkpoints 97%*, {{checkpoint_write_time}} ~21–23 тыс. s, {{wal_buffers_full}} 17–23 млн, {{WAL ≈ 123 GB/h}}, {{blks_hit_pct ≈ 85%}}, idle in transaction *CRITICAL*.
+* Корневая причина OS CPU *не подтверждена* — приоритетные *кандидаты*: оптимизация write-нагрузки {{t_transaction}} + WAL/checkpoint tuning + idle in transaction.
+{warning}
+
+h2. Интерпретация гипотез
+
+h3. Доминирующие SQL (confirmed — стабильно #1 в обоих периодах)
+
+||#||hex||sum_cpu_time||user_time_pct*||calls||total_exec||WAL||SQL||
+|1|11a74fb9c1776a85|6050–6905 s|9.7–13.3%|28.4–34.7M|77 555–98 330 s|522–563 GB|{{UPDATE counteragent.t_transaction SET ... WHERE object_id=$4}}|
+|2|a1fcd5d63d26f0a7|5433–5894 s|9.1–11.8%|34.4–40.7M|11 478–13 609 s|714–315 MB|{{SELECT ... FROM counteragent.t_transaction t1_0 ...}}|
+|3|541f3e835c8bf2f3|5214–5226 s|8.4–10.1%|39.7–45.6M|44 526–38 530 s|248–209 GB|{{SELECT txtype, changeeventmask ...}} (replication)|
+|4|9caf3ac0769402eb|4816–5304 s|7.8–10.3%|24.7–29.1M|24 938–29 331 s|28–27 GB|{{SELECT ... FROM t_feedbackwaitinglist WHERE destinationclient ...}}|
+|5|bd7c3f63db986839|3718 s|7.2%|24.8–29.3M|17 363–22 520 s|150–173 GB|{{SELECT txtype ...}} (replication)|
+
+* {{user_time_pct}}* — доля user CPU *среди топ SQL в секции pg_stat_kcache отчёта*, не процент CPU ОС.
+* {{t_transaction}} UPDATE — *главный кандидат* на root cause CPU (до корреляции с OS CPU): *~1.7–1.9 CPU-ч* {{sum_cpu_time}} за интервал; топ-3 по kcache — *~4.6–5.0 CPU-ч*. Колонка {{total_exec}} — суммарное wall time по calls (77–98 тыс. s), *не* CPU-time. Плюс огромный WAL.
+* Остальной топ — высокочастотные SELECT/UPDATE (replication, feedback queue) — CPU складывается из *объёма × частота*.
+* Медленный аналитический запрос (mean *57 670 ms*, 30 calls) — отдельный кандидат, не главный драйвер суммарного CPU.
+
+h3. Высокий объём вызовов (confirmed)
+
+{note:title=CPU × calls}
+* {{t_transaction}} UPDATE: *~30 млн calls* за 13–16 ч → ~500–700 calls/s в среднем.
+* Replication SELECT: *40–46 млн calls* — отдельный источник CPU и WAL.
+* {{t_feedbackwaitinglist}} polling: *25–29 млн calls* — кандидат на batch/кэш/pool оптимизацию.
+{note}
+
+h3. Checkpoint / WAL (confirmed/suspected — критично для counteragent)
+
+{warning:title=WAL и checkpoint}
+* {{checkpoints_req}} = *181* (prom1) / *154* (prom2); *97.8% requested* — {{max_wal_size}} (16384 × 8kB = 128 MB) явно мал для нагрузки.
+* {{checkpoint_write_time}} ≈ *22 769 s* (16 ч) / *21 018 s* (13 ч).
+* {{maxwritten_clean}} = *247 632* / *204 225* — bgwriter не успевает.
+* {{wal_buffers_full}} = *23 440 729* / *17 449 866*; WAL *~123–126 GB/h*.
+* Write-нагрузка {{t_transaction}} (563 GB WAL) *напрямую* связана с checkpoint/WAL pressure.
+{warning}
+
+h3. Autovacuum / cache / idle (стабильные PROD findings)
+
+{note:title=Сопутствующие факторы}
+* {{idle_in_transaction_time}} ≈ *954 000 s* (prom1) / *609 000 s* (prom2) — *кумулятивная* сумма за интервал ({{pg_stat_database}}), не одновременная нагрузка; {{idle_in_transaction_session_timeout=0}} — *CRITICAL*.
+* {{blks_hit_pct}} ≈ *85%* на уровне БД (порог 99%) — физические чтения, доп. CPU/IO.
+* Bloat: {{t_clientfeaturemapping dead_pct=53.6%}}, {{t_feedbackwaitinglist hit_pct=72%}}.
+* {{work_mem × max_connections}} ≈ *21.6 GB* — эвристика риска OOM ({{work_mem}} на операцию, не на connection); при параллельных sorts риск выше.
+{note}
+
+h2. План подтверждения
+
+# Корреляция OS CPU с hex {{11a74fb9c1776a85}} (UPDATE {{t_transaction}}) за 01.07 и 04.07.
+# {{EXPLAIN (ANALYZE, BUFFERS)}} для {{11a74fb9c1776a85}}, {{541f3e835c8bf2f3}}, {{9caf3ac0769402eb}} — индексы, FPI, dirty buffers.
+# Источник *30 млн UPDATE/сутки* в приложении: batch size, частота commit, конкуренция за {{object_id}}.
+# При пике CPU: {{pg_stat_activity}} — autovacuum, checkpoint, replication, idle in transaction.
+# iostat / latency диска во время checkpoint ({{checkpoint_write_time}}).
+
+h2. План опровержения
+
+# Если после снижения частоты UPDATE {{t_transaction}} CPU не падает — искать другие топ hex (replication SELECT).
+# Если увеличение {{max_wal_size}} + {{wal_buffers}} не снижает {{wal_buffers_full}} — узкое место в диске/replication.
+# Если {{idle_in_transaction}} не источник bloat — пересмотреть autovacuum per-table.
+
+h2. Стабильные рекомендации PROD (GUC и операции)
+
+{warning:title=Приоритет 1 — SQL / приложение (главный рычаг CPU)}
+* *Снизить частоту/объём UPDATE {{counteragent.t_transaction}}* — batch, debounce, очередь, idempotency.
+* EXPLAIN ANALYZE hex {{11a74fb9c1776a85}} — индекс по {{object_id}}, HOT update, fillfactor.
+* Оптимизировать replication SELECT (~45M calls) и polling {{t_feedbackwaitinglist}}.
+* EXPLAIN медленного COUNT-запроса (mean 57 s, 30 calls) — отдельная задача.
+{warning}
+
+{info:title=Приоритет 2 — WAL / checkpoint (стабильно critical/high)}
+* *{{max_wal_size}}* ↑ с 128 MB до значения под *~123 GB/h WAL* (политика диска + change window).
+* *{{wal_buffers}}* ↑ ({{wal_buffers_full}} миллионы).
+* *{{checkpoint_completion_target}}* → 0.7–0.9 (сейчас 0.5).
+* Согласовать {{checkpoint_timeout}} — не уменьшать вместо {{max_wal_size}}.
+{info}
+
+{info:title=Приоритет 3 — CRITICAL sessions}
+* *{{idle_in_transaction_session_timeout}}* → 60–300 s (сейчас 0).
+* Исправить pool / missing COMMIT в приложении.
+* *{{statement_timeout}}*, *{{lock_timeout}}* для OLTP-ролей.
+{info}
+
+{note:title=Приоритет 4 — cache / autovacuum}
+* *{{shared_buffers}}* ↑ (сейчас 1026816 × 8kB; {{blks_hit_pct}} 85%) — *restart*.
+* *{{effective_cache_size}}* ↑ (reload, безопасно).
+* Per-table autovacuum: {{t_clientfeaturemapping}}, {{t_feedbackwaitinglist}}; VACUUM в окне.
+* PgBouncer — снизить connections / work_mem risk.
+{note}
+
+h2. Следующие шаги DBA
+
+{note:title=Рекомендуемый порядок}
+# Встреча с владельцем приложения: частота UPDATE {{t_transaction}} (~30M/16h).
+# EXPLAIN ANALYZE топ-3 hex на НТ (без PROD).
+# НТ: {{max_wal_size}} + {{wal_buffers}} + {{checkpoint_completion_target}} → compare_runs.
+# PROD change window: {{idle_in_transaction_session_timeout}}, затем WAL GUC.
+# VACUUM (ANALYZE) {{t_clientfeaturemapping}} (dead 53%) в согласованное окно; {{VACUUM FULL}} — только при обосновании (блокировка таблицы, reclaim места).
+# Повторный pg_profile 13–16 ч после изменений.
+{note}

@@ -1,0 +1,90 @@
+h2. Краткое резюме
+
+{warning:title=Высокий CPU на PROD credithistory — стабильный паттерн}
+* Симптом подтверждён двумя суточными отчётами pg_profile (06–08.07.2026): топ SQL по CPU *стабилен* между prom1 и prom2.
+* Основной потребитель в топе pg_stat_kcache (~18% {{user_time_pct}} в отчёте, не % CPU ОС): мониторинг {{pgse_profile.take_sample()}}, далее — высокочастотные запросы к {{credithistory.t_value}} и {{T_REPL_AGGLOCK_*}} (~875k calls/сутки каждый).
+* Сопутствующие факторы, усиливающие CPU/IO: длительная запись checkpoint (~11 500 с/сутки), {{wal_buffers_full}} (7260–10204), bloat/autovacuum, idle in transaction (~3.7 ч/сутки).
+* Корневая причина *не установлена* — требуется EXPLAIN и корреляция с OS CPU; наиболее вероятны: *массовые мелкие OLTP-запросы* + *фон checkpoint/WAL/autovacuum*.
+{warning}
+
+h2. Интерпретация гипотез
+
+h3. Доминирующие SQL (suspected — стабильно в обоих периодах)
+
+{note:title=Топ CPU одинаков prom1/prom2}
+||#||hexqueryid||sum_cpu_time||user_time_pct*||SQL (начало)||
+|1|4aeabfa00fd66418|~122 s|~18%|{{SELECT pgse_profile.take_sample()}}|
+|2|790639d3aaede809|~96 s|~11%|{{select ... from credithistory.t_value where ucpid is not null ...}}|
+|3|a822446855e79f13|~86 s|~12%|{{WITH locks AS ( SELECT pid, locktype ...}}|
+|4|b59dde7dc9ed9bb7|~84 s|~10%|{{select ... from credithistory.t_value ...}}|
+|5|131fc809379da2b0|~73 s|~9%|{{update credithistory.t_value set ...}}|
+
+* {{user_time_pct}}* — доля user CPU *среди топ SQL в секции pg_stat_kcache*, не процент CPU ОС.
+* {{take_sample()}} — служебная нагрузка pgse_profile; не бизнес-OLTP, но стабильно ~18% доли в kcache-топе (~122 s {{sum_cpu_time}} за 24 ч — мало в абсолютных величинах).
+* Запросы к {{t_value}} / replication lock — *~876k вызовов за 24 ч*, mean exec time 0.04–0.13 ms: CPU складывается из *объёма*, а не из «медленных» запросов.
+* Запрос {{WITH locks}} — вероятно мониторинг/диагностика блокировок; также стабилен в топе CPU.
+{note}
+
+h3. Checkpoint / WAL (suspected — усиливает system CPU и IO wait)
+
+{note:title=Checkpoint write time}
+* {{checkpoint_write_time}} ≈ 11 519 s (prom1) и 11 835 s (prom2) за 24 ч — стабильно высокое.
+* {{checkpoints_req}} = 3–4 (невысокое), но суммарное время записи checkpoint велико → фоновая запись буферов конкурирует с OLTP.
+* {{wal_buffers_full}} = 7260 / 10204, WAL ≈ 403–517 MB/h — процессы ждут WAL buffer (доп. latency и CPU в kernel).
+{note}
+
+h3. Autovacuum / bloat (suspected — фоновый CPU + ухудшение планов)
+
+{note:title=Bloat}
+* {{credithistory.t_repl_agglock_auditevent}}: {{dead_pct=50%}} (prom1).
+* {{credithistory.t_value}}: {{n_dead≈1.39M}}, {{dead_pct≈14%}} — стабильно в обоих отчётах.
+* {{idle_in_transaction_time}} ≈ 13 278 s (prom1) / 13 601 s (prom2) — *кумулятивная* сумма за интервал (~3.7 ч/сутки), не одновременная нагрузка; при {{idle_in_transaction_session_timeout=0}} — блокирует vacuum, усиливает bloat (CRITICAL, стабильно).
+{note}
+
+h2. План подтверждения
+
+# Сопоставить топ-5 hexqueryid с пиками CPU на OS (Prometheus/Grafana, {{pg_stat_kcache}}) за те же интервалы 06–08.07.
+# {{EXPLAIN (ANALYZE, BUFFERS)}} для {{790639d3aaede809}}, {{131fc809379da2b0}}, {{b59dde7dc9ed9bb7}} — план, index scan vs seq scan, buffer hits.
+# Проверить наличие/использование индекса по {{t_value.ucpid}} и фильтрам в SELECT; {{ANALYZE credithistory.t_value}}.
+# Зафиксировать частоту вызовов (~876k/сутки) — источник в приложении (batch size, polling, pool).
+# При пике CPU проверить {{pg_stat_activity}}: autovacuum workers, checkpoint, {{take_sample()}}.
+
+h2. План опровержения
+
+# Если OS CPU высок, а {{sum_cpu_time}} всех топ SQL << 5% wall time — искать вне SQL (расширения, replication, OS).
+# Если {{790639d3aaede809}} исчезает из топа CPU в другой период — симптом связан с конкретным релизом/нагрузкой приложения.
+# Если {{checkpoint_write_time}} нормализуется после увеличения {{wal_buffers}} / {{checkpoint_completion_target}} — checkpoint был значимым фактором.
+
+h2. Стабильные рекомендации PROD (GUC и операции)
+
+{info:title=Приоритет 1 — безопасно / критично}
+* *{{idle_in_transaction_session_timeout}}* → 60–300 s (role-level, согласовать с приложением). Текущее: {{0}}.
+* *{{statement_timeout}}*, *{{lock_timeout}}* → ненулевые для OLTP-ролей. Текущее: {{0}}.
+* Исправить приложение: COMMIT/ROLLBACK, pool settings — источник idle in transaction.
+{info}
+
+{note:title=Приоритет 2 — CPU/IO, осторожно}
+* DB-level {{blks_hit_pct}} ≈ *99%*; stable findings по cache — на уровне отдельных таблиц ({{pgse_profile}}, hot tables), не глобальный дефицит.
+* *{{wal_buffers}}* ↑ (текущее 2048 × 8kB = 16 MB; {{max_wal_size}} = 4096 × 8kB = 32 MB; {{wal_buffers_full}} стабильно высокий). ↑ {{max_wal_size}} — низкий приоритет (requested checkpoints 5–7%).
+* *{{checkpoint_completion_target}}* → 0.7–0.9 (текущее 0.5) — сгладить IO/CPU spikes checkpoint.
+* Autovacuum для hot tables: per-table настройки для {{t_value}}, {{t_repl_agglock_*}}; рассмотреть ↓ {{autovacuum_vacuum_cost_delay}}, ↑ {{autovacuum_vacuum_cost_limit}}.
+* {{maintenance_work_mem}} уже высокий (1223680 kB) — при VACUUM в окне обслуживания использовать явно.
+{note}
+
+{note:title=Приоритет 3 — SQL / приложение (основной рычаг для CPU OLTP)}
+* Оптимизация высокочастотных запросов к {{t_value}} (~876k calls/сутки): batch, кэш, снижение round-trips.
+* EXPLAIN проблемных SELECT/UPDATE; индексы, статистика.
+* Рассмотреть удаление неиспользуемого индекса {{i_value_rquid}} (845 MB) после подтверждения на длинном интервале.
+* {{t_dspc_sys_versions}}: seq_scan=69096, idx_scan=0 — кандидат на индекс или исправление плана.
+{note}
+
+h2. Следующие шаги DBA
+
+{note:title=Рекомендуемый порядок}
+# Корреляция OS CPU ↔ топ hexqueryid (шаг 1–2 плана подтверждения).
+# EXPLAIN ANALYZE трёх запросов к {{t_value}} (без изменения PROD).
+# Включить {{idle_in_transaction_session_timeout}} на НТ → валидация → change window на PROD.
+# Увеличить {{wal_buffers}} и {{checkpoint_completion_target}} на НТ, сравнить WAL/checkpoint метрики.
+# Per-table autovacuum + VACUUM {{t_repl_agglock_auditevent}} / {{t_value}} в окне обслуживания.
+# Повторный pg_profile через 24–48 ч после изменений.
+{note}

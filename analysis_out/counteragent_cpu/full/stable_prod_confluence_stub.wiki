@@ -1,0 +1,77 @@
+h1. PROD counteragent: CPU и стабильные проблемы
+
+{info:title=О документе}
+Сводка стабильных проблем на PROD по нескольким pg_profile отчётам. Таблицы сформированы Python (analyze_prod_stability). Критичность проблемы и безопасность/влияние изменений GUC — отдельные оси.
+{info}
+
+{warning:title=Стабильные critical-проблемы}
+Обнаружено *1* рекоменований с критичностью CRITICAL, повторяющихся в ≥ 100% отчётов.
+{warning}
+
+h2. Параметры анализа
+
+||Параметр||Значение||
+|Дата формирования|2026-07-15 11:27|
+|Отчётов PROD|2|
+|Min stability|100%|
+|Стабильных findings|23|
+|Tuning-рекомендаций|14|
+|Critical / High|1 / 6|
+|Нестабильных|4|
+
+h2. PROD-отчёты
+
+||Метка||Файл||Интервал||Длительность||Findings||
+|prom1|counteragent_prom1.html|2026-07-01 05:00:02+03 .. 2026-07-01 21:00:01+03|16.0 ч|80|
+|prom2|counteragent_prom2.html|2026-07-04 10:00:02+03 .. 2026-07-04 23:00:02+03|13.0 ч|85|
+
+h2. Стабильные рекомендации по GUC
+
+||Критичность||Проблема||Стабильность||Безопасность||Влияние||GUC (текущие)||Finding ID||
+|{status:colour=Red|title=CRITICAL|subtle=false}|Idle in transaction / нет таймаута|2/2 (100%)|{status:colour=Yellow|title=CAUTIOUS|subtle=false}|{status:colour=Yellow|title=MEDIUM|subtle=false}|idle_in_transaction_session_timeout: prom1=0, prom2=0|sessions.high_idle_in_transaction, sessions.idle_timeout_disabled|
+|{status:colour=Yellow|title=WARNING|subtle=false}|Память / cache hit|2/2 (100%)|{status:colour=Yellow|title=RESTART|subtle=false}|{status:colour=Red|title=HIGH|subtle=false}|shared_buffers: prom1=1026816, prom2=1026816; effective_cache_size: prom1=3145728, prom2=3145728; work_mem: prom1=16384, prom2=16384|cache.low_hit_ratio, cache.low_table_hit_ratio, memory.work_mem_connections_risk|
+|{status:colour=Yellow|title=WARNING|subtle=false}|Длительная запись checkpoint / bgwriter|2/2 (100%)|{status:colour=Yellow|title=RESTART|subtle=false}|{status:colour=Red|title=HIGH|subtle=false}|checkpoint_completion_target: prom1=0.5, prom2=0.5; shared_buffers: prom1=1026816, prom2=1026816|checkpoints.high_write_time, checkpoints.high_write_time_per_hour, checkpoints.maxwritten_clean|
+|{status:colour=Yellow|title=WARNING|subtle=false}|Медленные / spill SQL (не GUC-only)|2/2 (100%)|{status:colour=Red|title=RISKY|subtle=false}|{status:colour=Red|title=HIGH|subtle=false}|work_mem: prom1=16384, prom2=16384|queries.slow_execution|
+|{status:colour=Yellow|title=WARNING|subtle=false}|Частые requested checkpoints / давление WAL|2/2 (100%)|{status:colour=Yellow|title=CAUTIOUS|subtle=false}|{status:colour=Yellow|title=MEDIUM|subtle=false}|max_wal_size: prom1=16384, prom2=16384; checkpoint_completion_target: prom1=0.5, prom2=0.5|checkpoints.high_requested_ratio, checkpoints.high_requested_count, checkpoints.high_requested_per_hour|
+|{status:colour=Yellow|title=WARNING|subtle=false}|Autovacuum не успевает / bloat|2/2 (100%)|{status:colour=Yellow|title=CAUTIOUS|subtle=false}|{status:colour=Yellow|title=MEDIUM|subtle=false}|autovacuum_naptime: prom1=10, prom2=10; autovacuum_vacuum_cost_delay: prom1=10, prom2=10; autovacuum_vacuum_cost_limit: prom1=1000, prom2=1000|autovacuum.table_high_dead_pct, autovacuum.table_high_mods_pct|
+|{status:colour=Yellow|title=WARNING|subtle=false}|Переполнение wal_buffers|2/2 (100%)|{status:colour=Yellow|title=CAUTIOUS|subtle=false}|{status:colour=Yellow|title=MEDIUM|subtle=false}|wal_buffers: prom1=2048, prom2=2048|wal.buffers_full|
+|{status:colour=Yellow|title=WARNING|subtle=false}|WAL/checkpoint (общее)|2/2 (100%)|{status:colour=Yellow|title=CAUTIOUS|subtle=false}|{status:colour=Yellow|title=MEDIUM|subtle=false}|max_wal_size: prom1=16384, prom2=16384|wal.backend_writes_high|
+|{status:colour=Yellow|title=WARNING|subtle=false}|Cache or I/O read finding|2/2 (100%)|{status:colour=Green|title=SAFE|subtle=false}|{status:colour=Green|title=LOW|subtle=false}|—|cache.high_read_time|
+|{status:colour=Yellow|title=WARNING|subtle=false}|Cache or I/O read finding|2/2 (100%)|{status:colour=Green|title=SAFE|subtle=false}|{status:colour=Green|title=LOW|subtle=false}|—|cache.temp_usage|
+|{status:colour=Yellow|title=WARNING|subtle=false}|I/O pattern finding|2/2 (100%)|{status:colour=Green|title=SAFE|subtle=false}|{status:colour=Green|title=LOW|subtle=false}|—|io.high_heap_reads|
+|{status:colour=Yellow|title=WARNING|subtle=false}|WAL-heavy SQL query|2/2 (100%)|{status:colour=Green|title=SAFE|subtle=false}|{status:colour=Green|title=LOW|subtle=false}|—|io.wal_heavy_query|
+|{status:colour=Yellow|title=WARNING|subtle=false}|Отключены statement/lock timeout|2/2 (100%)|{status:colour=Green|title=SAFE|subtle=false}|{status:colour=Green|title=LOW|subtle=false}|statement_timeout: prom1=0, prom2=0; lock_timeout: prom1=0, prom2=0|memory.lock_timeout_zero, memory.statement_timeout_zero|
+|{status:colour=Yellow|title=WARNING|subtle=false}|Unused index|2/2 (100%)|{status:colour=Green|title=SAFE|subtle=false}|{status:colour=Green|title=LOW|subtle=false}|—|io.unused_index|
+
+h2. Детали GUC
+
+||GUC||Направление||Безопасность||Влияние||Текущие значения||Postgres Pro||
+|idle_in_transaction_session_timeout|set_nonzero|{status:colour=Yellow|title=CAUTIOUS|subtle=false}|{status:colour=Yellow|title=MEDIUM|subtle=false}|prom1=0, prom2=0|Postgres Pro / PostgreSQL: 60s–300s типично для OLTP. Защита от утечки snapshots и bloat.|
+|shared_buffers|increase|{status:colour=Yellow|title=RESTART|subtle=false}|{status:colour=Red|title=HIGH|subtle=false}|prom1=1026816, prom2=1026816|Postgres Pro: shared_buffers ~25% RAM (политика банка). Требует restart.|
+|effective_cache_size|review_increase|{status:colour=Green|title=SAFE|subtle=false}|{status:colour=Green|title=LOW|subtle=false}|prom1=3145728, prom2=3145728|Подсказка планировщику (~50–75% RAM). Не выделяет память — безопасно для reload.|
+|work_mem|review_decrease_or_role_level|{status:colour=Red|title=RISKY|subtle=false}|{status:colour=Red|title=HIGH|subtle=false}|prom1=16384, prom2=16384|work_mem × параллельные sorts = риск OOM. Postgres Pro: задавать на уровне роли для тяжёлых запросов.|
+|checkpoint_completion_target|review_increase|{status:colour=Green|title=SAFE|subtle=false}|{status:colour=Green|title=LOW|subtle=false}|prom1=0.5, prom2=0.5|Растягивание checkpoint (0.7–0.9) снижает latency spikes.|
+|shared_buffers|review_increase|{status:colour=Yellow|title=RESTART|subtle=false}|{status:colour=Red|title=HIGH|subtle=false}|prom1=1026816, prom2=1026816|maxwritten_clean часто связан с давлением на buffer pool.|
+|work_mem|review_increase_role_level|{status:colour=Red|title=RISKY|subtle=false}|{status:colour=Red|title=HIGH|subtle=false}|prom1=16384, prom2=16384|temp_blks_written — кандидат на role-level work_mem, не глобальное увеличение.|
+|max_wal_size|increase|{status:colour=Yellow|title=CAUTIOUS|subtle=false}|{status:colour=Yellow|title=MEDIUM|subtle=false}|prom1=16384, prom2=16384|Postgres Pro / PostgreSQL: увеличение max_wal_size снижает частоту requested checkpoints.|
+|checkpoint_completion_target|review_increase|{status:colour=Green|title=SAFE|subtle=false}|{status:colour=Green|title=LOW|subtle=false}|prom1=0.5, prom2=0.5|Значение 0.7–0.9 растягивает checkpoint во времени (PostgreSQL docs).|
+|autovacuum_naptime|decrease|{status:colour=Yellow|title=CAUTIOUS|subtle=false}|{status:colour=Yellow|title=MEDIUM|subtle=false}|prom1=10, prom2=10|Для OLTP часто 15–60 с. Уменьшение ускоряет реакцию на bloat, но повышает фоновый IO.|
+|autovacuum_vacuum_cost_delay|decrease|{status:colour=Yellow|title=CAUTIOUS|subtle=false}|{status:colour=Yellow|title=MEDIUM|subtle=false}|prom1=10, prom2=10|Снижение cost_delay ускоряет vacuum ценой IO (PostgreSQL cost-based vacuum delay).|
+|autovacuum_vacuum_cost_limit|increase|{status:colour=Yellow|title=CAUTIOUS|subtle=false}|{status:colour=Yellow|title=MEDIUM|subtle=false}|prom1=1000, prom2=1000|Увеличение cost_limit даёт vacuum больший IO-бюджет за цикл.|
+|maintenance_work_mem|increase|{status:colour=Yellow|title=CAUTIOUS|subtle=false}|{status:colour=Yellow|title=MEDIUM|subtle=false}|prom1=3354624, prom2=3354624|Больше maintenance_work_mem ускоряет VACUUM и CREATE INDEX (PostgreSQL docs).|
+|wal_buffers|increase|{status:colour=Yellow|title=CAUTIOUS|subtle=false}|{status:colour=Yellow|title=MEDIUM|subtle=false}|prom1=2048, prom2=2048|Postgres Pro: при высоком wal_buffers_full увеличьте wal_buffers (единицы 8kB).|
+|max_wal_size|review|{status:colour=Yellow|title=CAUTIOUS|subtle=false}|{status:colour=Yellow|title=MEDIUM|subtle=false}|prom1=16384, prom2=16384|Review WAL metrics against Postgres Pro tuning guide.|
+|statement_timeout|set_nonzero|{status:colour=Green|title=SAFE|subtle=false}|{status:colour=Green|title=LOW|subtle=false}|prom1=0, prom2=0|Рекомендуется role-level timeout (30s–300s OLTP). Postgres Pro Enterprise — через ALTER ROLE.|
+|lock_timeout|set_nonzero|{status:colour=Green|title=SAFE|subtle=false}|{status:colour=Green|title=LOW|subtle=false}|prom1=0, prom2=0|lock_timeout 5–30s для OLTP предотвращает каскадные ожидания.|
+
+h2. Нестабильные находки (справочно)
+
+||Severity||Finding||Reports||
+|{status:colour=Yellow|title=WARNING|subtle=false}|autovacuum.generic|1/2 (prom1)|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.high_seq_scan|1/2 (prom2)|
+|{status:colour=Red|title=CRITICAL|subtle=false}|sessions.abnormal_termination|1/2 (prom2)|
+|{status:colour=Yellow|title=WARNING|subtle=false}|sessions.high_rollback_ratio|1/2 (prom2)|
+
+----
+
+_Ниже — вывод ИИ (Confluence Wiki Markup). Вставьте ответ gigacli или merge_confluence.py._

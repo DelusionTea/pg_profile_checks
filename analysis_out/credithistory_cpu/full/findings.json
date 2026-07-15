@@ -1,0 +1,1206 @@
+{
+  "type": "combined_analysis",
+  "analyses": [
+    {
+      "type": "stable_prod_analysis",
+      "min_stability_ratio": 1.0,
+      "reports": [
+        {
+          "label": "prom1",
+          "path": "resources/credithistory_prom1.html",
+          "filename": "credithistory_prom1.html",
+          "interval_hours": 24.0,
+          "findings_count": 43
+        },
+        {
+          "label": "prom2",
+          "path": "resources/credithistory_prom2.html",
+          "filename": "credithistory_prom2.html",
+          "interval_hours": 23.99972222222222,
+          "findings_count": 39
+        }
+      ],
+      "stable_findings": [
+        {
+          "rule_id": "sessions.high_idle_in_transaction",
+          "category": "sessions",
+          "occurrence_count": 2,
+          "total_reports": 2,
+          "stability_ratio": 1.0,
+          "max_severity": "critical",
+          "sample_messages": [
+            "credithistory: idle_in_transaction_time=13277.7s (threshold 3600s), idle_in_transaction_session_timeout=0",
+            "credithistory: idle_in_transaction_time=13601.4s (threshold 3600s), idle_in_transaction_session_timeout=0"
+          ],
+          "report_labels": [
+            "prom1",
+            "prom2"
+          ]
+        },
+        {
+          "rule_id": "sessions.idle_timeout_disabled",
+          "category": "sessions",
+          "occurrence_count": 2,
+          "total_reports": 2,
+          "stability_ratio": 1.0,
+          "max_severity": "critical",
+          "sample_messages": [
+            "idle_in_transaction_session_timeout=0 while idle in transaction time is high",
+            "idle_in_transaction_session_timeout=0 while idle in transaction time is high"
+          ],
+          "report_labels": [
+            "prom1",
+            "prom2"
+          ]
+        },
+        {
+          "rule_id": "autovacuum.table_high_dead_pct",
+          "category": "autovacuum",
+          "occurrence_count": 2,
+          "total_reports": 2,
+          "stability_ratio": 1.0,
+          "max_severity": "warning",
+          "sample_messages": [
+            "credithistory.credithistory.t_value: dead_pct=13.9%, n_dead=1392350, last_autovacuum=2026-07-06 08:45:17.991906+03",
+            "postgres.pgse_profile.sample_stat_tables: dead_pct=15.5%, n_dead=41360, last_autovacuum=2026-07-06 06:30:11.04073+03"
+          ],
+          "report_labels": [
+            "prom1",
+            "prom2"
+          ]
+        },
+        {
+          "rule_id": "cache.high_read_time",
+          "category": "cache",
+          "occurrence_count": 2,
+          "total_reports": 2,
+          "stability_ratio": 1.0,
+          "max_severity": "warning",
+          "sample_messages": [
+            "credithistory: blk_read_time=117.1s (threshold 60s)",
+            "credithistory: blk_read_time=170.9s (threshold 60s)"
+          ],
+          "report_labels": [
+            "prom1",
+            "prom2"
+          ]
+        },
+        {
+          "rule_id": "cache.low_table_hit_ratio",
+          "category": "cache",
+          "occurrence_count": 2,
+          "total_reports": 2,
+          "stability_ratio": 1.0,
+          "max_severity": "warning",
+          "sample_messages": [
+            "postgres.pgse_profile.sample_statements: table hit_pct=92.80% (threshold 95.0%)",
+            "postgres.pgse_profile.sample_statements: table hit_pct=93.69% (threshold 95.0%)"
+          ],
+          "report_labels": [
+            "prom1",
+            "prom2"
+          ]
+        },
+        {
+          "rule_id": "checkpoints.high_write_time",
+          "category": "checkpoints",
+          "occurrence_count": 2,
+          "total_reports": 2,
+          "stability_ratio": 1.0,
+          "max_severity": "warning",
+          "sample_messages": [
+            "Checkpoint write time: 11518.9s over 24.0h interval (threshold 300s)",
+            "Checkpoint write time: 11835.0s over 24.0h interval (threshold 300s)"
+          ],
+          "report_labels": [
+            "prom1",
+            "prom2"
+          ]
+        },
+        {
+          "rule_id": "checkpoints.high_write_time_per_hour",
+          "category": "checkpoints",
+          "occurrence_count": 2,
+          "total_reports": 2,
+          "stability_ratio": 1.0,
+          "max_severity": "warning",
+          "sample_messages": [
+            "Checkpoint write time: 480.0s/hour (threshold 60s/hour)",
+            "Checkpoint write time: 493.1s/hour (threshold 60s/hour)"
+          ],
+          "report_labels": [
+            "prom1",
+            "prom2"
+          ]
+        },
+        {
+          "rule_id": "checkpoints.maxwritten_clean",
+          "category": "checkpoints",
+          "occurrence_count": 2,
+          "total_reports": 2,
+          "stability_ratio": 1.0,
+          "max_severity": "warning",
+          "sample_messages": [
+            "Bgwriter interrupts (maxwritten_clean): 1028 (threshold 100)",
+            "Bgwriter interrupts (maxwritten_clean): 1131 (threshold 100)"
+          ],
+          "report_labels": [
+            "prom1",
+            "prom2"
+          ]
+        },
+        {
+          "rule_id": "io.high_heap_reads",
+          "category": "io",
+          "occurrence_count": 2,
+          "total_reports": 2,
+          "stability_ratio": 1.0,
+          "max_severity": "warning",
+          "sample_messages": [
+            "credithistory.credithistory.t_value: heap_blks_read=187664",
+            "credithistory.credithistory.t_value: heap_blks_read=279695"
+          ],
+          "report_labels": [
+            "prom1",
+            "prom2"
+          ]
+        },
+        {
+          "rule_id": "io.high_seq_scan",
+          "category": "io",
+          "occurrence_count": 2,
+          "total_reports": 2,
+          "stability_ratio": 1.0,
+          "max_severity": "warning",
+          "sample_messages": [
+            "credithistory.credithistory.t_dspc_sys_versions: seq_scan=69096, idx_scan=0, ratio=69096.0",
+            "credithistory.credithistory.t_dspc_sys_versions: seq_scan=69096, idx_scan=0, ratio=69096.0"
+          ],
+          "report_labels": [
+            "prom1",
+            "prom2"
+          ]
+        },
+        {
+          "rule_id": "io.unused_index",
+          "category": "io",
+          "occurrence_count": 2,
+          "total_reports": 2,
+          "stability_ratio": 1.0,
+          "max_severity": "warning",
+          "sample_messages": [
+            "Unused index credithistory.credithistory.t_value.i_value_rquid: size=845 MB",
+            "Unused index credithistory.credithistory.t_value.i_value_rquid: size=851 MB"
+          ],
+          "report_labels": [
+            "prom1",
+            "prom2"
+          ]
+        },
+        {
+          "rule_id": "memory.lock_timeout_zero",
+          "category": "memory",
+          "occurrence_count": 2,
+          "total_reports": 2,
+          "stability_ratio": 1.0,
+          "max_severity": "warning",
+          "sample_messages": [
+            "lock_timeout=0 (no protection against lock waits)",
+            "lock_timeout=0 (no protection against lock waits)"
+          ],
+          "report_labels": [
+            "prom1",
+            "prom2"
+          ]
+        },
+        {
+          "rule_id": "memory.statement_timeout_zero",
+          "category": "memory",
+          "occurrence_count": 2,
+          "total_reports": 2,
+          "stability_ratio": 1.0,
+          "max_severity": "warning",
+          "sample_messages": [
+            "statement_timeout=0 (queries may run indefinitely)",
+            "statement_timeout=0 (queries may run indefinitely)"
+          ],
+          "report_labels": [
+            "prom1",
+            "prom2"
+          ]
+        },
+        {
+          "rule_id": "queries.slow_execution",
+          "category": "queries",
+          "occurrence_count": 2,
+          "total_reports": 2,
+          "stability_ratio": 1.0,
+          "max_severity": "warning",
+          "sample_messages": [
+            "postgres/postgres: mean=2796.9ms, total=134.2s, calls=48\n  SELECT pgse_profile.take_sample()",
+            "postgres/postgres: mean=2845.7ms, total=136.6s, calls=48\n  SELECT pgse_profile.take_sample()"
+          ],
+          "report_labels": [
+            "prom1",
+            "prom2"
+          ]
+        },
+        {
+          "rule_id": "wal.buffers_full",
+          "category": "wal",
+          "occurrence_count": 2,
+          "total_reports": 2,
+          "stability_ratio": 1.0,
+          "max_severity": "warning",
+          "sample_messages": [
+            "wal_buffers_full: 7260 (threshold 1000)",
+            "wal_buffers_full: 10204 (threshold 1000)"
+          ],
+          "report_labels": [
+            "prom1",
+            "prom2"
+          ]
+        }
+      ],
+      "ephemeral_findings": [
+        {
+          "rule_id": "autovacuum.generic",
+          "category": "autovacuum",
+          "occurrence_count": 1,
+          "total_reports": 2,
+          "stability_ratio": 0.5,
+          "max_severity": "warning",
+          "sample_messages": [
+            "credithistory.credithistory.t_value: n_dead=531327, last_autovacuum=2026-07-08 11:15:14.437508+03"
+          ],
+          "report_labels": [
+            "prom2"
+          ]
+        },
+        {
+          "rule_id": "autovacuum.table_high_mods_pct",
+          "category": "autovacuum",
+          "occurrence_count": 1,
+          "total_reports": 2,
+          "stability_ratio": 0.5,
+          "max_severity": "warning",
+          "sample_messages": [
+            "credithistory.credithistory.t_repl_agglock_auditevent: mods_pct=100.0%, last_autoanalyze=never"
+          ],
+          "report_labels": [
+            "prom1"
+          ]
+        },
+        {
+          "rule_id": "cache.low_hit_ratio",
+          "category": "cache",
+          "occurrence_count": 1,
+          "total_reports": 2,
+          "stability_ratio": 0.5,
+          "max_severity": "warning",
+          "sample_messages": [
+            "credithistory: blks_hit_pct=98.69% (threshold 99.0%)"
+          ],
+          "report_labels": [
+            "prom2"
+          ]
+        }
+      ],
+      "recommendations": [
+        {
+          "tuning_rule_id": "tune_idle_in_transaction",
+          "finding_rule_id": "sessions.high_idle_in_transaction, sessions.idle_timeout_disabled",
+          "title": "Idle in transaction / нет таймаута",
+          "problem_severity": "critical",
+          "stability_ratio": 1.0,
+          "combined_change_safety": "cautious",
+          "combined_change_impact": "medium",
+          "guc_items": [
+            {
+              "guc": "idle_in_transaction_session_timeout",
+              "direction": "set_nonzero",
+              "change_safety": "cautious",
+              "change_impact": "medium",
+              "reload": false,
+              "postgres_pro": "Postgres Pro / PostgreSQL: 60s–300s типично для OLTP. Защита от утечки snapshots и bloat.\nСогласовать с приложением (длинные batch-транзакции).\nTypical OLTP: 60000-300000",
+              "rationale": "Стабильный idle in transaction без таймаута — классический production risk.",
+              "current_values": {
+                "prom1": "0",
+                "prom2": "0"
+              }
+            }
+          ],
+          "operational": [
+            "Исправить application: COMMIT/ROLLBACK, pool settings",
+            "Найти источник в pg_stat_activity",
+            "Установить idle_in_transaction_session_timeout",
+            "Исправить application connection pooling / missing COMMIT",
+            "Найти источник зависших транзакций в pg_stat_activity",
+            "Установить idle_in_transaction_session_timeout (например 60s–300s)"
+          ],
+          "problem_advice": {
+            "id": "sessions.high_idle_in_transaction",
+            "severity": "critical",
+            "title": "High idle in transaction time",
+            "recommendation": "Долгие idle in transaction сессии держат snapshots, блокируют vacuum\nи увеличивают bloat — одна из самых частых рекомендаций коммьюнити.\n",
+            "actions": [
+              "Установить idle_in_transaction_session_timeout",
+              "Исправить application connection pooling / missing COMMIT",
+              "Найти источник зависших транзакций в pg_stat_activity"
+            ],
+            "references": [
+              "PostgreSQL Documentation: idle_in_transaction_session_timeout",
+              "PostgreSQL Wiki: Lock Monitoring"
+            ]
+          },
+          "stable_finding": {
+            "rule_id": "sessions.high_idle_in_transaction, sessions.idle_timeout_disabled",
+            "category": "sessions",
+            "occurrence_count": 2,
+            "total_reports": 2,
+            "stability_ratio": 1.0,
+            "max_severity": "critical",
+            "sample_messages": [
+              "credithistory: idle_in_transaction_time=13277.7s (threshold 3600s), idle_in_transaction_session_timeout=0",
+              "credithistory: idle_in_transaction_time=13601.4s (threshold 3600s), idle_in_transaction_session_timeout=0",
+              "idle_in_transaction_session_timeout=0 while idle in transaction time is high"
+            ],
+            "report_labels": [
+              "prom1",
+              "prom2"
+            ]
+          }
+        },
+        {
+          "tuning_rule_id": "tune_memory",
+          "finding_rule_id": "cache.low_table_hit_ratio",
+          "title": "Память / cache hit",
+          "problem_severity": "high",
+          "stability_ratio": 1.0,
+          "combined_change_safety": "restart_required",
+          "combined_change_impact": "high",
+          "guc_items": [
+            {
+              "guc": "shared_buffers",
+              "direction": "increase",
+              "change_safety": "restart_required",
+              "change_impact": "high",
+              "reload": false,
+              "postgres_pro": "Postgres Pro: shared_buffers ~25% RAM (политика банка). Требует restart.\nПеред изменением — baseline cache hit и working set.\nTypical OLTP: ~25% RAM (policy-dependent)",
+              "rationale": "Низкий cache hit при стабильном паттерне — кандидат на увеличение буферов.",
+              "current_values": {
+                "prom1": "382464",
+                "prom2": "382464"
+              }
+            },
+            {
+              "guc": "effective_cache_size",
+              "direction": "review_increase",
+              "change_safety": "safe",
+              "change_impact": "low",
+              "reload": false,
+              "postgres_pro": "Подсказка планировщику (~50–75% RAM). Не выделяет память — безопасно для reload.\nTypical OLTP: ~50-75% RAM estimate",
+              "rationale": "Помогает планировщику при низком blks_hit_pct.",
+              "current_values": {
+                "prom1": "1147520",
+                "prom2": "1147520"
+              }
+            },
+            {
+              "guc": "work_mem",
+              "direction": "review_decrease_or_role_level",
+              "change_safety": "risky",
+              "change_impact": "high",
+              "reload": false,
+              "postgres_pro": "work_mem × параллельные sorts = риск OOM. Postgres Pro: задавать на уровне роли для тяжёлых запросов.\nTypical OLTP: 4096-32768 per operation",
+              "rationale": "Стабильный риск OOM при высоком work_mem и connections.",
+              "current_values": {
+                "prom1": "16384",
+                "prom2": "16384"
+              }
+            }
+          ],
+          "operational": [
+            "Connection pooler (PgBouncer)",
+            "Таблицы с высоким physical read",
+            "Identify tables with high physical reads"
+          ],
+          "problem_advice": {
+            "id": "cache.generic",
+            "severity": "medium",
+            "title": "Cache or I/O read finding",
+            "recommendation": "Review cache hit ratios and disk read patterns.",
+            "actions": [
+              "Identify tables with high physical reads"
+            ],
+            "references": [
+              "PostgreSQL Documentation: Resource Consumption"
+            ]
+          },
+          "stable_finding": {
+            "rule_id": "cache.low_table_hit_ratio",
+            "category": "cache",
+            "occurrence_count": 2,
+            "total_reports": 2,
+            "stability_ratio": 1.0,
+            "max_severity": "warning",
+            "sample_messages": [
+              "postgres.pgse_profile.sample_statements: table hit_pct=92.80% (threshold 95.0%)",
+              "postgres.pgse_profile.sample_statements: table hit_pct=93.69% (threshold 95.0%)"
+            ],
+            "report_labels": [
+              "prom1",
+              "prom2"
+            ]
+          }
+        },
+        {
+          "tuning_rule_id": "tune_checkpoints_write",
+          "finding_rule_id": "checkpoints.high_write_time, checkpoints.high_write_time_per_hour, checkpoints.maxwritten_clean",
+          "title": "Длительная запись checkpoint / bgwriter",
+          "problem_severity": "high",
+          "stability_ratio": 1.0,
+          "combined_change_safety": "restart_required",
+          "combined_change_impact": "high",
+          "guc_items": [
+            {
+              "guc": "checkpoint_completion_target",
+              "direction": "review_increase",
+              "change_safety": "safe",
+              "change_impact": "low",
+              "reload": false,
+              "postgres_pro": "Растягивание checkpoint (0.7–0.9) снижает latency spikes.\nTypical OLTP: 0.7-0.9",
+              "rationale": "Длинный checkpoint write time стабильно на PROD.",
+              "current_values": {
+                "prom1": "0.5",
+                "prom2": "0.5"
+              }
+            },
+            {
+              "guc": "shared_buffers",
+              "direction": "review_increase",
+              "change_safety": "restart_required",
+              "change_impact": "high",
+              "reload": false,
+              "postgres_pro": "maxwritten_clean часто связан с давлением на buffer pool.\nTypical OLTP: ~25% RAM (policy-dependent)",
+              "rationale": "Bgwriter не успевает при maxwritten_clean.",
+              "current_values": {
+                "prom1": "382464",
+                "prom2": "382464"
+              }
+            }
+          ],
+          "operational": [
+            "Проверить IO latency диска, iostat",
+            "Согласовать max_wal_size / checkpoint_timeout",
+            "Проверить производительность диска (IOPS, latency)",
+            "Оценить checkpoint_completion_target",
+            "Снизить write-нагрузку или распределить её во времени",
+            "Compare with previous test runs using compare_runs.py",
+            "Увеличить shared_buffers при низком cache hit",
+            "Настроить bgwriter (в новых версиях часто autotune)",
+            "Проверить checkpoint и WAL pressure"
+          ],
+          "problem_advice": {
+            "id": "checkpoints.high_write_time",
+            "severity": "high",
+            "title": "Long total checkpoint write time",
+            "recommendation": "Длительная запись checkpoint увеличивает IO latency и может влиять на\nвремя отклика запросов во время checkpoint.\n",
+            "actions": [
+              "Проверить производительность диска (IOPS, latency)",
+              "Оценить checkpoint_completion_target",
+              "Снизить write-нагрузку или распределить её во времени"
+            ],
+            "references": [
+              "PostgreSQL Documentation: Checkpoints"
+            ]
+          },
+          "stable_finding": {
+            "rule_id": "checkpoints.high_write_time, checkpoints.high_write_time_per_hour, checkpoints.maxwritten_clean",
+            "category": "checkpoints",
+            "occurrence_count": 2,
+            "total_reports": 2,
+            "stability_ratio": 1.0,
+            "max_severity": "warning",
+            "sample_messages": [
+              "Checkpoint write time: 11518.9s over 24.0h interval (threshold 300s)",
+              "Checkpoint write time: 11835.0s over 24.0h interval (threshold 300s)",
+              "Checkpoint write time: 480.0s/hour (threshold 60s/hour)",
+              "Checkpoint write time: 493.1s/hour (threshold 60s/hour)",
+              "Bgwriter interrupts (maxwritten_clean): 1028 (threshold 100)"
+            ],
+            "report_labels": [
+              "prom1",
+              "prom2"
+            ]
+          }
+        },
+        {
+          "tuning_rule_id": "tune_queries",
+          "finding_rule_id": "queries.slow_execution",
+          "title": "Медленные / spill SQL (не GUC-only)",
+          "problem_severity": "high",
+          "stability_ratio": 1.0,
+          "combined_change_safety": "risky",
+          "combined_change_impact": "high",
+          "guc_items": [
+            {
+              "guc": "work_mem",
+              "direction": "review_increase_role_level",
+              "change_safety": "risky",
+              "change_impact": "high",
+              "reload": false,
+              "postgres_pro": "temp_blks_written — кандидат на role-level work_mem, не глобальное увеличение.\nTypical OLTP: 4096-32768 per operation",
+              "rationale": "Temp spill стабильно на PROD — точечная настройка безопаснее глобальной.",
+              "current_values": {
+                "prom1": "16384",
+                "prom2": "16384"
+              }
+            }
+          ],
+          "operational": [
+            "EXPLAIN (ANALYZE, BUFFERS) топ SQL",
+            "Индексы, статистика ANALYZE",
+            "Не менять GUC без анализа планов",
+            "Выполнить EXPLAIN (ANALYZE, BUFFERS) для топ-запросов",
+            "Проверить индексы и статистику (ANALYZE)",
+            "Оценить work_mem при temp spills"
+          ],
+          "problem_advice": {
+            "id": "queries.slow_execution",
+            "severity": "high",
+            "title": "Slow SQL queries detected",
+            "recommendation": "Запросы с высоким mean/max/total execution time — кандидаты на оптимизацию\nплана, индексов или переписывания SQL.\n",
+            "actions": [
+              "Выполнить EXPLAIN (ANALYZE, BUFFERS) для топ-запросов",
+              "Проверить индексы и статистику (ANALYZE)",
+              "Оценить work_mem при temp spills"
+            ],
+            "references": [
+              "PostgreSQL Documentation: Using EXPLAIN",
+              "PostgreSQL Wiki: Performance Optimization"
+            ]
+          },
+          "stable_finding": {
+            "rule_id": "queries.slow_execution",
+            "category": "queries",
+            "occurrence_count": 2,
+            "total_reports": 2,
+            "stability_ratio": 1.0,
+            "max_severity": "warning",
+            "sample_messages": [
+              "postgres/postgres: mean=2796.9ms, total=134.2s, calls=48\n  SELECT pgse_profile.take_sample()",
+              "postgres/postgres: mean=2845.7ms, total=136.6s, calls=48\n  SELECT pgse_profile.take_sample()"
+            ],
+            "report_labels": [
+              "prom1",
+              "prom2"
+            ]
+          }
+        },
+        {
+          "tuning_rule_id": "tune_autovacuum_bloat",
+          "finding_rule_id": "autovacuum.table_high_dead_pct",
+          "title": "Autovacuum не успевает / bloat",
+          "problem_severity": "high",
+          "stability_ratio": 1.0,
+          "combined_change_safety": "cautious",
+          "combined_change_impact": "medium",
+          "guc_items": [
+            {
+              "guc": "autovacuum_naptime",
+              "direction": "decrease",
+              "change_safety": "cautious",
+              "change_impact": "medium",
+              "reload": false,
+              "postgres_pro": "Для OLTP часто 15–60 с. Уменьшение ускоряет реакцию на bloat, но повышает фоновый IO.\nTypical OLTP: 15-60",
+              "rationale": "Высокий naptime замедляет запуск vacuum на «горячих» таблицах.",
+              "current_values": {
+                "prom1": "10",
+                "prom2": "10"
+              }
+            },
+            {
+              "guc": "autovacuum_vacuum_cost_delay",
+              "direction": "decrease",
+              "change_safety": "cautious",
+              "change_impact": "medium",
+              "reload": false,
+              "postgres_pro": "Снижение cost_delay ускоряет vacuum ценой IO (PostgreSQL cost-based vacuum delay).\nTypical OLTP: 2-10",
+              "rationale": "Autovacuum «ползёт» при высоком cost_delay.",
+              "current_values": {
+                "prom1": "10",
+                "prom2": "10"
+              }
+            },
+            {
+              "guc": "autovacuum_vacuum_cost_limit",
+              "direction": "increase",
+              "change_safety": "cautious",
+              "change_impact": "medium",
+              "reload": false,
+              "postgres_pro": "Увеличение cost_limit даёт vacuum больший IO-бюджет за цикл.\nTypical OLTP: 200-1000+",
+              "rationale": "Низкий limit — типичная причина медленного autovacuum.",
+              "current_values": {
+                "prom1": "1000",
+                "prom2": "1000"
+              }
+            },
+            {
+              "guc": "maintenance_work_mem",
+              "direction": "increase",
+              "change_safety": "cautious",
+              "change_impact": "medium",
+              "reload": false,
+              "postgres_pro": "Больше maintenance_work_mem ускоряет VACUUM и CREATE INDEX (PostgreSQL docs).\nTypical OLTP: 256MB-2GB+",
+              "rationale": "Ускоряет очистку при стабильном bloat.",
+              "current_values": {
+                "prom1": "1223680",
+                "prom2": "1223680"
+              }
+            }
+          ],
+          "operational": [
+            "Проверить idle in transaction (блокирует vacuum)",
+            "Per-table autovacuum для hot tables",
+            "Проверить idle in transaction и lock waits",
+            "Настроить per-table autovacuum при необходимости",
+            "Рассмотреть VACUUM (ANALYZE) в окно обслуживания"
+          ],
+          "problem_advice": {
+            "id": "autovacuum.table_high_dead_pct",
+            "severity": "high",
+            "title": "High dead tuples ratio on table",
+            "recommendation": "Высокий процент мёртвых строк — autovacuum не успевает или заблокирован\nlong transactions.\n",
+            "actions": [
+              "Проверить idle in transaction и lock waits",
+              "Настроить per-table autovacuum при необходимости",
+              "Рассмотреть VACUUM (ANALYZE) в окно обслуживания"
+            ],
+            "references": [
+              "PostgreSQL Documentation: Routine Vacuuming",
+              "PostgreSQL Wiki: Don't Do This (long transactions)"
+            ]
+          },
+          "stable_finding": {
+            "rule_id": "autovacuum.table_high_dead_pct",
+            "category": "autovacuum",
+            "occurrence_count": 2,
+            "total_reports": 2,
+            "stability_ratio": 1.0,
+            "max_severity": "warning",
+            "sample_messages": [
+              "credithistory.credithistory.t_value: dead_pct=13.9%, n_dead=1392350, last_autovacuum=2026-07-06 08:45:17.991906+03",
+              "postgres.pgse_profile.sample_stat_tables: dead_pct=15.5%, n_dead=41360, last_autovacuum=2026-07-06 06:30:11.04073+03"
+            ],
+            "report_labels": [
+              "prom1",
+              "prom2"
+            ]
+          }
+        },
+        {
+          "tuning_rule_id": "tune_wal_buffers",
+          "finding_rule_id": "wal.buffers_full",
+          "title": "Переполнение wal_buffers",
+          "problem_severity": "high",
+          "stability_ratio": 1.0,
+          "combined_change_safety": "cautious",
+          "combined_change_impact": "medium",
+          "guc_items": [
+            {
+              "guc": "wal_buffers",
+              "direction": "increase",
+              "change_safety": "cautious",
+              "change_impact": "medium",
+              "reload": false,
+              "postgres_pro": "Postgres Pro: при высоком wal_buffers_full увеличьте wal_buffers (единицы 8kB).\nНа busy OLTP часто 16MB+; учитывайте autotune min.\nTypical OLTP: 2048+ (16MB+)",
+              "rationale": "Процессы ждут освобождения WAL buffer — стабильный симптом нехватки.",
+              "current_values": {
+                "prom1": "2048",
+                "prom2": "2048"
+              }
+            }
+          ],
+          "operational": [
+            "Проверить пики WAL generation и batch DML",
+            "Увеличить wal_buffers (единицы 8kB в pg_profile settings)",
+            "Проверить пики WAL generation"
+          ],
+          "problem_advice": {
+            "id": "wal.buffers_full",
+            "severity": "high",
+            "title": "WAL buffers frequently full",
+            "recommendation": "wal_buffers переполняется — процессы ждут освобождения WAL buffer.\nТипичная рекомендация коммьюнити: увеличить wal_buffers (часто 64MB на busy systems).\n",
+            "actions": [
+              "Увеличить wal_buffers (единицы 8kB в pg_profile settings)",
+              "Проверить пики WAL generation"
+            ],
+            "references": [
+              "PostgreSQL Documentation: wal_buffers"
+            ]
+          },
+          "stable_finding": {
+            "rule_id": "wal.buffers_full",
+            "category": "wal",
+            "occurrence_count": 2,
+            "total_reports": 2,
+            "stability_ratio": 1.0,
+            "max_severity": "warning",
+            "sample_messages": [
+              "wal_buffers_full: 7260 (threshold 1000)",
+              "wal_buffers_full: 10204 (threshold 1000)"
+            ],
+            "report_labels": [
+              "prom1",
+              "prom2"
+            ]
+          }
+        },
+        {
+          "tuning_rule_id": "tune_io_planner",
+          "finding_rule_id": "io.high_seq_scan",
+          "title": "Высокий seq scan",
+          "problem_severity": "medium",
+          "stability_ratio": 1.0,
+          "combined_change_safety": "cautious",
+          "combined_change_impact": "medium",
+          "guc_items": [
+            {
+              "guc": "random_page_cost",
+              "direction": "review_decrease_ssd",
+              "change_safety": "cautious",
+              "change_impact": "medium",
+              "reload": false,
+              "postgres_pro": "На SSD random_page_cost 1.1–2 (PostgreSQL docs). Влияет на выбор index vs seq scan.\nTypical OLTP: 1.1-4 (SSD lower)",
+              "rationale": "Стабильный seq scan может быть из-за planner costs.",
+              "current_values": {
+                "prom1": "2",
+                "prom2": "2"
+              }
+            },
+            {
+              "guc": "effective_io_concurrency",
+              "direction": "increase",
+              "change_safety": "cautious",
+              "change_impact": "low",
+              "reload": false,
+              "postgres_pro": "SSD: 200+ (PostgreSQL 15+). Улучшает prefetch.\nTypical OLTP: 200+ on SSD",
+              "rationale": "Низкий effective_io_concurrency на быстром storage.",
+              "current_values": {
+                "prom1": "300",
+                "prom2": "300"
+              }
+            }
+          ],
+          "operational": [
+            "EXPLAIN, индексы, ANALYZE",
+            "EXPLAIN проблемных запросов",
+            "Добавить индекс или обновить статистику (ANALYZE)"
+          ],
+          "problem_advice": {
+            "id": "io.high_seq_scan",
+            "severity": "medium",
+            "title": "High sequential scans on table",
+            "recommendation": "Много seq scan при низком idx_scan — возможно отсутствует индекс\nили планировщик выбирает seq scan из-за статистики/настроек.\n",
+            "actions": [
+              "EXPLAIN проблемных запросов",
+              "Добавить индекс или обновить статистику (ANALYZE)"
+            ],
+            "references": [
+              "PostgreSQL Documentation: Indexes"
+            ]
+          },
+          "stable_finding": {
+            "rule_id": "io.high_seq_scan",
+            "category": "io",
+            "occurrence_count": 2,
+            "total_reports": 2,
+            "stability_ratio": 1.0,
+            "max_severity": "warning",
+            "sample_messages": [
+              "credithistory.credithistory.t_dspc_sys_versions: seq_scan=69096, idx_scan=0, ratio=69096.0",
+              "credithistory.credithistory.t_dspc_sys_versions: seq_scan=69096, idx_scan=0, ratio=69096.0"
+            ],
+            "report_labels": [
+              "prom1",
+              "prom2"
+            ]
+          }
+        },
+        {
+          "tuning_rule_id": "advise.cache.high_read_time",
+          "finding_rule_id": "cache.high_read_time",
+          "title": "Cache or I/O read finding",
+          "problem_severity": "medium",
+          "stability_ratio": 1.0,
+          "combined_change_safety": "safe",
+          "combined_change_impact": "low",
+          "guc_items": [],
+          "operational": [
+            "Identify tables with high physical reads"
+          ],
+          "problem_advice": {
+            "id": "cache.generic",
+            "severity": "medium",
+            "title": "Cache or I/O read finding",
+            "recommendation": "Review cache hit ratios and disk read patterns.",
+            "actions": [
+              "Identify tables with high physical reads"
+            ],
+            "references": [
+              "PostgreSQL Documentation: Resource Consumption"
+            ]
+          },
+          "stable_finding": {
+            "rule_id": "cache.high_read_time",
+            "category": "cache",
+            "occurrence_count": 2,
+            "total_reports": 2,
+            "stability_ratio": 1.0,
+            "max_severity": "warning",
+            "sample_messages": [
+              "credithistory: blk_read_time=117.1s (threshold 60s)",
+              "credithistory: blk_read_time=170.9s (threshold 60s)"
+            ],
+            "report_labels": [
+              "prom1",
+              "prom2"
+            ]
+          }
+        },
+        {
+          "tuning_rule_id": "advise.io.high_heap_reads",
+          "finding_rule_id": "io.high_heap_reads",
+          "title": "I/O pattern finding",
+          "problem_severity": "medium",
+          "stability_ratio": 1.0,
+          "combined_change_safety": "safe",
+          "combined_change_impact": "low",
+          "guc_items": [],
+          "operational": [
+            "Use EXPLAIN and pg_profile top I/O sections"
+          ],
+          "problem_advice": {
+            "id": "io.generic",
+            "severity": "medium",
+            "title": "I/O pattern finding",
+            "recommendation": "Review query plans and table access patterns.",
+            "actions": [
+              "Use EXPLAIN and pg_profile top I/O sections"
+            ],
+            "references": [
+              "PostgreSQL Documentation: Performance Tips"
+            ]
+          },
+          "stable_finding": {
+            "rule_id": "io.high_heap_reads",
+            "category": "io",
+            "occurrence_count": 2,
+            "total_reports": 2,
+            "stability_ratio": 1.0,
+            "max_severity": "warning",
+            "sample_messages": [
+              "credithistory.credithistory.t_value: heap_blks_read=187664",
+              "credithistory.credithistory.t_value: heap_blks_read=279695"
+            ],
+            "report_labels": [
+              "prom1",
+              "prom2"
+            ]
+          }
+        },
+        {
+          "tuning_rule_id": "tune_timeouts",
+          "finding_rule_id": "memory.lock_timeout_zero, memory.statement_timeout_zero",
+          "title": "Отключены statement/lock timeout",
+          "problem_severity": "medium",
+          "stability_ratio": 1.0,
+          "combined_change_safety": "safe",
+          "combined_change_impact": "low",
+          "guc_items": [
+            {
+              "guc": "statement_timeout",
+              "direction": "set_nonzero",
+              "change_safety": "safe",
+              "change_impact": "low",
+              "reload": false,
+              "postgres_pro": "Рекомендуется role-level timeout (30s–300s OLTP). Postgres Pro Enterprise — через ALTER ROLE.\nTypical OLTP: 30000-300000 (role-specific)",
+              "rationale": "Защита от runaway queries без restart.",
+              "current_values": {
+                "prom1": "0",
+                "prom2": "0"
+              }
+            },
+            {
+              "guc": "lock_timeout",
+              "direction": "set_nonzero",
+              "change_safety": "safe",
+              "change_impact": "low",
+              "reload": false,
+              "postgres_pro": "lock_timeout 5–30s для OLTP предотвращает каскадные ожидания.\nTypical OLTP: 5000-30000 for OLTP",
+              "rationale": "Без lock_timeout приложение может ждать блокировку бесконечно.",
+              "current_values": {
+                "prom1": "0",
+                "prom2": "0"
+              }
+            }
+          ],
+          "operational": [
+            "Установить lock_timeout для OLTP workload",
+            "Установить statement_timeout для application roles",
+            "Отдельный лимит для batch/ETL при необходимости"
+          ],
+          "problem_advice": {
+            "id": "memory.lock_timeout_zero",
+            "severity": "medium",
+            "title": "lock_timeout is disabled",
+            "recommendation": "Без lock_timeout приложение может бесконечно ждать блокировку,\nсоздавая каскадные задержки.\n",
+            "actions": [
+              "Установить lock_timeout для OLTP workload"
+            ],
+            "references": [
+              "PostgreSQL Documentation: lock_timeout"
+            ]
+          },
+          "stable_finding": {
+            "rule_id": "memory.lock_timeout_zero, memory.statement_timeout_zero",
+            "category": "memory",
+            "occurrence_count": 2,
+            "total_reports": 2,
+            "stability_ratio": 1.0,
+            "max_severity": "warning",
+            "sample_messages": [
+              "lock_timeout=0 (no protection against lock waits)",
+              "statement_timeout=0 (queries may run indefinitely)"
+            ],
+            "report_labels": [
+              "prom1",
+              "prom2"
+            ]
+          }
+        },
+        {
+          "tuning_rule_id": "advise.io.unused_index",
+          "finding_rule_id": "io.unused_index",
+          "title": "Unused index",
+          "problem_severity": "low",
+          "stability_ratio": 1.0,
+          "combined_change_safety": "safe",
+          "combined_change_impact": "low",
+          "guc_items": [],
+          "operational": [
+            "Подтвердить отсутствие использования на длинном интервале",
+            "Удалить индекс в согласованное окно"
+          ],
+          "problem_advice": {
+            "id": "io.unused_index",
+            "severity": "low",
+            "title": "Unused index",
+            "recommendation": "Неиспользуемый индекс замедляет INSERT/UPDATE/DELETE и vacuum без пользы для чтения.\nКоммьюнити рекомендует периодически удалять unused indexes.\n",
+            "actions": [
+              "Подтвердить отсутствие использования на длинном интервале",
+              "Удалить индекс в согласованное окно"
+            ],
+            "references": [
+              "PostgreSQL Wiki: Index Maintenance"
+            ]
+          },
+          "stable_finding": {
+            "rule_id": "io.unused_index",
+            "category": "io",
+            "occurrence_count": 2,
+            "total_reports": 2,
+            "stability_ratio": 1.0,
+            "max_severity": "warning",
+            "sample_messages": [
+              "Unused index credithistory.credithistory.t_value.i_value_rquid: size=845 MB",
+              "Unused index credithistory.credithistory.t_value.i_value_rquid: size=851 MB"
+            ],
+            "report_labels": [
+              "prom1",
+              "prom2"
+            ]
+          }
+        }
+      ],
+      "summary": {
+        "report_count": 2,
+        "stable_count": 15,
+        "recommendation_count": 11,
+        "ephemeral_count": 3
+      }
+    },
+    {
+      "type": "symptom_investigation",
+      "symptom": "high_cpu",
+      "symptom_title": "Высокая утилизация CPU БД",
+      "symptom_description": "Симптом: высокая загрузка CPU процессами PostgreSQL. pg_profile показывает CPU через\npg_stat_kcache (top_rusage_statements) и active_time на уровне БД.",
+      "query_target": null,
+      "reports": [
+        {
+          "label": "prom1",
+          "path": "resources/credithistory_prom1.html",
+          "filename": "credithistory_prom1.html"
+        },
+        {
+          "label": "prom2",
+          "path": "resources/credithistory_prom2.html",
+          "filename": "credithistory_prom2.html"
+        }
+      ],
+      "query_matches": [],
+      "causes": [
+        {
+          "cause_id": "cpu.dominant_queries",
+          "title": "Доминирующие SQL по CPU (pg_stat_kcache)",
+          "description": "Несколько запросов потребляют большую долю user/system CPU за интервал.",
+          "status": "suspected",
+          "evidence": [
+            "[prom1] Топ CPU: sum_cpu_time=121.6s, user_time_pct=17.8%",
+            "[prom1] hex=4aeabfa00fd66418: SELECT pgse_profile.take_sample()",
+            "[prom1] #2: sum_cpu_time=96.3s hex=790639d3aaede809",
+            "[prom1] #3: sum_cpu_time=85.8s hex=a822446855e79f13",
+            "[prom2] Топ CPU: sum_cpu_time=123.7s, user_time_pct=17.9%",
+            "[prom2] hex=4aeabfa00fd66418: SELECT pgse_profile.take_sample()",
+            "[prom2] #2: sum_cpu_time=94.4s hex=790639d3aaede809",
+            "[prom2] #3: sum_cpu_time=85.5s hex=a822446855e79f13"
+          ],
+          "confirm_actions": [
+            "EXPLAIN (ANALYZE, BUFFERS) для топ-3 SQL по sum_cpu_time из отчёта",
+            "Сопоставить pg_stat_statements (calls, mean_exec_time) с pg_stat_kcache (sum_cpu_time)",
+            "Проверить, совпадает ли пик CPU на OS с интервалом отчёта pg_profile"
+          ],
+          "refute_actions": [
+            "Если sum_cpu_time топ-запросов <5% интервала — CPU уходит не в SQL (фон, autovacuum, checkpoint)",
+            "Сравнить топ CPU между двумя периодами: запрос исчез из топа — не корневая причина текущего пика"
+          ],
+          "reports_matched": [
+            "prom1",
+            "prom2"
+          ]
+        },
+        {
+          "cause_id": "cpu.checkpoint_bgwriter",
+          "title": "Checkpoint / bgwriter / IO wait в kernel CPU",
+          "description": "Высокий system_time, checkpoint write, maxwritten_clean — kernel CPU на запись.",
+          "status": "suspected",
+          "evidence": [
+            "[prom1] checkpoints_req=3, checkpoint_write_time=11518.9s",
+            "[prom2] checkpoints_req=4, checkpoint_write_time=11835.0s"
+          ],
+          "confirm_actions": [
+            "cluster_stats: checkpoints_req, checkpoint_write_time, maxwritten_clean",
+            "Сопоставить system_time_pct в top_rusage с WAL/checkpoint метриками"
+          ],
+          "refute_actions": [
+            "checkpoints_req низкий и checkpoint_write_time мал — не checkpoint"
+          ],
+          "reports_matched": [
+            "prom1",
+            "prom2"
+          ]
+        },
+        {
+          "cause_id": "cpu.autovacuum_pressure",
+          "title": "Autovacuum / analyze во время нагрузки",
+          "description": "Bloat, stale vacuum, высокий mods/dead_pct — autovacuum конкурирует за CPU.",
+          "status": "suspected",
+          "evidence": [
+            "[prom1] Bloat: credithistory.t_repl_agglock_auditevent dead_pct=50.0%",
+            "[prom2] Bloat: pgse_profile.sample_stat_tables dead_pct=15.541335217131541%"
+          ],
+          "confirm_actions": [
+            "Проверить top_tbl_last_sample: dead_pct, mods_pct, last_autovacuum",
+            "pg_stat_activity: autovacuum workers в пик CPU",
+            "Логи autovacuum (log_autovacuum_min_duration)"
+          ],
+          "refute_actions": [
+            "Нет таблиц с высоким dead_pct и autovacuum свежий — маловероятно"
+          ],
+          "reports_matched": [
+            "prom1",
+            "prom2"
+          ]
+        },
+        {
+          "cause_id": "cpu.parallel_workers",
+          "title": "Параллельные запросы / max_parallel_workers",
+          "description": "Много parallel workers увеличивают суммарный CPU.",
+          "status": "possible",
+          "evidence": [],
+          "confirm_actions": [
+            "EXPLAIN: Gather / Parallel Seq Scan в топ SQL",
+            "Проверить max_parallel_workers_per_gather и load"
+          ],
+          "refute_actions": [
+            "Планы без parallel nodes при высоком CPU — ищите другие причины"
+          ],
+          "reports_matched": []
+        },
+        {
+          "cause_id": "cpu.jit_overhead",
+          "title": "JIT-компиляция запросов",
+          "description": "JIT включён и топ SQL имеет заметный jit_total_time.",
+          "status": "possible",
+          "evidence": [],
+          "confirm_actions": [
+            "Проверить jit_* поля в top_statements для медленных/тяжёлых запросов",
+            "Сравнить plan time vs exec time; jit_generation_time в pg_profile",
+            "Тест с SET jit=off для подозрительного запроса на НТ"
+          ],
+          "refute_actions": [
+            "jit_total_time отсутствует или << total_exec_time — JIT не доминирует"
+          ],
+          "reports_matched": []
+        },
+        {
+          "cause_id": "cpu.high_call_volume",
+          "title": "Высокий объём вызовов (CPU × calls)",
+          "description": "Умеренное mean_exec_time при очень большом calls даёт высокий суммарный CPU.",
+          "status": "possible",
+          "evidence": [],
+          "confirm_actions": [
+            "Проверить calls и total_exec_time в top_statements для топ CPU запросов",
+            "Найти источник частых вызовов (ORM N+1, polling, отсутствие pool)"
+          ],
+          "refute_actions": [
+            "Если calls низкий при высоком CPU — причина не в частоте, а в тяжёлом плане/функции"
+          ],
+          "reports_matched": []
+        }
+      ],
+      "action_plan": [
+        "[подтвердить cpu.dominant_queries] EXPLAIN (ANALYZE, BUFFERS) для топ-3 SQL по sum_cpu_time из отчёта",
+        "[подтвердить cpu.dominant_queries] Сопоставить pg_stat_statements (calls, mean_exec_time) с pg_stat_kcache (sum_cpu_time)",
+        "[подтвердить cpu.dominant_queries] Проверить, совпадает ли пик CPU на OS с интервалом отчёта pg_profile",
+        "[опровергнуть cpu.dominant_queries] Если sum_cpu_time топ-запросов <5% интервала — CPU уходит не в SQL (фон, autovacuum, checkpoint)",
+        "[опровергнуть cpu.dominant_queries] Сравнить топ CPU между двумя периодами: запрос исчез из топа — не корневая причина текущего пика",
+        "[подтвердить cpu.checkpoint_bgwriter] cluster_stats: checkpoints_req, checkpoint_write_time, maxwritten_clean",
+        "[подтвердить cpu.checkpoint_bgwriter] Сопоставить system_time_pct в top_rusage с WAL/checkpoint метриками",
+        "[опровергнуть cpu.checkpoint_bgwriter] checkpoints_req низкий и checkpoint_write_time мал — не checkpoint",
+        "[подтвердить cpu.autovacuum_pressure] Проверить top_tbl_last_sample: dead_pct, mods_pct, last_autovacuum",
+        "[подтвердить cpu.autovacuum_pressure] pg_stat_activity: autovacuum workers в пик CPU",
+        "[подтвердить cpu.autovacuum_pressure] Логи autovacuum (log_autovacuum_min_duration)",
+        "[опровергнуть cpu.autovacuum_pressure] Нет таблиц с высоким dead_pct и autovacuum свежий — маловероятно",
+        "[подтвердить cpu.parallel_workers] EXPLAIN: Gather / Parallel Seq Scan в топ SQL",
+        "[подтвердить cpu.parallel_workers] Проверить max_parallel_workers_per_gather и load",
+        "[подтвердить cpu.jit_overhead] Проверить jit_* поля в top_statements для медленных/тяжёлых запросов",
+        "[подтвердить cpu.jit_overhead] Сравнить plan time vs exec time; jit_generation_time в pg_profile",
+        "[подтвердить cpu.jit_overhead] Тест с SET jit=off для подозрительного запроса на НТ",
+        "[подтвердить cpu.high_call_volume] Проверить calls и total_exec_time в top_statements для топ CPU запросов",
+        "[подтвердить cpu.high_call_volume] Найти источник частых вызовов (ORM N+1, polling, отсутствие pool)"
+      ],
+      "summary": {
+        "report_count": 2,
+        "confirmed_count": 0,
+        "suspected_count": 3
+      }
+    }
+  ],
+  "findings": [],
+  "summary": {
+    "total_findings": 0,
+    "analysis_count": 2
+  }
+}

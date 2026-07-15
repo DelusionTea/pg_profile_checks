@@ -1,0 +1,238 @@
+pg_profile stable PROD analysis
+Reports: 2 | min stability: 100%
+
+  [prom1] counteragent_prom1.html | 2026-07-01 05:00:02+03 .. 2026-07-01 21:00:01+03 (16.0 h) | findings=80
+  [prom2] counteragent_prom2.html | 2026-07-04 10:00:02+03 .. 2026-07-04 23:00:02+03 (13.0 h) | findings=85
+
+== Стабильные проблемы (23 — во всех ≥100% отчётов) ==
+
+--- [CRITICAL] Idle in transaction / нет таймаута ---
+  Finding: sessions.high_idle_in_transaction, sessions.idle_timeout_disabled | stable 2/2 (100%) | reports: prom1, prom2
+  Example: counteragent: idle_in_transaction_time=953878.0s (threshold 3600s), idle_in_transaction_session_timeout=0
+  Problem: Долгие idle in transaction сессии держат snapshots, блокируют vacuum
+  Problem: и увеличивают bloat — одна из самых частых рекомендаций коммьюнити.
+  GUC tuning | change safety: ОСТОРОЖНО (тест + мониторинг) | potential impact: среднее
+    • idle_in_transaction_session_timeout → set_nonzero | [ОСТОРОЖНО (тест + мониторинг)] [impact: среднее]
+      Current: prom1=0, prom2=0
+      Why: Стабильный idle in transaction без таймаута — классический production risk.
+      Postgres Pro: Postgres Pro / PostgreSQL: 60s–300s типично для OLTP. Защита от утечки snapshots и bloat.
+  Actions:
+    - Исправить application: COMMIT/ROLLBACK, pool settings
+    - Найти источник в pg_stat_activity
+    - Установить idle_in_transaction_session_timeout
+    - Исправить application connection pooling / missing COMMIT
+    - Найти источник зависших транзакций в pg_stat_activity
+    - Установить idle_in_transaction_session_timeout (например 60s–300s)
+
+--- [HIGH] Память / cache hit ---
+  Finding: cache.low_hit_ratio, cache.low_table_hit_ratio, memory.work_mem_connections_risk | stable 2/2 (100%) | reports: prom1, prom2
+  Example: counteragent: blks_hit_pct=84.96% (threshold 99.0%)
+  Problem: Низкий blks_hit_pct — данные часто читаются с диска. Проверьте размер
+  Problem: shared_buffers и working set БД.
+  GUC tuning | change safety: RESTART (плановое окно) | potential impact: высокое
+    • shared_buffers → increase | [RESTART (плановое окно)] [impact: высокое]
+      Current: prom1=1026816, prom2=1026816
+      Why: Низкий cache hit при стабильном паттерне — кандидат на увеличение буферов.
+      Postgres Pro: Postgres Pro: shared_buffers ~25% RAM (политика банка). Требует restart.
+    • effective_cache_size → review_increase | [БЕЗОПАСНО (reload)] [impact: низкое]
+      Current: prom1=3145728, prom2=3145728
+      Why: Помогает планировщику при низком blks_hit_pct.
+      Postgres Pro: Подсказка планировщику (~50–75% RAM). Не выделяет память — безопасно для reload.
+    • work_mem → review_decrease_or_role_level | [РИСК (может ухудшить нагрузку)] [impact: высокое]
+      Current: prom1=16384, prom2=16384
+      Why: Стабильный риск OOM при высоком work_mem и connections.
+      Postgres Pro: work_mem × параллельные sorts = риск OOM. Postgres Pro: задавать на уровне роли для тяжёлых запросов.
+  Actions:
+    - Connection pooler (PgBouncer)
+    - Таблицы с высоким physical read
+    - Увеличить shared_buffers (ориентир 25% RAM, с учётом политики банка)
+    - Проверить effective_cache_size для планировщика
+    - Найти таблицы с высоким physical read
+    - Identify tables with high physical reads
+
+--- [HIGH] Длительная запись checkpoint / bgwriter ---
+  Finding: checkpoints.high_write_time, checkpoints.high_write_time_per_hour, checkpoints.maxwritten_clean | stable 2/2 (100%) | reports: prom1, prom2
+  Example: Checkpoint write time: 22768.8s over 16.0h interval (threshold 300s)
+  Problem: Длительная запись checkpoint увеличивает IO latency и может влиять на
+  Problem: время отклика запросов во время checkpoint.
+  GUC tuning | change safety: RESTART (плановое окно) | potential impact: высокое
+    • checkpoint_completion_target → review_increase | [БЕЗОПАСНО (reload)] [impact: низкое]
+      Current: prom1=0.5, prom2=0.5
+      Why: Длинный checkpoint write time стабильно на PROD.
+      Postgres Pro: Растягивание checkpoint (0.7–0.9) снижает latency spikes.
+    • shared_buffers → review_increase | [RESTART (плановое окно)] [impact: высокое]
+      Current: prom1=1026816, prom2=1026816
+      Why: Bgwriter не успевает при maxwritten_clean.
+      Postgres Pro: maxwritten_clean часто связан с давлением на buffer pool.
+  Actions:
+    - Проверить IO latency диска, iostat
+    - Согласовать max_wal_size / checkpoint_timeout
+    - Проверить производительность диска (IOPS, latency)
+    - Оценить checkpoint_completion_target
+    - Снизить write-нагрузку или распределить её во времени
+    - Compare with previous test runs using compare_runs.py
+
+--- [HIGH] Медленные / spill SQL (не GUC-only) ---
+  Finding: queries.slow_execution | stable 2/2 (100%) | reports: prom1, prom2
+  Example: counteragent/as_admin: mean=57670.1ms, max=191210.5ms, total=1730.1s, calls=30
+  select 0, count(t0.DESTINATIONCLIENT_EN
+  Problem: Запросы с высоким mean/max/total execution time — кандидаты на оптимизацию
+  Problem: плана, индексов или переписывания SQL.
+  GUC tuning | change safety: РИСК (может ухудшить нагрузку) | potential impact: высокое
+    • work_mem → review_increase_role_level | [РИСК (может ухудшить нагрузку)] [impact: высокое]
+      Current: prom1=16384, prom2=16384
+      Why: Temp spill стабильно на PROD — точечная настройка безопаснее глобальной.
+      Postgres Pro: temp_blks_written — кандидат на role-level work_mem, не глобальное увеличение.
+  Actions:
+    - EXPLAIN (ANALYZE, BUFFERS) топ SQL
+    - Индексы, статистика ANALYZE
+    - Не менять GUC без анализа планов
+    - Выполнить EXPLAIN (ANALYZE, BUFFERS) для топ-запросов
+    - Проверить индексы и статистику (ANALYZE)
+    - Оценить work_mem при temp spills
+
+--- [HIGH] Частые requested checkpoints / давление WAL ---
+  Finding: checkpoints.high_requested_ratio, checkpoints.high_requested_count, checkpoints.high_requested_per_hour | stable 2/2 (100%) | reports: prom1, prom2
+  Example: Requested checkpoints: 181/185 (97.8%), threshold 30%
+  Problem: Большая доля requested checkpoints означает, что WAL заполняется быстрее,
+  Problem: чем срабатывают плановые checkpoints. Это типичный признак слишком малого
+  Problem: max_wal_size или высокой write-нагрузки.
+  GUC tuning | change safety: ОСТОРОЖНО (тест + мониторинг) | potential impact: среднее
+    • max_wal_size → increase | [ОСТОРОЖНО (тест + мониторинг)] [impact: среднее]
+      Current: prom1=16384, prom2=16384
+      Why: Малый max_wal_size — частая причина requested checkpoints при стабильной write-нагрузке.
+      Postgres Pro: Postgres Pro / PostgreSQL: увеличение max_wal_size снижает частоту requested checkpoints.
+    • checkpoint_completion_target → review_increase | [БЕЗОПАСНО (reload)] [impact: низкое]
+      Current: prom1=0.5, prom2=0.5
+      Why: Сглаживает IO-пики при длинных checkpoint write.
+      Postgres Pro: Значение 0.7–0.9 растягивает checkpoint во времени (PostgreSQL docs).
+  Actions:
+    - Сравнить WAL MB/h между периодами (compare_nt_prod / compare_runs)
+    - Проверить wal-heavy SQL в pg_profile
+    - Увеличить max_wal_size (часто 1–4 GB+ для OLTP под нагрузкой)
+    - Проверить wal_buffers_full и общий объём WAL за интервал
+    - Сопоставить с checkpoint_timeout — не уменьшать timeout вместо max_wal_size
+    - Проверить max_wal_size и рост WAL
+
+--- [HIGH] Autovacuum не успевает / bloat ---
+  Finding: autovacuum.table_high_dead_pct, autovacuum.table_high_mods_pct | stable 2/2 (100%) | reports: prom1, prom2
+  Example: counteragent.counteragent.t_clientfeaturemapping: dead_pct=53.6%, n_dead=165979, last_autovacuum=never
+  Problem: Высокий процент мёртвых строк — autovacuum не успевает или заблокирован
+  Problem: long transactions.
+  GUC tuning | change safety: ОСТОРОЖНО (тест + мониторинг) | potential impact: среднее
+    • autovacuum_naptime → decrease | [ОСТОРОЖНО (тест + мониторинг)] [impact: среднее]
+      Current: prom1=10, prom2=10
+      Why: Высокий naptime замедляет запуск vacuum на «горячих» таблицах.
+      Postgres Pro: Для OLTP часто 15–60 с. Уменьшение ускоряет реакцию на bloat, но повышает фоновый IO.
+    • autovacuum_vacuum_cost_delay → decrease | [ОСТОРОЖНО (тест + мониторинг)] [impact: среднее]
+      Current: prom1=10, prom2=10
+      Why: Autovacuum «ползёт» при высоком cost_delay.
+      Postgres Pro: Снижение cost_delay ускоряет vacuum ценой IO (PostgreSQL cost-based vacuum delay).
+    • autovacuum_vacuum_cost_limit → increase | [ОСТОРОЖНО (тест + мониторинг)] [impact: среднее]
+      Current: prom1=1000, prom2=1000
+      Why: Низкий limit — типичная причина медленного autovacuum.
+      Postgres Pro: Увеличение cost_limit даёт vacuum больший IO-бюджет за цикл.
+    • maintenance_work_mem → increase | [ОСТОРОЖНО (тест + мониторинг)] [impact: среднее]
+      Current: prom1=3354624, prom2=3354624
+      Why: Ускоряет очистку при стабильном bloat.
+      Postgres Pro: Больше maintenance_work_mem ускоряет VACUUM и CREATE INDEX (PostgreSQL docs).
+  Actions:
+    - Проверить idle in transaction (блокирует vacuum)
+    - Per-table autovacuum для hot tables
+    - Проверить idle in transaction и lock waits
+    - Настроить per-table autovacuum при необходимости
+    - Рассмотреть VACUUM (ANALYZE) в окно обслуживания
+    - Check autovacuum settings and long-running transactions
+
+--- [HIGH] Переполнение wal_buffers ---
+  Finding: wal.buffers_full | stable 2/2 (100%) | reports: prom1, prom2
+  Example: wal_buffers_full: 23440729 (threshold 1000)
+  Problem: wal_buffers переполняется — процессы ждут освобождения WAL buffer.
+  Problem: Типичная рекомендация коммьюнити: увеличить wal_buffers (часто 64MB на busy systems).
+  GUC tuning | change safety: ОСТОРОЖНО (тест + мониторинг) | potential impact: среднее
+    • wal_buffers → increase | [ОСТОРОЖНО (тест + мониторинг)] [impact: среднее]
+      Current: prom1=2048, prom2=2048
+      Why: Процессы ждут освобождения WAL buffer — стабильный симптом нехватки.
+      Postgres Pro: Postgres Pro: при высоком wal_buffers_full увеличьте wal_buffers (единицы 8kB).
+  Actions:
+    - Проверить пики WAL generation и batch DML
+    - Увеличить wal_buffers (единицы 8kB в pg_profile settings)
+    - Проверить пики WAL generation
+
+--- [MEDIUM] WAL/checkpoint (общее) ---
+  Finding: wal.backend_writes_high | stable 2/2 (100%) | reports: prom1, prom2
+  Example: Backend buffers written (314566620) exceed checkpoint buffers written (34553877)
+  Problem: Review WAL generation and checkpoint configuration.
+  GUC tuning | change safety: ОСТОРОЖНО (тест + мониторинг) | potential impact: среднее
+    • max_wal_size → review | [ОСТОРОЖНО (тест + мониторинг)] [impact: среднее]
+      Current: prom1=16384, prom2=16384
+      Why: Стабильная WAL-аномалия без точного sub-rule.
+      Postgres Pro: Review WAL metrics against Postgres Pro tuning guide.
+  Actions:
+    - Check max_wal_size and wal_buffers
+
+--- [MEDIUM] Cache or I/O read finding ---
+  Finding: cache.high_read_time | stable 2/2 (100%) | reports: prom1, prom2
+  Example: counteragent: blk_read_time=196673.6s (threshold 60s)
+  Problem: Review cache hit ratios and disk read patterns.
+  GUC tuning: нет (операционные действия ниже)
+  Actions:
+    - Identify tables with high physical reads
+
+--- [MEDIUM] Cache or I/O read finding ---
+  Finding: cache.temp_usage | stable 2/2 (100%) | reports: prom1, prom2
+  Example: counteragent: temp usage detected (temp_bytes=699 MB, temp_files=8)
+  Problem: Review cache hit ratios and disk read patterns.
+  GUC tuning: нет (операционные действия ниже)
+  Actions:
+    - Identify tables with high physical reads
+
+--- [MEDIUM] I/O pattern finding ---
+  Finding: io.high_heap_reads | stable 2/2 (100%) | reports: prom1, prom2
+  Example: counteragent.counteragent.t_processednotificationcandidate: heap_blks_read=198321587
+  Problem: Review query plans and table access patterns.
+  GUC tuning: нет (операционные действия ниже)
+  Actions:
+    - Use EXPLAIN and pg_profile top I/O sections
+
+--- [MEDIUM] WAL-heavy SQL query ---
+  Finding: io.wal_heavy_query | stable 2/2 (100%) | reports: prom1, prom2
+  Example: counteragent/as_admin: wal=522.0GB
+  update counteragent.t_transaction set sys_lastchangedate=$1,rquid=$2,validto=$3 whe
+  Problem: Запрос генерирует много WAL — типично для массовых INSERT/UPDATE.
+  Problem: Проверьте batch size и индексы на горячих таблицах.
+  GUC tuning: нет (операционные действия ниже)
+  Actions:
+    - Оптимизировать batch DML
+    - Проверить fillfactor и индексы на целевых таблицах
+
+--- [MEDIUM] Отключены statement/lock timeout ---
+  Finding: memory.lock_timeout_zero, memory.statement_timeout_zero | stable 2/2 (100%) | reports: prom1, prom2
+  Example: lock_timeout=0 (no protection against lock waits)
+  Problem: Без lock_timeout приложение может бесконечно ждать блокировку,
+  Problem: создавая каскадные задержки.
+  GUC tuning | change safety: БЕЗОПАСНО (reload) | potential impact: низкое
+    • statement_timeout → set_nonzero | [БЕЗОПАСНО (reload)] [impact: низкое]
+      Current: prom1=0, prom2=0
+      Why: Защита от runaway queries без restart.
+      Postgres Pro: Рекомендуется role-level timeout (30s–300s OLTP). Postgres Pro Enterprise — через ALTER ROLE.
+    • lock_timeout → set_nonzero | [БЕЗОПАСНО (reload)] [impact: низкое]
+      Current: prom1=0, prom2=0
+      Why: Без lock_timeout приложение может ждать блокировку бесконечно.
+      Postgres Pro: lock_timeout 5–30s для OLTP предотвращает каскадные ожидания.
+  Actions:
+    - Установить lock_timeout для OLTP workload
+    - Установить statement_timeout для application roles
+    - Отдельный лимит для batch/ETL при необходимости
+
+--- [LOW] Unused index ---
+  Finding: io.unused_index | stable 2/2 (100%) | reports: prom1, prom2
+  Example: Unused index counteragent.counteragent.t_transaction.i_transaction_rquid: size=1206 MB
+  Problem: Неиспользуемый индекс замедляет INSERT/UPDATE/DELETE и vacuum без пользы для чтения.
+  Problem: Коммьюнити рекомендует периодически удалять unused indexes.
+  GUC tuning: нет (операционные действия ниже)
+  Actions:
+    - Подтвердить отсутствие использования на длинном интервале
+    - Удалить индекс в согласованное окно
+
+Summary: 23 stable findings, 14 tuning recommendations, 4 ephemeral

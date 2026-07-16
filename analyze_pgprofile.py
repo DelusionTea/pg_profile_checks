@@ -32,6 +32,13 @@ from pgprofile_health import load_report_data, load_thresholds, run_checks
 from pgprofile_parser import PgProfileParseError, load_settings, parse_report_meta
 from pgprofile_nt_prod import nt_prod_validation_to_dict, validate_nt_prod
 from pgprofile_stable_prod import analyze_stable_prod, stable_prod_to_dict
+from pgprofile_nt_runs import (
+    analyze_nt_runs,
+    build_nt_runs_brief,
+    build_nt_runs_confluence_wiki,
+    nt_runs_to_dict,
+    parse_symptom_list,
+)
 from pgprofile_symptoms import QueryTarget, investigate_symptom, symptom_investigation_to_dict
 
 from compare_settings import diff_settings
@@ -126,6 +133,25 @@ def build_parser() -> argparse.ArgumentParser:
         default=DEFAULT_PLAYBOOK,
         help=f"Symptom playbook YAML (default: {DEFAULT_PLAYBOOK.name})",
     )
+    parser.add_argument(
+        "--nt-reports",
+        nargs="+",
+        type=Path,
+        metavar="HTML",
+        help="2+ NT reports in order; with --symptoms runs multi-run analysis + GUC impact",
+    )
+    parser.add_argument(
+        "--nt-label",
+        action="append",
+        default=[],
+        metavar="NAME",
+        help="Label for --nt-reports (repeat per file, same order)",
+    )
+    parser.add_argument(
+        "--symptoms",
+        type=str,
+        help="Comma/space-separated symptoms for --nt-reports: high_cpu,high_wal,...",
+    )
     parser.add_argument("--settings-a-id", type=str, default="NT")
     parser.add_argument("--settings-b-id", type=str, default="PROD")
     parser.add_argument(
@@ -163,12 +189,26 @@ def main(argv: list[str] | None = None) -> int:
         and not args.compare_settings
         and not args.stable_prod_reports
         and not (args.symptom and args.symptom_reports)
+        and not (args.nt_reports and args.symptoms)
     ):
         print(
             "error: provide --report, --compare-settings, --stable-prod-reports, "
-            "and/or --symptom with --symptom-reports",
+            "--symptom with --symptom-reports, and/or --nt-reports with --symptoms",
             file=sys.stderr,
         )
+        return 2
+
+    if args.nt_reports and not args.symptoms:
+        print("error: --nt-reports requires --symptoms", file=sys.stderr)
+        return 2
+    if args.symptoms and not args.nt_reports:
+        print("error: --symptoms requires --nt-reports", file=sys.stderr)
+        return 2
+    if args.nt_reports and len(args.nt_reports) < 2:
+        print("error: --nt-reports requires at least two HTML files", file=sys.stderr)
+        return 2
+    if args.nt_label and len(args.nt_label) != len(args.nt_reports or []):
+        print("error: --nt-label count must match --nt-reports", file=sys.stderr)
         return 2
 
     if args.symptom and not args.symptom_reports:
@@ -198,6 +238,7 @@ def main(argv: list[str] | None = None) -> int:
     has_issues = False
     stable_prod_analysis = None
     symptom_investigation = None
+    nt_runs_analysis = None
 
     try:
         if args.report:
@@ -299,6 +340,49 @@ def main(argv: list[str] | None = None) -> int:
             ):
                 has_issues = True
 
+        if args.nt_reports and args.symptoms:
+            for path in args.nt_reports:
+                if not path.exists():
+                    raise FileNotFoundError(f"NT report not found: {path}")
+            try:
+                parse_symptom_list(args.symptoms)
+            except ValueError as exc:
+                raise ValueError(str(exc)) from exc
+            query_target = QueryTarget(
+                hexqueryid=args.query_hex,
+                queryid=args.query_id,
+                query_text=args.query_text,
+            )
+            labels = args.nt_label if args.nt_label else None
+            nt_runs_analysis = analyze_nt_runs(
+                args.nt_reports,
+                labels=labels,
+                symptoms=args.symptoms,
+                playbook_path=args.playbook,
+                health_thresholds_path=args.config,
+                min_change_pct=args.min_change_pct,
+                top_n=args.top_n,
+                query_target=query_target,
+            )
+            nt_dict = nt_runs_to_dict(nt_runs_analysis)
+            analyses.append(nt_dict)
+            _save_json(args.output_dir / "nt_runs.json", nt_dict)
+            (args.output_dir / "nt_runs_brief.md").write_text(
+                build_nt_runs_brief(nt_runs_analysis), encoding="utf-8"
+            )
+            (args.output_dir / "nt_runs_confluence.wiki").write_text(
+                build_nt_runs_confluence_wiki(
+                    nt_runs_analysis, page_title=args.confluence_title
+                ),
+                encoding="utf-8",
+            )
+            if any(
+                inv.causes
+                for inv in nt_runs_analysis.symptom_investigations
+                if any(c.status.value in ("confirmed", "suspected") for c in inv.causes)
+            ):
+                has_issues = True
+
         if args.symptom and args.symptom_reports:
             for path in args.symptom_reports:
                 if not path.exists():
@@ -350,7 +434,8 @@ def main(argv: list[str] | None = None) -> int:
     advisor_analyses = [
         a
         for a in analyses
-        if a.get("type") not in ("stable_prod_analysis", "symptom_investigation")
+        if a.get("type")
+        not in ("stable_prod_analysis", "symptom_investigation", "nt_runs_analysis")
     ]
     advisor_reports = [advise_findings(a) for a in advisor_analyses]
     combined_advisor = {
@@ -363,6 +448,8 @@ def main(argv: list[str] | None = None) -> int:
     }
     if stable_prod_analysis is not None:
         combined_advisor["stable_prod"] = stable_prod_to_dict(stable_prod_analysis)
+    if nt_runs_analysis is not None:
+        combined_advisor["nt_runs"] = nt_runs_to_dict(nt_runs_analysis)
     if symptom_investigation is not None:
         combined_advisor["symptom_investigation"] = symptom_investigation_to_dict(
             symptom_investigation
@@ -374,6 +461,8 @@ def main(argv: list[str] | None = None) -> int:
         from pgprofile_stable_prod import build_stable_prod_brief
 
         brief_parts.append(build_stable_prod_brief(stable_prod_analysis))
+    if nt_runs_analysis is not None:
+        brief_parts.append(build_nt_runs_brief(nt_runs_analysis))
     if symptom_investigation is not None:
         from pgprofile_symptoms import build_symptom_brief
 
@@ -412,6 +501,10 @@ def main(argv: list[str] | None = None) -> int:
         print(f"  stable_prod_confluence_stub.wiki  (стабильные PROD → Confluence)")
         print(f"  stable_prod_confluence_prompt.txt  (gigacli → план GUC)")
         print(f"  stable_prod_brief.md")
+    if nt_runs_analysis is not None:
+        print(f"  nt_runs.json  (symptoms: {', '.join(nt_runs_analysis.symptoms)})")
+        print(f"  nt_runs_brief.md")
+        print(f"  nt_runs_confluence.wiki  (симптомы + влияние GUC)")
     if symptom_investigation is not None:
         summary = symptom_investigation_to_dict(symptom_investigation)["summary"]
         print(

@@ -1,0 +1,974 @@
+{
+  "type": "run_comparison",
+  "run_a": {
+    "run_id": "before_guc",
+    "path": "resources/counter_nt_before_settings.html",
+    "filename": "counter_nt_before_settings.html",
+    "server": "tsldd-pprb02833.cloud.delta.sbrf.ru",
+    "report_start": "2026-07-14 18:00:02+03",
+    "report_end": "2026-07-15 12:00:02+03",
+    "interval_hours": 18.0
+  },
+  "run_b": {
+    "run_id": "after_guc",
+    "path": "resources/counter_nt_with_settings.html",
+    "filename": "counter_nt_with_settings.html",
+    "server": "tsldd-pprb02833.cloud.delta.sbrf.ru",
+    "report_start": "2026-07-15 14:30:02+03",
+    "report_end": "2026-07-16 09:30:02+03",
+    "interval_hours": 19.0
+  },
+  "interval_diff_hours": 1.0,
+  "interval_mismatch": true,
+  "findings": [
+    {
+      "id": "run_compare.cluster.buffers_backend",
+      "category": "cluster",
+      "severity": "warning",
+      "message": "buffers_backend",
+      "details": {
+        "value_a": 463195650.0,
+        "value_b": 365372858.0,
+        "per_hour_a": 25733091.666666668,
+        "per_hour_b": 19230150.42105263,
+        "delta": -97822792.0,
+        "delta_pct": -21.119108523579616,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.cluster.buffers_checkpoint",
+      "category": "cluster",
+      "severity": "warning",
+      "message": "buffers_checkpoint",
+      "details": {
+        "value_a": 4136935.0,
+        "value_b": 1812275.0,
+        "per_hour_a": 229829.72222222222,
+        "per_hour_b": 95382.8947368421,
+        "delta": -2324660.0,
+        "delta_pct": -56.192809410831934,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.cluster.checkpoint_sync_time",
+      "category": "cluster",
+      "severity": "warning",
+      "message": "checkpoint_sync_time",
+      "details": {
+        "value_a": 831.19,
+        "value_b": 385.16,
+        "per_hour_a": 46.17722222222223,
+        "per_hour_b": 20.271578947368422,
+        "delta": -446.03000000000003,
+        "delta_pct": -53.661617680674695,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.cluster.checkpoint_write_time",
+      "category": "cluster",
+      "severity": "warning",
+      "message": "checkpoint_write_time",
+      "details": {
+        "value_a": 56617.23,
+        "value_b": 52294.35,
+        "per_hour_a": 3145.4016666666666,
+        "per_hour_b": 2752.334210526316,
+        "delta": -4322.880000000005,
+        "delta_pct": -7.635272866581436,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.cluster.checkpoints_req",
+      "category": "cluster",
+      "severity": "warning",
+      "message": "checkpoints_req",
+      "details": {
+        "value_a": 309.0,
+        "value_b": 125.0,
+        "per_hour_a": 17.166666666666668,
+        "per_hour_b": 6.578947368421052,
+        "delta": -184.0,
+        "delta_pct": -59.54692556634304,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.cluster.checkpoints_timed",
+      "category": "cluster",
+      "severity": "warning",
+      "message": "checkpoints_timed",
+      "details": {
+        "value_a": 1.0,
+        "value_b": 12.0,
+        "per_hour_a": 0.05555555555555555,
+        "per_hour_b": 0.631578947368421,
+        "delta": 11.0,
+        "delta_pct": 1100.0,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.cluster.maxwritten_clean",
+      "category": "cluster",
+      "severity": "warning",
+      "message": "maxwritten_clean",
+      "details": {
+        "value_a": 234051.0,
+        "value_b": 220108.0,
+        "per_hour_a": 13002.833333333334,
+        "per_hour_b": 11584.631578947368,
+        "delta": -13943.0,
+        "delta_pct": -5.9572486338447606,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.cluster.wal_size",
+      "category": "cluster",
+      "severity": "warning",
+      "message": "wal_size",
+      "details": {
+        "value_a": 2791663375072.0,
+        "value_b": 1773823600776.0,
+        "per_hour_a": 155092409726.22223,
+        "per_hour_b": 93359136882.94737,
+        "delta": -1017839774296.0,
+        "delta_pct": -36.45997520276774,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.wal.wal_buffers_full",
+      "category": "wal",
+      "severity": "warning",
+      "message": "wal_buffers_full",
+      "details": {
+        "value_a": 19453.0,
+        "value_b": 39986.0,
+        "per_hour_a": 1080.7222222222222,
+        "per_hour_b": 2104.5263157894738,
+        "delta": 20533.0,
+        "delta_pct": 105.55184290340821,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.wal.wal_bytes",
+      "category": "wal",
+      "severity": "warning",
+      "message": "wal_bytes",
+      "details": {
+        "value_a": 2752283715507.0,
+        "value_b": 1758645861763.0,
+        "per_hour_a": 152904650861.5,
+        "per_hour_b": 92560308513.8421,
+        "delta": -993637853744.0,
+        "delta_pct": -36.10230472046234,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.wal.wal_records",
+      "category": "wal",
+      "severity": "warning",
+      "message": "wal_records",
+      "details": {
+        "value_a": 2826136364.0,
+        "value_b": 2436237022.0,
+        "per_hour_a": 157007575.7777778,
+        "per_hour_b": 128223001.15789473,
+        "delta": -389899342.0,
+        "delta_pct": -13.796197061353123,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.wal.wal_sync",
+      "category": "wal",
+      "severity": "warning",
+      "message": "wal_sync",
+      "details": {
+        "value_a": 5028688.0,
+        "value_b": 5682947.0,
+        "per_hour_a": 279371.55555555556,
+        "per_hour_b": 299102.4736842105,
+        "delta": 654259.0,
+        "delta_pct": 13.010530778604679,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.wal.wal_write",
+      "category": "wal",
+      "severity": "warning",
+      "message": "wal_write",
+      "details": {
+        "value_a": 5125951.0,
+        "value_b": 5833690.0,
+        "per_hour_a": 284775.05555555556,
+        "per_hour_b": 307036.3157894737,
+        "delta": 707739.0,
+        "delta_pct": 13.806979426841966,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.dml.Total.INSERT",
+      "category": "dml",
+      "severity": "warning",
+      "message": "Total.INSERT",
+      "details": {
+        "value_a": 9916495.0,
+        "value_b": 18269131.0,
+        "per_hour_a": 550916.3888888889,
+        "per_hour_b": 961533.2105263158,
+        "delta": 8352636.0,
+        "delta_pct": 84.22972027919138,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.dml.Total.UPDATE",
+      "category": "dml",
+      "severity": "warning",
+      "message": "Total.UPDATE",
+      "details": {
+        "value_a": 447271146.0,
+        "value_b": 376281572.0,
+        "per_hour_a": 24848397.0,
+        "per_hour_b": 19804293.263157893,
+        "delta": -70989574.0,
+        "delta_pct": -15.871708835874694,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.dml.Total.DELETE",
+      "category": "dml",
+      "severity": "warning",
+      "message": "Total.DELETE",
+      "details": {
+        "value_a": 2517941.0,
+        "value_b": 4455676.0,
+        "per_hour_a": 139885.61111111112,
+        "per_hour_b": 234509.26315789475,
+        "delta": 1937735.0,
+        "delta_pct": 76.95712488894696,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.dml.Total.ROLLBACK",
+      "category": "dml",
+      "severity": "warning",
+      "message": "Total.ROLLBACK",
+      "details": {
+        "value_a": 19471.0,
+        "value_b": 4373.0,
+        "per_hour_a": 1081.7222222222222,
+        "per_hour_b": 230.1578947368421,
+        "delta": -15098.0,
+        "delta_pct": -77.54095834831287,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.dml.Total.FETCH",
+      "category": "dml",
+      "severity": "warning",
+      "message": "Total.FETCH",
+      "details": {
+        "value_a": 8225454680.0,
+        "value_b": 9509738346.0,
+        "per_hour_a": 456969704.4444444,
+        "per_hour_b": 500512544.5263158,
+        "delta": 1284283666.0,
+        "delta_pct": 15.613527956365811,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.dml.counteragent.INSERT",
+      "category": "dml",
+      "severity": "warning",
+      "message": "counteragent.INSERT",
+      "details": {
+        "value_a": 9723591.0,
+        "value_b": 18068126.0,
+        "per_hour_a": 540199.5,
+        "per_hour_b": 950954.0,
+        "delta": 8344535.0,
+        "delta_pct": 85.81742074507247,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.dml.counteragent.UPDATE",
+      "category": "dml",
+      "severity": "warning",
+      "message": "counteragent.UPDATE",
+      "details": {
+        "value_a": 447215608.0,
+        "value_b": 376221066.0,
+        "per_hour_a": 24845311.555555556,
+        "per_hour_b": 19801108.736842107,
+        "delta": -70994542.0,
+        "delta_pct": -15.874790756408483,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.dml.counteragent.DELETE",
+      "category": "dml",
+      "severity": "warning",
+      "message": "counteragent.DELETE",
+      "details": {
+        "value_a": 2322038.0,
+        "value_b": 4252897.0,
+        "per_hour_a": 129002.11111111111,
+        "per_hour_b": 223836.68421052632,
+        "delta": 1930859.0,
+        "delta_pct": 83.15363486730192,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.dml.counteragent.ROLLBACK",
+      "category": "dml",
+      "severity": "warning",
+      "message": "counteragent.ROLLBACK",
+      "details": {
+        "value_a": 18389.0,
+        "value_b": 3233.0,
+        "per_hour_a": 1021.6111111111111,
+        "per_hour_b": 170.1578947368421,
+        "delta": -15156.0,
+        "delta_pct": -82.41883734841481,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.dml.counteragent.FETCH",
+      "category": "dml",
+      "severity": "warning",
+      "message": "counteragent.FETCH",
+      "details": {
+        "value_a": 8050858991.0,
+        "value_b": 9335288277.0,
+        "per_hour_a": 447269943.9444444,
+        "per_hour_b": 491330961.94736844,
+        "delta": 1284429286.0,
+        "delta_pct": 15.95394090786902,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.dml.postgres.UPDATE",
+      "category": "dml",
+      "severity": "warning",
+      "message": "postgres.UPDATE",
+      "details": {
+        "value_a": 55538.0,
+        "value_b": 60506.0,
+        "per_hour_a": 3085.4444444444443,
+        "per_hour_b": 3184.5263157894738,
+        "delta": 4968.0,
+        "delta_pct": 8.945226691634556,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.dml.postgres.COMMIT",
+      "category": "dml",
+      "severity": "warning",
+      "message": "postgres.COMMIT",
+      "details": {
+        "value_a": 217174.0,
+        "value_b": 244347.0,
+        "per_hour_a": 12065.222222222223,
+        "per_hour_b": 12860.368421052632,
+        "delta": 27173.0,
+        "delta_pct": 12.512087082247415,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.dml.postgres.ROLLBACK",
+      "category": "dml",
+      "severity": "warning",
+      "message": "postgres.ROLLBACK",
+      "details": {
+        "value_a": 1082.0,
+        "value_b": 1140.0,
+        "per_hour_a": 60.111111111111114,
+        "per_hour_b": 60.0,
+        "delta": 58.0,
+        "delta_pct": 5.360443622920518,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.queries.counteragent_as_admin",
+      "category": "queries",
+      "severity": "warning",
+      "message": "counteragent/as_admin",
+      "details": {
+        "value_a": 661064.19,
+        "value_b": 366977.99,
+        "per_hour_a": 36725.78833333333,
+        "per_hour_b": 19314.63105263158,
+        "delta": -294086.19999999995,
+        "delta_pct": -44.48678425615521,
+        "unit": "sec",
+        "extra": "A: calls=126.45M, total_time=661064.2s, mean_exec_time=5.2ms, max_exec_time=5298.8ms, wal_bytes=1447.40G, shared_blks_read=194.11M\nB: calls=89.93M, total_time=366978.0s, mean_exec_time=4.1ms, max_exec_time=4944.8ms, wal_bytes=840.92G, shared_blks_read=131.79M\n  update counteragent.t_feedbackwaitinglist set sys_lastchangedate=$1,refreshdate=$2 where object_i..."
+      }
+    },
+    {
+      "id": "run_compare.queries.counteragent_as_admin",
+      "category": "queries",
+      "severity": "warning",
+      "message": "counteragent/as_admin",
+      "details": {
+        "value_a": 335069.26,
+        "value_b": 255052.44,
+        "per_hour_a": 18614.95888888889,
+        "per_hour_b": 13423.812631578947,
+        "delta": -80016.82,
+        "delta_pct": -23.8806806688265,
+        "unit": "sec",
+        "extra": "A: calls=328.54K, total_time=335069.3s, mean_exec_time=1019.9ms, max_exec_time=4066.1ms, wal_bytes=2.48G, shared_blks_read=238.28M\nB: calls=344.77K, total_time=255052.4s, mean_exec_time=739.8ms, max_exec_time=2936.6ms, wal_bytes=2.32G, shared_blks_read=232.74M\n  with ct0(c0, c1, c2, c3) as (select t0.OBJECT_ID c0, t0.INN c1, t0.KPP c2, t0.NAME c3 from counte..."
+      }
+    },
+    {
+      "id": "run_compare.queries.counteragent_as_admin",
+      "category": "queries",
+      "severity": "warning",
+      "message": "counteragent/as_admin",
+      "details": {
+        "value_a": 68711.71,
+        "value_b": 127331.81,
+        "per_hour_a": 3817.3172222222224,
+        "per_hour_b": 6701.674210526316,
+        "delta": 58620.09999999999,
+        "delta_pct": 85.31311475147393,
+        "unit": "sec",
+        "extra": "A: calls=58, total_time=68711.7s, mean_exec_time=1184684.7ms, max_exec_time=3441232.8ms, shared_blks_read=397.09M\nB: calls=130, total_time=127331.8s, mean_exec_time=979475.4ms, max_exec_time=3550020.9ms, shared_blks_read=775.91M\n  select distinct $5, $6::int4 c2, t0.GROUPID c3 from counteragent.T_PROCESSEDNOTIFICATIONCANDIDATE..."
+      }
+    },
+    {
+      "id": "run_compare.queries.counteragent_as_admin",
+      "category": "queries",
+      "severity": "warning",
+      "message": "counteragent/as_admin",
+      "details": {
+        "value_a": 326100.53,
+        "value_b": 273223.6,
+        "per_hour_a": 18116.696111111112,
+        "per_hour_b": 14380.18947368421,
+        "delta": -52876.93000000005,
+        "delta_pct": -16.21491691534511,
+        "unit": "sec",
+        "extra": "A: calls=55.97M, total_time=326100.5s, mean_exec_time=5.8ms, max_exec_time=516.4ms, wal_bytes=553.27G, shared_blks_read=80.31M\nB: calls=64.96M, total_time=273223.6s, mean_exec_time=4.2ms, max_exec_time=302.7ms, wal_bytes=394.00G, shared_blks_read=87.49M\n  update counteragent.t_transaction set sys_lastchangedate=$1,rquid=$2 where object_id=$3"
+      }
+    },
+    {
+      "id": "run_compare.queries.counteragent_as_admin",
+      "category": "queries",
+      "severity": "warning",
+      "message": "counteragent/as_admin",
+      "details": {
+        "value_a": 69766.09,
+        "value_b": 39215.24,
+        "per_hour_a": 3875.893888888889,
+        "per_hour_b": 2063.96,
+        "delta": -30550.85,
+        "delta_pct": -43.79040017865413,
+        "unit": "sec",
+        "extra": "A: calls=128.39M, total_time=69766.1s, mean_exec_time=0.5ms, max_exec_time=509.3ms, wal_bytes=51.55G, shared_blks_read=1.87M\nB: calls=91.94M, total_time=39215.2s, mean_exec_time=0.4ms, max_exec_time=345.7ms, wal_bytes=36.39G, shared_blks_read=1.71M\n  UPDATE counteragent.T_REPL_AGGLOCK_FEEDBACKWAITINGLIST SET siversion = $1, guid = $2, version = $..."
+      }
+    },
+    {
+      "id": "run_compare.queries.counteragent_as_admin",
+      "category": "queries",
+      "severity": "warning",
+      "message": "counteragent/as_admin",
+      "details": {
+        "value_a": 152058.6,
+        "value_b": 131317.42,
+        "per_hour_a": 8447.7,
+        "per_hour_b": 6911.443157894738,
+        "delta": -20741.179999999993,
+        "delta_pct": -13.640254480838303,
+        "unit": "sec",
+        "extra": "A: calls=129.74M, total_time=152058.6s, mean_exec_time=1.2ms, max_exec_time=616.6ms, wal_bytes=12.93G, shared_blks_read=67.36M\nB: calls=129.90M, total_time=131317.4s, mean_exec_time=1.0ms, max_exec_time=338.3ms, wal_bytes=551.56M, shared_blks_read=67.49M\n  select f1_0.object_id from counteragent.t_feedbackwaitinglist f1_0 where f1_0.destinationclient_e..."
+      }
+    },
+    {
+      "id": "run_compare.queries.counteragent_as_admin",
+      "category": "queries",
+      "severity": "warning",
+      "message": "counteragent/as_admin",
+      "details": {
+        "value_a": 47527.45,
+        "value_b": 26980.44,
+        "per_hour_a": 2640.413888888889,
+        "per_hour_b": 1420.0231578947369,
+        "delta": -20547.01,
+        "delta_pct": -43.23187968216262,
+        "unit": "sec",
+        "extra": "A: calls=131.67M, total_time=47527.4s, mean_exec_time=0.4ms, max_exec_time=424.4ms, wal_bytes=26.95G, shared_blks_read=3.28M\nB: calls=94.58M, total_time=26980.4s, mean_exec_time=0.3ms, max_exec_time=237.6ms, wal_bytes=20.20G, shared_blks_read=2.73M\n  SELECT txtype, changeeventmask, aggtype, ownerid, migrationstatus, silock, siversion, guid, versi..."
+      }
+    },
+    {
+      "id": "run_compare.queries.counteragent_as_admin",
+      "category": "queries",
+      "severity": "warning",
+      "message": "counteragent/as_admin",
+      "details": {
+        "value_a": 75798.18,
+        "value_b": 55727.92,
+        "per_hour_a": 4211.009999999999,
+        "per_hour_b": 2933.0484210526315,
+        "delta": -20070.259999999995,
+        "delta_pct": -26.478551331971293,
+        "unit": "sec",
+        "extra": "A: calls=316.37K, total_time=75798.2s, mean_exec_time=239.6ms, max_exec_time=3467.6ms, shared_blks_read=88.99M\nB: calls=316.35K, total_time=55727.9s, mean_exec_time=176.2ms, max_exec_time=699.6ms, shared_blks_read=82.37M\n  select 0, t0.OBJECT_ID c2, t0.UCPID c3 from counteragent.T_PROCESSEDNOTIFICATIONCANDIDATE t0 wher..."
+      }
+    },
+    {
+      "id": "run_compare.queries.counteragent_as_admin",
+      "category": "queries",
+      "severity": "warning",
+      "message": "counteragent/as_admin",
+      "details": {
+        "value_a": 67771.34,
+        "value_b": 56136.6,
+        "per_hour_a": 3765.0744444444445,
+        "per_hour_b": 2954.557894736842,
+        "delta": -11634.739999999998,
+        "delta_pct": -17.167640480474486,
+        "unit": "sec",
+        "extra": "A: calls=65.34M, total_time=67771.3s, mean_exec_time=1.0ms, max_exec_time=320.8ms, shared_blks_read=35.18M\nB: calls=66.96M, total_time=56136.6s, mean_exec_time=0.8ms, max_exec_time=275.2ms, wal_bytes=14.91K, shared_blks_read=34.06M\n  select 0, t0.OBJECT_ID c2 from counteragent.T_TRANSACTION t0 where (t0.FROMCLIENT_ENTITYID = $1 a..."
+      }
+    },
+    {
+      "id": "run_compare.queries.counteragent_as_admin",
+      "category": "queries",
+      "severity": "warning",
+      "message": "counteragent/as_admin",
+      "details": {
+        "value_a": 10612.5,
+        "value_b": null,
+        "per_hour_a": 589.5833333333334,
+        "per_hour_b": null,
+        "delta": -10612.5,
+        "delta_pct": -100.0,
+        "unit": "sec",
+        "extra": "A: calls=2.51M, total_time=10612.5s, mean_exec_time=4.2ms, max_exec_time=328.8ms, wal_bytes=18.94G, shared_blks_read=3.38M\nB: \n  update counteragent.t_transaction set dtsum=$1,sys_lastchangedate=$2,rquid=$3,totalsum=$4 where o..."
+      }
+    },
+    {
+      "id": "run_compare.queries.counteragent_as_admin",
+      "category": "queries",
+      "severity": "warning",
+      "message": "counteragent/as_admin",
+      "details": {
+        "value_a": 9550.9,
+        "value_b": null,
+        "per_hour_a": 530.6055555555555,
+        "per_hour_b": null,
+        "delta": -9550.9,
+        "delta_pct": -100.0,
+        "unit": "sec",
+        "extra": "A: calls=2.48M, total_time=9550.9s, mean_exec_time=3.8ms, max_exec_time=294.3ms, wal_bytes=19.23G, shared_blks_read=2.88M\nB: \n  update counteragent.t_transaction set ktsum=$1,sys_lastchangedate=$2,rquid=$3,totalsum=$4 where o..."
+      }
+    },
+    {
+      "id": "run_compare.queries.counteragent_as_admin",
+      "category": "queries",
+      "severity": "warning",
+      "message": "counteragent/as_admin",
+      "details": {
+        "value_a": 7802.32,
+        "value_b": null,
+        "per_hour_a": 433.4622222222222,
+        "per_hour_b": null,
+        "delta": -7802.32,
+        "delta_pct": -100.0,
+        "unit": "sec",
+        "extra": "A: calls=216, total_time=7802.3s, mean_exec_time=36121.9ms, max_exec_time=306665.9ms, wal_bytes=2.10G, shared_blks_read=124.84M\nB: \n  select distinct 0, t0.DESTINATIONCLIENT_ENTITYID c2 from counteragent.T_FEEDBACKWAITINGLIST t0 wh..."
+      }
+    },
+    {
+      "id": "run_compare.queries.counteragent_as_admin",
+      "category": "queries",
+      "severity": "warning",
+      "message": "counteragent/as_admin",
+      "details": {
+        "value_a": null,
+        "value_b": 6940.86,
+        "per_hour_a": null,
+        "per_hour_b": 365.30842105263156,
+        "delta": 6940.86,
+        "delta_pct": null,
+        "unit": "sec",
+        "extra": "A: \nB: calls=18.16K, total_time=6940.9s, mean_exec_time=382.3ms, max_exec_time=899.1ms, wal_bytes=107.15M, shared_blks_read=5.43M\n  select 0, t0.OBJECT_ID c2, t0.UCPID c3 from counteragent.T_NOTIFICATIONCANDIDATE t0 where t0.UCPI..."
+      }
+    },
+    {
+      "id": "run_compare.queries.counteragent_as_admin",
+      "category": "queries",
+      "severity": "warning",
+      "message": "counteragent/as_admin",
+      "details": {
+        "value_a": 24718.78,
+        "value_b": 17824.11,
+        "per_hour_a": 1373.2655555555555,
+        "per_hour_b": 938.111052631579,
+        "delta": -6894.669999999998,
+        "delta_pct": -27.892436439015185,
+        "unit": "sec",
+        "extra": "A: calls=64.96M, total_time=24718.8s, mean_exec_time=0.4ms, max_exec_time=413.6ms, wal_bytes=26.03G, shared_blks_read=894.62K\nB: calls=66.97M, total_time=17824.1s, mean_exec_time=0.3ms, max_exec_time=249.5ms, wal_bytes=25.75G, shared_blks_read=1.13M\n  UPDATE counteragent.T_REPL_AGGLOCK_TRANSACTION SET siversion = $1, guid = $2, version = $3, sys_l..."
+      }
+    },
+    {
+      "id": "run_compare.queries.counteragent_as_admin",
+      "category": "queries",
+      "severity": "warning",
+      "message": "counteragent/as_admin",
+      "details": {
+        "value_a": 6416.91,
+        "value_b": null,
+        "per_hour_a": 356.495,
+        "per_hour_b": null,
+        "delta": -6416.91,
+        "delta_pct": -100.0,
+        "unit": "sec",
+        "extra": "A: calls=2.03M, total_time=6416.9s, mean_exec_time=3.2ms, max_exec_time=347.1ms, wal_bytes=16.26G, shared_blks_read=2.60M\nB: \n  update counteragent.t_transaction set sys_lastchangedate=$1,rquid=$2,tolevel_entityid=$3 where ob..."
+      }
+    },
+    {
+      "id": "run_compare.sessions.Total.active_time",
+      "category": "sessions",
+      "severity": "warning",
+      "message": "Total.active_time",
+      "details": {
+        "value_a": 6131643.53,
+        "value_b": 4200455.83,
+        "per_hour_a": 340646.8627777778,
+        "per_hour_b": 221076.62263157894,
+        "delta": -1931187.7000000002,
+        "delta_pct": -31.49543332960193,
+        "unit": "sec",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.sessions.Total.session_time",
+      "category": "sessions",
+      "severity": "warning",
+      "message": "Total.session_time",
+      "details": {
+        "value_a": 34163492.17,
+        "value_b": 32393171.8,
+        "per_hour_a": 1897971.7872222224,
+        "per_hour_b": 1704903.7789473685,
+        "delta": -1770320.370000001,
+        "delta_pct": -5.181906935013433,
+        "unit": "sec",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.sessions.Total.deadlocks",
+      "category": "sessions",
+      "severity": "warning",
+      "message": "Total.deadlocks",
+      "details": {
+        "value_a": 913.0,
+        "value_b": 52.0,
+        "per_hour_a": 50.72222222222222,
+        "per_hour_b": 2.736842105263158,
+        "delta": -861.0,
+        "delta_pct": -94.30449069003286,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.sessions.counteragent.active_time",
+      "category": "sessions",
+      "severity": "warning",
+      "message": "counteragent.active_time",
+      "details": {
+        "value_a": 6128624.88,
+        "value_b": 4198136.08,
+        "per_hour_a": 340479.16,
+        "per_hour_b": 220954.5305263158,
+        "delta": -1930488.7999999998,
+        "delta_pct": -31.4995425205401,
+        "unit": "sec",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.sessions.counteragent.session_time",
+      "category": "sessions",
+      "severity": "warning",
+      "message": "counteragent.session_time",
+      "details": {
+        "value_a": 33695877.17,
+        "value_b": 31898104.74,
+        "per_hour_a": 1871993.1761111112,
+        "per_hour_b": 1678847.6178947368,
+        "delta": -1797772.4300000034,
+        "delta_pct": -5.335289005625264,
+        "unit": "sec",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.sessions.counteragent.deadlocks",
+      "category": "sessions",
+      "severity": "warning",
+      "message": "counteragent.deadlocks",
+      "details": {
+        "value_a": 913.0,
+        "value_b": 52.0,
+        "per_hour_a": 50.72222222222222,
+        "per_hour_b": 2.736842105263158,
+        "delta": -861.0,
+        "delta_pct": -94.30449069003286,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.sessions.postgres.sessions",
+      "category": "sessions",
+      "severity": "warning",
+      "message": "postgres.sessions",
+      "details": {
+        "value_a": 3496.0,
+        "value_b": 3678.0,
+        "per_hour_a": 194.22222222222223,
+        "per_hour_b": 193.57894736842104,
+        "delta": 182.0,
+        "delta_pct": 5.205949656750572,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.sessions.postgres.idle_in_transaction_time",
+      "category": "sessions",
+      "severity": "warning",
+      "message": "postgres.idle_in_transaction_time",
+      "details": {
+        "value_a": 142.77,
+        "value_b": 108.34,
+        "per_hour_a": 7.9316666666666675,
+        "per_hour_b": 5.702105263157895,
+        "delta": -34.43000000000001,
+        "delta_pct": -24.11571058345591,
+        "unit": "sec",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.sessions.postgres.active_time",
+      "category": "sessions",
+      "severity": "warning",
+      "message": "postgres.active_time",
+      "details": {
+        "value_a": 3018.64,
+        "value_b": 2319.75,
+        "per_hour_a": 167.70222222222222,
+        "per_hour_b": 122.09210526315789,
+        "delta": -698.8899999999999,
+        "delta_pct": -23.15247926218429,
+        "unit": "sec",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.sessions.postgres.session_time",
+      "category": "sessions",
+      "severity": "warning",
+      "message": "postgres.session_time",
+      "details": {
+        "value_a": 467615.0,
+        "value_b": 495067.07,
+        "per_hour_a": 25978.61111111111,
+        "per_hour_b": 26056.16157894737,
+        "delta": 27452.070000000007,
+        "delta_pct": 5.870656416068776,
+        "unit": "sec",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.sessions.postgres.sessions_fatal",
+      "category": "sessions",
+      "severity": "warning",
+      "message": "postgres.sessions_fatal",
+      "details": {
+        "value_a": 2.0,
+        "value_b": null,
+        "per_hour_a": 0.1111111111111111,
+        "per_hour_b": null,
+        "delta": -2.0,
+        "delta_pct": -100.0,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.cache.Total.blk_read_time",
+      "category": "cache",
+      "severity": "warning",
+      "message": "Total.blk_read_time",
+      "details": {
+        "value_a": 3613927.14,
+        "value_b": 2446290.04,
+        "per_hour_a": 200773.73,
+        "per_hour_b": 128752.10736842106,
+        "delta": -1167637.1,
+        "delta_pct": -32.30937024369562,
+        "unit": "sec",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.cache.Total.blk_write_time",
+      "category": "cache",
+      "severity": "warning",
+      "message": "Total.blk_write_time",
+      "details": {
+        "value_a": 434888.8,
+        "value_b": 304804.12,
+        "per_hour_a": 24160.48888888889,
+        "per_hour_b": 16042.322105263158,
+        "delta": -130084.68,
+        "delta_pct": -29.912170651440093,
+        "unit": "sec",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.cache.counteragent.blk_read_time",
+      "category": "cache",
+      "severity": "warning",
+      "message": "counteragent.blk_read_time",
+      "details": {
+        "value_a": 3613339.13,
+        "value_b": 2445919.26,
+        "per_hour_a": 200741.06277777778,
+        "per_hour_b": 128732.59263157894,
+        "delta": -1167419.87,
+        "delta_pct": -32.308616158041055,
+        "unit": "sec",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.cache.counteragent.blk_write_time",
+      "category": "cache",
+      "severity": "warning",
+      "message": "counteragent.blk_write_time",
+      "details": {
+        "value_a": 434839.52,
+        "value_b": 304778.11,
+        "per_hour_a": 24157.751111111113,
+        "per_hour_b": 16040.953157894735,
+        "delta": -130061.41000000003,
+        "delta_pct": -29.910209173260064,
+        "unit": "sec",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.cache.postgres.blks_read",
+      "category": "cache",
+      "severity": "warning",
+      "message": "postgres.blks_read",
+      "details": {
+        "value_a": 488720.0,
+        "value_b": 441442.0,
+        "per_hour_a": 27151.11111111111,
+        "per_hour_b": 23233.78947368421,
+        "delta": -47278.0,
+        "delta_pct": -9.673841872646914,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.cache.postgres.blk_read_time",
+      "category": "cache",
+      "severity": "warning",
+      "message": "postgres.blk_read_time",
+      "details": {
+        "value_a": 588.01,
+        "value_b": 370.78,
+        "per_hour_a": 32.66722222222222,
+        "per_hour_b": 19.51473684210526,
+        "delta": -217.23000000000002,
+        "delta_pct": -36.94324926446829,
+        "unit": "sec",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.cache.postgres.blk_write_time",
+      "category": "cache",
+      "severity": "warning",
+      "message": "postgres.blk_write_time",
+      "details": {
+        "value_a": 49.28,
+        "value_b": 26.01,
+        "per_hour_a": 2.7377777777777776,
+        "per_hour_b": 1.3689473684210527,
+        "delta": -23.27,
+        "delta_pct": -47.21996753246753,
+        "unit": "sec",
+        "extra": ""
+      }
+    }
+  ],
+  "summary": {
+    "total_compared": 79,
+    "significant_count": 59,
+    "min_change_pct": 5.0
+  }
+}

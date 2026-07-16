@@ -1,0 +1,85 @@
+# GUC change → likely impact on metrics and symptoms (for NT multi-run analysis).
+# used_by: pgprofile_nt_runs.infer_guc_impacts
+
+guc_impact:
+  max_wal_size:
+    symptoms: [high_wal, high_cpu]
+    metrics: [checkpoints_req, checkpoint_write_time, wal_buffers_full, wal_bytes, wal_size]
+    increased_improves: [checkpoints_req, checkpoint_write_time]
+    narrative_increase: |
+      Увеличение max_wal_size снижает частоту requested checkpoints при высокой WAL generation.
+    narrative_decrease: |
+      Уменьшение max_wal_size усиливает requested checkpoints и IO-пики checkpoint.
+
+  wal_buffers:
+    symptoms: [high_wal, high_cpu]
+    metrics: [wal_buffers_full, wal_bytes, wal_sync, wal_write]
+    increased_improves: [wal_buffers_full]
+    narrative_increase: |
+      Увеличение wal_buffers снижает ожидание освобождения WAL buffer (wal_buffers_full).
+    narrative_decrease: |
+      Уменьшение wal_buffers может повысить wal_buffers_full и latency commit.
+
+  shared_buffers:
+    symptoms: [high_cpu, high_memory]
+    metrics: [blks_hit_pct, blks_read, blk_read_time, blk_write_time]
+    increased_improves: [blks_hit_pct]
+    increased_worsens: [blks_read, blk_read_time]
+    narrative_increase: |
+      Увеличение shared_buffers повышает cache hit и снижает физические чтения (CPU/IO).
+    narrative_decrease: |
+      Уменьшение shared_buffers снижает cache hit и увеличивает чтения с диска.
+
+  checkpoint_completion_target:
+    symptoms: [high_wal, high_cpu]
+    metrics: [checkpoint_write_time, checkpoint_sync_time, checkpoints_req]
+    increased_improves: [checkpoint_write_time]
+    narrative_increase: |
+      Более высокий checkpoint_completion_target растягивает checkpoint во времени и сглаживает IO spikes.
+    narrative_decrease: |
+      Более низкий checkpoint_completion_target укорачивает окно записи checkpoint — возможны IO spikes.
+
+  checkpoint_timeout:
+    symptoms: [high_wal]
+    metrics: [checkpoints_timed, checkpoints_req, checkpoint_write_time]
+    narrative_increase: |
+      Увеличение checkpoint_timeout снижает долю timed checkpoints при стабильной write-нагрузке.
+    narrative_decrease: |
+      Уменьшение checkpoint_timeout повышает частоту timed checkpoints.
+
+  effective_cache_size:
+    symptoms: [high_cpu]
+    metrics: [blks_hit_pct, blk_read_time]
+    narrative_increase: |
+      Увеличение effective_cache_size влияет на планы (index vs seq scan), не выделяет память.
+    narrative_decrease: |
+      Уменьшение effective_cache_size может ухудшить выбор планов.
+
+  work_mem:
+    symptoms: [high_cpu, high_memory]
+    metrics: [temp_blks_written, blk_read_time]
+    narrative_increase: |
+      Увеличение work_mem снижает spill в temp, но повышает риск OOM при параллельных sorts.
+    narrative_decrease: |
+      Уменьшение work_mem повышает temp spill и CPU/IO на сортировках.
+
+  maintenance_work_mem:
+    symptoms: [high_cpu]
+    metrics: [checkpoint_write_time]
+    narrative_increase: |
+      Увеличение maintenance_work_mem ускоряет VACUUM и maintenance в окне обслуживания.
+
+  idle_in_transaction_session_timeout:
+    symptoms: [high_cpu, high_memory]
+    metrics: [idle_in_transaction_time]
+    enabled_improves: [idle_in_transaction_time]
+    narrative_enable: |
+      Включение idle_in_transaction_session_timeout снижает idle in transaction и блокировку vacuum.
+    narrative_disable: |
+      Отключение (0) idle_in_transaction_session_timeout усиливает idle in transaction.
+
+  huge_pages:
+    symptoms: [high_cpu, high_memory]
+    metrics: [blk_read_time, blks_hit_pct]
+    narrative_enable: |
+      huge_pages может снизить TLB pressure и стабилизировать latency при большом shared_buffers.

@@ -1,0 +1,707 @@
+{
+  "type": "health_check",
+  "report_meta": {
+    "path": "resources/counter_nt_with_settings.html",
+    "filename": "counter_nt_with_settings.html",
+    "server": "tsldd-pprb02833.cloud.delta.sbrf.ru",
+    "report_start": "2026-07-15 14:30:02+03",
+    "report_end": "2026-07-16 09:30:02+03",
+    "interval_hours": 19.0,
+    "pgprofile_version": "4.7"
+  },
+  "findings": [
+    {
+      "id": "checkpoints.high_requested_ratio",
+      "category": "checkpoints",
+      "severity": "critical",
+      "message": "Requested checkpoints: 125/137 (91.2%), threshold 30%",
+      "details": {
+        "requested": 125,
+        "timed": 12,
+        "ratio": 0.912409
+      }
+    },
+    {
+      "id": "checkpoints.high_requested_count",
+      "category": "checkpoints",
+      "severity": "warning",
+      "message": "Requested checkpoints: 125 (threshold 10)",
+      "details": {
+        "requested": 125
+      }
+    },
+    {
+      "id": "checkpoints.high_requested_per_hour",
+      "category": "checkpoints",
+      "severity": "warning",
+      "message": "Requested checkpoints: 6.6/hour (threshold 5)",
+      "details": {
+        "per_hour": 6.578947
+      }
+    },
+    {
+      "id": "checkpoints.high_write_time_per_hour",
+      "category": "checkpoints",
+      "severity": "warning",
+      "message": "Checkpoint write time: 2752.3s/hour (threshold 60s/hour)",
+      "details": {
+        "write_per_hour": 2752.334211
+      }
+    },
+    {
+      "id": "checkpoints.high_write_time",
+      "category": "checkpoints",
+      "severity": "warning",
+      "message": "Checkpoint write time: 52294.3s over 19.0h interval (threshold 300s)",
+      "details": {
+        "write_time": 52294.35
+      }
+    },
+    {
+      "id": "checkpoints.maxwritten_clean",
+      "category": "checkpoints",
+      "severity": "warning",
+      "message": "Bgwriter interrupts (maxwritten_clean): 220108 (threshold 100)",
+      "details": {
+        "maxwritten_clean": 220108
+      }
+    },
+    {
+      "id": "queries.slow_execution",
+      "category": "queries",
+      "severity": "warning",
+      "message": "counteragent/as_admin: mean=979475.4ms, max=3550020.9ms, total=127331.8s, calls=130\n  select distinct $5, $6::int4 c2, t0.GROUPID c3 from counteragent.T_PROCESSEDNOTIFICATIONCANDIDATE t0 where ((t0.STATU...",
+      "details": {
+        "hexqueryid": "6a6d1096c31b93cc",
+        "mean_exec_time": 979475.45,
+        "max_exec_time": 3550020.88,
+        "total_time": 127331.81,
+        "calls": 130
+      }
+    },
+    {
+      "id": "queries.slow_execution",
+      "category": "queries",
+      "severity": "warning",
+      "message": "counteragent/as_admin: mean=208993.7ms, max=313480.5ms, total=3970.9s, calls=19\n  select distinct 0, null::int4 c2, t0.GROUPID c3 from counteragent.T_PROCESSEDNOTIFICATIONCANDIDATE t0 where (t0.STATU...",
+      "details": {
+        "hexqueryid": "589fae993a0871e7",
+        "mean_exec_time": 208993.71,
+        "max_exec_time": 313480.46,
+        "total_time": 3970.88,
+        "calls": 19
+      }
+    },
+    {
+      "id": "queries.slow_execution",
+      "category": "queries",
+      "severity": "warning",
+      "message": "counteragent/as_admin: mean=2172.4ms, max=306018.0ms, total=1611.9s, calls=742\n  select $3, t0.OBJECT_ID c2, t0.DESTINATIONCLIENT_ENTITYID c3 from counteragent.T_FEEDBACKWAITINGLIST t0 where t0.REFR...",
+      "details": {
+        "hexqueryid": "211a9d9df71879f5",
+        "mean_exec_time": 2172.38,
+        "max_exec_time": 306017.97,
+        "total_time": 1611.9,
+        "calls": 742
+      }
+    },
+    {
+      "id": "queries.slow_execution",
+      "category": "queries",
+      "severity": "warning",
+      "message": "counteragent/as_admin: max=49368.7ms, total=101.2s, calls=10001\n  select $3, t0.OBJECT_ID c2 from counteragent.T_TRANSACTION t0 where t0.RQUID &lt;> $1 limit $2",
+      "details": {
+        "hexqueryid": "cef658a1d0a41bcc",
+        "mean_exec_time": 10.12,
+        "max_exec_time": 49368.74,
+        "total_time": 101.21,
+        "calls": 10001
+      }
+    },
+    {
+      "id": "queries.slow_execution",
+      "category": "queries",
+      "severity": "warning",
+      "message": "counteragent/as_admin: mean=13370.3ms, max=35106.9ms, total=9145.3s, calls=684\n  select $3, t0.OBJECT_ID c2, t0.MESSAGE c3 from counteragent.T_AUDITEVENT t0 where t0.MODULEID = $1 limit $2",
+      "details": {
+        "hexqueryid": "7f2cb9fe8801451a",
+        "mean_exec_time": 13370.34,
+        "max_exec_time": 35106.89,
+        "total_time": 9145.31,
+        "calls": 684
+      }
+    },
+    {
+      "id": "queries.slow_execution",
+      "category": "queries",
+      "severity": "warning",
+      "message": "counteragent/as_admin: mean=2960.8ms, max=6130.1ms, total=675.1s, calls=228\n  select $4, $5::int4 c2, t0.OBJECT_ID c3, t0.PUBLICATIONDATETIME c4, t0.UUID c5, t0.TOCLIENT_ENTITYID c6, t0.TOCLIENT_...",
+      "details": {
+        "hexqueryid": "f8fafb4886306f34",
+        "mean_exec_time": 2960.82,
+        "max_exec_time": 6130.07,
+        "total_time": 675.07,
+        "calls": 228
+      }
+    },
+    {
+      "id": "queries.slow_execution",
+      "category": "queries",
+      "severity": "warning",
+      "message": "counteragent/as_admin: total=366978.0s, calls=89931404\n  update counteragent.t_feedbackwaitinglist set sys_lastchangedate=$1,refreshdate=$2 where object_id=$3",
+      "details": {
+        "hexqueryid": "aabf68fb55a475ea",
+        "mean_exec_time": 4.08,
+        "max_exec_time": 4944.8,
+        "total_time": 366977.99,
+        "calls": 89931404
+      }
+    },
+    {
+      "id": "queries.slow_execution",
+      "category": "queries",
+      "severity": "warning",
+      "message": "counteragent/as_admin: total=255052.4s, calls=344770\n  with ct0(c0, c1, c2, c3) as (select t0.OBJECT_ID c0, t0.INN c1, t0.KPP c2, t0.NAME c3 from counteragent.T_CLIENT t0 w...",
+      "details": {
+        "hexqueryid": "947d3792bf3c6b66",
+        "mean_exec_time": 739.78,
+        "max_exec_time": 2936.61,
+        "total_time": 255052.44,
+        "calls": 344770
+      }
+    },
+    {
+      "id": "queries.slow_execution",
+      "category": "queries",
+      "severity": "warning",
+      "message": "counteragent/as_admin: total=8402.3s, calls=22116\n  select 0, t0.OBJECT_ID c2, t0.UCPID c3 from counteragent.T_NOTIFICATIONCANDIDATE t0 where t0.UCPID in ($1, $2, $3, $4...",
+      "details": {
+        "hexqueryid": "dadbe63e3a24d8ec",
+        "mean_exec_time": 379.92,
+        "max_exec_time": 1038.13,
+        "total_time": 8402.31,
+        "calls": 22116
+      }
+    },
+    {
+      "id": "queries.slow_execution",
+      "category": "queries",
+      "severity": "warning",
+      "message": "counteragent/as_admin: total=5901.2s, calls=16359\n  select 0, t0.OBJECT_ID c2, t0.UCPID c3 from counteragent.T_NOTIFICATIONCANDIDATE t0 where t0.UCPID in ($1, $2, $3, $4...",
+      "details": {
+        "hexqueryid": "575728baebe5acd9",
+        "mean_exec_time": 360.73,
+        "max_exec_time": 999.28,
+        "total_time": 5901.22,
+        "calls": 16359
+      }
+    },
+    {
+      "id": "autovacuum.table_high_mods_pct",
+      "category": "autovacuum",
+      "severity": "warning",
+      "message": "counteragent.counteragent.t_feedback: mods_pct=100.0%, last_autoanalyze=never",
+      "details": {
+        "mods_pct": 100.0
+      }
+    },
+    {
+      "id": "autovacuum.table_high_mods_pct",
+      "category": "autovacuum",
+      "severity": "warning",
+      "message": "counteragent.counteragent.t_auditevent: mods_pct=100.0%, last_autoanalyze=never",
+      "details": {
+        "mods_pct": 100.0
+      }
+    },
+    {
+      "id": "autovacuum.table_high_mods_pct",
+      "category": "autovacuum",
+      "severity": "warning",
+      "message": "counteragent.counteragent.t_ucp: mods_pct=100.0%, last_autoanalyze=never",
+      "details": {
+        "mods_pct": 100.0
+      }
+    },
+    {
+      "id": "autovacuum.table_high_dead_pct",
+      "category": "autovacuum",
+      "severity": "warning",
+      "message": "counteragent.counteragent.t_transaction: dead_pct=15.8%, n_dead=12637797, last_autovacuum=2026-07-16 06:58:58.916584+03",
+      "details": {
+        "dead_pct": 15.84951
+      }
+    },
+    {
+      "id": "autovacuum.table_high_dead_pct",
+      "category": "autovacuum",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.sample_statements: dead_pct=15.4%, n_dead=15938, last_autovacuum=2026-07-13 23:30:35.563121+03",
+      "details": {
+        "dead_pct": 15.386101
+      }
+    },
+    {
+      "id": "autovacuum.table_high_dead_pct",
+      "category": "autovacuum",
+      "severity": "warning",
+      "message": "counteragent.counteragent.t_feedbackwaitinglist: dead_pct=13.7%, n_dead=19026351, last_autovacuum=2026-07-16 07:29:20.186486+03",
+      "details": {
+        "dead_pct": 13.722541
+      }
+    },
+    {
+      "id": "autovacuum.table_high_dead_pct",
+      "category": "autovacuum",
+      "severity": "warning",
+      "message": "counteragent.counteragent.t_repl_agglock_feedbackwaitinglist: dead_pct=13.3%, n_dead=20907009, last_autovacuum=2026-07-16 06:55:29.38798+03",
+      "details": {
+        "dead_pct": 13.329173
+      }
+    },
+    {
+      "id": "autovacuum.table_high_dead_pct",
+      "category": "autovacuum",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.sample_statements: stale autovacuum (58h ago), dead_pct=15.4%",
+      "details": {
+        "age_hours": 57.990677
+      }
+    },
+    {
+      "id": "autovacuum.generic",
+      "category": "autovacuum",
+      "severity": "warning",
+      "message": "counteragent.counteragent.t_repl_agglock_client: n_dead=2685613, last_autovacuum=2026-07-15 18:17:05.731633+03",
+      "details": {
+        "n_dead_tup": 2685613
+      }
+    },
+    {
+      "id": "autovacuum.generic",
+      "category": "autovacuum",
+      "severity": "warning",
+      "message": "counteragent.counteragent.t_repl_agglock_transaction: n_dead=1967400, last_autovacuum=2026-07-16 07:42:58.61224+03",
+      "details": {
+        "n_dead_tup": 1967400
+      }
+    },
+    {
+      "id": "wal.buffers_full",
+      "category": "wal",
+      "severity": "warning",
+      "message": "wal_buffers_full: 39986 (threshold 1000)",
+      "details": {}
+    },
+    {
+      "id": "wal.backend_writes_high",
+      "category": "wal",
+      "severity": "warning",
+      "message": "Backend buffers written (365372858) exceed checkpoint buffers written (1812275)",
+      "details": {
+        "buffers_backend": 365372858,
+        "buffers_checkpoint": 1812275
+      }
+    },
+    {
+      "id": "cache.low_hit_ratio",
+      "category": "cache",
+      "severity": "warning",
+      "message": "counteragent: blks_hit_pct=81.56% (threshold 99.0%)",
+      "details": {}
+    },
+    {
+      "id": "cache.high_read_time",
+      "category": "cache",
+      "severity": "warning",
+      "message": "counteragent: blk_read_time=2445919.3s (threshold 60s)",
+      "details": {}
+    },
+    {
+      "id": "cache.high_read_time",
+      "category": "cache",
+      "severity": "warning",
+      "message": "postgres: blk_read_time=370.8s (threshold 60s)",
+      "details": {}
+    },
+    {
+      "id": "cache.low_table_hit_ratio",
+      "category": "cache",
+      "severity": "warning",
+      "message": "counteragent.counteragent.t_processednotificationcandidate: table hit_pct=40.10% (threshold 95.0%)",
+      "details": {}
+    },
+    {
+      "id": "cache.low_table_hit_ratio",
+      "category": "cache",
+      "severity": "warning",
+      "message": "counteragent.counteragent.t_feedbackwaitinglist: table hit_pct=93.70% (threshold 95.0%)",
+      "details": {}
+    },
+    {
+      "id": "cache.low_table_hit_ratio",
+      "category": "cache",
+      "severity": "warning",
+      "message": "counteragent.counteragent.t_client: table hit_pct=94.56% (threshold 95.0%)",
+      "details": {}
+    },
+    {
+      "id": "cache.low_table_hit_ratio",
+      "category": "cache",
+      "severity": "warning",
+      "message": "counteragent.counteragent.t_ucp: table hit_pct=77.29% (threshold 95.0%)",
+      "details": {}
+    },
+    {
+      "id": "cache.low_table_hit_ratio",
+      "category": "cache",
+      "severity": "warning",
+      "message": "counteragent.counteragent.t_auditevent: table hit_pct=0.10% (threshold 95.0%)",
+      "details": {}
+    },
+    {
+      "id": "cache.low_table_hit_ratio",
+      "category": "cache",
+      "severity": "warning",
+      "message": "counteragent.counteragent.t_notificationcandidate: table hit_pct=60.21% (threshold 95.0%)",
+      "details": {}
+    },
+    {
+      "id": "cache.low_table_hit_ratio",
+      "category": "cache",
+      "severity": "warning",
+      "message": "counteragent.counteragent.t_clientfeaturemapping: table hit_pct=86.68% (threshold 95.0%)",
+      "details": {}
+    },
+    {
+      "id": "cache.low_table_hit_ratio",
+      "category": "cache",
+      "severity": "warning",
+      "message": "counteragent.counteragent.t_repl_agglock_clientfeaturemapping: table hit_pct=94.93% (threshold 95.0%)",
+      "details": {}
+    },
+    {
+      "id": "cache.low_table_hit_ratio",
+      "category": "cache",
+      "severity": "warning",
+      "message": "postgres.pg_catalog.pg_proc: table hit_pct=76.09% (threshold 95.0%)",
+      "details": {}
+    },
+    {
+      "id": "sessions.high_idle_in_transaction",
+      "category": "sessions",
+      "severity": "critical",
+      "message": "counteragent: idle_in_transaction_time=3040548.3s (threshold 3600s), idle_in_transaction_session_timeout=0",
+      "details": {
+        "idle_time": 3040548.3
+      }
+    },
+    {
+      "id": "sessions.abnormal_termination",
+      "category": "sessions",
+      "severity": "critical",
+      "message": "counteragent: fatal sessions=244",
+      "details": {}
+    },
+    {
+      "id": "sessions.idle_timeout_disabled",
+      "category": "sessions",
+      "severity": "critical",
+      "message": "idle_in_transaction_session_timeout=0 while idle in transaction time is high",
+      "details": {}
+    },
+    {
+      "id": "memory.work_mem_connections_risk",
+      "category": "memory",
+      "severity": "warning",
+      "message": "work_mem * max_connections = 21.6GB (threshold 16GB)",
+      "details": {}
+    },
+    {
+      "id": "memory.statement_timeout_zero",
+      "category": "memory",
+      "severity": "warning",
+      "message": "statement_timeout=0 (queries may run indefinitely)",
+      "details": {}
+    },
+    {
+      "id": "memory.lock_timeout_zero",
+      "category": "memory",
+      "severity": "warning",
+      "message": "lock_timeout=0 (no protection against lock waits)",
+      "details": {}
+    },
+    {
+      "id": "io.wal_heavy_query",
+      "category": "io",
+      "severity": "warning",
+      "message": "counteragent/as_admin: wal=783.2GB\n  update counteragent.t_feedbackwaitinglist set sys_lastchangedate=$1,refreshdate=$2 where object_id=$3",
+      "details": {
+        "hexqueryid": "aabf68fb55a475ea",
+        "wal_bytes": 840919442941.0
+      }
+    },
+    {
+      "id": "io.wal_heavy_query",
+      "category": "io",
+      "severity": "warning",
+      "message": "counteragent/as_admin: wal=366.9GB\n  update counteragent.t_transaction set sys_lastchangedate=$1,rquid=$2 where object_id=$3",
+      "details": {
+        "hexqueryid": "5049b7f719abb763",
+        "wal_bytes": 393998329090.0
+      }
+    },
+    {
+      "id": "io.wal_heavy_query",
+      "category": "io",
+      "severity": "warning",
+      "message": "counteragent/as_admin: wal=33.9GB\n  UPDATE counteragent.T_REPL_AGGLOCK_FEEDBACKWAITINGLIST SET siversion = $1, guid = $2, version = $3, sys_lastchangedat...",
+      "details": {
+        "hexqueryid": "5a68bd6f1f3a0ef1",
+        "wal_bytes": 36392384121.0
+      }
+    },
+    {
+      "id": "io.wal_heavy_query",
+      "category": "io",
+      "severity": "warning",
+      "message": "counteragent/as_admin: wal=27.7GB\n  update counteragent.t_client set sys_lastchangedate=$1,sourcedatetime=$2 where object_id=$3",
+      "details": {
+        "hexqueryid": "cba78047b684ffd4",
+        "wal_bytes": 29775258843.0
+      }
+    },
+    {
+      "id": "io.wal_heavy_query",
+      "category": "io",
+      "severity": "warning",
+      "message": "counteragent/as_admin: wal=25.1GB\n  insert into counteragent.t_feedbackwaitinglist (chgcnt,destinationclient_entityid,sys_isdeleted,sys_lastchangedate,of...",
+      "details": {
+        "hexqueryid": "d725445a98810378",
+        "wal_bytes": 26955511284.0
+      }
+    },
+    {
+      "id": "io.wal_heavy_query",
+      "category": "io",
+      "severity": "warning",
+      "message": "counteragent/as_admin: wal=24.0GB\n  UPDATE counteragent.T_REPL_AGGLOCK_TRANSACTION SET siversion = $1, guid = $2, version = $3, sys_lastchangedate = LOCA...",
+      "details": {
+        "hexqueryid": "9e195d9367009abe",
+        "wal_bytes": 25752703830.0
+      }
+    },
+    {
+      "id": "io.wal_heavy_query",
+      "category": "io",
+      "severity": "warning",
+      "message": "counteragent/as_admin: wal=18.8GB\n  SELECT txtype, changeeventmask, aggtype, ownerid, migrationstatus, silock, siversion, guid, version FROM counteragent...",
+      "details": {
+        "hexqueryid": "4af8ad263dfbf35b",
+        "wal_bytes": 20203936683.0
+      }
+    },
+    {
+      "id": "io.wal_heavy_query",
+      "category": "io",
+      "severity": "warning",
+      "message": "counteragent/as_admin: wal=12.8GB\n  SELECT txtype, changeeventmask, aggtype, ownerid, migrationstatus, silock, siversion, guid, version FROM counteragent...",
+      "details": {
+        "hexqueryid": "f3bd68a083051260",
+        "wal_bytes": 13776415725.0
+      }
+    },
+    {
+      "id": "io.wal_heavy_query",
+      "category": "io",
+      "severity": "warning",
+      "message": "counteragent/as_admin: wal=11.3GB\n  insert into counteragent.t_client (averagerating,canreceivefeedback,chgcnt,countrating,counttext,inn,sys_isdeleted,kp...",
+      "details": {
+        "hexqueryid": "1c6e3deba07963d9",
+        "wal_bytes": 12158628110.0
+      }
+    },
+    {
+      "id": "io.wal_heavy_query",
+      "category": "io",
+      "severity": "warning",
+      "message": "counteragent/as_admin: wal=11.0GB\n  UPDATE counteragent.T_REPL_AGGLOCK_CLIENT SET siversion = $1, guid = $2, version = $3, sys_lastchangedate = LOCALTIME...",
+      "details": {
+        "hexqueryid": "53d2cee7750d6983",
+        "wal_bytes": 11820782957.0
+      }
+    },
+    {
+      "id": "io.high_heap_reads",
+      "category": "io",
+      "severity": "warning",
+      "message": "counteragent.counteragent.t_processednotificationcandidate: heap_blks_read=2532440080",
+      "details": {
+        "heap_blks_read": 2532440080
+      }
+    },
+    {
+      "id": "io.high_heap_reads",
+      "category": "io",
+      "severity": "warning",
+      "message": "counteragent.counteragent.t_auditevent: heap_blks_read=115321944",
+      "details": {
+        "heap_blks_read": 115321944
+      }
+    },
+    {
+      "id": "io.high_heap_reads",
+      "category": "io",
+      "severity": "warning",
+      "message": "counteragent.counteragent.t_client: heap_blks_read=71278717",
+      "details": {
+        "heap_blks_read": 71278717
+      }
+    },
+    {
+      "id": "io.high_heap_reads",
+      "category": "io",
+      "severity": "warning",
+      "message": "counteragent.counteragent.t_ucp: heap_blks_read=62416128",
+      "details": {
+        "heap_blks_read": 62416128
+      }
+    },
+    {
+      "id": "io.high_heap_reads",
+      "category": "io",
+      "severity": "warning",
+      "message": "counteragent.counteragent.t_notificationcandidate: heap_blks_read=49269058",
+      "details": {
+        "heap_blks_read": 49269058
+      }
+    },
+    {
+      "id": "io.high_heap_reads",
+      "category": "io",
+      "severity": "warning",
+      "message": "counteragent.counteragent.t_feedbackwaitinglist: heap_blks_read=43493003",
+      "details": {
+        "heap_blks_read": 43493003
+      }
+    },
+    {
+      "id": "io.high_heap_reads",
+      "category": "io",
+      "severity": "warning",
+      "message": "counteragent.counteragent.t_transaction: heap_blks_read=18354233",
+      "details": {
+        "heap_blks_read": 18354233
+      }
+    },
+    {
+      "id": "io.high_heap_reads",
+      "category": "io",
+      "severity": "warning",
+      "message": "counteragent.counteragent.t_repl_agglock_feedbackwaitinglist: heap_blks_read=14363020",
+      "details": {
+        "heap_blks_read": 14363020
+      }
+    },
+    {
+      "id": "io.high_heap_reads",
+      "category": "io",
+      "severity": "warning",
+      "message": "counteragent.counteragent.t_repl_agglock_transaction: heap_blks_read=10098557",
+      "details": {
+        "heap_blks_read": 10098557
+      }
+    },
+    {
+      "id": "io.high_heap_reads",
+      "category": "io",
+      "severity": "warning",
+      "message": "counteragent.counteragent.t_feedback: heap_blks_read=6318589",
+      "details": {
+        "heap_blks_read": 6318589
+      }
+    },
+    {
+      "id": "io.unused_index",
+      "category": "io",
+      "severity": "warning",
+      "message": "Unused index counteragent.counteragent.t_transaction.i_transaction_totalsum: size=2626 MB",
+      "details": {}
+    },
+    {
+      "id": "io.unused_index",
+      "category": "io",
+      "severity": "warning",
+      "message": "Unused index counteragent.counteragent.t_client.i_client_type: size=1199 MB",
+      "details": {}
+    },
+    {
+      "id": "io.unused_index",
+      "category": "io",
+      "severity": "warning",
+      "message": "Unused index counteragent.counteragent.t_client.i_client_sourcedatetime: size=1265 MB",
+      "details": {}
+    },
+    {
+      "id": "io.unused_index",
+      "category": "io",
+      "severity": "warning",
+      "message": "Unused index counteragent.counteragent.t_transaction.i_transaction_rquid: size=918 MB",
+      "details": {}
+    },
+    {
+      "id": "io.unused_index",
+      "category": "io",
+      "severity": "warning",
+      "message": "Unused index counteragent.counteragent.t_transaction.i_transaction_type: size=874 MB",
+      "details": {}
+    },
+    {
+      "id": "io.unused_index",
+      "category": "io",
+      "severity": "warning",
+      "message": "Unused index counteragent.counteragent.t_notificationcandidate.i_notificationcandidate_type: size=270 MB",
+      "details": {}
+    },
+    {
+      "id": "io.unused_index",
+      "category": "io",
+      "severity": "warning",
+      "message": "Unused index counteragent.counteragent.t_feedbackwaitinglist.i_feedbackwaitinglist_type: size=1947 MB",
+      "details": {}
+    },
+    {
+      "id": "io.unused_index",
+      "category": "io",
+      "severity": "warning",
+      "message": "Unused index counteragent.counteragent.t_transaction.i_transaction_fromlevel: size=842 MB",
+      "details": {}
+    },
+    {
+      "id": "io.unused_index",
+      "category": "io",
+      "severity": "warning",
+      "message": "Unused index counteragent.counteragent.t_transaction.i_transaction_tolevel: size=844 MB",
+      "details": {}
+    },
+    {
+      "id": "io.unused_index",
+      "category": "io",
+      "severity": "warning",
+      "message": "Unused index counteragent.counteragent.t_feedbackwaitinglist.i_feedbackwaitinglist_referencedclient: size=3329 MB",
+      "details": {}
+    },
+    {
+      "id": "locks.deadlocks",
+      "category": "locks",
+      "severity": "critical",
+      "message": "counteragent: deadlocks=52 (threshold 0)",
+      "details": {}
+    }
+  ],
+  "summary": {
+    "total": 77,
+    "critical": 5,
+    "warning": 72
+  }
+}

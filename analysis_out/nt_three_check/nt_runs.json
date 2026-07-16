@@ -1,0 +1,736 @@
+{
+  "type": "nt_runs_analysis",
+  "symptoms": [
+    "high_cpu",
+    "high_wal"
+  ],
+  "reports": [
+    {
+      "label": "old_app",
+      "path": "resources/counter_nt_old_version.html",
+      "filename": "counter_nt_old_version.html",
+      "meta": {
+        "path": "resources/counter_nt_old_version.html",
+        "filename": "counter_nt_old_version.html",
+        "server": "",
+        "from": "",
+        "to": "",
+        "version": "PostgreSQL 15.5 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 8.5.0 20210514 (Platform V SberLinux 8.5.0-28), 64-bit"
+      }
+    },
+    {
+      "label": "new_before_guc",
+      "path": "resources/counter_nt_before_settings.html",
+      "filename": "counter_nt_before_settings.html",
+      "meta": {
+        "path": "resources/counter_nt_before_settings.html",
+        "filename": "counter_nt_before_settings.html",
+        "server": "",
+        "from": "",
+        "to": "",
+        "version": "PostgreSQL 15.5 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 8.5.0 20210514 (Platform V SberLinux 8.5.0-28), 64-bit"
+      }
+    },
+    {
+      "label": "new_after_guc",
+      "path": "resources/counter_nt_with_settings.html",
+      "filename": "counter_nt_with_settings.html",
+      "meta": {
+        "path": "resources/counter_nt_with_settings.html",
+        "filename": "counter_nt_with_settings.html",
+        "server": "",
+        "from": "",
+        "to": "",
+        "version": "PostgreSQL 15.5 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 8.5.0 20210514 (Platform V SberLinux 8.5.0-28), 64-bit"
+      }
+    }
+  ],
+  "symptom_investigations": [
+    {
+      "type": "symptom_investigation",
+      "symptom": "high_cpu",
+      "symptom_title": "Высокая утилизация CPU БД",
+      "symptom_description": "Симптом: высокая загрузка CPU процессами PostgreSQL. pg_profile показывает CPU через\npg_stat_kcache (top_rusage_statements) и active_time на уровне БД.",
+      "query_target": null,
+      "reports": [
+        {
+          "label": "old_app",
+          "path": "resources/counter_nt_old_version.html",
+          "filename": "counter_nt_old_version.html"
+        },
+        {
+          "label": "new_before_guc",
+          "path": "resources/counter_nt_before_settings.html",
+          "filename": "counter_nt_before_settings.html"
+        },
+        {
+          "label": "new_after_guc",
+          "path": "resources/counter_nt_with_settings.html",
+          "filename": "counter_nt_with_settings.html"
+        }
+      ],
+      "query_matches": [],
+      "causes": [
+        {
+          "cause_id": "cpu.dominant_queries",
+          "title": "Доминирующие SQL по CPU (pg_stat_kcache)",
+          "description": "Несколько запросов потребляют большую долю user/system CPU за интервал.",
+          "status": "confirmed",
+          "evidence": [
+            "[old_app] Топ CPU: sum_cpu_time=9636.3s, user_time_pct=9.2%",
+            "[old_app] hex=a82eb1cdc7e93a20: update counteragent.t_transaction set sys_lastchangedate=$1,rquid=$2,validto=$3 …",
+            "[old_app] #2: sum_cpu_time=9236.4s hex=b62bf356da94bd81",
+            "[old_app] #3: sum_cpu_time=7379.4s hex=bc341d0886926024",
+            "[new_before_guc] Топ CPU: sum_cpu_time=34754.0s, user_time_pct=14.1%",
+            "[new_before_guc] hex=aabf68fb55a475ea: update counteragent.t_feedbackwaitinglist set sys_lastchangedate=$1,refreshdate=…",
+            "[new_before_guc] #2: sum_cpu_time=32346.3s hex=b62bf356da94bd81",
+            "[new_before_guc] #3: sum_cpu_time=24777.3s hex=bc341d0886926024",
+            "[new_after_guc] Топ CPU: sum_cpu_time=30070.1s, user_time_pct=14.2%",
+            "[new_after_guc] hex=b62bf356da94bd81: select f1_0.object_id from counteragent.t_feedbackwaitinglist f1_0 where f1_0.de…",
+            "[new_after_guc] #2: sum_cpu_time=24461.1s hex=bc341d0886926024",
+            "[new_after_guc] #3: sum_cpu_time=20614.6s hex=aabf68fb55a475ea"
+          ],
+          "confirm_actions": [
+            "EXPLAIN (ANALYZE, BUFFERS) для топ-3 SQL по sum_cpu_time из отчёта",
+            "Сопоставить pg_stat_statements (calls, mean_exec_time) с pg_stat_kcache (sum_cpu_time)",
+            "Проверить, совпадает ли пик CPU на OS с интервалом отчёта pg_profile"
+          ],
+          "refute_actions": [
+            "Если sum_cpu_time топ-запросов <5% интервала — CPU уходит не в SQL (фон, autovacuum, checkpoint)",
+            "Сравнить топ CPU между двумя периодами: запрос исчез из топа — не корневая причина текущего пика"
+          ],
+          "reports_matched": [
+            "old_app",
+            "new_before_guc",
+            "new_after_guc"
+          ]
+        },
+        {
+          "cause_id": "cpu.high_call_volume",
+          "title": "Высокий объём вызовов (CPU × calls)",
+          "description": "Умеренное mean_exec_time при очень большом calls даёт высокий суммарный CPU.",
+          "status": "suspected",
+          "evidence": [
+            "[old_app] Высокий объём: calls=32,995,478, total_exec_time=72216.6s, mean=2.19ms hex=a82eb1cdc7e93a20",
+            "[old_app] Высокий объём: calls=32,932,461, total_exec_time=63794.6s, mean=1.94ms hex=aabf68fb55a475ea",
+            "[old_app] Высокий объём: calls=110,000, total_exec_time=27803.2s, mean=252.76ms hex=947d3792bf3c6b66",
+            "[old_app] Высокий объём: calls=35,985,406, total_exec_time=24097.8s, mean=0.67ms hex=b62bf356da94bd81",
+            "[old_app] Высокий объём: calls=38,445,693, total_exec_time=20008.0s, mean=0.52ms hex=1185016cb5c9d10e",
+            "[old_app] Высокий объём: calls=34,994,426, total_exec_time=11005.9s, mean=0.31ms hex=85b476cc8397eec6",
+            "[old_app] Высокий объём: calls=3,051,389, total_exec_time=10322.8s, mean=3.38ms hex=d725445a98810378",
+            "[old_app] Высокий объём: calls=174,978, total_exec_time=7886.5s, mean=45.07ms hex=3b2adbd02d8262cd",
+            "[old_app] Высокий объём: calls=31,000,000, total_exec_time=6799.1s, mean=0.22ms hex=cba78047b684ffd4",
+            "[old_app] Высокий объём: calls=13,874,662, total_exec_time=6002.9s, mean=0.43ms hex=39e843964ceee04a",
+            "[old_app] Высокий объём: calls=34,999,961, total_exec_time=5490.9s, mean=0.16ms hex=f07dd621fb3ba560",
+            "[old_app] Высокий объём: calls=38,445,676, total_exec_time=5420.7s, mean=0.14ms hex=4af8ad263dfbf35b",
+            "[old_app] Высокий объём: calls=1,249,849, total_exec_time=3515.1s, mean=2.81ms hex=167e97e5b291187",
+            "[old_app] Высокий объём: calls=35,394,820, total_exec_time=3290.2s, mean=0.09ms hex=bc341d0886926024",
+            "[old_app] Высокий объём: calls=34,994,427, total_exec_time=3211.6s, mean=0.09ms hex=f3bd68a083051260",
+            "[old_app] Высокий объём: calls=1,207,989, total_exec_time=3115.2s, mean=2.58ms hex=50ab00537e133ae0",
+            "[old_app] Высокий объём: calls=32,995,570, total_exec_time=3037.3s, mean=0.09ms hex=c041231552f07d3c",
+            "[old_app] Высокий объём: calls=204,990, total_exec_time=2718.2s, mean=13.26ms hex=f8def257b4502ca7",
+            "[old_app] Высокий объём: calls=13,873,588, total_exec_time=2148.9s, mean=0.15ms hex=70fe471d6ab1ba7c",
+            "[old_app] Высокий объём: calls=1,250,524, total_exec_time=2009.7s, mean=1.61ms hex=25edb34bb1d350c",
+            "[old_app] Высокий объём: calls=11,868,816, total_exec_time=1956.6s, mean=0.16ms hex=2460dc7a83938005",
+            "[old_app] Высокий объём: calls=34,999,961, total_exec_time=1823.0s, mean=0.05ms hex=ea8ea37314e7aa01",
+            "[old_app] Высокий объём: calls=31,000,000, total_exec_time=1788.8s, mean=0.06ms hex=83d62318a221923a",
+            "[old_app] Высокий объём: calls=13,618,904, total_exec_time=1318.1s, mean=0.10ms hex=113e4b75b27b3d77",
+            "[old_app] Высокий объём: calls=2,000,000, total_exec_time=1116.0s, mean=0.56ms hex=e165ecce0bd0ce44",
+            "[old_app] Высокий объём: calls=1,158,496, total_exec_time=1054.9s, mean=0.91ms hex=246860828fe00f50",
+            "[old_app] Высокий объём: calls=154,982, total_exec_time=1052.2s, mean=6.79ms hex=b8bfc0f848f0ab12",
+            "[old_app] Высокий объём: calls=4,000,000, total_exec_time=1035.0s, mean=0.26ms hex=1c6e3deba07963d9",
+            "[old_app] Высокий объём: calls=13,948,087, total_exec_time=523.7s, mean=0.04ms hex=b0bbec6a60959321",
+            "[old_app] Высокий объём: calls=879,772, total_exec_time=379.6s, mean=0.43ms hex=90ab016fd82b91f3",
+            "[old_app] Высокий объём: calls=17,998,127, total_exec_time=355.2s, mean=0.02ms hex=b637405ffe02f90f",
+            "[new_before_guc] Высокий объём: calls=126,454,697, total_exec_time=661064.2s, mean=5.23ms hex=aabf68fb55a475ea",
+            "[new_before_guc] Высокий объём: calls=328,542, total_exec_time=335069.3s, mean=1019.87ms hex=947d3792bf3c6b66",
+            "[new_before_guc] Высокий объём: calls=55,969,728, total_exec_time=326100.5s, mean=5.83ms hex=5049b7f719abb763",
+            "[new_before_guc] Высокий объём: calls=129,744,055, total_exec_time=152058.6s, mean=1.17ms hex=b62bf356da94bd81",
+            "[new_before_guc] Высокий объём: calls=316,368, total_exec_time=75798.2s, mean=239.59ms hex=22805b2c754ef87f",
+            "[new_before_guc] Высокий объём: calls=128,391,067, total_exec_time=69766.1s, mean=0.54ms hex=5a68bd6f1f3a0ef1",
+            "[new_before_guc] Высокий объём: calls=65,338,006, total_exec_time=67771.3s, mean=1.04ms hex=beeeac4e79c5ae3c",
+            "[new_before_guc] Высокий объём: calls=131,669,752, total_exec_time=47527.4s, mean=0.36ms hex=4af8ad263dfbf35b",
+            "[new_before_guc] Высокий объём: calls=64,963,947, total_exec_time=24718.8s, mean=0.38ms hex=9e195d9367009abe",
+            "[new_before_guc] Высокий объём: calls=128,526,534, total_exec_time=20434.3s, mean=0.16ms hex=bc341d0886926024",
+            "[new_before_guc] Высокий объём: calls=65,339,919, total_exec_time=17260.3s, mean=0.26ms hex=f3bd68a083051260",
+            "[new_before_guc] Высокий объём: calls=3,287,694, total_exec_time=13766.5s, mean=4.19ms hex=d725445a98810378",
+            "[new_before_guc] Высокий объём: calls=332,346, total_exec_time=11991.0s, mean=36.08ms hex=f8def257b4502ca7",
+            "[new_before_guc] Высокий объём: calls=2,510,993, total_exec_time=10612.5s, mean=4.23ms hex=b815111acf3e444",
+            "[new_before_guc] Высокий объём: calls=314,866, total_exec_time=10505.2s, mean=33.36ms hex=164790713ffd8e03",
+            "[new_before_guc] Высокий объём: calls=2,484,878, total_exec_time=9550.9s, mean=3.84ms hex=4169bb7018307d02",
+            "[new_before_guc] Высокий объём: calls=64,962,075, total_exec_time=8505.6s, mean=0.13ms hex=c041231552f07d3c",
+            "[new_before_guc] Высокий объём: calls=2,026,457, total_exec_time=6416.9s, mean=3.17ms hex=f8e2f447d799c280",
+            "[new_before_guc] Высокий объём: calls=1,970,119, total_exec_time=6168.7s, mean=3.13ms hex=257271d69c9adc2",
+            "[new_before_guc] Высокий объём: calls=21,330,234, total_exec_time=5625.9s, mean=0.26ms hex=81a55ff128ec75c",
+            "[new_before_guc] Высокий объём: calls=1,636,716, total_exec_time=4531.4s, mean=2.77ms hex=4612e82d5b49079e",
+            "[new_before_guc] Высокий объём: calls=64,962,991, total_exec_time=3965.2s, mean=0.06ms hex=b637405ffe02f90f",
+            "[new_before_guc] Высокий объём: calls=30,999,321, total_exec_time=3386.3s, mean=0.11ms hex=53d2cee7750d6983",
+            "[new_before_guc] Высокий объём: calls=9,669,634, total_exec_time=2517.9s, mean=0.26ms hex=cba78047b684ffd4",
+            "[new_before_guc] Высокий объём: calls=31,759,325, total_exec_time=2102.7s, mean=0.07ms hex=ea8ea37314e7aa01",
+            "[new_before_guc] Высокий объём: calls=25,902,938, total_exec_time=1765.7s, mean=0.07ms hex=b0bbec6a60959321",
+            "[new_before_guc] Высокий объём: calls=30,999,877, total_exec_time=1718.9s, mean=0.06ms hex=83d62318a221923a",
+            "[new_before_guc] Высокий объём: calls=132,074,901, total_exec_time=1111.0s, mean=0.01ms hex=334718932049516b",
+            "[new_before_guc] Высокий объём: calls=132,090,151, total_exec_time=1070.9s, mean=0.01ms hex=214646ce6f9b1a85",
+            "[new_before_guc] Высокий объём: calls=154,977, total_exec_time=1005.7s, mean=6.49ms hex=b8bfc0f848f0ab12",
+            "[new_before_guc] Высокий объём: calls=12,195,839, total_exec_time=863.6s, mean=0.07ms hex=48b6a6e4fefcf3e8",
+            "[new_before_guc] Высокий объём: calls=376,000, total_exec_time=630.7s, mean=1.68ms hex=e165ecce0bd0ce44",
+            "[new_after_guc] Высокий объём: calls=89,931,404, total_exec_time=366978.0s, mean=4.08ms hex=aabf68fb55a475ea",
+            "[new_after_guc] Высокий объём: calls=64,963,856, total_exec_time=273223.6s, mean=4.21ms hex=5049b7f719abb763",
+            "[new_after_guc] Высокий объём: calls=344,770, total_exec_time=255052.4s, mean=739.78ms hex=947d3792bf3c6b66",
+            "[new_after_guc] Высокий объём: calls=129,901,772, total_exec_time=131317.4s, mean=1.01ms hex=b62bf356da94bd81",
+            "[new_after_guc] Высокий объём: calls=66,963,678, total_exec_time=56136.6s, mean=0.84ms hex=beeeac4e79c5ae3c",
+            "[new_after_guc] Высокий объём: calls=316,353, total_exec_time=55727.9s, mean=176.16ms hex=22805b2c754ef87f",
+            "[new_after_guc] Высокий объём: calls=91,942,264, total_exec_time=39215.2s, mean=0.43ms hex=5a68bd6f1f3a0ef1",
+            "[new_after_guc] Высокий объём: calls=94,581,847, total_exec_time=26980.4s, mean=0.29ms hex=4af8ad263dfbf35b",
+            "[new_after_guc] Высокий объём: calls=66,965,323, total_exec_time=17824.1s, mean=0.27ms hex=9e195d9367009abe",
+            "[new_after_guc] Высокий объём: calls=129,274,536, total_exec_time=14747.8s, mean=0.11ms hex=bc341d0886926024",
+            "[new_after_guc] Высокий объём: calls=68,965,302, total_exec_time=12388.3s, mean=0.18ms hex=f3bd68a083051260",
+            "[new_after_guc] Высокий объём: calls=2,640,135, total_exec_time=10449.0s, mean=3.96ms hex=d725445a98810378",
+            "[new_after_guc] Высокий объём: calls=364,792, total_exec_time=6834.4s, mean=18.73ms hex=f8def257b4502ca7",
+            "[new_after_guc] Высокий объём: calls=66,963,633, total_exec_time=5973.4s, mean=0.09ms hex=c041231552f07d3c",
+            "[new_after_guc] Высокий объём: calls=30,996,294, total_exec_time=5826.1s, mean=0.19ms hex=cba78047b684ffd4",
+            "[new_after_guc] Высокий объём: calls=316,284, total_exec_time=4844.6s, mean=15.32ms hex=164790713ffd8e03",
+            "[new_after_guc] Высокий объём: calls=1,384,715, total_exec_time=3916.4s, mean=2.83ms hex=4612e82d5b49079e",
+            "[new_after_guc] Высокий объём: calls=2,000,000, total_exec_time=2996.0s, mean=1.50ms hex=e165ecce0bd0ce44",
+            "[new_after_guc] Высокий объём: calls=30,997,577, total_exec_time=2816.9s, mean=0.09ms hex=53d2cee7750d6983",
+            "[new_after_guc] Высокий объём: calls=64,965,224, total_exec_time=2325.9s, mean=0.04ms hex=b637405ffe02f90f",
+            "[new_after_guc] Высокий объём: calls=34,997,571, total_exec_time=1844.5s, mean=0.05ms hex=ea8ea37314e7aa01",
+            "[new_after_guc] Высокий объём: calls=30,996,262, total_exec_time=1393.2s, mean=0.04ms hex=83d62318a221923a",
+            "[new_after_guc] Высокий объём: calls=4,000,000, total_exec_time=1204.8s, mean=0.30ms hex=1c6e3deba07963d9",
+            "[new_after_guc] Высокий объём: calls=2,591,101, total_exec_time=1169.7s, mean=0.45ms hex=1185016cb5c9d10e",
+            "[new_after_guc] Высокий объём: calls=26,164,322, total_exec_time=1114.8s, mean=0.04ms hex=b0bbec6a60959321",
+            "[new_after_guc] Высокий объём: calls=154,971, total_exec_time=851.0s, mean=5.49ms hex=b8bfc0f848f0ab12",
+            "[new_after_guc] Высокий объём: calls=132,886,486, total_exec_time=764.2s, mean=0.01ms hex=334718932049516b",
+            "[new_after_guc] Высокий объём: calls=132,887,057, total_exec_time=703.3s, mean=0.01ms hex=214646ce6f9b1a85",
+            "[new_after_guc] Высокий объём: calls=250,697, total_exec_time=651.0s, mean=2.60ms hex=25edb34bb1d350c",
+            "[new_after_guc] Высокий объём: calls=148,338, total_exec_time=581.9s, mean=3.92ms hex=167e97e5b291187",
+            "[new_after_guc] Высокий объём: calls=12,672,779, total_exec_time=566.7s, mean=0.04ms hex=48b6a6e4fefcf3e8",
+            "[new_after_guc] Высокий объём: calls=4,000,000, total_exec_time=545.3s, mean=0.14ms hex=f07dd621fb3ba560"
+          ],
+          "confirm_actions": [
+            "Проверить calls и total_exec_time в top_statements для топ CPU запросов",
+            "Найти источник частых вызовов (ORM N+1, polling, отсутствие pool)"
+          ],
+          "refute_actions": [
+            "Если calls низкий при высоком CPU — причина не в частоте, а в тяжёлом плане/функции"
+          ],
+          "reports_matched": [
+            "old_app",
+            "new_before_guc",
+            "new_after_guc"
+          ]
+        },
+        {
+          "cause_id": "cpu.checkpoint_bgwriter",
+          "title": "Checkpoint / bgwriter / IO wait в kernel CPU",
+          "description": "Высокий system_time, checkpoint write, maxwritten_clean — kernel CPU на запись.",
+          "status": "suspected",
+          "evidence": [
+            "[old_app] checkpoints_req=67, checkpoint_write_time=66400.2s",
+            "[new_before_guc] checkpoints_req=309, checkpoint_write_time=56617.2s",
+            "[new_after_guc] checkpoints_req=125, checkpoint_write_time=52294.3s"
+          ],
+          "confirm_actions": [
+            "cluster_stats: checkpoints_req, checkpoint_write_time, maxwritten_clean",
+            "Сопоставить system_time_pct в top_rusage с WAL/checkpoint метриками"
+          ],
+          "refute_actions": [
+            "checkpoints_req низкий и checkpoint_write_time мал — не checkpoint"
+          ],
+          "reports_matched": [
+            "old_app",
+            "new_before_guc",
+            "new_after_guc"
+          ]
+        },
+        {
+          "cause_id": "cpu.autovacuum_pressure",
+          "title": "Autovacuum / analyze во время нагрузки",
+          "description": "Bloat, stale vacuum, высокий mods/dead_pct — autovacuum конкурирует за CPU.",
+          "status": "suspected",
+          "evidence": [
+            "[old_app] Bloat: pgse_profile.sample_stat_tables dead_pct=13.523352515649522%",
+            "[new_before_guc] Bloat: counteragent.t_feedback dead_pct=100.0%",
+            "[new_after_guc] Bloat: counteragent.t_feedback dead_pct=100.0%"
+          ],
+          "confirm_actions": [
+            "Проверить top_tbl_last_sample: dead_pct, mods_pct, last_autovacuum",
+            "pg_stat_activity: autovacuum workers в пик CPU",
+            "Логи autovacuum (log_autovacuum_min_duration)"
+          ],
+          "refute_actions": [
+            "Нет таблиц с высоким dead_pct и autovacuum свежий — маловероятно"
+          ],
+          "reports_matched": [
+            "old_app",
+            "new_before_guc",
+            "new_after_guc"
+          ]
+        },
+        {
+          "cause_id": "cpu.parallel_workers",
+          "title": "Параллельные запросы / max_parallel_workers",
+          "description": "Много parallel workers увеличивают суммарный CPU.",
+          "status": "possible",
+          "evidence": [],
+          "confirm_actions": [
+            "EXPLAIN: Gather / Parallel Seq Scan в топ SQL",
+            "Проверить max_parallel_workers_per_gather и load"
+          ],
+          "refute_actions": [
+            "Планы без parallel nodes при высоком CPU — ищите другие причины"
+          ],
+          "reports_matched": []
+        },
+        {
+          "cause_id": "cpu.jit_overhead",
+          "title": "JIT-компиляция запросов",
+          "description": "JIT включён и топ SQL имеет заметный jit_total_time.",
+          "status": "possible",
+          "evidence": [],
+          "confirm_actions": [
+            "Проверить jit_* поля в top_statements для медленных/тяжёлых запросов",
+            "Сравнить plan time vs exec time; jit_generation_time в pg_profile",
+            "Тест с SET jit=off для подозрительного запроса на НТ"
+          ],
+          "refute_actions": [
+            "jit_total_time отсутствует или << total_exec_time — JIT не доминирует"
+          ],
+          "reports_matched": []
+        }
+      ],
+      "action_plan": [
+        "[подтвердить cpu.dominant_queries] EXPLAIN (ANALYZE, BUFFERS) для топ-3 SQL по sum_cpu_time из отчёта",
+        "[подтвердить cpu.dominant_queries] Сопоставить pg_stat_statements (calls, mean_exec_time) с pg_stat_kcache (sum_cpu_time)",
+        "[подтвердить cpu.dominant_queries] Проверить, совпадает ли пик CPU на OS с интервалом отчёта pg_profile",
+        "[опровергнуть cpu.dominant_queries] Если sum_cpu_time топ-запросов <5% интервала — CPU уходит не в SQL (фон, autovacuum, checkpoint)",
+        "[опровергнуть cpu.dominant_queries] Сравнить топ CPU между двумя периодами: запрос исчез из топа — не корневая причина текущего пика",
+        "[подтвердить cpu.high_call_volume] Проверить calls и total_exec_time в top_statements для топ CPU запросов",
+        "[подтвердить cpu.high_call_volume] Найти источник частых вызовов (ORM N+1, polling, отсутствие pool)",
+        "[опровергнуть cpu.high_call_volume] Если calls низкий при высоком CPU — причина не в частоте, а в тяжёлом плане/функции",
+        "[подтвердить cpu.checkpoint_bgwriter] cluster_stats: checkpoints_req, checkpoint_write_time, maxwritten_clean",
+        "[подтвердить cpu.checkpoint_bgwriter] Сопоставить system_time_pct в top_rusage с WAL/checkpoint метриками",
+        "[опровергнуть cpu.checkpoint_bgwriter] checkpoints_req низкий и checkpoint_write_time мал — не checkpoint",
+        "[подтвердить cpu.autovacuum_pressure] Проверить top_tbl_last_sample: dead_pct, mods_pct, last_autovacuum",
+        "[подтвердить cpu.autovacuum_pressure] pg_stat_activity: autovacuum workers в пик CPU",
+        "[подтвердить cpu.autovacuum_pressure] Логи autovacuum (log_autovacuum_min_duration)",
+        "[опровергнуть cpu.autovacuum_pressure] Нет таблиц с высоким dead_pct и autovacuum свежий — маловероятно",
+        "[подтвердить cpu.parallel_workers] EXPLAIN: Gather / Parallel Seq Scan в топ SQL",
+        "[подтвердить cpu.parallel_workers] Проверить max_parallel_workers_per_gather и load",
+        "[подтвердить cpu.jit_overhead] Проверить jit_* поля в top_statements для медленных/тяжёлых запросов",
+        "[подтвердить cpu.jit_overhead] Сравнить plan time vs exec time; jit_generation_time в pg_profile",
+        "[подтвердить cpu.jit_overhead] Тест с SET jit=off для подозрительного запроса на НТ"
+      ],
+      "summary": {
+        "report_count": 3,
+        "confirmed_count": 1,
+        "suspected_count": 3
+      }
+    },
+    {
+      "type": "symptom_investigation",
+      "symptom": "high_wal",
+      "symptom_title": "Высокая генерация WAL",
+      "symptom_description": "Симптом: быстрый рост WAL, wal_buffers_full, частые checkpoints, replication lag.",
+      "query_target": null,
+      "reports": [
+        {
+          "label": "old_app",
+          "path": "resources/counter_nt_old_version.html",
+          "filename": "counter_nt_old_version.html"
+        },
+        {
+          "label": "new_before_guc",
+          "path": "resources/counter_nt_before_settings.html",
+          "filename": "counter_nt_before_settings.html"
+        },
+        {
+          "label": "new_after_guc",
+          "path": "resources/counter_nt_with_settings.html",
+          "filename": "counter_nt_with_settings.html"
+        }
+      ],
+      "query_matches": [],
+      "causes": [
+        {
+          "cause_id": "wal.high_generation_rate",
+          "title": "Высокая скорость генерации WAL (wal_bytes)",
+          "description": "wal_bytes / interval выше порога — общая write-нагрузка.",
+          "status": "confirmed",
+          "evidence": [
+            "[old_app] WAL generation ≈ 30381.2 MB/h",
+            "[new_before_guc] WAL generation ≈ 145821.2 MB/h",
+            "[new_after_guc] WAL generation ≈ 88272.4 MB/h"
+          ],
+          "confirm_actions": [
+            "wal_stats: wal_bytes, wal_bytes_per_sec за интервал",
+            "Сравнить WAL MB/h между периодами (compare_runs / compare_nt_prod)"
+          ],
+          "refute_actions": [
+            "wal_bytes низкий за интервал — симптом мог быть кратковременным вне окна отчёта"
+          ],
+          "reports_matched": [
+            "old_app",
+            "new_before_guc",
+            "new_after_guc"
+          ]
+        },
+        {
+          "cause_id": "wal.buffers_full",
+          "title": "Переполнение wal_buffers",
+          "description": "wal_buffers_full > 0 — процессы ждут WAL buffer.",
+          "status": "confirmed",
+          "evidence": [
+            "[old_app] wal_buffers_full=132212",
+            "[new_before_guc] wal_buffers_full=19453",
+            "[new_after_guc] wal_buffers_full=39986"
+          ],
+          "confirm_actions": [
+            "wal_stats.wal_buffers_full",
+            "Увеличить wal_buffers на НТ и сравнить"
+          ],
+          "refute_actions": [
+            "wal_buffers_full = 0 — буферы достаточны"
+          ],
+          "reports_matched": [
+            "old_app",
+            "new_before_guc",
+            "new_after_guc"
+          ]
+        },
+        {
+          "cause_id": "wal.wal_heavy_queries",
+          "title": "WAL-heavy SQL",
+          "description": "Топ SQL с высоким wal_bytes, wal_records, shared_blks_dirtied.",
+          "status": "suspected",
+          "evidence": [
+            "[old_app] WAL-heavy SQL: wal_bytes=192 GB hex=a82eb1cdc7e93a20",
+            "[new_before_guc] WAL-heavy SQL: wal_bytes=1348 GB hex=aabf68fb55a475ea",
+            "[new_after_guc] WAL-heavy SQL: wal_bytes=783 GB hex=aabf68fb55a475ea"
+          ],
+          "confirm_actions": [
+            "top_statements: wal_bytes, wal_fpi для топ запросов",
+            "EXPLAIN: массовые UPDATE/INSERT, TOAST, FPI"
+          ],
+          "refute_actions": [
+            "Топ SQL не содержит wal_bytes — WAL от batch/DDL/replication"
+          ],
+          "reports_matched": [
+            "old_app",
+            "new_before_guc",
+            "new_after_guc"
+          ]
+        },
+        {
+          "cause_id": "wal.high_dml_tables",
+          "title": "Write-heavy таблицы (DML volume)",
+          "description": "top_tables с высоким n_tup_ins/upd/del генерируют WAL.",
+          "status": "suspected",
+          "evidence": [
+            "[old_app] DML table counteragent.t_feedbackwaitinglist: ins=3052851 upd=32946064 del=2462400",
+            "[new_before_guc] DML table counteragent.t_feedbackwaitinglist: ins=3291458 upd=126531975 del=2071909",
+            "[new_after_guc] DML table counteragent.t_feedbackwaitinglist: ins=2640704 upd=89998684 del=2013773"
+          ],
+          "confirm_actions": [
+            "top_tables: n_tup_ins, n_tup_upd, n_tup_del",
+            "Сопоставить таблицы с wal-heavy SQL"
+          ],
+          "refute_actions": [
+            "DML counters низкие — WAL не от OLTP DML"
+          ],
+          "reports_matched": [
+            "old_app",
+            "new_before_guc",
+            "new_after_guc"
+          ]
+        },
+        {
+          "cause_id": "wal.checkpoint_pressure",
+          "title": "Checkpoint pressure (requested checkpoints)",
+          "description": "Частые requested checkpoints из-за max_wal_size / write burst.",
+          "status": "suspected",
+          "evidence": [
+            "[old_app] checkpoints_req=67",
+            "[new_before_guc] checkpoints_req=309",
+            "[new_after_guc] checkpoints_req=125"
+          ],
+          "confirm_actions": [
+            "cluster_stats: checkpoints_req/timed, checkpoint_write_time",
+            "max_wal_size vs WAL generation rate"
+          ],
+          "refute_actions": [
+            "checkpoints_req низкий — checkpoint не лимитирует"
+          ],
+          "reports_matched": [
+            "old_app",
+            "new_before_guc",
+            "new_after_guc"
+          ]
+        },
+        {
+          "cause_id": "wal.small_max_wal_size",
+          "title": "Малый max_wal_size",
+          "description": "max_wal_size ниже рекомендуемого при текущей write-нагрузке.",
+          "status": "possible",
+          "evidence": [],
+          "confirm_actions": [
+            "settings.max_wal_size vs wal MB/h",
+            "Политика диска и replication"
+          ],
+          "refute_actions": [
+            "max_wal_size уже большой — причина в объёме записи, не в лимите"
+          ],
+          "reports_matched": []
+        }
+      ],
+      "action_plan": [
+        "[подтвердить wal.high_generation_rate] wal_stats: wal_bytes, wal_bytes_per_sec за интервал",
+        "[подтвердить wal.high_generation_rate] Сравнить WAL MB/h между периодами (compare_runs / compare_nt_prod)",
+        "[опровергнуть wal.high_generation_rate] wal_bytes низкий за интервал — симптом мог быть кратковременным вне окна отчёта",
+        "[подтвердить wal.buffers_full] wal_stats.wal_buffers_full",
+        "[подтвердить wal.buffers_full] Увеличить wal_buffers на НТ и сравнить",
+        "[опровергнуть wal.buffers_full] wal_buffers_full = 0 — буферы достаточны",
+        "[подтвердить wal.wal_heavy_queries] top_statements: wal_bytes, wal_fpi для топ запросов",
+        "[подтвердить wal.wal_heavy_queries] EXPLAIN: массовые UPDATE/INSERT, TOAST, FPI",
+        "[опровергнуть wal.wal_heavy_queries] Топ SQL не содержит wal_bytes — WAL от batch/DDL/replication",
+        "[подтвердить wal.high_dml_tables] top_tables: n_tup_ins, n_tup_upd, n_tup_del",
+        "[подтвердить wal.high_dml_tables] Сопоставить таблицы с wal-heavy SQL",
+        "[опровергнуть wal.high_dml_tables] DML counters низкие — WAL не от OLTP DML",
+        "[подтвердить wal.checkpoint_pressure] cluster_stats: checkpoints_req/timed, checkpoint_write_time",
+        "[подтвердить wal.checkpoint_pressure] max_wal_size vs WAL generation rate",
+        "[опровергнуть wal.checkpoint_pressure] checkpoints_req низкий — checkpoint не лимитирует",
+        "[подтвердить wal.small_max_wal_size] settings.max_wal_size vs wal MB/h",
+        "[подтвердить wal.small_max_wal_size] Политика диска и replication"
+      ],
+      "summary": {
+        "report_count": 3,
+        "confirmed_count": 2,
+        "suspected_count": 3
+      }
+    }
+  ],
+  "pair_analyses": [
+    {
+      "run_a": "old_app",
+      "run_b": "new_before_guc",
+      "compare_summary": {
+        "total_compared": 94,
+        "significant_count": 88,
+        "min_change_pct": 5.0
+      },
+      "narrative": "Между прогонами old_app → new_before_guc значимые изменения метрик есть (88 показателей), но критичных изменений Defined settings не обнаружено — рост симптомов скорее связан с нагрузкой приложения/SQL, а не с GUC.",
+      "settings_changes": [
+        {
+          "guc": "primary_slot_name",
+          "value_from": "tsldd_pprb02835_cloud_delta_sbrf_ru",
+          "value_to": null
+        },
+        {
+          "guc": "synchronous_standby_names",
+          "value_from": "\"tsldd-pprb02833.cloud.delta.sbrf.ru\"",
+          "value_to": "\"tsldd-pprb02835.cloud.delta.sbrf.ru\""
+        }
+      ],
+      "guc_impacts": []
+    },
+    {
+      "run_a": "new_before_guc",
+      "run_b": "new_after_guc",
+      "compare_summary": {
+        "total_compared": 94,
+        "significant_count": 74,
+        "min_change_pct": 5.0
+      },
+      "narrative": "Между прогонами new_before_guc → new_after_guc изменены настройки; ниже — вероятное влияние на метрики (корреляция, не доказательство причинности):\n- huge_pages: — → on (changed); уверенность: possible\n  • В этом сравнении: blk_read_time -32.3% — направление согласуется с ожидаемым эффектом настройки\n- max_wal_size: 16384 (128.0 MB) → 24576 (192.0 MB) (increased); уверенность: possible\n  • Увеличение max_wal_size снижает частоту requested checkpoints при высокой WAL generation.\n  • В этом сравнении: checkpoints_req -59.5%, checkpoint_write_time -7.6%, wal_buffers_full +105.6%, wal_bytes -36.1% — направление согласуется с ожидаемым эффектом настройки\n- shared_buffers: 1048576 (8192.0 MB) → 1258240 (9830.0 MB) (increased); уверенность: likely\n  • Увеличение shared_buffers повышает cache hit и снижает физические чтения (CPU/IO).\n  • В этом сравнении: blks_read -9.7%, blk_read_time -32.3%, blk_write_time -29.9% — направление согласуется с ожидаемым эффектом настройки\n- wal_buffers: 2048 (16.0 MB) → 3072 (24.0 MB) (increased); уверенность: possible\n  • Увеличение wal_buffers снижает ожидание освобождения WAL buffer (wal_buffers_full).\n  • В этом сравнении: wal_buffers_full +105.6%, wal_bytes -36.1%, wal_sync +13.0%, wal_write +13.8% — направление согласуется с ожидаемым эффектом настройки",
+      "settings_changes": [
+        {
+          "guc": "huge_pages",
+          "value_from": null,
+          "value_to": "on"
+        },
+        {
+          "guc": "max_wal_size",
+          "value_from": "16384",
+          "value_to": "24576"
+        },
+        {
+          "guc": "shared_buffers",
+          "value_from": "1048576",
+          "value_to": "1258240"
+        },
+        {
+          "guc": "shared_memory_size",
+          "value_from": "9194",
+          "value_to": "10877"
+        },
+        {
+          "guc": "shared_memory_size_in_huge_pages",
+          "value_from": "4597",
+          "value_to": "5439"
+        },
+        {
+          "guc": "wal_buffers",
+          "value_from": "2048",
+          "value_to": "3072"
+        }
+      ],
+      "guc_impacts": [
+        {
+          "guc": "huge_pages",
+          "value_from": "—",
+          "value_to": "on",
+          "direction": "changed",
+          "confidence": "possible",
+          "likely_effects": [
+            "В этом сравнении: blk_read_time -32.3% — направление согласуется с ожидаемым эффектом настройки"
+          ],
+          "correlated_metrics": [
+            {
+              "metric": "blk_read_time",
+              "delta": -1167637.1,
+              "delta_pct": -32.30937024369562,
+              "per_hour_a": 200773.73,
+              "per_hour_b": 128752.10736842106,
+              "improved": null
+            }
+          ]
+        },
+        {
+          "guc": "max_wal_size",
+          "value_from": "16384 (128.0 MB)",
+          "value_to": "24576 (192.0 MB)",
+          "direction": "increased",
+          "confidence": "possible",
+          "likely_effects": [
+            "Увеличение max_wal_size снижает частоту requested checkpoints при высокой WAL generation.",
+            "В этом сравнении: checkpoints_req -59.5%, checkpoint_write_time -7.6%, wal_buffers_full +105.6%, wal_bytes -36.1% — направление согласуется с ожидаемым эффектом настройки"
+          ],
+          "correlated_metrics": [
+            {
+              "metric": "checkpoints_req",
+              "delta": -184.0,
+              "delta_pct": -59.54692556634304,
+              "per_hour_a": 17.166666666666668,
+              "per_hour_b": 6.578947368421052,
+              "improved": true
+            },
+            {
+              "metric": "checkpoint_write_time",
+              "delta": -4322.880000000005,
+              "delta_pct": -7.635272866581436,
+              "per_hour_a": 3145.4016666666666,
+              "per_hour_b": 2752.334210526316,
+              "improved": true
+            },
+            {
+              "metric": "wal_buffers_full",
+              "delta": 20533.0,
+              "delta_pct": 105.55184290340821,
+              "per_hour_a": 1080.7222222222222,
+              "per_hour_b": 2104.5263157894738,
+              "improved": false
+            },
+            {
+              "metric": "wal_bytes",
+              "delta": -993637853744.0,
+              "delta_pct": -36.10230472046234,
+              "per_hour_a": 152904650861.5,
+              "per_hour_b": 92560308513.8421,
+              "improved": true
+            },
+            {
+              "metric": "wal_size",
+              "delta": -1017839774296.0,
+              "delta_pct": -36.45997520276774,
+              "per_hour_a": 155092409726.22223,
+              "per_hour_b": 93359136882.94737,
+              "improved": true
+            }
+          ]
+        },
+        {
+          "guc": "shared_buffers",
+          "value_from": "1048576 (8192.0 MB)",
+          "value_to": "1258240 (9830.0 MB)",
+          "direction": "increased",
+          "confidence": "likely",
+          "likely_effects": [
+            "Увеличение shared_buffers повышает cache hit и снижает физические чтения (CPU/IO).",
+            "В этом сравнении: blks_read -9.7%, blk_read_time -32.3%, blk_write_time -29.9% — направление согласуется с ожидаемым эффектом настройки"
+          ],
+          "correlated_metrics": [
+            {
+              "metric": "blks_read",
+              "delta": -47278.0,
+              "delta_pct": -9.673841872646914,
+              "per_hour_a": 27151.11111111111,
+              "per_hour_b": 23233.78947368421,
+              "improved": true
+            },
+            {
+              "metric": "blk_read_time",
+              "delta": -1167637.1,
+              "delta_pct": -32.30937024369562,
+              "per_hour_a": 200773.73,
+              "per_hour_b": 128752.10736842106,
+              "improved": true
+            },
+            {
+              "metric": "blk_write_time",
+              "delta": -130084.68,
+              "delta_pct": -29.912170651440093,
+              "per_hour_a": 24160.48888888889,
+              "per_hour_b": 16042.322105263158,
+              "improved": true
+            }
+          ]
+        },
+        {
+          "guc": "wal_buffers",
+          "value_from": "2048 (16.0 MB)",
+          "value_to": "3072 (24.0 MB)",
+          "direction": "increased",
+          "confidence": "possible",
+          "likely_effects": [
+            "Увеличение wal_buffers снижает ожидание освобождения WAL buffer (wal_buffers_full).",
+            "В этом сравнении: wal_buffers_full +105.6%, wal_bytes -36.1%, wal_sync +13.0%, wal_write +13.8% — направление согласуется с ожидаемым эффектом настройки"
+          ],
+          "correlated_metrics": [
+            {
+              "metric": "wal_buffers_full",
+              "delta": 20533.0,
+              "delta_pct": 105.55184290340821,
+              "per_hour_a": 1080.7222222222222,
+              "per_hour_b": 2104.5263157894738,
+              "improved": false
+            },
+            {
+              "metric": "wal_bytes",
+              "delta": -993637853744.0,
+              "delta_pct": -36.10230472046234,
+              "per_hour_a": 152904650861.5,
+              "per_hour_b": 92560308513.8421,
+              "improved": true
+            },
+            {
+              "metric": "wal_sync",
+              "delta": 654259.0,
+              "delta_pct": 13.010530778604679,
+              "per_hour_a": 279371.55555555556,
+              "per_hour_b": 299102.4736842105,
+              "improved": null
+            },
+            {
+              "metric": "wal_write",
+              "delta": 707739.0,
+              "delta_pct": 13.806979426841966,
+              "per_hour_a": 284775.05555555556,
+              "per_hour_b": 307036.3157894737,
+              "improved": null
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

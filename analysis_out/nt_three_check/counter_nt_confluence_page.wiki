@@ -1,0 +1,151 @@
+h1. НТ counteragent: регрессия новой версии приложения и эффект GUC
+
+h2. Метаданные прогонов
+
+||Прогон||Отчёт||Сервер||Интервал||Длительность||
+|Старая версия приложения|{{counter_nt_old_version.html}}|tsldd-pprb02835|03.06.2026 15:30 — 04.06.2026 12:30|21.0 ч|
+|Новая версия, до GUC|{{counter_nt_before_settings.html}}|tsldd-pprb02833|14.07.2026 18:00 — 15.07.2026 12:00|18.0 ч|
+|Новая версия, после GUC|{{counter_nt_with_settings.html}}|tsldd-pprb02833|15.07.2026 14:30 — 16.07.2026 09:30|19.0 ч|
+
+{note:title=Ограничения сравнения}
+* Прогоны на *разных серверах НТ* (02835 vs 02833) и *разной длительности* — для счётчиков использована нормализация «/час».
+* В отчётах нет метрик CPU ОС — CPU оценивается по {{pg_stat_kcache}} ({{sum_cpu_time}}) и {{total_exec_time}} SQL.
+{note}
+
+----
+
+h2. Краткое резюме
+
+{warning:title=Регрессия новой версии: WAL ×4.8, CPU SQL ×3–4; GUC улучшили, но SLA не закрыт}
+* *Старая → новая версия (до GUC):* WAL *~30 → ~142 GB/h* (+380%), {{UPDATE}} *~5.2M → ~24.8M/ч* (+309%), {{blks_hit_pct}} *95% → 82%*.
+* *Корневая причина (уровень SQL/приложения):* массовые *UPDATE {{t_feedbackwaitinglist}}* и *{{t_transaction}}* + рост polling/replication SELECT (~130M calls/18 ч каждый).
+* *После GUC* ({{max_wal_size}}, {{shared_buffers}}, {{wal_buffers}}, {{huge_pages}}): WAL *~142 → ~86 GB/h* (−40%), requested checkpoints *17.2 → 6.6/ч* (−60%).
+* *Gap до SLA:* после GUC остаются *CRITICAL* — requested checkpoints 91%, idle in transaction, deadlocks (52); cache hit ~82%; топ write-SQL не устранён.
+* *Вывод:* рост WAL/CPU вызван *изменением паттерна нагрузки приложения*; GUC — необходимы, но *недостаточны* без оптимизации приложения.
+{warning}
+
+----
+
+h2. Сводка метрик (нормализация /час)
+
+||Метрика||Старая версия||Новая (до GUC)||Новая (после GUC)||Δ old→new||Δ before→after||
+|WAL|~29.7 GB/h|~142.4 GB/h|~86.2 GB/h|*+380%*|*−40%*|
+|{{checkpoints_req}}|3.2/ч (78% req)|17.2/ч (99.7% req)|6.6/ч (91.2% req)|*+438%*|*−62%*|
+|{{Total.UPDATE}}|5.2M/ч|24.8M/ч|19.8M/ч|*+377%*|*−20%*|
+|{{Total.FETCH}}|46.0M/ч|457.0M/ч|500.5M/ч|*+893%*|+10%|
+|{{blks_hit_pct}}|95.2%|81.9%|81.6%|−13 п.п.|без изменений|
+|{{idle_in_transaction_time}}|56.1k s/ч|168.7k s/ч|—|*+200%*|—|
+|Health-check CRITICAL|3|6|5|+3|−1|
+
+----
+
+h2. Почему выросли WAL и CPU
+
+h3. 1. Массовые UPDATE — главный драйвер WAL
+
+||#||SQL||calls (old → new)||WAL (old → new)||mean exec (old → new)||
+|1|{{UPDATE counteragent.t_feedbackwaitinglist SET sys_lastchangedate, refreshdate WHERE object_id}}|33M → *126M*|132 GB → *1348 GB*|1.9 ms → 5.2 ms|
+|2|{{UPDATE counteragent.t_transaction SET ... WHERE object_id}} (паттерн изменился)|33M → *56M*|206 GB → *553 GB*|2.2 ms → 5.8 ms|
+|3|{{UPDATE counteragent.T_REPL_AGGLOCK_FEEDBACKWAITINGLIST ...}}|— → *128M*|— → *48 GB*|— → 0.5 ms|
+
+* *×3–4 больше write-операций* в новой версии — прямое объяснение роста WAL.
+* UPDATE {{t_feedbackwaitinglist}} — *~75% WAL* нового прогона (1348 GB из ~2752 GB total).
+
+h3. 2. Высокочастотный polling и replication — драйвер CPU
+
+||SQL||sum_cpu_time (old → new)||calls (old → new)||
+|{{SELECT ... FROM t_feedbackwaitinglist WHERE destinationclient ...}}|9.2k s → *32.3k s*|36M → *130M*|
+|{{UPDATE t_feedbackwaitinglist ...}}|~9.6k s → *34.8k s*|33M → *126M*|
+|{{SELECT txtype, changeeventmask ...}} (replication)|5.4k s → *17.8k s*|38M → *132M*|
+|{{UPDATE t_transaction ...}}|9.6k s → *17.4k s*|33M → *56M*|
+
+* CPU складывается из *объёма × частота*, не из единичных «медленных» запросов.
+* {{user_time_pct}} в kcache — доля *среди топ SQL отчёта*, не % CPU ОС.
+
+h3. 3. Усилители (не root cause, но ухудшают картину)
+
+{note:title=Сопутствующие факторы новой версии}
+* {{blks_hit_pct}}: 95% → 82% — рост физических чтений и {{blk_read_time}} (~7.5k → ~201k s/ч).
+* {{idle_in_transaction_time}}: +200% при {{idle_in_transaction_session_timeout=0}}.
+* Deadlocks: 0 → *913* (до GUC); после GUC — *52*.
+* Медленный DISTINCT по {{T_PROCESSEDNOTIFICATIONCANDIDATE}}: mean *~19 мин*, 58 calls, 69k s wall time.
+{note}
+
+----
+
+h2. Эффект применения GUC (before → after)
+
+{info:title=Применённые настройки}
+* {{max_wal_size}}: 16384 → 24576 pages (*128 → 192 MB*)
+* {{shared_buffers}}: 1048576 → 1258240 pages (*~8.0 → ~9.6 GB*)
+* {{wal_buffers}}: 2048 → 3072 pages (*16 → 24 MB*)
+* {{huge_pages}}: включены на прогоне after
+{info}
+
+||Метрика||До GUC||После GUC||Изменение||
+|WAL|~142 GB/h|~86 GB/h|*−40%*|
+|{{checkpoints_req}}|17.2/ч|6.6/ч|*−62%*|
+|Top UPDATE {{t_feedbackwaitinglist}} WAL|1348 GB|783 GB|*−42%*|
+|Top UPDATE {{t_transaction}} WAL|553 GB|367 GB|*−34%*|
+|{{wal_buffers_full}}|19 453|39 986|*+106%*|
+
+* GUC *сняли инфраструктурное давление* (checkpoint storm), но WAL всё ещё *×2.9* относительно старой версии (~86 vs ~30 GB/h).
+
+----
+
+h2. Остаточный gap до SLA (после GUC)
+
+||Проблема||Статус||Значение||Порог||
+|Requested checkpoints|{status:colour=Red|title=CRITICAL|subtle=false}|91.2% (125/137)|30%|
+|Idle in transaction|{status:colour=Red|title=CRITICAL|subtle=false}|~3.04M s cumulative|3600 s|
+|Deadlocks|{status:colour=Red|title=CRITICAL|subtle=false}|52|0|
+|Cache hit (DB-level)|{status:colour=Yellow|title=WARNING|subtle=false}|81.6%|99%|
+|{{wal_buffers_full}}|{status:colour=Yellow|title=WARNING|subtle=false}|39 986|1000|
+|Checkpoint write time|{status:colour=Yellow|title=WARNING|subtle=false}|~2752 s/ч|60 s/ч|
+|WAL generation|{status:colour=Yellow|title=WARNING|subtle=false}|~86 GB/h|~30 GB/h (baseline old)|
+
+* Health-check после GUC: *77 findings* (5 critical, 72 warning) vs *80* до GUC (6 critical).
+* До уровня старой версии по WAL не дотягиваем: *86 vs 30 GB/h*.
+
+----
+
+h2. Рекомендации
+
+{warning:title=Приоритет 1 — приложение (главный рычаг)}
+# *Снизить частоту UPDATE {{t_feedbackwaitinglist}}* — batch, debounce, очередь; целевой ориентир: вернуться к ~33M calls/21h, а не 126M/18h.
+# *Оптимизировать UPDATE {{t_transaction}}* — пересмотреть паттерн (смена SQL с {{validto}} на {{rquid}}); EXPLAIN ANALYZE, HOT update, fillfactor.
+# *Снизить polling SELECT* по {{t_feedbackwaitinglist}} (~130M calls) — кэш, batch read, снижение round-trips.
+# *Оптимизировать replication path* — SELECT/UPDATE {{T_REPL_AGGLOCK_*}} (~128M calls).
+# *Исправить медленный DISTINCT* по {{T_PROCESSEDNOTIFICATIONCANDIDATE}} (mean ~16–19 мин) — индексы, переписать запрос.
+{warning}
+
+{info:title=Приоритет 2 — GUC (донастройка)}
+# *{{max_wal_size}}* ↑ ещё (сейчас 192 MB при ~86 GB/h WAL — requested checkpoints 91%).
+# *{{checkpoint_completion_target}}* → 0.7–0.9 (если не применялось).
+# *{{idle_in_transaction_session_timeout}}* → 60–300 s (сейчас 0).
+# *{{statement_timeout}}*, *{{lock_timeout}}* для OLTP-ролей.
+{info}
+
+{note:title=Приоритет 3 — подтверждение}
+# Повторный pg_profile после правок приложения (18–21 ч, тот же сценарий нагрузки).
+# Сравнить {{compare_runs}} new_after vs old_app — целевые метрики: WAL ≤ 35 GB/h, {{blks_hit_pct}} ≥ 95%.
+# Корреляция OS CPU с топ hex ({{aabf68fb55a475ea}}, {{5049b7f719abb763}}, {{b62bf356da94bd81}}).
+{note}
+
+----
+
+h2. Следующие шаги DBA
+
+# Встреча с владельцем приложения: источник *×3–4 роста UPDATE/polling* в новой версии.
+# EXPLAIN (ANALYZE, BUFFERS) топ-3 write-SQL на НТ.
+# PROD change window: {{idle_in_transaction_session_timeout}}, затем донастройка {{max_wal_size}}.
+# Повторный прогон НТ → {{compare_runs}} + {{check_report}} → верификация gap до SLA.
+
+----
+
+h2. Источники данных
+
+* Сравнения: {{compare_runs.py}} (old→before, before→after)
+* Health-check: {{check_report.py}} + {{thresholds.yaml}}
+* Settings diff: {{compare_settings.py}} (before→after)
+* Артефакты: {{analysis_out/nt_three_check/}}

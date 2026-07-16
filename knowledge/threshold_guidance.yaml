@@ -1,0 +1,290 @@
+# Situational guidance for health-check thresholds (UI /thresholds page).
+# Oriented on Postgres Pro docs (resource consumption, WAL/checkpoints, autovacuum, kernel resources).
+# Keys = flattened paths as on the Thresholds page (section omitted — key is relative to section).
+
+guidelines:
+  # --- checkpoints ---
+  max_requested_ratio:
+    when: |
+      Снижайте порог на OLTP с ровным WAL; повышайте на ETL/batch, где всплески requested checkpoints ожидаемы.
+    databases: |
+      Критично для высоконагруженных OLTP и реплик: частые requested checkpoints (малый max_wal_size /
+      checkpoint_timeout) бьют по диску. Postgres Pro: увеличивайте checkpoint_timeout и max_wal_size,
+      чтобы снизить частоту checkpoints.
+    ref: "Postgres Pro: Configuring Server Parameters / Write-Ahead Log; checkpoint_timeout, max_wal_size"
+
+  critical_requested_ratio:
+    when: |
+      Оставляйте заметно выше max_requested_ratio. Повышайте только если batch-нагрузка регулярно даёт
+      краткие пики requested без деградации latency.
+    databases: |
+      Prod OLTP — держите строгим. Аналитические/ночные окна — можно мягче, если IO и RPO согласованы.
+    ref: "Postgres Pro: checkpoints и объём WAL"
+
+  max_requested_per_hour:
+    when: |
+      Увеличьте для коротких НТ-прогонов с искусственно частыми checkpoints; уменьшите для prod 24×7,
+      где важен стабильный IO.
+    databases: |
+      Связано с max_wal_size / checkpoint_timeout. На системах с большим объёмом записи (1C-like, очередь
+      событий) Postgres Pro советует поднять max_wal_size, иначе порог будет срабатывать постоянно.
+    ref: "Postgres Pro: max_wal_size, min_wal_size, checkpoint_timeout"
+
+  max_write_time_sec:
+    when: |
+      Поднимайте на медленных HDD / сетевых СХД; опускайте на NVMe-dedicated, где длинный checkpoint write
+      — аномалия.
+    databases: |
+      Крупные shared_buffers требуют согласованного max_wal_size, иначе checkpoint write растягивается.
+      Postgres Pro: shared_buffers ~25% RAM на выделенном сервере; при росте буферов пересмотрите WAL.
+    ref: "Postgres Pro: shared_buffers, max_wal_size; checkpoint I/O"
+
+  max_write_time_per_hour_sec:
+    when: |
+      Нормируйте под длительность отчёта pg_profile. Для часовых отчётов оставляйте ближе к дефолту;
+      для суточных — повышайте пропорционально.
+    databases: |
+      Полезно на prod с длинными интервалами сэмпла. На НТ с коротким окном порог часто завышен — снизьте.
+    ref: "Postgres Pro: checkpoint_completion_target (сглаживание записи)"
+
+  max_maxwritten_clean:
+    when: |
+      Повышайте при известном давлении bgwriter на очень больших buffer pool; снижайте, если важны
+      ранние сигналы о нехватке clean buffers.
+    databases: |
+      Характерно для крупных shared_buffers и write-heavy OLTP. Смотрите вместе с checkpoint/bgwriter.
+    ref: "Postgres Pro / PostgreSQL: bgwriter, shared_buffers"
+
+  # --- queries ---
+  max_mean_exec_ms:
+    when: |
+      OLTP API — 50–500 ms; отчётность/ETL — 1–30+ s. Поднимайте для BI, опускайте для latency-critical.
+    databases: |
+      Не путайте с медленным SQL из-за планирования: смотрите calls. Для 1C/OLTP Postgres Pro ориентирует
+      на короткие транзакции; для DSS mean выше — норма.
+    ref: "Postgres Pro: workload-specific tuning; work_mem для тяжёлых sort/hash"
+
+  max_max_exec_ms:
+    when: |
+      Ловит «хвосты». На prod с statement_timeout согласуйте порог с таймаутом приложения.
+    databases: |
+      Полезно везде, где есть runaway queries. На batch-джобах без timeout — повышайте или отключайте
+      сравнение с max через top_n.
+    ref: "Postgres Pro / PostgreSQL: statement_timeout"
+
+  max_total_exec_sec:
+    when: |
+      Суммарное время в интервале отчёта. Увеличьте для длинных pg_profile окон и частых коротких SQL.
+    databases: |
+      На высоконагруженных OLTP топ по total_time часто «шумный» — смотрите mean/calls. На аналитике
+      total высок осознанно.
+    ref: "pg_stat_statements / pg_profile top statements"
+
+  min_calls_for_mean:
+    when: |
+      Поднимайте, чтобы отфильтровать редкие «разовые» запросы; снижайте, если важны редкие, но тяжёлые.
+    databases: |
+      Для prod OLTP обычно выше; для расследования инцидентов на НТ — ниже.
+    ref: "pg_stat_statements: calls vs mean_exec_time"
+
+  # --- autovacuum ---
+  settings.max_naptime_sec:
+    when: |
+      Если порог срабатывает при naptime=60 (default) на write-heavy БД — снижайте порог (строже),
+      а на сервере naptime; если vacuum и так агрессивен — повышайте порог.
+    databases: |
+      Postgres Pro: при большом числе update/delete уменьшайте autovacuum_naptime, иначе bloat и деградация.
+      На read-mostly можно мягче.
+    ref: "Postgres Pro: autovacuum_naptime, autovacuum_max_workers"
+
+  settings.min_vacuum_cost_limit:
+    when: |
+      На IO-bound СХД низкий cost_limit нормален — снизьте порог. На выделенном NVMe можно требовать выше.
+    databases: |
+      Write-heavy таблицы (очереди, сессии, 1C) часто нуждаются в более агрессивном vacuum (выше limit /
+      ниже delay). Postgres Pro не рекомендует отключать autovacuum.
+    ref: "Postgres Pro: autovacuum cost parameters"
+
+  settings.max_vacuum_cost_delay_ms:
+    when: |
+      Высокий delay замедляет vacuum. На prod с bloat держите порог строгим; на shared-host повышайте,
+      если vacuum душит соседей.
+    databases: |
+      Связка с cost_limit. Для высоконагруженных OLTP Postgres Pro советует не «душить» autovacuum delay.
+    ref: "Postgres Pro: autovacuum_vacuum_cost_delay"
+
+  tables.max_dead_pct:
+    when: |
+      Для огромных append-only таблиц 10% может быть шумным — повысьте. Для горячих OLTP-таблиц — снизьте.
+    databases: |
+      Критично при частых UPDATE/DELETE. Postgres Pro: без своевременного vacuum растёт размер БД и падает
+      производительность; настраивайте scale_factor/threshold per-table при необходимости.
+    ref: "Postgres Pro: autovacuum; table storage parameters"
+
+  tables.max_mods_pct:
+    when: |
+      Аналогично dead_pct: строже на горячих таблицах, мягче на bulk-load staging.
+    databases: |
+      Полезно для очередей и таблиц состояний. Смотрите n_mod_since_analyze.
+    ref: "PostgreSQL/Postgres Pro: autovacuum analyze thresholds"
+
+  tables.stale_autovacuum_hours:
+    when: |
+      Для редко обновляемых справочников повышайте; для write-heavy — снижайте (раньше сигнал).
+    databases: |
+      На 24×7 OLTP «тишина» vacuum на активной таблице — тревожный знак.
+    ref: "pg_stat_all_tables: last_autovacuum"
+
+  # --- wal ---
+  max_wal_buffers_full:
+    when: |
+      На очень write-heavy системах кратковременный full допустим — поднимите порог; одновременно
+      рассмотрите рост wal_buffers.
+    databases: |
+      Postgres Pro / PostgreSQL: при высокой генерации WAL увеличьте wal_buffers (часто ≥16MB на busy).
+      Порог — сигнал к настройке, не замена GUC.
+    ref: "Postgres Pro: wal_buffers; WAL configuration"
+
+  max_wal_mb_per_sec:
+    when: |
+      Калибруйте под пиковую запись: OLTP десятки MB/s возможны; на репликах с отставанием смотрите
+      вместе с сетью/диском.
+    databases: |
+      Высокая скорость WAL → запас max_wal_size и пропускная способность диска. Для 1C/очередей пики выше.
+    ref: "Postgres Pro: max_wal_size, WAL volume"
+
+  min_max_wal_size_mb:
+    when: |
+      Если в политике банка max_wal_size заведомо мал на НТ — снизьте порог для стенда; на prod держите
+      согласованно с checkpoint_timeout.
+    databases: |
+      Postgres Pro: увеличьте max_wal_size (и min_wal_size), чтобы реже делать checkpoints при высокой записи.
+    ref: "Postgres Pro: max_wal_size / min_wal_size"
+
+  # --- cache ---
+  min_blks_hit_pct:
+    when: |
+      99% — ориентир для прогретого OLTP. После рестарта / на DSS с большим working set снижайте
+      (например 95–97%), иначе ложные срабатывания.
+    databases: |
+      Связано с shared_buffers (~25% RAM по Postgres Pro на выделенном сервере) и размером working set.
+      Низкий hit при огромной БД может быть нормой, если OS cache компенсирует.
+    ref: "Postgres Pro: shared_buffers; caching"
+
+  min_table_io_hit_pct:
+    when: |
+      Для холодных архивных партиций hit ниже — повышайте толерантность; для горячего ядра схемы — строже.
+    databases: |
+      Смотрите top I/O tables в pg_profile. Часто лечится индексами/partitioning, не только shared_buffers.
+    ref: "pg_profile top I/O; shared_buffers"
+
+  max_blk_read_time_sec:
+    when: |
+      Нормируйте под интервал отчёта и тип диска. На медленном storage повышайте; на NVMe — строже.
+    databases: |
+      Высокий read time при хорошем hit_pct — признак редких cold reads или проблем СХД.
+    ref: "Postgres Pro: I/O and storage considerations"
+
+  # --- sessions ---
+  max_idle_in_transaction_sec:
+    when: |
+      Для приложений с длинными бизнес-транзакциями повышайте; для классического OLTP держите жёстко.
+    databases: |
+      Idle in transaction блокирует vacuum и раздувает bloat. Postgres Pro/PG: включайте
+      idle_in_transaction_session_timeout на application roles.
+    ref: "PostgreSQL/Postgres Pro: idle_in_transaction_session_timeout"
+
+  max_idle_in_transaction_per_hour:
+    when: |
+      Масштабируйте с длительностью отчёта и числом сессий. На НТ с малым окном снижайте.
+    databases: |
+      Вместе с max_connections / pooler (PgBouncer). Без pooler порог будет шуметь.
+    ref: "connection pooling; idle in transaction"
+
+  max_rollback_pct:
+    when: |
+      При осознанных retry/optimistic-lock повышайте; при росте rollback из-за ошибок — оставляйте строгим.
+    databases: |
+      Полезно как KPI качества приложения, не только БД.
+    ref: "xact_commit / xact_rollback"
+
+  # --- memory ---
+  max_work_mem_kb:
+    when: |
+      На DSS/отчётности с тяжёлыми sort допускайте выше; на OLTP с тысячами соединений — ниже
+      (риск work_mem × параллельные операции).
+    databases: |
+      Postgres Pro: work_mem на операцию; при высокой конкуренции задавайте точечно на роль/сессию,
+      а не глобально завышенным.
+    ref: "Postgres Pro / PostgreSQL: work_mem"
+
+  warn_work_mem_x_connections_gb:
+    when: |
+      Оценка worst-case. Поднимайте, если max_connections завышен «на бумаге», а реальный peak << max
+      (есть pooler). Снижайте без pooler.
+    databases: |
+      Критично при большом max_connections. Postgres Pro для 1C и плотных OLTP — контроль памяти сессий.
+    ref: "work_mem; max_connections; PgBouncer"
+
+  min_shared_buffers_mb:
+    when: |
+      На малых VM/dev снижайте; на выделенных prod с ≥16–32GB RAM держите ≥1024 и ориентир ~25% RAM.
+    databases: |
+      Postgres Pro: на выделенном сервере shared_buffers часто от ~25% RAM; >~40% редко эффективнее
+      из‑за OS page cache. После роста — max_wal_size и HugePages.
+    ref: "Postgres Pro: shared_buffers"
+
+  recommend_huge_pages_min_shared_buffers_mb:
+    when: |
+      Порог «с какого shared_buffers советовать huge_pages=on». Для мелких инстансов поднимите
+      (реже советовать); для крупных prod оставьте 2GB или ниже.
+    databases: |
+      Postgres Pro (kernel-resources): huge pages снижают overhead на больших shared_buffers.
+      После смены буферов пересчитайте vm.nr_hugepages по shared_memory_size_in_huge_pages.
+    ref: "Postgres Pro: 18.4 Managing Kernel Resources — Linux Huge Pages"
+
+  warn_huge_pages_not_on:
+    when: |
+      false — отключить совет (контейнеры без HP, shared hosting). true — на bare metal / VM с контролем ОС.
+    databases: |
+      На prod с shared_buffers ≳ 2–8GB Postgres Pro рекомендует резерв huge pages и huge_pages=on
+      (try может тихо откатиться на 4kB).
+    ref: "Postgres Pro: huge_pages, shared_memory_size_in_huge_pages"
+
+  # --- io ---
+  queries.max_io_time_ms:
+    when: |
+      Строже на NVMe latency-sensitive; мягче на HDD и cold storage.
+    databases: |
+      Ловит SQL с высоким IO wait. Часто нужен EXPLAIN (ANALYZE, BUFFERS), а не только GUC.
+    ref: "EXPLAIN (ANALYZE, BUFFERS); track_io_timing"
+
+  queries.max_wal_bytes_gb:
+    when: |
+      Поднимите для массовых UPDATE/ETL в окне отчёта; для OLTP оставьте низким как сигнал аномалии.
+    databases: |
+      WAL-heavy SQL раздувают max_wal_size и нагрузку на репликацию.
+    ref: "WAL generation; bulk updates"
+
+  queries.max_temp_blks_written:
+    when: |
+      На аналитике temp spill обычен — повышайте; на OLTP temp — повод смотреть work_mem/запросы.
+    databases: |
+      Postgres Pro: увеличьте work_mem для тяжёлых операций осторожно (память × параллельность).
+    ref: "work_mem; temporary files"
+
+  tables.max_seq_scan_to_idx_scan_ratio:
+    when: |
+      На DSS seq scan по большим таблицам ожидаем — повышайте. На OLTP — снижайте для поиска missing index.
+    databases: |
+      Учитывайте random_page_cost / effective_io_concurrency (SSD vs HDD) из Postgres Pro planner tuning.
+    ref: "Planner: random_page_cost; indexes"
+
+  # --- locks ---
+  max_deadlocks:
+    when: |
+      0 — любой deadlock в отчёте = finding. Если приложение осознанно ретраит редкие deadlocks,
+      поставьте 1–N, иначе шум.
+    databases: |
+      На высоконкурентных OLTP важны порядок блокировок и короткие транзакции; порог — сигнал, не «норма».
+    ref: "PostgreSQL/Postgres Pro: deadlocks; lock_timeout"

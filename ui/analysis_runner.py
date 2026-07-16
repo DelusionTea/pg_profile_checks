@@ -20,6 +20,11 @@ from analyze_pgprofile import (
     DEFAULT_TUNING,
     run_pipeline,
 )
+from pgprofile_health import load_thresholds
+
+DEFAULT_THRESHOLD_GUIDANCE = (
+    Path(__file__).resolve().parent.parent / "knowledge" / "threshold_guidance.yaml"
+)
 
 WIKI_PRIORITY = (
     "multi_symptom_confluence.wiki",
@@ -91,6 +96,96 @@ class AnalyzeResult:
     prompt_path: Path | None
     brief_path: Path | None
     summary: dict[str, Any]
+
+
+def _flatten_threshold_node(prefix: str, value: Any) -> list[dict[str, str]]:
+    """Flatten nested threshold dict into rows {key, value, type}."""
+    rows: list[dict[str, str]] = []
+    if isinstance(value, dict):
+        for key, child in value.items():
+            path = f"{prefix}.{key}" if prefix else str(key)
+            rows.extend(_flatten_threshold_node(path, child))
+        return rows
+    if isinstance(value, list):
+        rendered = ", ".join(str(v) for v in value)
+        rows.append(
+            {
+                "key": prefix,
+                "value": rendered,
+                "type": "list",
+            }
+        )
+        return rows
+    if isinstance(value, bool):
+        type_name = "bool"
+    elif isinstance(value, int) and not isinstance(value, bool):
+        type_name = "int"
+    elif isinstance(value, float):
+        type_name = "float"
+    else:
+        type_name = "str"
+    rows.append({"key": prefix, "value": str(value), "type": type_name})
+    return rows
+
+
+def load_threshold_guidance(path: Path | None = None) -> dict[str, dict[str, str]]:
+    cfg_path = path or DEFAULT_THRESHOLD_GUIDANCE
+    if not cfg_path.is_file():
+        return {}
+    raw = yaml.safe_load(cfg_path.read_text(encoding="utf-8")) or {}
+    guidelines = raw.get("guidelines") or {}
+    result: dict[str, dict[str, str]] = {}
+    for key, body in guidelines.items():
+        if not isinstance(body, dict):
+            continue
+        result[str(key)] = {
+            "when": str(body.get("when") or "").strip(),
+            "databases": str(body.get("databases") or "").strip(),
+            "ref": str(body.get("ref") or "").strip(),
+        }
+    return result
+
+
+def list_thresholds(
+    config_path: Path | None = None,
+    guidance_path: Path | None = None,
+) -> dict[str, Any]:
+    """Structured thresholds for UI: sections with flat parameter tables + hints."""
+    path = config_path or DEFAULT_CONFIG
+    data = load_thresholds(path)
+    guidance = load_threshold_guidance(guidance_path)
+    sections: list[dict[str, Any]] = []
+    for section_name in sorted(data.keys()):
+        body = data[section_name]
+        rows = _flatten_threshold_node("", body)
+        enriched: list[dict[str, Any]] = []
+        for row in rows:
+            if not row.get("key"):
+                continue
+            key = row["key"]
+            hint = guidance.get(key) or {}
+            enriched.append(
+                {
+                    **row,
+                    "hint_when": hint.get("when") or "",
+                    "hint_databases": hint.get("databases") or "",
+                    "hint_ref": hint.get("ref") or "",
+                    "has_hint": bool(hint.get("when") or hint.get("databases")),
+                }
+            )
+        sections.append(
+            {
+                "id": section_name,
+                "title": section_name,
+                "rows": enriched,
+            }
+        )
+    return {
+        "source": str(path.resolve()),
+        "filename": path.name,
+        "guidance_source": str((guidance_path or DEFAULT_THRESHOLD_GUIDANCE).resolve()),
+        "sections": sections,
+    }
 
 
 def list_symptoms(playbook_path: Path | None = None) -> list[dict[str, str]]:

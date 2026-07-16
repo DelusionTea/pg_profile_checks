@@ -332,3 +332,116 @@
 .inline-spinner.visible {
   display: inline-block;
 }
+
+.panel-meta {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  letter-spacing: 0.04em;
+}
+
+.thresholds-toc {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-bottom: 1.25rem;
+}
+
+.toc-link {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--text-dim);
+  padding: 0.35rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.toc-link:hover {
+  color: var(--accent);
+  border-color: var(--border-strong);
+  background: var(--accent-soft);
+}
+
+.threshold-section {
+  margin-bottom: 1.75rem;
+}
+
+.thresholds-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.5rem;
+}
+
+.thresholds-table th,
+.thresholds-table td {
+  padding: 0.65rem 0.9rem;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.thresholds-table th {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+  font-weight: 500;
+}
+
+.thresholds-table code {
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  color: var(--cyan);
+}
+
+.thresholds-table .type-cell {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+
+.thresholds-table .hint-cell {
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--text);
+  max-width: 28rem;
+  vertical-align: top;
+}
+
+.thresholds-table .hint-empty {
+  color: var(--text-dim);
+  font-family: var(--mono);
+}
+
+.thresholds-table tr.has-hint {
+  background: rgba(0, 255, 159, 0.02);
+}
+
+.hint-block {
+  margin-bottom: 0.45rem;
+}
+
+.hint-block:last-child {
+  margin-bottom: 0;
+}
+
+.hint-label {
+  display: block;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 0.15rem;
+}
+
+.hint-ref {
+  margin-top: 0.35rem;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  line-height: 1.35;
+}

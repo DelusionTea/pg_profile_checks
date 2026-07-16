@@ -111,6 +111,10 @@ python3 ui/server.py
 
 Список симптомов берётся из `knowledge/symptom_playbook.yaml`.
 
+Страница **Thresholds** (ссылка в header): таблицы порогов из `thresholds.yaml` — `/thresholds`.
+У части параметров — справка «когда менять / для каких БД» из `knowledge/threshold_guidance.yaml`
+(ориентир — документация Postgres Pro).
+
 ### Сессии и хранение файлов
 
 Каждый запуск «Анализировать» создаёт каталог:

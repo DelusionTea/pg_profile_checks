@@ -48,6 +48,7 @@ from ui.analysis_runner import (  # noqa: E402
     ReportMeta,
     build_zip,
     list_symptoms,
+    list_thresholds,
     run_analysis,
     suggest_label,
     suggest_scenario,
@@ -226,11 +227,20 @@ class Handler(BaseHTTPRequestHandler):
         if path in ("/", "/index.html"):
             self._serve_static("index.html")
             return
+        if path in ("/thresholds", "/thresholds.html"):
+            self._serve_static("thresholds.html")
+            return
         if path.startswith("/css/") or path.startswith("/js/") or path.startswith("/img/"):
             self._serve_static(path.lstrip("/"))
             return
         if path == "/api/symptoms":
             _json_response(self, 200, {"symptoms": list_symptoms()})
+            return
+        if path == "/api/thresholds":
+            try:
+                _json_response(self, 200, list_thresholds())
+            except Exception as exc:
+                _json_response(self, 500, {"error": str(exc)})
             return
         if path == "/api/suggest":
             qs = parse_qs(parsed.query)

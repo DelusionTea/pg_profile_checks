@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thresholds · PG Profile Checks</title>
+  <link rel="stylesheet" href="/css/gatling-base.css">
+  <link rel="stylesheet" href="/css/pgprofile.css">
+</head>
+<body>
+<div class="page">
+  <header class="header header-main">
+    <div class="mascot-wrap">
+      <img class="mascot" src="/img/mascot.png" alt="PG Profile Checks" width="130" height="130">
+    </div>
+    <div class="title-block">
+      <h1>PG PROFILE CHECKS</h1>
+      <p class="subtitle">// thresholds · пороги health-check</p>
+    </div>
+    <nav class="header-nav">
+      <a href="/" class="nav-link">Анализ</a>
+      <a href="/thresholds" class="nav-link nav-link-active">Thresholds</a>
+    </nav>
+  </header>
+
+  <div id="error-banner" class="alert alert-error error-banner"></div>
+
+  <section class="panel section">
+    <div class="panel-head">
+      <span>THRESHOLDS</span>
+      <span id="thresholds-source" class="panel-meta"></span>
+    </div>
+    <div class="panel-body">
+      <p class="note-ai">
+        Пороги из <code>thresholds.yaml</code>, которые использует health-check и оркестратор.
+        Значения задают, когда finding попадает в отчёт (не жёсткие лимиты Postgres).
+        У ситуативных параметров — краткая справка (ориентир: документация Postgres&nbsp;Pro),
+        когда и для каких БД порог стоит изменить. Файл подсказок:
+        <code>knowledge/threshold_guidance.yaml</code>.
+      </p>
+      <div id="thresholds-toc" class="thresholds-toc"></div>
+      <div id="thresholds-root">
+        <p class="empty-row">загрузка…</p>
+      </div>
+    </div>
+  </section>
+</div>
+<script>
+  window.API_BASE = "";
+</script>
+<script src="/js/thresholds.js"></script>
+</body>
+</html>

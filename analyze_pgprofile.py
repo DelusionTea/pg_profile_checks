@@ -194,10 +194,8 @@ def _save_json(path: Path, data: dict[str, Any]) -> None:
     path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
-def main(argv: list[str] | None = None) -> int:
-    args = build_parser().parse_args(argv)
-    args.output_dir.mkdir(parents=True, exist_ok=True)
-
+def validate_args(args: argparse.Namespace) -> str | None:
+    """Return an error message if args are invalid, else None."""
     if (
         not args.report
         and not args.compare_settings
@@ -205,51 +203,48 @@ def main(argv: list[str] | None = None) -> int:
         and not (args.symptom and args.symptom_reports)
         and not (args.nt_reports and args.symptoms)
     ):
-        print(
-            "error: provide --report, --compare-settings, --stable-prod-reports, "
-            "--symptom with --symptom-reports, and/or --nt-reports with --symptoms",
-            file=sys.stderr,
+        return (
+            "provide --report, --compare-settings, --stable-prod-reports, "
+            "--symptom with --symptom-reports, and/or --nt-reports with --symptoms"
         )
-        return 2
 
     if args.nt_reports and not args.symptoms:
-        print("error: --nt-reports requires --symptoms", file=sys.stderr)
-        return 2
+        return "--nt-reports requires --symptoms"
     if args.symptoms and not args.nt_reports:
-        print("error: --symptoms requires --nt-reports", file=sys.stderr)
-        return 2
+        return "--symptoms requires --nt-reports"
     if args.nt_reports and len(args.nt_reports) < 2:
-        print("error: --nt-reports requires at least two HTML files", file=sys.stderr)
-        return 2
+        return "--nt-reports requires at least two HTML files"
     if args.nt_label and len(args.nt_label) != len(args.nt_reports or []):
-        print("error: --nt-label count must match --nt-reports", file=sys.stderr)
-        return 2
+        return "--nt-label count must match --nt-reports"
     if args.prod_reports and args.prod_label and len(args.prod_reports) != len(args.prod_label):
-        print("error: --prod-label count must match --prod-reports", file=sys.stderr)
-        return 2
+        return "--prod-label count must match --prod-reports"
 
     if args.symptom and not args.symptom_reports:
-        print("error: --symptom requires --symptom-reports", file=sys.stderr)
-        return 2
+        return "--symptom requires --symptom-reports"
     if args.symptom_reports and not args.symptom:
-        print("error: --symptom-reports requires --symptom", file=sys.stderr)
-        return 2
+        return "--symptom-reports requires --symptom"
     if args.symptom_label and len(args.symptom_label) != len(args.symptom_reports or []):
-        print("error: --symptom-label count must match --symptom-reports", file=sys.stderr)
-        return 2
+        return "--symptom-label count must match --symptom-reports"
 
     if args.stable_prod_reports and len(args.stable_prod_reports) < 2:
-        print("error: --stable-prod-reports requires at least two HTML files", file=sys.stderr)
-        return 2
+        return "--stable-prod-reports requires at least two HTML files"
     if args.min_stability <= 0 or args.min_stability > 1:
-        print("error: --min-stability must be in (0, 1]", file=sys.stderr)
+        return "--min-stability must be in (0, 1]"
+    if args.stable_prod_label and len(args.stable_prod_label) != len(
+        args.stable_prod_reports or []
+    ):
+        return "--stable-prod-label count must match --stable-prod-reports"
+    return None
+
+
+def run_pipeline(args: argparse.Namespace) -> int:
+    """Execute the analysis pipeline for a parsed Namespace. Writes to args.output_dir."""
+    err = validate_args(args)
+    if err:
+        print(f"error: {err}", file=sys.stderr)
         return 2
-    if args.stable_prod_label and len(args.stable_prod_label) != len(args.stable_prod_reports or []):
-        print(
-            "error: --stable-prod-label count must match --stable-prod-reports",
-            file=sys.stderr,
-        )
-        return 2
+
+    args.output_dir.mkdir(parents=True, exist_ok=True)
 
     analyses: list[dict[str, Any]] = []
     has_issues = False
@@ -550,6 +545,11 @@ def main(argv: list[str] | None = None) -> int:
     if args.exit_code and has_issues:
         return 1
     return 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = build_parser().parse_args(argv)
+    return run_pipeline(args)
 
 
 if __name__ == "__main__":

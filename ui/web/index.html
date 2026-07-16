@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PG Profile Checks</title>
+  <link rel="stylesheet" href="/css/gatling-base.css">
+  <link rel="stylesheet" href="/css/pgprofile.css">
+</head>
+<body>
+<div class="page">
+  <header class="header header-main">
+    <div class="mascot-wrap">
+      <img class="mascot" src="/img/mascot.png" alt="PG Profile Checks" width="130" height="130">
+    </div>
+    <div class="title-block">
+      <h1>PG PROFILE CHECKS</h1>
+      <p class="subtitle">// отчёты · НТ/ПРОМ · confluence</p>
+    </div>
+    <nav class="header-nav">
+      <a href="/" class="nav-link nav-link-active">Анализ</a>
+    </nav>
+  </header>
+
+  <div id="error-banner" class="alert alert-error error-banner"></div>
+
+  <section class="panel section">
+    <div class="panel-head">
+      <span>01 · ОТЧЁТЫ</span>
+    </div>
+    <div class="panel-body">
+      <div id="dropzone" class="dropzone" tabindex="0">
+        <p class="dropzone-title">Перетащите HTML отчёты pg_profile</p>
+        <p class="dropzone-hint">или нажмите, чтобы выбрать файлы · можно несколько</p>
+        <input id="file-input" class="hidden-file" type="file" accept=".html,text/html" multiple>
+      </div>
+
+      <table class="reports-table">
+        <thead>
+          <tr>
+            <th>Файл</th>
+            <th>Среда</th>
+            <th>Label</th>
+            <th>Порядок</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="reports-body">
+          <tr id="reports-empty">
+            <td colspan="5" class="empty-row">файлы ещё не добавлены</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel section">
+    <div class="panel-head">
+      <span>02 · ЧТО АНАЛИЗИРУЕМ</span>
+    </div>
+    <div class="panel-body">
+      <div class="field-grid">
+        <div class="field">
+          <label for="scenario">Сценарий</label>
+          <select id="scenario">
+            <option value="auto">Авто по меткам</option>
+            <option value="symptom">Расследование проблемы</option>
+            <option value="nt_runs">Несколько прогонов НТ</option>
+            <option value="health">Health-check одного отчёта</option>
+            <option value="stable_prod">Стабильные проблемы ПРОМ</option>
+            <option value="nt_prod">НТ vs ПРОМ (gate)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="confluence-title">Заголовок Confluence (опционально)</label>
+          <input id="confluence-title" type="text" placeholder="например: counteragent · high_cpu">
+        </div>
+      </div>
+
+      <p class="section-title" style="margin-top: 1.25rem;">Проблемы (можно несколько)</p>
+      <p class="dropzone-hint" style="margin: -0.35rem 0 0.75rem;">Отметьте одну или несколько — анализ пройдёт по каждой</p>
+      <div id="symptom-list" class="symptom-list">
+        <p class="empty-row" style="padding: 0.5rem 0;">загрузка списка…</p>
+      </div>
+
+      <div id="slow-query-fields" class="field-grid slow-query-fields">
+        <div class="field">
+          <label for="query-hex">hexqueryid</label>
+          <input id="query-hex" type="text" placeholder="для slow_query">
+        </div>
+        <div class="field">
+          <label for="query-id">queryid</label>
+          <input id="query-id" type="text">
+        </div>
+        <div class="field" style="grid-column: 1 / -1;">
+          <label for="query-text">фрагмент SQL</label>
+          <input id="query-text" type="text" placeholder="подстрока текста запроса">
+        </div>
+      </div>
+
+      <div class="actions-row">
+        <button id="run-btn" type="button" class="btn-primary">Анализировать</button>
+        <span id="run-spinner" class="inline-spinner" aria-hidden="true"></span>
+        <span id="run-hint" class="auto-refresh-hint"></span>
+      </div>
+    </div>
+  </section>
+
+  <section id="result-panel" class="panel section">
+    <div class="panel-head">
+      <span>03 · РЕЗУЛЬТАТ</span>
+    </div>
+    <div class="panel-body">
+      <div id="status-bar" class="status-bar"></div>
+
+      <div class="tabs" role="tablist">
+        <button type="button" class="tab-btn active" data-tab="wiki">Confluence</button>
+        <button type="button" class="tab-btn" data-tab="prompt">Промпт для ИИ</button>
+        <button type="button" class="tab-btn" data-tab="brief">Brief</button>
+      </div>
+
+      <div id="tab-wiki" class="tab-panel active">
+        <p class="note-ai">Wiki Markup для вставки в Confluence (Insert → Wiki Markup). gigacli пока не вызывается из UI.</p>
+        <div class="actions-row" style="margin-bottom: 0.75rem;">
+          <button type="button" class="btn-secondary" id="copy-wiki">Скопировать</button>
+          <a class="btn-secondary" id="download-wiki" href="#" download>Скачать .wiki</a>
+          <a class="btn-secondary" id="download-zip" href="#" download>Скачать ZIP (analysis_out + prompt)</a>
+        </div>
+        <textarea id="wiki-text" class="result-text" readonly></textarea>
+      </div>
+
+      <div id="tab-prompt" class="tab-panel">
+        <p class="note-ai">Скопируйте промпт в gigacli вручную. Ответ можно слить со stub через <code>merge_confluence.py</code>. Полный набор файлов — в ZIP.</p>
+        <div class="actions-row" style="margin-bottom: 0.75rem;">
+          <button type="button" class="btn-secondary" id="copy-prompt">Скопировать промпт</button>
+        </div>
+        <textarea id="prompt-text" class="result-text" readonly></textarea>
+      </div>
+
+      <div id="tab-brief" class="tab-panel">
+        <textarea id="brief-text" class="result-text" readonly></textarea>
+      </div>
+    </div>
+  </section>
+</div>
+<script>
+  window.API_BASE = "";
+</script>
+<script src="/js/app.js"></script>
+</body>
+</html>

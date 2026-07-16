@@ -46,7 +46,24 @@ python analyze_pgprofile.py \
   --report resources/pgprofile_srv=10_55_51_82_from=2026_03_13_12_30_to=2026_03_14_03.html \
   --output-dir ./analysis_out/ \
   --exit-code
+
+# UI (без новых pip-зависимостей; стиль как у Gatling Monitor)
+python ui/server.py
+# → http://127.0.0.1:8090/
 ```
+
+### UI
+
+Локальный визард: drag-and-drop HTML → метка **НТ** / **ПРОМ** → выбор проблемы (симптома) → текст для Confluence + ZIP с `analysis_out` и промптом для ИИ.
+
+```bash
+source .venv/bin/activate
+python ui/server.py --host 127.0.0.1 --port 8090
+```
+
+Новых пакетов сверх `requirements.txt` (PyYAML) не нужно — сервер на stdlib `http.server`.
+
+Позже UI можно встроить в Gatling Monitor: см. [docs/INTEGRATION_GATLING_MONITOR.md](docs/INTEGRATION_GATLING_MONITOR.md).
 
 ---
 
@@ -62,6 +79,7 @@ python analyze_pgprofile.py \
 | `investigate_symptom.py` | **Расследование симптома**: CPU / память / WAL / медленный SQL |
 | `analyze_pgprofile.py` | **Оркестратор**: все анализы + JSON + brief + Confluence |
 | `merge_confluence.py` | Сборка `confluence_stub.wiki` + ответ ИИ → `confluence_page.wiki` |
+| `ui/server.py` | **UI**: локальный HTTP-визард (stdlib) |
 
 Все CLI-скрипты анализа поддерживают `--format json` и `-o` / `--output` (кроме `analyze_pgprofile`, который пишет в `--output-dir`).
 
@@ -736,6 +754,12 @@ pg_profile_checks/
 │   ├── prod_tuning.yaml     # finding → GUC tuning (PROD stability)
 │   └── symptom_playbook.yaml # симптом → причины + verify steps
 ├── prompts/                 # Промпты для gigacli
+├── ui/                      # Standalone UI (stdlib HTTP)
+│   ├── server.py
+│   ├── analysis_runner.py
+│   └── web/                 # HTML/CSS/JS + mascot (стиль Gatling Monitor)
+├── docs/
+│   └── INTEGRATION_GATLING_MONITOR.md
 ├── thresholds.yaml
 ├── thresholds_relaxed.yaml
 ├── requirements.txt

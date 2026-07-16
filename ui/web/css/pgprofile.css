@@ -1,0 +1,334 @@
+/* UI-specific additions on top of gatling-base.css */
+
+.dropzone {
+  border: 1px dashed var(--border-strong);
+  border-radius: 12px;
+  background: rgba(0, 255, 159, 0.03);
+  padding: 2rem 1.25rem;
+  text-align: center;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+  margin-bottom: 1rem;
+}
+
+.dropzone:hover,
+.dropzone.dragover {
+  background: var(--accent-soft);
+  box-shadow: 0 0 18px rgba(0, 255, 159, 0.12);
+}
+
+.dropzone-title {
+  margin: 0 0 0.35rem;
+  font-family: var(--mono);
+  font-size: 0.9rem;
+  color: var(--accent);
+  letter-spacing: 0.04em;
+}
+
+.dropzone-hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  font-family: var(--mono);
+}
+
+.section {
+  margin-bottom: 1.25rem;
+}
+
+.section-title {
+  margin: 0 0 0.75rem;
+  font-size: 0.95rem;
+  font-family: var(--mono);
+  letter-spacing: 0.04em;
+  color: var(--accent);
+}
+
+.field-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem 1rem;
+}
+
+@media (max-width: 720px) {
+  .field-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.field label {
+  display: block;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 0.35rem;
+}
+
+.field select,
+.field input[type="text"],
+.field textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 0.82rem;
+}
+
+.field select:focus,
+.field input:focus,
+.field textarea:focus {
+  outline: none;
+  border-color: var(--border-strong);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.symptom-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.symptom-item {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+}
+
+.symptom-item:hover {
+  border-color: var(--border-strong);
+}
+
+.symptom-item input {
+  margin-top: 0.2rem;
+}
+
+.symptom-item strong {
+  display: block;
+  color: #e8f4f0;
+  font-size: 0.9rem;
+  margin-bottom: 0.15rem;
+}
+
+.symptom-item span {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  line-height: 1.4;
+}
+
+.actions-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+  margin-top: 0.5rem;
+}
+
+.btn-primary {
+  margin-top: 0;
+}
+
+.btn-secondary {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.7rem 1rem;
+  cursor: pointer;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  border-color: var(--border-strong);
+  color: var(--accent);
+}
+
+.btn-secondary:disabled,
+.btn-primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.icon-btn {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.25rem 0.45rem;
+  cursor: pointer;
+}
+
+.icon-btn:hover {
+  color: var(--accent);
+  border-color: var(--border-strong);
+}
+
+.reports-table select,
+.reports-table input {
+  width: 100%;
+  min-width: 0;
+  padding: 0.35rem 0.45rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 0.78rem;
+}
+
+.reports-table .col-actions {
+  white-space: nowrap;
+}
+
+.filename-cell {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--cyan);
+  word-break: break-all;
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+}
+
+.tab-btn {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.4rem 0.75rem;
+  cursor: pointer;
+}
+
+.tab-btn.active {
+  color: var(--accent);
+  border-color: var(--border-strong);
+  background: var(--accent-soft);
+}
+
+.tab-panel {
+  display: none;
+}
+
+.tab-panel.active {
+  display: block;
+}
+
+.result-text {
+  width: 100%;
+  min-height: 280px;
+  box-sizing: border-box;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  resize: vertical;
+  white-space: pre-wrap;
+}
+
+.status-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+
+.status-pill {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  padding: 0.4rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.status-pill strong {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+#result-panel {
+  display: none;
+}
+
+#result-panel.visible {
+  display: block;
+}
+
+.slow-query-fields {
+  display: none;
+  margin-top: 0.75rem;
+}
+
+.slow-query-fields.visible {
+  display: grid;
+}
+
+.error-banner {
+  display: none;
+  margin-bottom: 1rem;
+}
+
+.error-banner.visible {
+  display: block;
+}
+
+.note-ai {
+  margin: 0 0 0.75rem;
+  padding: 0.75rem 0.9rem;
+  border-left: 3px solid var(--cyan);
+  background: rgba(77, 232, 255, 0.06);
+  border-radius: 0 6px 6px 0;
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+
+.hidden-file {
+  display: none;
+}
+
+.panel-body {
+  padding: 1.25rem 1.5rem 1.5rem;
+}
+
+.inline-spinner {
+  display: none;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(77, 232, 255, 0.2);
+  border-top-color: var(--cyan);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.inline-spinner.visible {
+  display: inline-block;
+}

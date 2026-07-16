@@ -47,23 +47,104 @@ python analyze_pgprofile.py \
   --output-dir ./analysis_out/ \
   --exit-code
 
-# UI (без новых pip-зависимостей; стиль как у Gatling Monitor)
+# UI (см. раздел ниже)
 python ui/server.py
 # → http://127.0.0.1:8090/
 ```
 
-### UI
+---
 
-Локальный визард: drag-and-drop HTML → метка **НТ** / **ПРОМ** → выбор проблемы (симптома) → текст для Confluence + ZIP с `analysis_out` и промптом для ИИ.
+## UI (локальный визард)
+
+Веб-интерфейс поверх того же оркестратора `analyze_pgprofile.py`. Новых pip-зависимостей нет (только stdlib + уже установленный PyYAML). Визуальный стиль и маскот — как у Gatling Monitor.
+
+### Запуск
 
 ```bash
+cd pg_profile_checks
 source .venv/bin/activate
+python ui/server.py
+# http://127.0.0.1:8090/
+```
+
+Опции:
+
+```bash
 python ui/server.py --host 127.0.0.1 --port 8090
 ```
 
-Новых пакетов сверх `requirements.txt` (PyYAML) не нужно — сервер на stdlib `http.server`.
+Если порт занят (`Address already in use`):
 
-Позже UI можно встроить в Gatling Monitor: см. [docs/INTEGRATION_GATLING_MONITOR.md](docs/INTEGRATION_GATLING_MONITOR.md).
+```bash
+# другой порт
+python ui/server.py --port 8091
+
+# или освободить 8090
+lsof -iTCP:8090 -sTCP:LISTEN
+kill $(lsof -t -iTCP:8090 -sTCP:LISTEN)
+```
+
+По умолчанию слушает только `127.0.0.1` (доступ с других машин нет). Для LAN: `--host 0.0.0.0` (авторизации нет).
+
+### Что умеет
+
+1. Drag-and-drop нескольких HTML-отчётов pg_profile.
+2. Для каждого файла: метка **НТ** / **ПРОМ**, label, порядок.
+3. Выбор сценария (или «Авто по меткам»):
+   - расследование проблемы(ам);
+   - несколько прогонов НТ (+ опционально ПРОМ-baseline);
+   - health-check одного отчёта;
+   - стабильные проблемы ПРОМ;
+   - НТ vs ПРОМ (gate).
+4. Выбор **одной или нескольких** проблем из playbook (`high_cpu`, `high_memory`, `high_wal`, `slow_query`). При нескольких — анализ по каждой, в UI отдаётся объединённый Confluence-текст.
+5. Результат:
+   - Wiki Markup для Confluence (копировать / скачать `.wiki`);
+   - промпт для ИИ (gigacli пока не вызывается из UI);
+   - brief;
+   - ZIP со всем `analysis_out` сессии + `README_AI.txt`.
+
+Список симптомов берётся из `knowledge/symptom_playbook.yaml`.
+
+### Сессии и хранение файлов
+
+Каждый запуск «Анализировать» создаёт каталог:
+
+```text
+{tempdir}/pgprofile_ui_sessions/<uuid>/
+  uploads/     # загруженные HTML
+  out/         # findings, wiki, prompt, brief, …
+  meta.json
+```
+
+Путь к `tempdir` печатается при старте сервера (`sessions: …`). Обычно это `/tmp/...` или `/var/folders/...` на macOS.
+
+- **TTL / автоочистки нет** — артефакты остаются на диске, пока их не удалят вручную или пока ОС не почистит temp.
+- Остановка `ui/server.py` сессии **не** удаляет.
+- Скачайте нужный ZIP сразу после анализа, если результат нужен надолго.
+
+Ручная очистка:
+
+```bash
+rm -rf "$(python -c 'import tempfile; print(tempfile.gettempdir())')/pgprofile_ui_sessions"
+```
+
+### Одновременная работа нескольких человек
+
+Сервер — `ThreadingHTTPServer`: запросы обрабатываются в разных потоках. У каждого анализа свой UUID и своя папка; чужие сессии не перезаписываются.
+
+На практике:
+
+- несколько анализов делят CPU и RAM одной машины;
+- без `--host 0.0.0.0` доступен только localhost;
+- авторизации нет: зная `session_id`, можно скачать чужой ZIP (UUID угадать сложно).
+
+Для постоянного общего доступа удобнее позже встроить UI в Gatling Monitor (см. ниже).
+
+### Встраивание в Gatling Monitor
+
+Standalone UI можно перенести в уже развёрнутый Gatling Monitor (Java вызывает тот же CLI, без новых Python-библиотек на рабочей машине):
+
+→ [docs/INTEGRATION_GATLING_MONITOR.md](docs/INTEGRATION_GATLING_MONITOR.md)
 
 ---
 
@@ -77,9 +158,10 @@ python ui/server.py --host 127.0.0.1 --port 8090
 | `compare_nt_prod.py` | **НТ vs ПРОМ**: gate по настройкам + WAL, DML, SQL по параметрам |
 | `analyze_prod_stability.py` | **Несколько PROD-отчётов**: стабильные проблемы + GUC-рекомендации |
 | `investigate_symptom.py` | **Расследование симптома**: CPU / память / WAL / медленный SQL |
+| `analyze_nt_runs.py` | **Несколько НТ-прогонов**: симптомы + влияние GUC (+ опционально ПРОМ) |
 | `analyze_pgprofile.py` | **Оркестратор**: все анализы + JSON + brief + Confluence |
 | `merge_confluence.py` | Сборка `confluence_stub.wiki` + ответ ИИ → `confluence_page.wiki` |
-| `ui/server.py` | **UI**: локальный HTTP-визард (stdlib) |
+| `ui/server.py` | **UI**: локальный HTTP-визард (stdlib, без новых pip-пакетов) |
 
 Все CLI-скрипты анализа поддерживают `--format json` и `-o` / `--output` (кроме `analyze_pgprofile`, который пишет в `--output-dir`).
 
@@ -751,15 +833,18 @@ pg_profile_checks/
 ├── knowledge/               # YAML playbook (offline)
 │   ├── recommendations.yaml
 │   ├── guc_guidance.yaml
+│   ├── guc_impact.yaml      # ожидаемый эффект смены GUC (NT multi-run)
 │   ├── prod_tuning.yaml     # finding → GUC tuning (PROD stability)
 │   └── symptom_playbook.yaml # симптом → причины + verify steps
 ├── prompts/                 # Промпты для gigacli
 ├── ui/                      # Standalone UI (stdlib HTTP)
-│   ├── server.py
-│   ├── analysis_runner.py
+│   ├── server.py            # python ui/server.py → :8090
+│   ├── analysis_runner.py   # UI → analyze_pgprofile.run_pipeline
 │   └── web/                 # HTML/CSS/JS + mascot (стиль Gatling Monitor)
 ├── docs/
 │   └── INTEGRATION_GATLING_MONITOR.md
+├── analyze_nt_runs.py       # CLI: несколько НТ + симптомы + GUC impact
+├── pgprofile_nt_runs.py
 ├── thresholds.yaml
 ├── thresholds_relaxed.yaml
 ├── requirements.txt
@@ -775,3 +860,4 @@ pg_profile_checks/
 - `compare_settings.py` — только **Defined settings**. Параметр, явно заданный на одной среде и дефолтный на другой, попадёт в «Only in NT» / «Only in PROD» — это ожидаемо.
 - Пороги в `thresholds.yaml` — ориентир; подбирайте под свою нагрузку.
 - ИИ (gigacli) — опционально, только для оформления текста; цифры и таблицы — из Python.
+- UI не вызывает gigacli сам: только отдаёт stub/wiki, prompt и ZIP; сессии в temp без автоочистки (см. раздел UI).

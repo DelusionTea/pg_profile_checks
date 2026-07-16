@@ -47,8 +47,8 @@ python analyze_pgprofile.py \
   --output-dir ./analysis_out/ \
   --exit-code
 
-# UI (см. раздел ниже)
-python ui/server.py
+# UI (см. раздел ниже; нужен Python 3.10+)
+.venv/bin/python ui/server.py
 # → http://127.0.0.1:8090/
 ```
 
@@ -60,28 +60,34 @@ python ui/server.py
 
 ### Запуск
 
+Нужен **Python 3.10+** — тот же интерпретатор, которым уже запускаете CLI (`analyze_pgprofile.py`).  
+Команда `python` на рабочей машине часто указывает на 2.x / 3.6 → ошибка вида `future feature annotations is not defined`.
+
 ```bash
 cd pg_profile_checks
-source .venv/bin/activate
-python ui/server.py
-# http://127.0.0.1:8090/
+
+# предпочтительно: venv проекта (уже с PyYAML)
+.venv/bin/python ui/server.py
+
+# или явный python3 3.10+
+python3 ui/server.py
+
+# проверить версию
+.venv/bin/python -V    # ожидается Python 3.10+
 ```
+
+Откройте http://127.0.0.1:8090/
 
 Опции:
 
 ```bash
-python ui/server.py --host 127.0.0.1 --port 8090
+.venv/bin/python ui/server.py --host 127.0.0.1 --port 8090
 ```
 
 Если порт занят (`Address already in use`):
 
 ```bash
-# другой порт
-python ui/server.py --port 8091
-
-# или освободить 8090
-lsof -iTCP:8090 -sTCP:LISTEN
-kill $(lsof -t -iTCP:8090 -sTCP:LISTEN)
+.venv/bin/python ui/server.py --port 8091
 ```
 
 По умолчанию слушает только `127.0.0.1` (доступ с других машин нет). Для LAN: `--host 0.0.0.0` (авторизации нет).
@@ -96,7 +102,7 @@ kill $(lsof -t -iTCP:8090 -sTCP:LISTEN)
    - health-check одного отчёта;
    - стабильные проблемы ПРОМ;
    - НТ vs ПРОМ (gate).
-4. Выбор **одной или нескольких** проблем из playbook (`high_cpu`, `high_memory`, `high_wal`, `slow_query`). При нескольких — анализ по каждой, в UI отдаётся объединённый Confluence-текст.
+4. Проблемы из playbook (`high_cpu`, `high_memory`, `high_wal`, `slow_query`) — опционально. **Если ничего не отмечено** — полный health-check всего отчёта; при нескольких файлах — findings, общие для всех, и специфичные для отдельных отчётов. Если отмечены симптомы — точечное расследование (при нескольких — объединённый Confluence-текст).
 5. Результат:
    - Wiki Markup для Confluence (копировать / скачать `.wiki`);
    - промпт для ИИ (gigacli пока не вызывается из UI);
@@ -118,14 +124,29 @@ kill $(lsof -t -iTCP:8090 -sTCP:LISTEN)
 
 Путь к `tempdir` печатается при старте сервера (`sessions: …`). Обычно это `/tmp/...` или `/var/folders/...` на macOS.
 
-- **TTL / автоочистки нет** — артефакты остаются на диске, пока их не удалят вручную или пока ОС не почистит temp.
-- Остановка `ui/server.py` сессии **не** удаляет.
-- Скачайте нужный ZIP сразу после анализа, если результат нужен надолго.
+**Автоочистка (по умолчанию):**
 
-Ручная очистка:
+| Параметр | Default | Смысл |
+|----------|---------|--------|
+| `--session-ttl-hours` | `24` | удалять сессии старше N часов (`0` — выключить) |
+| `--cleanup-interval-hours` | `1` | периодический сканер во время работы (`0` — только при старте и после analyze) |
+
+Очистка срабатывает: при старте сервера, после каждого analyze, и по таймеру. Возраст считается по mtime каталога сессии / `meta.json` / `out`.
 
 ```bash
-rm -rf "$(python -c 'import tempfile; print(tempfile.gettempdir())')/pgprofile_ui_sessions"
+# хранить сессии 6 часов, чистить каждый час
+python3.11 ui/server.py --session-ttl-hours 6
+
+# без автоочистки
+python3.11 ui/server.py --session-ttl-hours 0
+```
+
+Остановка сервера сама по себе файлы не удаляет — их заберёт следующий старт (если TTL > 0) или ручная очистка. Нужный результат лучше сразу скачать ZIP.
+
+Ручная очистка всего каталога:
+
+```bash
+rm -rf "$(python3 -c 'import tempfile; print(tempfile.gettempdir())')/pgprofile_ui_sessions"
 ```
 
 ### Одновременная работа нескольких человек
@@ -860,4 +881,4 @@ pg_profile_checks/
 - `compare_settings.py` — только **Defined settings**. Параметр, явно заданный на одной среде и дефолтный на другой, попадёт в «Only in NT» / «Only in PROD» — это ожидаемо.
 - Пороги в `thresholds.yaml` — ориентир; подбирайте под свою нагрузку.
 - ИИ (gigacli) — опционально, только для оформления текста; цифры и таблицы — из Python.
-- UI не вызывает gigacli сам: только отдаёт stub/wiki, prompt и ZIP; сессии в temp без автоочистки (см. раздел UI).
+- UI не вызывает gigacli сам: только отдаёт stub/wiki, prompt и ZIP; сессии в temp с TTL по умолчанию 24ч (см. раздел UI).

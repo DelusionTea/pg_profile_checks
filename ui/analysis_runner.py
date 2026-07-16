@@ -73,7 +73,7 @@ class ReportMeta:
 
 @dataclass
 class AnalyzeRequest:
-    scenario: str  # health | symptom | nt_runs | stable_prod | nt_prod
+    scenario: str  # health | full_multi | symptom | nt_runs | stable_prod | nt_prod
     reports: list[ReportMeta]
     symptoms: list[str] = field(default_factory=list)
     query_hex: str | None = None
@@ -176,6 +176,13 @@ def _build_summary(output_dir: Path) -> dict[str, Any]:
     if nt_path.is_file():
         data = json.loads(nt_path.read_text(encoding="utf-8"))
         summary["nt_runs_symptoms"] = data.get("symptoms", [])
+    stable_path = output_dir / "stable_prod.json"
+    if stable_path.is_file():
+        data = json.loads(stable_path.read_text(encoding="utf-8"))
+        sm = data.get("summary") or {}
+        summary["common_findings"] = sm.get("stable_count", len(data.get("stable_findings") or []))
+        summary["specific_findings"] = len(data.get("ephemeral_findings") or [])
+        summary["report_count"] = len(data.get("reports") or [])
     return summary
 
 
@@ -231,10 +238,20 @@ def build_namespace(req: AnalyzeRequest, upload_paths: list[Path], output_dir: P
     symptoms = [s.strip() for s in req.symptoms if s and s.strip()]
 
     if scenario == "nt_runs":
+        if not symptoms:
+            # No symptom selected → full health across reports (common + per-file).
+            return build_namespace(
+                AnalyzeRequest(
+                    scenario="full_multi" if len(paths) >= 2 else "health",
+                    reports=req.reports,
+                    symptoms=[],
+                    confluence_title=req.confluence_title,
+                ),
+                upload_paths,
+                output_dir,
+            )
         if len(nt_items) < 2:
             raise ValueError("сценарий «Несколько прогонов НТ» требует ≥2 файлов с меткой НТ")
-        if not symptoms:
-            raise ValueError("выберите хотя бы одну проблему (симптом)")
         ns.nt_reports = [p for _, p in nt_items]
         ns.nt_label = [m.label or suggest_label(m.filename, "NT", i) for i, (m, _) in enumerate(nt_items)]
         ns.symptoms = ",".join(symptoms)
@@ -247,7 +264,16 @@ def build_namespace(req: AnalyzeRequest, upload_paths: list[Path], output_dir: P
 
     if scenario == "symptom":
         if not symptoms:
-            raise ValueError("выберите хотя бы одну проблему для расследования")
+            return build_namespace(
+                AnalyzeRequest(
+                    scenario="full_multi" if len(paths) >= 2 else "health",
+                    reports=req.reports,
+                    symptoms=[],
+                    confluence_title=req.confluence_title,
+                ),
+                upload_paths,
+                output_dir,
+            )
         if not paths:
             raise ValueError("добавьте хотя бы один отчёт")
         # Single symptom → one pipeline call. Multiple → handled in run_analysis.
@@ -263,13 +289,27 @@ def build_namespace(req: AnalyzeRequest, upload_paths: list[Path], output_dir: P
             ]
         return ns
 
-    if scenario == "stable_prod":
-        if len(prod_items) < 2:
-            raise ValueError("нужно ≥2 отчёта с меткой ПРОМ")
-        ns.stable_prod_reports = [p for _, p in prod_items]
+    if scenario == "full_multi":
+        if len(paths) < 2:
+            raise ValueError("полный анализ нескольких отчётов требует ≥2 файлов")
+        # All reports (НТ и ПРОМ): health on each → общие + специфичные findings.
+        ns.stable_prod_reports = paths
         ns.stable_prod_label = [
-            m.label or suggest_label(m.filename, "PROD", i) for i, (m, _) in enumerate(prod_items)
+            m.label or suggest_label(m.filename, m.env, i) for i, m in enumerate(reports)
         ]
+        ns.min_stability = 1.0
+        return ns
+
+    if scenario == "stable_prod":
+        # Prefer PROD-tagged; if fewer than 2 PROD, use all uploaded reports.
+        items = prod_items if len(prod_items) >= 2 else list(zip(reports, paths))
+        if len(items) < 2:
+            raise ValueError("нужно ≥2 отчёта")
+        ns.stable_prod_reports = [p for _, p in items]
+        ns.stable_prod_label = [
+            m.label or suggest_label(m.filename, m.env, i) for i, (m, _) in enumerate(items)
+        ]
+        ns.min_stability = 1.0
         return ns
 
     if scenario == "nt_prod":
@@ -282,8 +322,20 @@ def build_namespace(req: AnalyzeRequest, upload_paths: list[Path], output_dir: P
         return ns
 
     if scenario == "health":
-        if len(paths) != 1:
-            raise ValueError("health-check принимает ровно один отчёт")
+        if not paths:
+            raise ValueError("добавьте хотя бы один отчёт")
+        if len(paths) > 1:
+            # Multiple files without a multi scenario → full cross-report analysis.
+            return build_namespace(
+                AnalyzeRequest(
+                    scenario="full_multi",
+                    reports=req.reports,
+                    symptoms=[],
+                    confluence_title=req.confluence_title,
+                ),
+                upload_paths,
+                output_dir,
+            )
         ns.report = paths[0]
         return ns
 
@@ -293,19 +345,18 @@ def build_namespace(req: AnalyzeRequest, upload_paths: list[Path], output_dir: P
 def suggest_scenario(reports: list[ReportMeta], symptoms: list[str]) -> str:
     nt = sum(1 for r in reports if r.env.upper() == "NT")
     prod = sum(1 for r in reports if r.env.upper() == "PROD")
-    if nt >= 2 and symptoms:
-        return "nt_runs"
-    if symptoms and reports:
+    if symptoms:
+        if nt >= 2:
+            return "nt_runs"
         return "symptom"
-    if prod >= 2 and not symptoms:
-        return "stable_prod"
-    if nt >= 1 and prod >= 1 and not symptoms:
-        return "nt_prod"
+    # No specific problem selected → analyze everything in the report(s).
+    if len(reports) >= 2:
+        return "full_multi"
     if len(reports) == 1:
         return "health"
-    if nt >= 2:
-        return "nt_runs"
-    return "symptom" if symptoms else "health"
+    if nt >= 1 and prod >= 1:
+        return "nt_prod"
+    return "health"
 
 
 def _run_pipeline_captured(ns: argparse.Namespace) -> tuple[int, str]:

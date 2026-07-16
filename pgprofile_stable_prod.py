@@ -601,14 +601,35 @@ def build_stable_prod_brief(
             lines.append("")
 
     if analysis.ephemeral_findings:
-        lines.append("## Ephemeral findings (not in all reports)")
-        for ef in analysis.ephemeral_findings[:max_ephemeral]:
-            lines.append(
-                f"- [{ef.max_severity}] {ef.rule_id}: "
-                f"{ef.occurrence_count}/{ef.total_reports} — {', '.join(ef.report_labels)}"
-            )
+        lines.append("## Report-specific findings (not in all reports)")
+        partial = [ef for ef in analysis.ephemeral_findings if ef.occurrence_count > 1]
+        single = [ef for ef in analysis.ephemeral_findings if ef.occurrence_count == 1]
+        if partial:
+            lines.append("### In some reports (not all)")
+            for ef in partial[:max_ephemeral]:
+                lines.append(
+                    f"- [{ef.max_severity}] {ef.rule_id}: "
+                    f"{ef.occurrence_count}/{ef.total_reports} — {', '.join(ef.report_labels)}"
+                )
+        if single:
+            lines.append("### Only in one report")
+            by_label: dict[str, list[StableFinding]] = {}
+            for ef in single:
+                for label in ef.report_labels:
+                    by_label.setdefault(label, []).append(ef)
+            shown = 0
+            for label in sorted(by_label):
+                lines.append(f"#### {label}")
+                for ef in by_label[label]:
+                    if shown >= max_ephemeral:
+                        break
+                    msg = ef.sample_messages[0][:160] if ef.sample_messages else ""
+                    lines.append(f"- [{ef.max_severity}] {ef.rule_id}: {msg}")
+                    shown += 1
+                if shown >= max_ephemeral:
+                    break
         if len(analysis.ephemeral_findings) > max_ephemeral:
-            lines.append(f"- ... and {len(analysis.ephemeral_findings) - max_ephemeral} more")
+            lines.append(f"- ... and more report-specific findings")
         lines.append("")
 
     return "\n".join(lines).rstrip() + "\n"

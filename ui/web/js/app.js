@@ -245,6 +245,15 @@
           "</strong></span>"
       );
     }
+    if (summary.common_findings != null || summary.specific_findings != null) {
+      pills.push(
+        '<span class="status-pill">общие <strong>' +
+          (summary.common_findings || 0) +
+          "</strong> · специфичные <strong>" +
+          (summary.specific_findings || 0) +
+          "</strong></span>"
+      );
+    }
     if (summary.symptoms && summary.symptoms.length) {
       pills.push(
         '<span class="status-pill">симптомы <strong>' +

@@ -1,24 +1,42 @@
 #!/usr/bin/env python3
 """Standalone stdlib HTTP UI for pg_profile_checks.
 
-Usage:
-  python ui/server.py
-  python ui/server.py --port 8090 --host 127.0.0.1
+Usage (Python 3.10+ — тот же интерпретатор, что и для CLI):
+  .venv/bin/python ui/server.py
+  python3 ui/server.py --port 8090 --host 127.0.0.1
 """
 
-from __future__ import annotations
+import sys
+
+# До любых конструкций 3.10+ / __future__ — иначе на Python 2/3.6 сообщение непонятное:
+# "future feature annotations is not defined"
+if sys.version_info < (3, 10):
+    sys.stderr.write(
+        "pg_profile UI requires Python 3.10+ (found %s).\n"
+        "Use the same interpreter as for analyze_pgprofile.py, for example:\n"
+        "  .venv/bin/python ui/server.py\n"
+        "  python3 ui/server.py\n"
+        % ".".join(str(x) for x in sys.version_info[:3])
+    )
+    raise SystemExit(2)
 
 import argparse
 import json
 import mimetypes
-import sys
+import shutil
 import tempfile
+import threading
+import time
 import traceback
 import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qs, urlparse
+
+# Defaults (overridden by CLI in main)
+SESSION_TTL_SECONDS = 24 * 3600
+CLEANUP_INTERVAL_SECONDS = 3600
 
 # Ensure project root is on sys.path when run as `python ui/server.py`
 _ROOT = Path(__file__).resolve().parent.parent
@@ -130,6 +148,69 @@ def re_session(session_id: str) -> bool:
         return True
     except ValueError:
         return False
+
+
+def _session_mtime(path: Path) -> float:
+    """Newest mtime among session dir / meta.json / out (best-effort)."""
+    latest = path.stat().st_mtime
+    for candidate in (path / "meta.json", path / "out"):
+        try:
+            latest = max(latest, candidate.stat().st_mtime)
+        except OSError:
+            pass
+    return latest
+
+
+def cleanup_old_sessions(
+    max_age_seconds: float | None = None,
+    *,
+    sessions_root: Path | None = None,
+) -> int:
+    """Delete session dirs older than TTL. Returns number of removed sessions.
+
+    TTL <= 0 disables cleanup. Safe to call concurrently with analyzes: only
+    UUID-named directories are considered, and only if older than TTL.
+    """
+    ttl = SESSION_TTL_SECONDS if max_age_seconds is None else max_age_seconds
+    if ttl <= 0:
+        return 0
+    root = sessions_root or SESSIONS_ROOT
+    if not root.is_dir():
+        return 0
+    cutoff = time.time() - ttl
+    removed = 0
+    for child in root.iterdir():
+        if not child.is_dir() or not re_session(child.name):
+            continue
+        try:
+            if _session_mtime(child) >= cutoff:
+                continue
+            shutil.rmtree(child, ignore_errors=True)
+            removed += 1
+        except OSError as exc:
+            sys.stderr.write(f"cleanup: skip {child.name}: {exc}\n")
+    if removed:
+        sys.stderr.write(
+            f"cleanup: removed {removed} session(s) older than {ttl / 3600:.1f}h "
+            f"from {root}\n"
+        )
+    return removed
+
+
+def _start_cleanup_thread(interval_seconds: float) -> None:
+    if interval_seconds <= 0 or SESSION_TTL_SECONDS <= 0:
+        return
+
+    def loop() -> None:
+        while True:
+            time.sleep(interval_seconds)
+            try:
+                cleanup_old_sessions()
+            except Exception as exc:  # noqa: BLE001 — background best-effort
+                sys.stderr.write(f"cleanup: error: {exc}\n")
+
+    thread = threading.Thread(target=loop, name="session-cleanup", daemon=True)
+    thread.start()
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -291,6 +372,11 @@ class Handler(BaseHTTPRequestHandler):
                 confluence_title=meta.get("confluence_title") or None,
             )
             result = run_analysis(req, upload_paths, out)
+            # Opportunistic cleanup of other old sessions (cheap if nothing expired).
+            try:
+                cleanup_old_sessions()
+            except Exception:
+                pass
             if result.error:
                 _json_response(self, 400, {"error": result.error, "exit_code": result.exit_code})
                 # keep session for debugging
@@ -355,16 +441,45 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def main(argv: list[str] | None = None) -> int:
+    global SESSION_TTL_SECONDS, CLEANUP_INTERVAL_SECONDS
+
     parser = argparse.ArgumentParser(description="pg_profile_checks standalone UI")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8090)
+    parser.add_argument(
+        "--session-ttl-hours",
+        type=float,
+        default=24.0,
+        help="Delete sessions older than this many hours (default: 24; 0 = disable)",
+    )
+    parser.add_argument(
+        "--cleanup-interval-hours",
+        type=float,
+        default=1.0,
+        help="How often to scan for expired sessions while server runs (default: 1; 0 = only at start/analyze)",
+    )
     args = parser.parse_args(argv)
 
     if not WEB_ROOT.is_dir():
         print(f"error: web root missing: {WEB_ROOT}", file=sys.stderr)
         return 2
 
+    SESSION_TTL_SECONDS = max(0.0, float(args.session_ttl_hours)) * 3600.0
+    CLEANUP_INTERVAL_SECONDS = max(0.0, float(args.cleanup_interval_hours)) * 3600.0
+
     SESSIONS_ROOT.mkdir(parents=True, exist_ok=True)
+    removed = cleanup_old_sessions()
+    if SESSION_TTL_SECONDS <= 0:
+        print("session cleanup: disabled (--session-ttl-hours 0)")
+    else:
+        print(
+            f"session cleanup: TTL {args.session_ttl_hours:g}h "
+            f"(removed {removed} on startup)"
+        )
+        if CLEANUP_INTERVAL_SECONDS > 0:
+            _start_cleanup_thread(CLEANUP_INTERVAL_SECONDS)
+            print(f"session cleanup: every {args.cleanup_interval_hours:g}h")
+
     httpd = ThreadingHTTPServer((args.host, args.port), Handler)
     print(f"pg_profile UI: http://{args.host}:{args.port}/")
     print(f"sessions: {SESSIONS_ROOT}")

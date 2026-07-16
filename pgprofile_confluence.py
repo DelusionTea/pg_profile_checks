@@ -15,7 +15,7 @@ from pgprofile_compare import (
 )
 from pgprofile_classify import split_settings_rows
 from pgprofile_nt_prod import NtProdValidation
-from pgprofile_stable_prod import StableProdAnalysis, TuningRecommendation
+from pgprofile_stable_prod import StableFinding, StableProdAnalysis, TuningRecommendation
 from pgprofile_symptoms import CauseStatus, SymptomInvestigation
 
 CONFLUENCE_PROMPT = Path(__file__).resolve().parent / "prompts" / "analyst_confluence.md"
@@ -493,9 +493,10 @@ def _stable_prod_page_title(analysis: StableProdAnalysis, page_title: str | None
     for snap in analysis.reports:
         name = snap.ctx.properties.get("server_name") or snap.path.stem
         servers.add(str(name))
+    n = len(analysis.reports)
     if len(servers) == 1:
-        return f"pg_profile PROD: стабильные проблемы ({next(iter(servers))})"
-    return "pg_profile PROD: стабильные проблемы"
+        return f"pg_profile: полный анализ {n} отчётов ({next(iter(servers))})"
+    return f"pg_profile: полный анализ {n} отчётов"
 
 
 def _guc_current_wiki(guc_items: list[Any]) -> str:
@@ -519,12 +520,14 @@ def _guc_current_wiki(guc_items: list[Any]) -> str:
 
 def _recommendations_summary_table(recommendations: list[TuningRecommendation]) -> list[str]:
     lines = [
-        "h2. Стабильные рекомендации по GUC",
+        "h2. Общие проблемы (во всех отчётах) — рекомендации по GUC",
         "",
         "||Критичность||Проблема||Стабильность||Безопасность||Влияние||GUC (текущие)||Finding ID||",
     ]
     if not recommendations:
-        lines.append("|{status:colour=Green|title=OK|subtle=false}|Стабильных проблем нет|—|—|—|—|—|")
+        lines.append(
+            "|{status:colour=Green|title=OK|subtle=false}|Общих проблем нет|—|—|—|—|—|"
+        )
         lines.append("")
         return lines
 
@@ -542,6 +545,65 @@ def _recommendations_summary_table(recommendations: list[TuningRecommendation]) 
             f"{_change_impact_status(rec.combined_impact)}|{guc_cur}|{fid}|"
         )
     lines.append("")
+    return lines
+
+
+def _ephemeral_findings_by_report_wiki(analysis: StableProdAnalysis) -> list[str]:
+    """Problems not present in every report, grouped by report label."""
+    if not analysis.ephemeral_findings:
+        return []
+
+    lines: list[str] = [
+        "h2. Проблемы отдельных отчётов",
+        "",
+        "{note}Ниже — findings, которые есть не во всех загруженных отчётах "
+        "(специфичны для одного или части файлов).{note}",
+        "",
+    ]
+
+    # occurrence in some but not all — show once with labels
+    partial = [ef for ef in analysis.ephemeral_findings if ef.occurrence_count > 1]
+    single = [ef for ef in analysis.ephemeral_findings if ef.occurrence_count == 1]
+
+    if partial:
+        lines.extend(
+            [
+                "h3. В части отчётов (не во всех)",
+                "",
+                "||Severity||Finding||Отчёты||",
+            ]
+        )
+        for ef in partial[:40]:
+            labels = _wiki_escape(", ".join(ef.report_labels))
+            reports = _wiki_escape(f"{ef.occurrence_count}/{ef.total_reports}")
+            msg = _wiki_escape((ef.sample_messages[0][:120] if ef.sample_messages else ef.rule_id))
+            lines.append(
+                f"|{_status(ef.max_severity)}|{_wiki_escape(ef.rule_id)} — {msg}|"
+                f"{reports} ({labels})|"
+            )
+        lines.append("")
+
+    by_label: dict[str, list[StableFinding]] = {}
+    for ef in single:
+        for label in ef.report_labels:
+            by_label.setdefault(label, []).append(ef)
+
+    if by_label:
+        lines.append("h3. Только в одном отчёте")
+        lines.append("")
+        for label in sorted(by_label.keys()):
+            lines.append(f"h4. {_wiki_escape(label)}")
+            lines.append("")
+            lines.append("||Severity||Finding||Сообщение||")
+            for ef in by_label[label][:30]:
+                msg = _wiki_escape(
+                    (ef.sample_messages[0][:160] if ef.sample_messages else "—")
+                )
+                lines.append(
+                    f"|{_status(ef.max_severity)}|{_wiki_escape(ef.rule_id)}|{msg}|"
+                )
+            lines.append("")
+
     return lines
 
 
@@ -584,9 +646,9 @@ def build_stable_prod_confluence_stub(
         f"h1. {title}",
         "",
         "{info:title=О документе}",
-        "Сводка стабильных проблем на PROD по нескольким pg_profile отчётам. "
-        "Таблицы сформированы Python (analyze_prod_stability). "
-        "Критичность проблемы и безопасность/влияние изменений GUC — отдельные оси.",
+        "Полный health-check нескольких pg_profile отчётов. "
+        "Сначала — проблемы, общие для *всех* отчётов; затем — специфичные для отдельных файлов. "
+        "Таблицы сформированы Python (analyze_prod_stability / UI full_multi).",
         "{info}",
         "",
     ]
@@ -594,9 +656,9 @@ def build_stable_prod_confluence_stub(
     if critical > 0:
         lines.extend(
             [
-                "{warning:title=Стабильные critical-проблемы}",
-                f"Обнаружено *{critical}* рекоменований с критичностью CRITICAL, "
-                f"повторяющихся в ≥ {analysis.min_stability_ratio:.0%} отчётов.",
+                "{warning:title=Общие critical-проблемы}",
+                f"Обнаружено *{critical}* рекомендаций с критичностью CRITICAL, "
+                f"повторяющихся во всех отчётах (min stability {analysis.min_stability_ratio:.0%}).",
                 "{warning}",
                 "",
             ]
@@ -608,14 +670,13 @@ def build_stable_prod_confluence_stub(
             "",
             "||Параметр||Значение||",
             f"|Дата формирования|{datetime.now().strftime('%Y-%m-%d %H:%M')}|",
-            f"|Отчётов PROD|{len(analysis.reports)}|",
-            f"|Min stability|{analysis.min_stability_ratio:.0%}|",
-            f"|Стабильных findings|{len(analysis.stable_findings)}|",
+            f"|Отчётов|{len(analysis.reports)}|",
+            f"|Общие findings (во всех)|{len(analysis.stable_findings)}|",
             f"|Tuning-рекомендаций|{len(analysis.recommendations)}|",
             f"|Critical / High|{critical} / {high}|",
-            f"|Нестабильных|{len(analysis.ephemeral_findings)}|",
+            f"|Специфичные findings|{len(analysis.ephemeral_findings)}|",
             "",
-            "h2. PROD-отчёты",
+            "h2. Отчёты",
             "",
             "||Метка||Файл||Интервал||Длительность||Findings||",
         ]
@@ -632,17 +693,7 @@ def build_stable_prod_confluence_stub(
     lines.append("")
     lines.extend(_recommendations_summary_table(analysis.recommendations))
     lines.extend(_guc_details_table(analysis.recommendations))
-
-    if analysis.ephemeral_findings:
-        lines.extend(["h2. Нестабильные находки (справочно)", ""])
-        lines.append("||Severity||Finding||Reports||")
-        for ef in analysis.ephemeral_findings[:15]:
-            reports = _wiki_escape(f"{ef.occurrence_count}/{ef.total_reports}")
-            labels = _wiki_escape(", ".join(ef.report_labels))
-            lines.append(
-                f"|{_status(ef.max_severity)}|{_wiki_escape(ef.rule_id)}|{reports} ({labels})|"
-            )
-        lines.append("")
+    lines.extend(_ephemeral_findings_by_report_wiki(analysis))
 
     lines.extend(
         [

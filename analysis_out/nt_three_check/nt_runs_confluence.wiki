@@ -9,6 +9,11 @@ h2. Прогоны
 |new_before_guc|counter_nt_before_settings.html| .. |
 |new_after_guc|counter_nt_with_settings.html| .. |
 
+h2. PROD baseline
+||Метка||Файл||Интервал||
+|prod_old_1|counteragent_prom1.html| .. |
+|prod_old_2|counteragent_prom2.html| .. |
+
 h2. Высокая утилизация CPU БД
 * {status:colour=Red|title=CONFIRMED} Доминирующие SQL по CPU (pg_stat_kcache) — cpu.dominant_queries
 ** [old_app] Топ CPU: sum_cpu_time=9636.3s, user_time_pct=9.2%
@@ -61,23 +66,22 @@ h3. new_before_guc → new_after_guc
 ** В этом сравнении: wal_buffers_full +105.6%, wal_bytes -36.1%, wal_sync +13.0%, wal_write +13.8% — направление согласуется с ожидаемым эффектом настройки
 {info}
 
-h2. Рекомендации
+h2. Что уже есть на PROD и критичность расхождения НТ
+h3. Высокая утилизация CPU БД
+* {status:colour=Green|title=LOW} Критичность расхождения NT vs PROD
+* Уже есть на PROD: cpu.autovacuum_pressure, cpu.checkpoint_bgwriter, cpu.dominant_queries, cpu.high_call_volume
+* Только на НТ: нет
 
-{warning:title=Приоритет 1 — изменения в приложении (главный рычаг CPU/WAL)}
-# Снизить частоту UPDATE {counteragent.t_feedbackwaitinglist} (batch/debounce/очередь), так как это основной источник WAL и CPU после релиза.
-# Оптимизировать UPDATE {counteragent.t_transaction} и polling SELECT по {t_feedbackwaitinglist} (снижение round-trips, укрупнение операций).
-# Разобрать и оптимизировать медленный DISTINCT по {T_PROCESSEDNOTIFICATIONCANDIDATE} (EXPLAIN ANALYZE, индексы, переписывание запроса).
-{warning}
+h3. Высокая генерация WAL
+* {status:colour=Green|title=LOW} Критичность расхождения NT vs PROD
+* Уже есть на PROD: wal.buffers_full, wal.checkpoint_pressure, wal.high_dml_tables, wal.high_generation_rate, wal.wal_heavy_queries
+* Только на НТ: нет
 
-{info:title=Приоритет 2 — дополнительная настройка БД}
-# Повысить {max_wal_size} поэтапно (с 192 MB к диапазону 1-4 GB+) и проверить снижение requested checkpoints и checkpoint_write_time.
-# Включить {idle_in_transaction_session_timeout} = 60000-300000 ms (сейчас 0), чтобы снизить idle in transaction и давление на autovacuum.
-# Задать ненулевые {statement_timeout} и {lock_timeout} для OLTP-ролей (ограничение runaway/lock wait запросов).
-# Проверить целесообразность дополнительного увеличения {wal_buffers} только по результатам повторного прогона, так как {wal_buffers_full} после прошлого изменения не снизился.
-{info}
-
-{note:title=Ожидаемый эффект и критерии готовности к SLA}
-* Настройки БД могут снизить фоновый CPU/IO, но без изменения SQL-паттерна приложения полного возврата к baseline не будет.
-* Критерии следующего прогона НТ: устойчивое снижение WAL MB/h, requested checkpoints <30%, снижение sum_cpu_time у топ-3 SQL, уменьшение idle in transaction и deadlocks.
-* После внедрения: повторный pg_profile и сравнение {new_after_guc} vs {old_app} через {compare_runs.py}.
-{note}
+h2. NT vs PROD: оценка расхождения по прогонам
+||NT||PROD||Settings valid||Perf warnings||Critical settings||
+|old_app|prod_old_1|no|56|22|
+|old_app|prod_old_2|no|59|22|
+|new_before_guc|prod_old_1|no|60|22|
+|new_before_guc|prod_old_2|no|63|22|
+|new_after_guc|prod_old_1|no|59|23|
+|new_after_guc|prod_old_2|no|62|23|

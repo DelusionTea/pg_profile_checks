@@ -9,15 +9,15 @@ from typing import Any
 import yaml
 
 from compare_settings import DiffRow, DiffStatus, diff_settings
-from pgprofile_classify import SettingIssueLevel, classify_setting_name, split_settings_rows
-from pgprofile_compare import CompareResult, compare_runs, load_run
+from pgprofile_classify import split_settings_rows
+from pgprofile_compare import compare_runs, load_run
 from pgprofile_findings import run_comparison_to_dict
 from pgprofile_health import parse_setting_int
 from pgprofile_parser import load_settings, parse_report_meta
+from pgprofile_nt_prod import NtProdValidation, nt_prod_validation_to_dict, validate_nt_prod
 from pgprofile_symptoms import (
     SYMPTOM_TITLES,
     SymptomInvestigation,
-    build_symptom_brief,
     investigate_symptom,
     normalize_symptom,
     symptom_investigation_to_dict,
@@ -56,6 +56,11 @@ class NtRunsAnalysis:
     pair_analyses: list[RunPairAnalysis]
     report_labels: list[str]
     report_paths: list[Path]
+    prod_labels: list[str] = field(default_factory=list)
+    prod_paths: list[Path] = field(default_factory=list)
+    prod_symptom_investigations: list[SymptomInvestigation] = field(default_factory=list)
+    nt_prod_validations: list[NtProdValidation] = field(default_factory=list)
+    problem_overlap: dict[str, Any] = field(default_factory=dict)
 
 
 def load_guc_impact(path: Path | None = None) -> dict[str, Any]:
@@ -294,6 +299,48 @@ def _build_pair_narrative(
     return "\n".join(lines)
 
 
+def _problem_keys_by_status(inv: SymptomInvestigation, statuses: set[str]) -> set[str]:
+    return {
+        c.cause_id
+        for c in inv.causes
+        if c.status.value in statuses
+    }
+
+
+def _compute_problem_overlap(
+    nt_investigations: list[SymptomInvestigation],
+    prod_investigations: list[SymptomInvestigation],
+) -> dict[str, Any]:
+    by_symptom: dict[str, Any] = {}
+    prod_by_symptom = {inv.symptom: inv for inv in prod_investigations}
+    for nt_inv in nt_investigations:
+        prod_inv = prod_by_symptom.get(nt_inv.symptom)
+        nt_confirmed = _problem_keys_by_status(nt_inv, {"confirmed"})
+        nt_suspected = _problem_keys_by_status(nt_inv, {"suspected"})
+        prod_confirmed = _problem_keys_by_status(prod_inv, {"confirmed"}) if prod_inv else set()
+        prod_suspected = _problem_keys_by_status(prod_inv, {"suspected"}) if prod_inv else set()
+
+        existing_on_prod = sorted((nt_confirmed | nt_suspected) & (prod_confirmed | prod_suspected))
+        nt_only = sorted((nt_confirmed | nt_suspected) - (prod_confirmed | prod_suspected))
+        prod_only = sorted((prod_confirmed | prod_suspected) - (nt_confirmed | nt_suspected))
+        critical_nt_only = sorted(nt_confirmed - (prod_confirmed | prod_suspected))
+
+        criticality = "low"
+        if critical_nt_only:
+            criticality = "high"
+        elif nt_only:
+            criticality = "medium"
+
+        by_symptom[nt_inv.symptom] = {
+            "existing_on_prod": existing_on_prod,
+            "nt_only": nt_only,
+            "prod_only": prod_only,
+            "critical_nt_only": critical_nt_only,
+            "divergence_criticality": criticality,
+        }
+    return by_symptom
+
+
 def analyze_run_pair(
     path_a: Path,
     path_b: Path,
@@ -345,6 +392,8 @@ def analyze_nt_runs(
     report_paths: list[Path],
     *,
     labels: list[str] | None = None,
+    prod_paths: list[Path] | None = None,
+    prod_labels: list[str] | None = None,
     symptoms: list[str] | str,
     playbook_path: Path | None = None,
     health_thresholds_path: Path | None = None,
@@ -363,6 +412,10 @@ def analyze_nt_runs(
     ]
     if labels and len(labels) != len(report_paths):
         raise ValueError("labels count must match reports count")
+    if prod_labels and not prod_paths:
+        raise ValueError("prod_labels requires prod_paths")
+    if prod_paths and prod_labels and len(prod_paths) != len(prod_labels):
+        raise ValueError("prod_labels count must match prod_paths count")
 
     investigations: list[SymptomInvestigation] = []
     for symptom in symptom_keys:
@@ -391,12 +444,54 @@ def analyze_nt_runs(
             )
         )
 
+    resolved_prod_paths = prod_paths or []
+    resolved_prod_labels = [
+        prod_labels[i] if prod_labels and i < len(prod_labels) else resolved_prod_paths[i].stem
+        for i in range(len(resolved_prod_paths))
+    ]
+    prod_investigations: list[SymptomInvestigation] = []
+    nt_prod_validations: list[NtProdValidation] = []
+    overlap: dict[str, Any] = {}
+
+    if resolved_prod_paths:
+        for symptom in symptom_keys:
+            prod_investigations.append(
+                investigate_symptom(
+                    symptom,
+                    resolved_prod_paths,
+                    labels=resolved_prod_labels,
+                    query_target=query_target,
+                    playbook_path=playbook_path,
+                    health_thresholds_path=health_thresholds_path,
+                )
+            )
+        overlap = _compute_problem_overlap(investigations, prod_investigations)
+
+        # Evaluate how critically each NT run diverges from PROD baseline.
+        for nt_path, nt_label in zip(report_paths, resolved_labels):
+            for prod_path, prod_label in zip(resolved_prod_paths, resolved_prod_labels):
+                nt_prod_validations.append(
+                    validate_nt_prod(
+                        nt_path,
+                        prod_path,
+                        min_change_pct=min_change_pct,
+                        top_n=top_n,
+                        nt_label=nt_label,
+                        prod_label=prod_label,
+                    )
+                )
+
     return NtRunsAnalysis(
         symptoms=symptom_keys,
         symptom_investigations=investigations,
         pair_analyses=pair_analyses,
         report_labels=resolved_labels,
         report_paths=report_paths,
+        prod_labels=resolved_prod_labels,
+        prod_paths=resolved_prod_paths,
+        prod_symptom_investigations=prod_investigations,
+        nt_prod_validations=nt_prod_validations,
+        problem_overlap=overlap,
     )
 
 
@@ -413,9 +508,23 @@ def nt_runs_to_dict(analysis: NtRunsAnalysis) -> dict[str, Any]:
             }
             for label, path in zip(analysis.report_labels, analysis.report_paths)
         ],
+        "prod_reports": [
+            {
+                "label": label,
+                "path": str(path),
+                "filename": path.name,
+                "meta": parse_report_meta(path),
+            }
+            for label, path in zip(analysis.prod_labels, analysis.prod_paths)
+        ],
         "symptom_investigations": [
             symptom_investigation_to_dict(inv) for inv in analysis.symptom_investigations
         ],
+        "prod_symptom_investigations": [
+            symptom_investigation_to_dict(inv) for inv in analysis.prod_symptom_investigations
+        ],
+        "problem_overlap": analysis.problem_overlap,
+        "nt_prod_validations": [nt_prod_validation_to_dict(v) for v in analysis.nt_prod_validations],
         "pair_analyses": [
             {
                 "run_a": pa.run_a_label,
@@ -462,6 +571,13 @@ def build_nt_runs_brief(analysis: NtRunsAnalysis) -> str:
         lines.append(f"- {label}: {path.name} ({meta.get('from')} .. {meta.get('to')})")
     lines.append("")
 
+    if analysis.prod_paths:
+        lines.append("## PROD baseline reports")
+        for label, path in zip(analysis.prod_labels, analysis.prod_paths):
+            meta = parse_report_meta(path)
+            lines.append(f"- {label}: {path.name} ({meta.get('from')} .. {meta.get('to')})")
+        lines.append("")
+
     for inv in analysis.symptom_investigations:
         lines.append(f"## Symptom: {inv.symptom_title} ({inv.symptom})")
         confirmed = [c for c in inv.causes if c.status.value == "confirmed"]
@@ -485,6 +601,27 @@ def build_nt_runs_brief(analysis: NtRunsAnalysis) -> str:
         lines.append(f"### {pa.run_a_label} → {pa.run_b_label}")
         lines.append(pa.narrative)
         lines.append("")
+
+    if analysis.problem_overlap:
+        lines.append("## NT vs PROD problem overlap")
+        for symptom, payload in analysis.problem_overlap.items():
+            lines.append(f"### {SYMPTOM_TITLES.get(symptom, symptom)}")
+            lines.append(f"- divergence_criticality: {payload.get('divergence_criticality')}")
+            lines.append(f"- existing_on_prod: {', '.join(payload.get('existing_on_prod', [])) or 'none'}")
+            lines.append(f"- nt_only: {', '.join(payload.get('nt_only', [])) or 'none'}")
+            lines.append(f"- critical_nt_only: {', '.join(payload.get('critical_nt_only', [])) or 'none'}")
+            lines.append("")
+
+    if analysis.nt_prod_validations:
+        lines.append("## NT vs PROD divergence summary")
+        for v in analysis.nt_prod_validations:
+            lines.append(
+                f"- {v.run_nt.run_id} vs {v.run_prod.run_id}: "
+                f"settings_valid={str(v.settings.valid).lower()}, "
+                f"performance_warnings={v.warning_count}, "
+                f"critical_settings={v.settings.critical_count}"
+            )
+        lines.append("")
     return "\n".join(lines).rstrip() + "\n"
 
 
@@ -504,6 +641,15 @@ def build_nt_runs_confluence_wiki(analysis: NtRunsAnalysis, *, page_title: str |
         interval = f"{meta.get('from', '?')} .. {meta.get('to', '?')}"
         lines.append(f"|{label}|{path.name}|{interval}|")
     lines.append("")
+
+    if analysis.prod_paths:
+        lines.append("h2. PROD baseline")
+        lines.append("||Метка||Файл||Интервал||")
+        for label, path in zip(analysis.prod_labels, analysis.prod_paths):
+            meta = parse_report_meta(path)
+            interval = f"{meta.get('from', '?')} .. {meta.get('to', '?')}"
+            lines.append(f"|{label}|{path.name}|{interval}|")
+        lines.append("")
 
     for inv in analysis.symptom_investigations:
         lines.append(f"h2. {inv.symptom_title}")
@@ -538,6 +684,38 @@ def build_nt_runs_confluence_wiki(analysis: NtRunsAnalysis, *, page_title: str |
             lines.append("{info}")
         lines.append("")
 
+    if analysis.problem_overlap:
+        lines.append("h2. Что уже есть на PROD и критичность расхождения НТ")
+        for symptom, payload in analysis.problem_overlap.items():
+            lines.append(f"h3. {SYMPTOM_TITLES.get(symptom, symptom)}")
+            crit = payload.get("divergence_criticality", "low")
+            color = "Red" if crit == "high" else ("Yellow" if crit == "medium" else "Green")
+            lines.append(
+                f"* {{status:colour={color}|title={crit.upper()}}} Критичность расхождения NT vs PROD"
+            )
+            existing = payload.get("existing_on_prod", [])
+            nt_only = payload.get("nt_only", [])
+            critical_nt_only = payload.get("critical_nt_only", [])
+            lines.append(
+                f"* Уже есть на PROD: {', '.join(existing) if existing else 'нет значимых пересечений'}"
+            )
+            lines.append(
+                f"* Только на НТ: {', '.join(nt_only) if nt_only else 'нет'}"
+            )
+            if critical_nt_only:
+                lines.append(f"* Критичные только на НТ: {', '.join(critical_nt_only)}")
+            lines.append("")
+
+    if analysis.nt_prod_validations:
+        lines.append("h2. NT vs PROD: оценка расхождения по прогонам")
+        lines.append("||NT||PROD||Settings valid||Perf warnings||Critical settings||")
+        for v in analysis.nt_prod_validations:
+            settings = "yes" if v.settings.valid else "no"
+            lines.append(
+                f"|{v.run_nt.run_id}|{v.run_prod.run_id}|{settings}|{v.warning_count}|{v.settings.critical_count}|"
+            )
+        lines.append("")
+
     return "\n".join(lines).rstrip() + "\n"
 
 
@@ -548,6 +726,8 @@ def print_nt_runs_report(analysis: NtRunsAnalysis, *, out: Any = None) -> None:
     print("NT multi-run analysis", file=stream)
     print(f"Symptoms: {', '.join(analysis.symptoms)}", file=stream)
     print(f"Reports: {', '.join(analysis.report_labels)}", file=stream)
+    if analysis.prod_labels:
+        print(f"PROD baseline: {', '.join(analysis.prod_labels)}", file=stream)
     print(file=stream)
 
     for inv in analysis.symptom_investigations:
@@ -571,3 +751,27 @@ def print_nt_runs_report(analysis: NtRunsAnalysis, *, out: Any = None) -> None:
                     print(f"  {row.name}: {row.nt_value} → (removed)", file=stream)
         print(pa.narrative, file=stream)
         print(file=stream)
+
+    if analysis.problem_overlap:
+        print("== NT vs PROD overlap ==", file=stream)
+        for symptom, payload in analysis.problem_overlap.items():
+            print(f"--- {SYMPTOM_TITLES.get(symptom, symptom)} ---", file=stream)
+            print(f"divergence_criticality: {payload.get('divergence_criticality')}", file=stream)
+            print(f"existing_on_prod: {', '.join(payload.get('existing_on_prod', [])) or 'none'}", file=stream)
+            print(f"nt_only: {', '.join(payload.get('nt_only', [])) or 'none'}", file=stream)
+            print(
+                f"critical_nt_only: {', '.join(payload.get('critical_nt_only', [])) or 'none'}",
+                file=stream,
+            )
+            print(file=stream)
+
+    if analysis.nt_prod_validations:
+        print("== NT vs PROD divergence summary ==", file=stream)
+        for v in analysis.nt_prod_validations:
+            print(
+                f"{v.run_nt.run_id} vs {v.run_prod.run_id}: "
+                f"settings_valid={v.settings.valid}, "
+                f"performance_warnings={v.warning_count}, "
+                f"critical_settings={v.settings.critical_count}",
+                file=stream,
+            )

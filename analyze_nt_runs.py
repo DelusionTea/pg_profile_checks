@@ -52,6 +52,20 @@ def build_parser() -> argparse.ArgumentParser:
         help="Report label (repeat per file, same order)",
     )
     parser.add_argument(
+        "--prod-reports",
+        nargs="+",
+        type=Path,
+        metavar="HTML",
+        help="Optional PROD baseline reports (old app/settings) for overlap and NT-vs-PROD divergence",
+    )
+    parser.add_argument(
+        "--prod-label",
+        action="append",
+        default=[],
+        metavar="NAME",
+        help="Label for --prod-reports (repeat per file, same order)",
+    )
+    parser.add_argument(
         "--playbook",
         type=Path,
         default=DEFAULT_PLAYBOOK,
@@ -105,7 +119,14 @@ def main(argv: list[str] | None = None) -> int:
     if args.label and len(args.label) != len(args.reports):
         print("error: --label count must match reports", file=sys.stderr)
         return 2
+    if args.prod_reports and args.prod_label and len(args.prod_reports) != len(args.prod_label):
+        print("error: --prod-label count must match --prod-reports", file=sys.stderr)
+        return 2
     for path in args.reports:
+        if not path.exists():
+            print(f"error: file not found: {path}", file=sys.stderr)
+            return 2
+    for path in args.prod_reports or []:
         if not path.exists():
             print(f"error: file not found: {path}", file=sys.stderr)
             return 2
@@ -126,6 +147,8 @@ def main(argv: list[str] | None = None) -> int:
         analysis = analyze_nt_runs(
             args.reports,
             labels=args.label if args.label else None,
+            prod_paths=args.prod_reports,
+            prod_labels=args.prod_label if args.prod_label else None,
             symptoms=args.symptoms,
             playbook_path=args.playbook,
             health_thresholds_path=args.config,

@@ -148,6 +148,20 @@ def build_parser() -> argparse.ArgumentParser:
         help="Label for --nt-reports (repeat per file, same order)",
     )
     parser.add_argument(
+        "--prod-reports",
+        nargs="+",
+        type=Path,
+        metavar="HTML",
+        help="PROD baseline reports for --nt-reports overlap/divergence analysis",
+    )
+    parser.add_argument(
+        "--prod-label",
+        action="append",
+        default=[],
+        metavar="NAME",
+        help="Label for --prod-reports (repeat per file, same order)",
+    )
+    parser.add_argument(
         "--symptoms",
         type=str,
         help="Comma/space-separated symptoms for --nt-reports: high_cpu,high_wal,...",
@@ -209,6 +223,9 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     if args.nt_label and len(args.nt_label) != len(args.nt_reports or []):
         print("error: --nt-label count must match --nt-reports", file=sys.stderr)
+        return 2
+    if args.prod_reports and args.prod_label and len(args.prod_reports) != len(args.prod_label):
+        print("error: --prod-label count must match --prod-reports", file=sys.stderr)
         return 2
 
     if args.symptom and not args.symptom_reports:
@@ -357,6 +374,8 @@ def main(argv: list[str] | None = None) -> int:
             nt_runs_analysis = analyze_nt_runs(
                 args.nt_reports,
                 labels=labels,
+                prod_paths=args.prod_reports,
+                prod_labels=args.prod_label if args.prod_label else None,
                 symptoms=args.symptoms,
                 playbook_path=args.playbook,
                 health_thresholds_path=args.config,

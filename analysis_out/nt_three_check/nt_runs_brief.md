@@ -8,6 +8,10 @@ reports: old_app, new_before_guc, new_after_guc
 - new_before_guc: counter_nt_before_settings.html ( .. )
 - new_after_guc: counter_nt_with_settings.html ( .. )
 
+## PROD baseline reports
+- prod_old_1: counteragent_prom1.html ( .. )
+- prod_old_2: counteragent_prom2.html ( .. )
+
 ## Symptom: Высокая утилизация CPU БД (high_cpu)
 ### Confirmed causes
 - [cpu.dominant_queries] Доминирующие SQL по CPU (pg_stat_kcache)
@@ -63,3 +67,24 @@ reports: old_app, new_before_guc, new_after_guc
 - wal_buffers: 2048 (16.0 MB) → 3072 (24.0 MB) (increased); уверенность: possible
   • Увеличение wal_buffers снижает ожидание освобождения WAL buffer (wal_buffers_full).
   • В этом сравнении: wal_buffers_full +105.6%, wal_bytes -36.1%, wal_sync +13.0%, wal_write +13.8% — направление согласуется с ожидаемым эффектом настройки
+
+## NT vs PROD problem overlap
+### Высокая утилизация CPU БД
+- divergence_criticality: low
+- existing_on_prod: cpu.autovacuum_pressure, cpu.checkpoint_bgwriter, cpu.dominant_queries, cpu.high_call_volume
+- nt_only: none
+- critical_nt_only: none
+
+### Высокая генерация WAL
+- divergence_criticality: low
+- existing_on_prod: wal.buffers_full, wal.checkpoint_pressure, wal.high_dml_tables, wal.high_generation_rate, wal.wal_heavy_queries
+- nt_only: none
+- critical_nt_only: none
+
+## NT vs PROD divergence summary
+- old_app vs prod_old_1: settings_valid=false, performance_warnings=56, critical_settings=22
+- old_app vs prod_old_2: settings_valid=false, performance_warnings=59, critical_settings=22
+- new_before_guc vs prod_old_1: settings_valid=false, performance_warnings=60, critical_settings=22
+- new_before_guc vs prod_old_2: settings_valid=false, performance_warnings=63, critical_settings=22
+- new_after_guc vs prod_old_1: settings_valid=false, performance_warnings=59, critical_settings=23
+- new_after_guc vs prod_old_2: settings_valid=false, performance_warnings=62, critical_settings=23

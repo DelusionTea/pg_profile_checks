@@ -22,6 +22,7 @@ REQUIRED_SECTIONS = (
     "memory",
     "io",
     "locks",
+    "disk",
 )
 
 CATEGORY_LABELS = {
@@ -33,6 +34,7 @@ CATEGORY_LABELS = {
     "sessions": "Sessions and transactions",
     "memory": "Memory settings",
     "io": "I/O patterns",
+    "disk": "Tablespaces / disk",
     "locks": "Locks",
 }
 
@@ -64,6 +66,7 @@ class ReportContext:
     top_indexes: list[dict[str, Any]]
     top_rusage_statements: list[dict[str, Any]]
     statements_dbstats: list[dict[str, Any]]
+    tablespace_stats: list[dict[str, Any]]
     interval_hours: float
     report_end: datetime | None = None
 
@@ -156,6 +159,7 @@ def load_report_data(html_path: Path) -> ReportContext:
         top_indexes=list(datasets.get("top_indexes", [])),
         top_rusage_statements=list(datasets.get("top_rusage_statements", [])),
         statements_dbstats=list(datasets.get("statements_dbstats", [])),
+        tablespace_stats=list(datasets.get("tablespace_stats", [])),
         interval_hours=interval_hours,
         report_end=parse_report_datetime(properties.get("report_end1")),
     )
@@ -614,6 +618,30 @@ def check_sessions(ctx: ReportContext, cfg: dict[str, Any]) -> list[Warning]:
                     )
                 )
 
+    max_conn = parse_setting_int(ctx.settings.get("max_connections"))
+    util_pct = float(cfg.get("min_connection_util_pct") or 70.0)
+    if max_conn and max_conn > 0:
+        for row in ctx.dbstat:
+            dbname = row.get("dbname")
+            if not dbname or dbname == "Total":
+                continue
+            sessions = int(row.get("sessions") or 0)
+            if sessions <= 0:
+                continue
+            pct = sessions / max_conn * 100
+            if pct >= util_pct:
+                warnings.append(
+                    _warn(
+                        "sessions",
+                        "warning",
+                        f"{dbname}: connection pressure sessions={sessions} "
+                        f"({pct:.0f}% of max_connections={max_conn})",
+                        sessions=sessions,
+                        max_connections=max_conn,
+                        util_pct=pct,
+                    )
+                )
+
     if cfg.get("warn_on_disabled_idle_timeout") and idle_timeout == 0:
         high_idle = any(
             float(row.get("idle_in_transaction_time") or 0) > cfg["max_idle_in_transaction_sec"]
@@ -743,6 +771,12 @@ def check_io_patterns(
             reasons.append(f"wal={wal_gb:.1f}GB")
         if temp_written >= queries_cfg["max_temp_blks_written"]:
             reasons.append(f"temp_blks_written={temp_written}")
+        dirtied = int(stmt.get("shared_blks_dirtied") or stmt.get("shared_blks_written") or 0)
+        if dirtied >= int(queries_cfg.get("max_shared_blks_dirtied") or 500000):
+            reasons.append(f"shared_blks_dirtied={dirtied}")
+        temp_io_ms = float(stmt.get("temp_blk_write_time") or stmt.get("temp_blks_write_time") or 0)
+        if temp_io_ms >= float(queries_cfg.get("max_temp_blk_write_time_ms") or 5000):
+            reasons.append(f"temp_blk_write_time={temp_io_ms:.1f}ms")
 
         if not reasons:
             continue
@@ -800,11 +834,50 @@ def check_io_patterns(
                 )
             )
 
+    growth_warnings: list[Warning] = []
+    vacuum_warnings: list[Warning] = []
+    min_growth = float(tables_cfg.get("min_growth_mb") or 100)
+    min_vac = int(tables_cfg.get("min_vacuum_ops") or 50)
+    for row in ctx.top_tables:
+        growth_mb = parse_size_to_mb(row.get("growth_pretty"))
+        if growth_mb is not None and growth_mb >= min_growth:
+            qualified = f"{row.get('dbname')}.{row.get('schemaname')}.{row.get('relname')}"
+            growth_warnings.append(
+                _warn(
+                    "io",
+                    "warning",
+                    f"{qualified}: table growth={row.get('growth_pretty')} (≥{min_growth:.0f}MB)",
+                    growth_mb=growth_mb,
+                    kind="table_growth",
+                )
+            )
+        vac_ops = int(row.get("vacuum_count") or 0) + int(row.get("autovacuum_count") or 0)
+        an_ops = int(row.get("analyze_count") or 0) + int(row.get("autoanalyze_count") or 0)
+        if vac_ops >= min_vac or an_ops >= min_vac:
+            qualified = f"{row.get('dbname')}.{row.get('schemaname')}.{row.get('relname')}"
+            vacuum_warnings.append(
+                _warn(
+                    "io",
+                    "warning",
+                    f"{qualified}: vacuum_ops={vac_ops}, analyze_ops={an_ops}",
+                    vacuum_ops=vac_ops,
+                    analyze_ops=an_ops,
+                    kind="vacuum_ops",
+                )
+            )
+
+    top_n_tables = int(tables_cfg["top_n"])
     table_warnings.sort(
         key=lambda w: w.details.get("seq_scan", w.details.get("heap_blks_read", 0)),
         reverse=True,
     )
-    table_warnings = table_warnings[: int(tables_cfg["top_n"])]
+    growth_warnings.sort(key=lambda w: float(w.details.get("growth_mb") or 0), reverse=True)
+    vacuum_warnings.sort(key=lambda w: int(w.details.get("vacuum_ops") or 0), reverse=True)
+    table_warnings = (
+        table_warnings[:top_n_tables]
+        + growth_warnings[:top_n_tables]
+        + vacuum_warnings[:top_n_tables]
+    )
 
     excluded = indexes_cfg.get("exclude_schemas", [])
     for row in ctx.top_indexes:
@@ -825,8 +898,98 @@ def check_io_patterns(
             )
         )
 
+    idx_growth_min = float(indexes_cfg.get("min_growth_mb") or 50)
+    for row in ctx.top_indexes:
+        schema = row.get("schemaname")
+        if _is_excluded_schema(schema, excluded):
+            continue
+        growth_mb = parse_size_to_mb(row.get("growth_pretty"))
+        if growth_mb is not None and growth_mb >= idx_growth_min:
+            qualified = (
+                f"{row.get('dbname')}.{schema}.{row.get('relname')}.{row.get('indexrelname')}"
+            )
+            index_warnings.append(
+                _warn(
+                    "io",
+                    "warning",
+                    f"Growing index {qualified}: growth={row.get('growth_pretty')}",
+                    growth_mb=growth_mb,
+                    kind="index_growth",
+                )
+            )
+
+    min_idx_read = int(indexes_cfg.get("min_idx_blks_read") or 100000)
+    min_idx_hit = float(indexes_cfg.get("min_hit_pct") or 90.0)
+    for row in ctx.top_io_indexes:
+        schema = row.get("schemaname")
+        if _is_excluded_schema(schema, excluded):
+            continue
+        reads = int(row.get("idx_blks_read") or 0)
+        hit = row.get("idx_blks_hit_pct")
+        if reads < min_idx_read and (hit is None or float(hit) >= min_idx_hit):
+            continue
+        if reads >= min_idx_read or (hit is not None and float(hit) < min_idx_hit):
+            qualified = (
+                f"{row.get('dbname')}.{schema}.{row.get('relname')}.{row.get('indexrelname')}"
+            )
+            hit_s = f"{float(hit):.2f}%" if hit is not None else "?"
+            index_warnings.append(
+                _warn(
+                    "io",
+                    "warning",
+                    f"Hot index reads {qualified}: idx_blks_read={reads}, hit_pct={hit_s}",
+                    idx_blks_read=reads,
+                    kind="hot_index",
+                )
+            )
+
     index_warnings = index_warnings[: int(indexes_cfg["top_n"])]
-    return query_warnings + table_warnings + index_warnings
+
+    dbstat_warnings: list[Warning] = []
+    dbstats_cfg = cfg.get("dbstats") or {}
+    min_dom = float(dbstats_cfg.get("min_dominance_pct") or 70.0)
+    rows = [r for r in ctx.statements_dbstats if r.get("dbname") and r.get("dbname") != "Total"]
+    total_exec = sum(float(r.get("total_exec_time") or 0) for r in rows)
+    if total_exec > 0 and rows:
+        top = max(rows, key=lambda r: float(r.get("total_exec_time") or 0))
+        share = float(top.get("total_exec_time") or 0) / total_exec * 100
+        if share >= min_dom and len(rows) > 1:
+            dbstat_warnings.append(
+                _warn(
+                    "io",
+                    "warning",
+                    f"{top.get('dbname')}: dominates statement time {share:.1f}% "
+                    f"(total_exec_time={top.get('total_exec_time')})",
+                    dominance_pct=share,
+                    kind="db_dominance",
+                )
+            )
+
+    return query_warnings + table_warnings + index_warnings + dbstat_warnings
+
+
+def check_disk(ctx: ReportContext, cfg: dict[str, Any]) -> list[Warning]:
+    warnings: list[Warning] = []
+    min_delta = float(cfg.get("min_tablespace_delta_mb") or 500)
+    top_n = int(cfg.get("top_n") or 10)
+    rows: list[Warning] = []
+    for row in ctx.tablespace_stats:
+        name = row.get("tablespacename") or "?"
+        delta_mb = parse_size_to_mb(row.get("size_delta"))
+        if delta_mb is None or delta_mb < min_delta:
+            continue
+        rows.append(
+            _warn(
+                "disk",
+                "warning",
+                f"Tablespace {name}: size_delta={row.get('size_delta')} "
+                f"(size={row.get('size')}, threshold {min_delta:.0f}MB)",
+                size_delta_mb=delta_mb,
+                tablespacename=name,
+            )
+        )
+    rows.sort(key=lambda w: float(w.details.get("size_delta_mb") or 0), reverse=True)
+    return rows[:top_n]
 
 
 def check_locks(ctx: ReportContext, cfg: dict[str, Any]) -> list[Warning]:
@@ -856,6 +1019,7 @@ CHECKERS: dict[str, Callable[..., list[Warning]]] = {
     "sessions": check_sessions,
     "memory": check_memory_settings,
     "io": check_io_patterns,
+    "disk": check_disk,
     "locks": check_locks,
 }
 

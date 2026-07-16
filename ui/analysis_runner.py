@@ -96,6 +96,7 @@ class AnalyzeResult:
     prompt_path: Path | None
     brief_path: Path | None
     summary: dict[str, Any]
+    findings_ui: list[dict[str, Any]] = field(default_factory=list)
 
 
 def _flatten_threshold_node(prefix: str, value: Any) -> list[dict[str, str]]:
@@ -256,6 +257,94 @@ def _pick_first(output_dir: Path, names: tuple[str, ...]) -> Path | None:
     return None
 
 
+def _severity_bucket(sev: str) -> str:
+    s = (sev or "warning").lower()
+    if s in ("critical", "high"):
+        return "critical"
+    if s in ("warning", "medium"):
+        return "warning"
+    return "info"
+
+
+def _build_findings_ui(output_dir: Path) -> list[dict[str, Any]]:
+    """Flatten findings for UI cards (severity, id, message, advice, threshold)."""
+    cards: list[dict[str, Any]] = []
+
+    def add(
+        fid: str,
+        severity: str,
+        message: str,
+        *,
+        title: str = "",
+        advice: str = "",
+        threshold: str = "",
+    ) -> None:
+        cards.append(
+            {
+                "id": fid,
+                "severity": severity,
+                "message": message,
+                "title": title or fid,
+                "advice": advice,
+                "threshold": threshold,
+            }
+        )
+
+    advisor = output_dir / "advisor.json"
+    if advisor.is_file():
+        data = json.loads(advisor.read_text(encoding="utf-8"))
+        reports = data if isinstance(data, list) else data.get("reports") or [data]
+        for report in reports:
+            for item in report.get("advised_findings") or []:
+                f = item.get("finding") or {}
+                advice = item.get("advice") or {}
+                actions = advice.get("actions") or []
+                add(
+                    str(f.get("id") or "?"),
+                    str(f.get("severity") or "warning"),
+                    str(f.get("message") or ""),
+                    title=str(advice.get("title") or f.get("id") or ""),
+                    advice=str(actions[0]) if actions else str(advice.get("recommendation") or "")[:180],
+                )
+
+    stable_path = output_dir / "stable_prod.json"
+    if stable_path.is_file() and not cards:
+        data = json.loads(stable_path.read_text(encoding="utf-8"))
+        for sf in data.get("stable_findings") or []:
+            msgs = sf.get("sample_messages") or []
+            add(
+                str(sf.get("rule_id") or "?"),
+                str(sf.get("max_severity") or "warning"),
+                str(msgs[0] if msgs else sf.get("rule_id") or ""),
+                title=str(sf.get("rule_id") or ""),
+            )
+
+    symptom_path = output_dir / "symptom_investigation.json"
+    if symptom_path.is_file() and not cards:
+        data = json.loads(symptom_path.read_text(encoding="utf-8"))
+        for c in data.get("causes") or []:
+            status = str(c.get("status") or "possible")
+            sev = (
+                "critical"
+                if status == "confirmed"
+                else "warning"
+                if status == "suspected"
+                else "info"
+            )
+            add(
+                str(c.get("cause_id") or "?"),
+                sev,
+                str(c.get("title") or ""),
+                title=str(c.get("title") or ""),
+                advice=(c.get("confirm_actions") or [""])[0],
+            )
+
+    # severity sort
+    rank = {"critical": 0, "high": 1, "warning": 2, "medium": 3, "info": 4, "low": 5}
+    cards.sort(key=lambda c: (rank.get(str(c["severity"]).lower(), 9), c["id"]))
+    return cards[:80]
+
+
 def _build_summary(output_dir: Path) -> dict[str, Any]:
     summary: dict[str, Any] = {"files": sorted(p.name for p in output_dir.iterdir() if p.is_file())}
     findings_path = output_dir / "findings.json"
@@ -278,6 +367,15 @@ def _build_summary(output_dir: Path) -> dict[str, Any]:
         summary["common_findings"] = sm.get("stable_count", len(data.get("stable_findings") or []))
         summary["specific_findings"] = len(data.get("ephemeral_findings") or [])
         summary["report_count"] = len(data.get("reports") or [])
+
+    findings_ui = _build_findings_ui(output_dir)
+    summary["findings_ui"] = findings_ui
+    counts = {"critical": 0, "warning": 0, "info": 0}
+    for card in findings_ui:
+        counts[_severity_bucket(str(card.get("severity")))] += 1
+    summary["severity_counts"] = counts
+    if summary.get("total_findings") is None and findings_ui:
+        summary["total_findings"] = len(findings_ui)
     return summary
 
 
@@ -432,6 +530,18 @@ def build_namespace(req: AnalyzeRequest, upload_paths: list[Path], output_dir: P
                 output_dir,
             )
         ns.report = paths[0]
+        return ns
+
+    if scenario == "compare_runs":
+        if len(paths) < 2:
+            raise ValueError("сравнение требует ровно ≥2 отчёта (берутся первые два по порядку)")
+        ns.report = paths[0]
+        ns.compare_run = paths[1]
+        ns.compare_settings = paths[1]
+        ns.run_a_id = reports[0].label or suggest_label(reports[0].filename, reports[0].env, 0)
+        ns.run_b_id = reports[1].label or suggest_label(reports[1].filename, reports[1].env, 1)
+        ns.settings_a_id = ns.run_a_id
+        ns.settings_b_id = ns.run_b_id
         return ns
 
     raise ValueError(f"неизвестный сценарий: {scenario}")

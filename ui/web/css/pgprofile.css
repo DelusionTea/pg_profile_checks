@@ -445,3 +445,275 @@
   color: var(--text-dim);
   line-height: 1.35;
 }
+
+.field-help,
+.auto-scenario-preview {
+  margin: 0.35rem 0 0;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  line-height: 1.4;
+}
+
+.auto-scenario-preview {
+  color: var(--accent);
+  font-family: var(--mono);
+}
+
+.toast {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 50;
+  padding: 0.65rem 1rem;
+  background: rgba(0, 20, 16, 0.92);
+  border: 1px solid var(--accent);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.toast.visible {
+  opacity: 1;
+}
+
+.status-pill.pill-btn {
+  cursor: pointer;
+  border: none;
+  background: transparent;
+}
+
+.check-flow {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid rgba(0, 255, 159, 0.2);
+  display: grid;
+  gap: 0.35rem;
+}
+
+.check-item {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  font-size: 0.85rem;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.findings-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  gap: 0.75rem;
+  margin: 0 0 1rem;
+}
+
+.finding-card {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0.75rem;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.finding-card.sev-critical,
+.finding-card.sev-high {
+  border-color: rgba(255, 80, 80, 0.45);
+}
+
+.finding-card.sev-warning,
+.finding-card.sev-medium {
+  border-color: rgba(255, 200, 80, 0.35);
+}
+
+.finding-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+  margin-bottom: 0.35rem;
+  font-size: 0.72rem;
+}
+
+.sev-badge {
+  font-family: var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+}
+
+.finding-title {
+  margin: 0 0 0.25rem;
+  font-size: 0.9rem;
+}
+
+.finding-msg,
+.finding-advice,
+.finding-threshold {
+  margin: 0.2rem 0 0;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  line-height: 1.35;
+}
+
+.finding-advice {
+  color: var(--text);
+}
+
+.finding-thr-link {
+  color: var(--accent);
+}
+
+.wiki-toolbar {
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.wiki-mode-toggle {
+  display: inline-flex;
+  gap: 0.25rem;
+  margin-left: auto;
+}
+
+.wiki-preview {
+  min-height: 16rem;
+  max-height: 36rem;
+  overflow: auto;
+  padding: 1rem;
+  border: 1px solid rgba(0, 255, 159, 0.15);
+  background: rgba(0, 0, 0, 0.25);
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.wiki-preview h1,
+.wiki-preview h2,
+.wiki-preview h3 {
+  margin: 1rem 0 0.5rem;
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: 1rem;
+}
+
+.wiki-panel {
+  margin: 0.75rem 0;
+  padding: 0.65rem 0.85rem;
+  border-left: 3px solid var(--accent);
+  background: rgba(0, 255, 159, 0.04);
+}
+
+.wiki-panel-warning {
+  border-left-color: #ffc850;
+}
+
+.wiki-panel-note {
+  border-left-color: #7ec8ff;
+}
+
+.wiki-panel-title {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.35rem;
+  color: var(--accent);
+}
+
+.wiki-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.5rem 0;
+  font-size: 0.78rem;
+}
+
+.wiki-table th,
+.wiki-table td {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.35rem 0.5rem;
+  vertical-align: top;
+}
+
+.wiki-status {
+  display: inline-block;
+  padding: 0.1rem 0.35rem;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  border: 1px solid currentColor;
+}
+
+.wiki-status-red { color: #ff6b6b; }
+.wiki-status-yellow { color: #ffc850; }
+.wiki-status-green { color: #00ff9f; }
+.wiki-status-blue { color: #7ec8ff; }
+
+.wiki-expand {
+  margin: 0.5rem 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.35rem 0.6rem;
+}
+
+.wiki-expand summary {
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  color: var(--accent);
+}
+
+.wiki-code {
+  overflow: auto;
+  padding: 0.65rem;
+  background: rgba(0, 0, 0, 0.35);
+  font-size: 0.75rem;
+}
+
+.thresholds-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.thresholds-toolbar input[type="search"] {
+  flex: 1;
+  min-width: 12rem;
+}
+
+.threshold-section.sec-highlight {
+  outline: 1px solid var(--accent);
+  outline-offset: 4px;
+}
+
+.advanced-settings {
+  margin-top: 0.5rem;
+  border: 1px solid rgba(0, 255, 159, 0.2);
+  padding: 0.25rem 0.85rem 0.85rem;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.advanced-summary {
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent);
+  padding: 0.65rem 0;
+  list-style: none;
+}
+
+.advanced-summary::-webkit-details-marker {
+  display: none;
+}
+
+.advanced-summary::before {
+  content: "▸ ";
+}
+
+.advanced-settings[open] > .advanced-summary::before {
+  content: "▾ ";
+}
+
+.advanced-body {
+  padding-top: 0.25rem;
+}

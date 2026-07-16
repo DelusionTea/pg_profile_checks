@@ -51,6 +51,7 @@ sessions:
   max_idle_in_transaction_per_hour: 300
   max_rollback_pct: 5.0
   warn_on_disabled_idle_timeout: true
+  min_connection_util_pct: 70.0
 
 memory:
   max_work_mem_kb: 65536
@@ -67,17 +68,30 @@ io:
     max_io_time_ms: 1000
     max_wal_bytes_gb: 10
     max_temp_blks_written: 100000
+    max_shared_blks_dirtied: 500000
+    max_temp_blk_write_time_ms: 5000
     top_n: 10
   tables:
     min_seq_scan: 1000
     max_seq_scan_to_idx_scan_ratio: 10.0
     min_heap_blks_read: 100000
+    min_growth_mb: 100
+    min_vacuum_ops: 50
     top_n: 10
   indexes:
     min_unused_index_size_mb: 10
+    min_growth_mb: 50
+    min_idx_blks_read: 100000
+    min_hit_pct: 90.0
     top_n: 10
     exclude_schemas:
       - pg_catalog
+  dbstats:
+    min_dominance_pct: 70.0
+
+disk:
+  min_tablespace_delta_mb: 500
+  top_n: 10
 
 locks:
   max_deadlocks: 0

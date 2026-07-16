@@ -15,7 +15,7 @@
     </div>
     <div class="title-block">
       <h1>PG PROFILE CHECKS</h1>
-      <p class="subtitle">// отчёты · НТ/ПРОМ · confluence</p>
+      <p class="subtitle">// отчёты · health-check · confluence</p>
     </div>
     <nav class="header-nav">
       <a href="/" class="nav-link nav-link-active">Анализ</a>
@@ -24,21 +24,28 @@
   </header>
 
   <div id="error-banner" class="alert alert-error error-banner"></div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <section class="panel section">
     <div class="panel-head">
-      <span>01 · ОТЧЁТЫ</span>
+      <span>01 · ОТЧЁТ</span>
     </div>
     <div class="panel-body">
       <div id="dropzone" class="dropzone" tabindex="0">
-        <p class="dropzone-title">Перетащите HTML отчёты pg_profile</p>
-        <p class="dropzone-hint">или нажмите, чтобы выбрать файлы · можно несколько</p>
+        <p class="dropzone-title">Перетащите HTML отчёт pg_profile</p>
+        <p id="dropzone-hint" class="dropzone-hint">или нажмите, чтобы выбрать файл · полный health-check одного отчёта</p>
         <input id="file-input" class="hidden-file" type="file" accept=".html,text/html" multiple>
       </div>
 
-      <table class="reports-table">
+      <p id="simple-mode-note" class="field-help">По умолчанию анализируется только первый файл (все категории health-check). Мульти-отчёты и симптомы — в расширенных настройках.</p>
+
+      <table class="reports-table" id="reports-table">
         <thead>
-          <tr>
+          <tr id="reports-head-simple">
+            <th>Файл</th>
+            <th></th>
+          </tr>
+          <tr id="reports-head-advanced" hidden>
             <th>Файл</th>
             <th>Среда</th>
             <th>Label</th>
@@ -48,7 +55,7 @@
         </thead>
         <tbody id="reports-body">
           <tr id="reports-empty">
-            <td colspan="5" class="empty-row">файлы ещё не добавлены</td>
+            <td colspan="2" class="empty-row">файл ещё не добавлен</td>
           </tr>
         </tbody>
       </table>
@@ -57,51 +64,64 @@
 
   <section class="panel section">
     <div class="panel-head">
-      <span>02 · ЧТО АНАЛИЗИРУЕМ</span>
+      <span>02 · АНАЛИЗ</span>
     </div>
     <div class="panel-body">
-      <div class="field-grid">
-        <div class="field">
-          <label for="scenario">Сценарий</label>
-          <select id="scenario">
-            <option value="auto">Авто по меткам</option>
-            <option value="full_multi">Полный анализ (все findings)</option>
-            <option value="symptom">Расследование проблемы</option>
-            <option value="nt_runs">Несколько прогонов НТ</option>
-            <option value="health">Health-check одного отчёта</option>
-            <option value="stable_prod">Стабильные / общие проблемы</option>
-            <option value="nt_prod">НТ vs ПРОМ (gate)</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="confluence-title">Заголовок Confluence (опционально)</label>
-          <input id="confluence-title" type="text" placeholder="например: counteragent · high_cpu">
-        </div>
-      </div>
+      <p class="note-ai" id="simple-analysis-hint">
+        Полный health-check одного отчёта: checkpoints, WAL, cache, sessions, memory, IO, autovacuum, locks и др.
+        Результат — Confluence wiki с чеклистом PASS / FAIL / SUSPECT.
+      </p>
 
-      <p class="section-title" style="margin-top: 1.25rem;">Проблемы (можно несколько)</p>
-      <p class="dropzone-hint" style="margin: -0.35rem 0 0.75rem;">Не отмечено — полный анализ всего отчёта. Несколько отчётов: общие findings + специфичные по файлам. Отметьте симптомы — точечное расследование.</p>
-      <div id="symptom-list" class="symptom-list">
-        <p class="empty-row" style="padding: 0.5rem 0;">загрузка списка…</p>
-      </div>
+      <details id="advanced-settings" class="advanced-settings">
+        <summary class="advanced-summary">Расширенные настройки</summary>
+        <div class="advanced-body">
+          <div class="field-grid">
+            <div class="field">
+              <label for="scenario">Сценарий</label>
+              <select id="scenario">
+                <option value="auto">Авто по меткам</option>
+                <option value="full_multi">Полный анализ (все findings)</option>
+                <option value="symptom">Расследование проблемы</option>
+                <option value="nt_runs">Несколько прогонов НТ</option>
+                <option value="health" selected>Health-check одного отчёта</option>
+                <option value="stable_prod">Стабильные / общие проблемы</option>
+                <option value="nt_prod">НТ vs ПРОМ (gate)</option>
+                <option value="compare_runs">Сравнение двух отчётов (diff)</option>
+              </select>
+              <p id="scenario-help" class="field-help">Выберите сценарий или оставьте «Авто».</p>
+            </div>
+            <div class="field">
+              <label for="confluence-title">Заголовок Confluence (опционально)</label>
+              <input id="confluence-title" type="text" placeholder="например: counteragent · high_cpu">
+            </div>
+          </div>
+          <p id="auto-scenario-preview" class="auto-scenario-preview" hidden></p>
 
-      <div id="slow-query-fields" class="field-grid slow-query-fields">
-        <div class="field">
-          <label for="query-hex">hexqueryid</label>
-          <input id="query-hex" type="text" placeholder="для slow_query">
-        </div>
-        <div class="field">
-          <label for="query-id">queryid</label>
-          <input id="query-id" type="text">
-        </div>
-        <div class="field" style="grid-column: 1 / -1;">
-          <label for="query-text">фрагмент SQL</label>
-          <input id="query-text" type="text" placeholder="подстрока текста запроса">
-        </div>
-      </div>
+          <p class="section-title" style="margin-top: 1.25rem;">Проблемы (можно несколько)</p>
+          <p class="dropzone-hint" style="margin: -0.35rem 0 0.75rem;">Не отмечено — полный анализ. Несколько отчётов: общие findings + специфичные. Отметьте симптомы — точечное расследование.</p>
+          <div id="symptom-list" class="symptom-list">
+            <p class="empty-row" style="padding: 0.5rem 0;">загрузка списка…</p>
+          </div>
 
-      <div class="actions-row">
-        <button id="run-btn" type="button" class="btn-primary">Анализировать</button>
+          <div id="slow-query-fields" class="field-grid slow-query-fields">
+            <div class="field">
+              <label for="query-hex">hexqueryid</label>
+              <input id="query-hex" type="text" placeholder="для slow_query">
+            </div>
+            <div class="field">
+              <label for="query-id">queryid</label>
+              <input id="query-id" type="text">
+            </div>
+            <div class="field" style="grid-column: 1 / -1;">
+              <label for="query-text">фрагмент SQL</label>
+              <input id="query-text" type="text" placeholder="подстрока текста запроса">
+            </div>
+          </div>
+        </div>
+      </details>
+
+      <div class="actions-row" style="margin-top: 1rem;">
+        <button id="run-btn" type="button" class="btn-primary" disabled>Анализировать</button>
         <span id="run-spinner" class="inline-spinner" aria-hidden="true"></span>
         <span id="run-hint" class="auto-refresh-hint"></span>
       </div>
@@ -115,6 +135,17 @@
     <div class="panel-body">
       <div id="status-bar" class="status-bar"></div>
 
+      <div id="check-flow" class="check-flow" hidden>
+        <p class="section-title">Чеклист проверки</p>
+        <label class="check-item"><input type="checkbox" data-step="verdict"> Сверить краткий вердикт</label>
+        <label class="check-item"><input type="checkbox" data-step="findings"> Открыть top findings</label>
+        <label class="check-item"><input type="checkbox" data-step="verify"> Пройти verify / действия</label>
+        <label class="check-item"><input type="checkbox" data-step="ai"> (опц.) промпт для ИИ</label>
+        <label class="check-item"><input type="checkbox" data-step="confluence"> Вставить wiki в Confluence</label>
+      </div>
+
+      <div id="findings-cards" class="findings-cards" hidden></div>
+
       <div class="tabs" role="tablist">
         <button type="button" class="tab-btn active" data-tab="wiki">Confluence</button>
         <button type="button" class="tab-btn" data-tab="prompt">Промпт для ИИ</button>
@@ -123,12 +154,18 @@
 
       <div id="tab-wiki" class="tab-panel active">
         <p class="note-ai">Wiki Markup для вставки в Confluence (Insert → Wiki Markup). gigacli пока не вызывается из UI.</p>
-        <div class="actions-row" style="margin-bottom: 0.75rem;">
-          <button type="button" class="btn-secondary" id="copy-wiki">Скопировать</button>
+        <div class="actions-row wiki-toolbar">
+          <button type="button" class="btn-primary" id="copy-wiki">Скопировать для Confluence</button>
+          <button type="button" class="btn-secondary" id="copy-verdict">Вердикт + план</button>
           <a class="btn-secondary" id="download-wiki" href="#" download>Скачать .wiki</a>
-          <a class="btn-secondary" id="download-zip" href="#" download>Скачать ZIP (analysis_out + prompt)</a>
+          <a class="btn-secondary" id="download-zip" href="#" download>ZIP</a>
+          <div class="wiki-mode-toggle" role="group" aria-label="Режим wiki">
+            <button type="button" class="btn-secondary wiki-mode active" data-mode="source">Разметка</button>
+            <button type="button" class="btn-secondary wiki-mode" data-mode="preview">Превью</button>
+          </div>
         </div>
         <textarea id="wiki-text" class="result-text" readonly></textarea>
+        <div id="wiki-preview" class="wiki-preview" hidden></div>
       </div>
 
       <div id="tab-prompt" class="tab-panel">
@@ -148,6 +185,7 @@
 <script>
   window.API_BASE = "";
 </script>
+<script src="/js/wiki_preview.js"></script>
 <script src="/js/app.js"></script>
 </body>
 </html>

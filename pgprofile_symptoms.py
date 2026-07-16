@@ -41,6 +41,15 @@ SYMPTOM_ALIASES: dict[str, str] = {
     "slow_sql": "slow_query",
     "query": "slow_query",
     "медленный_запрос": "slow_query",
+    "high_temp": "high_temp",
+    "temp": "high_temp",
+    "temp_spill": "high_temp",
+    "bloat_vacuum_debt": "bloat_vacuum_debt",
+    "bloat": "bloat_vacuum_debt",
+    "vacuum_debt": "bloat_vacuum_debt",
+    "connection_pressure": "connection_pressure",
+    "connections": "connection_pressure",
+    "conn": "connection_pressure",
 }
 
 SYMPTOM_TITLES = {
@@ -48,6 +57,9 @@ SYMPTOM_TITLES = {
     "high_memory": "Высокое потребление памяти БД",
     "high_wal": "Высокая генерация WAL",
     "slow_query": "Медленная работа запроса",
+    "high_temp": "Высокий temp spill (временные файлы)",
+    "bloat_vacuum_debt": "Bloat / долг autovacuum",
+    "connection_pressure": "Давление на соединения",
 }
 
 
@@ -571,10 +583,184 @@ def _evaluate_slow_query(
     return results
 
 
+def _evaluate_high_temp(
+    snap: ReportSnapshot,
+    thresholds: dict[str, Any],
+) -> dict[str, tuple[CauseStatus, list[str]]]:
+    ctx = snap.ctx
+    cfg = thresholds.get("high_temp", {})
+    label = snap.label
+    results: dict[str, tuple[CauseStatus, list[str]]] = {}
+
+    for db in ctx.dbstat:
+        if db.get("dbname") in (None, "Total"):
+            continue
+        temp_mb = _temp_bytes_mb(db)
+        if temp_mb >= cfg.get("temp_bytes_mb_suspected", 50):
+            status = (
+                CauseStatus.CONFIRMED
+                if temp_mb >= cfg.get("temp_bytes_mb_confirmed", 200)
+                else CauseStatus.SUSPECTED
+            )
+            lines = [
+                f"[{label}] {db.get('dbname')}: temp_bytes={db.get('temp_bytes')}, "
+                f"temp_files={db.get('temp_files')}",
+            ]
+            results["temp.db_temp_bytes"] = (status, lines)
+
+    spill = sorted(
+        ctx.top_statements,
+        key=lambda r: _int_val(r.get("temp_blks_written")) or 0,
+        reverse=True,
+    )
+    if spill:
+        row = spill[0]
+        temp_blks = _int_val(row.get("temp_blks_written")) or 0
+        if temp_blks >= cfg.get("temp_blks_written_suspected", 5000):
+            lines = [
+                f"[{label}] SQL spill: temp_blks_written={temp_blks:,} hex={row.get('hexqueryid')}",
+            ]
+            results["temp.sql_spill"] = (CauseStatus.SUSPECTED, lines)
+
+    work_mem = parse_setting_int(ctx.settings.get("work_mem"))
+    if work_mem is not None and work_mem <= 65536 and "temp.db_temp_bytes" in results:
+        lines = [f"[{label}] work_mem={work_mem}kB при наличии temp spill"]
+        results["temp.work_mem_low"] = (CauseStatus.SUSPECTED, lines)
+
+    return results
+
+
+def _evaluate_bloat_vacuum_debt(
+    snap: ReportSnapshot,
+    thresholds: dict[str, Any],
+) -> dict[str, tuple[CauseStatus, list[str]]]:
+    ctx = snap.ctx
+    cfg = thresholds.get("bloat_vacuum_debt", {})
+    label = snap.label
+    results: dict[str, tuple[CauseStatus, list[str]]] = {}
+
+    dead = [
+        r
+        for r in ctx.top_tbl_last_sample
+        if (_float_val(r.get("dead_pct")) or 0.0) >= cfg.get("dead_pct_suspected", 10.0)
+    ]
+    if dead:
+        row = max(dead, key=lambda r: _float_val(r.get("dead_pct")) or 0.0)
+        pct = _float_val(row.get("dead_pct")) or 0.0
+        status = (
+            CauseStatus.CONFIRMED
+            if pct >= cfg.get("dead_pct_confirmed", 20.0)
+            else CauseStatus.SUSPECTED
+        )
+        lines = [
+            f"[{label}] {row.get('schemaname')}.{row.get('relname')}: dead_pct={pct}%",
+        ]
+        results["bloat.high_dead_pct"] = (status, lines)
+
+    stale = [
+        r
+        for r in ctx.top_tbl_last_sample
+        if "stale" in str(r.get("last_autovacuum") or "").lower()
+        or str(r.get("last_autovacuum") or "").lower() in ("never", "none", "")
+    ]
+    # also use health-style: if dead high and last_autovacuum old — covered by messages in health;
+    # here flag never/None last_autovacuum on dead tables
+    never = [
+        r
+        for r in ctx.top_tbl_last_sample
+        if (_float_val(r.get("dead_pct")) or 0) >= 5
+        and str(r.get("last_autovacuum") or "").lower() in ("never", "none", "")
+    ]
+    if never or stale:
+        row = (never or stale)[0]
+        lines = [
+            f"[{label}] {row.get('schemaname')}.{row.get('relname')}: "
+            f"last_autovacuum={row.get('last_autovacuum')}, dead_pct={row.get('dead_pct')}",
+        ]
+        results["bloat.stale_vacuum"] = (CauseStatus.SUSPECTED, lines)
+
+    min_vac = int(cfg.get("min_vacuum_ops", 30))
+    vac_rows = sorted(
+        ctx.top_tables,
+        key=lambda r: (_int_val(r.get("vacuum_count")) or 0)
+        + (_int_val(r.get("autovacuum_count")) or 0),
+        reverse=True,
+    )
+    if vac_rows:
+        row = vac_rows[0]
+        vac = (_int_val(row.get("vacuum_count")) or 0) + (_int_val(row.get("autovacuum_count")) or 0)
+        if vac >= min_vac:
+            lines = [
+                f"[{label}] {row.get('schemaname')}.{row.get('relname')}: vacuum_ops={vac}",
+            ]
+            results["bloat.vacuum_ops_pressure"] = (CauseStatus.SUSPECTED, lines)
+
+    min_g = float(cfg.get("min_growth_mb", 50))
+    for row in ctx.top_tables:
+        g = parse_size_to_mb(row.get("growth_pretty"))
+        if g is not None and g >= min_g:
+            lines = [
+                f"[{label}] {row.get('schemaname')}.{row.get('relname')}: growth={row.get('growth_pretty')}",
+            ]
+            results["bloat.growth"] = (CauseStatus.SUSPECTED, lines)
+            break
+
+    return results
+
+
+def _evaluate_connection_pressure(
+    snap: ReportSnapshot,
+    thresholds: dict[str, Any],
+) -> dict[str, tuple[CauseStatus, list[str]]]:
+    ctx = snap.ctx
+    cfg = thresholds.get("connection_pressure", {})
+    label = snap.label
+    results: dict[str, tuple[CauseStatus, list[str]]] = {}
+    max_conn = parse_setting_int(ctx.settings.get("max_connections"))
+
+    if max_conn and max_conn > 0:
+        for db in ctx.dbstat:
+            if db.get("dbname") in (None, "Total"):
+                continue
+            sessions = _int_val(db.get("sessions")) or 0
+            if sessions <= 0:
+                continue
+            pct = sessions / max_conn * 100
+            if pct >= cfg.get("util_pct_suspected", 70.0):
+                status = (
+                    CauseStatus.CONFIRMED
+                    if pct >= cfg.get("util_pct_confirmed", 90.0)
+                    else CauseStatus.SUSPECTED
+                )
+                lines = [
+                    f"[{label}] {db.get('dbname')}: sessions={sessions} "
+                    f"({pct:.0f}% of max_connections={max_conn})",
+                ]
+                results["conn.high_utilization"] = (status, lines)
+
+    idle_lim = float(cfg.get("idle_in_xact_sec", 1800))
+    for db in ctx.dbstat:
+        if db.get("dbname") in (None, "Total"):
+            continue
+        idle = _float_val(db.get("idle_in_transaction_time")) or 0.0
+        if idle >= idle_lim:
+            lines = [f"[{label}] {db.get('dbname')}: idle_in_transaction_time={idle:.0f}s"]
+            results["conn.idle_in_transaction"] = (CauseStatus.SUSPECTED, lines)
+
+    if max_conn and max_conn >= int(cfg.get("max_connections_high", 300)):
+        lines = [f"[{label}] max_connections={max_conn} — проверьте наличие pooler"]
+        results["conn.no_pooler_hint"] = (CauseStatus.POSSIBLE, lines)
+
+    return results
+
+
 EVALUATORS: dict[str, Callable[..., dict[str, tuple[CauseStatus, list[str]]]]] = {
     "high_cpu": _evaluate_high_cpu,
     "high_memory": _evaluate_high_memory,
     "high_wal": _evaluate_high_wal,
+    "high_temp": _evaluate_high_temp,
+    "bloat_vacuum_debt": _evaluate_bloat_vacuum_debt,
+    "connection_pressure": _evaluate_connection_pressure,
 }
 
 
@@ -586,13 +772,13 @@ def _build_action_plan(causes: list[CauseHypothesis]) -> list[str]:
             key = action.strip()
             if key and key not in seen:
                 seen.add(key)
-                plan.append(f"[подтвердить {cause.cause_id}] {key}")
+                plan.append(f"(подтвердить {cause.cause_id}) {key}")
         if cause.status in (CauseStatus.CONFIRMED, CauseStatus.SUSPECTED):
             for action in cause.refute_actions[:2]:
                 key = action.strip()
                 if key and key not in seen:
                     seen.add(key)
-                    plan.append(f"[опровергнуть {cause.cause_id}] {key}")
+                    plan.append(f"(опровергнуть {cause.cause_id}) {key}")
     return plan
 
 

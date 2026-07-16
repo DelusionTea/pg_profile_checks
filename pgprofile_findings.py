@@ -71,9 +71,11 @@ def infer_rule_id(warning: Warning) -> str:
             return "autovacuum.table_high_mods_pct"
         if "stale" in message:
             return "autovacuum.stale_vacuum"
-        if "n_dead" in details:
+        if "n_dead" in details or "n_dead=" in message:
             return "autovacuum.table_many_dead_tuples"
     if category == "cache":
+        if "slru" in message:
+            return "cache.low_slru_hit_ratio"
         if "blks_hit_pct" in message:
             return "cache.low_hit_ratio"
         if "blk_read_time" in message:
@@ -85,6 +87,8 @@ def infer_rule_id(warning: Warning) -> str:
     if category == "sessions":
         if "idle_in_transaction_session_timeout=0 while" in message:
             return "sessions.idle_timeout_disabled"
+        if "connection pressure" in message:
+            return "sessions.connection_pressure"
         if "idle_in_transaction" in message:
             return "sessions.high_idle_in_transaction"
         if "rollback_pct" in message:
@@ -105,18 +109,33 @@ def infer_rule_id(warning: Warning) -> str:
         if "lock_timeout=0" in message:
             return "memory.lock_timeout_zero"
     if category == "io":
+        kind = str(details.get("kind") or "")
+        if kind == "table_growth" or "table growth=" in message:
+            return "io.table_growth"
+        if kind == "index_growth" or "growing index" in message:
+            return "io.index_growth"
+        if kind == "vacuum_ops" or "vacuum_ops=" in message:
+            return "io.vacuum_ops_pressure"
+        if kind == "hot_index" or "hot index reads" in message:
+            return "io.hot_index_reads"
+        if kind == "db_dominance" or "dominates statement" in message:
+            return "db.statement_dominance"
         if "wal=" in message:
             return "io.wal_heavy_query"
         if "io_time" in message:
             return "io.high_io_wait_query"
-        if "temp_blks_written" in message:
+        if "temp_blks_written" in message or "temp_blk_write_time" in message:
             return "io.temp_spill_query"
+        if "shared_blks_dirtied" in message:
+            return "io.wal_heavy_query"
         if "seq_scan" in message:
             return "io.high_seq_scan"
         if "heap_blks_read" in message:
             return "io.high_heap_reads"
         if "unused index" in message:
             return "io.unused_index"
+    if category == "disk":
+        return "disk.tablespace_growth"
     if category == "locks":
         return "locks.deadlocks"
 

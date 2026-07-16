@@ -55,6 +55,20 @@ recommendations:
     references:
       - "PostgreSQL Documentation: Checkpoints"
 
+  - id: checkpoints.high_write_time_per_hour
+    severity: high
+    title: High checkpoint write time per hour
+    recommendation: |
+      Нормализованное время записи checkpoint за час высокое — устойчивое IO-давление
+      от checkpoints, а не только длинный единичный интервал отчёта.
+    actions:
+      - Поднять checkpoint_completion_target (0.7–0.9) для сглаживания записи
+      - Согласовать max_wal_size и checkpoint_timeout с объёмом WAL
+      - Проверить latency диска (iostat) в окнах checkpoint
+    references:
+      - "PostgreSQL Documentation: Checkpoints"
+      - "Postgres Pro: checkpoint_completion_target"
+
   - id: checkpoints.maxwritten_clean
     severity: medium
     title: Bgwriter interrupts (maxwritten_clean)
@@ -154,6 +168,71 @@ recommendations:
     references:
       - "PostgreSQL Documentation: Cost-Based Vacuum Delay"
 
+  - id: autovacuum.table_high_mods_pct
+    severity: high
+    title: High modified tuples ratio since analyze
+    recommendation: |
+      Высокий n_mod_since_analyze — статистика устаревает, планировщик может выбирать
+      плохие планы. Autovacuum analyze не успевает за DML.
+    actions:
+      - Снизить autovacuum_analyze_scale_factor / threshold на горячих таблицах
+      - Ускорить autovacuum (naptime, cost_delay/limit)
+      - Выполнить ANALYZE в окно обслуживания при необходимости
+    references:
+      - "PostgreSQL Documentation: Routine Vacuuming"
+      - "Postgres Pro: autovacuum analyze thresholds"
+
+  - id: autovacuum.table_many_dead_tuples
+    severity: high
+    title: Large absolute dead tuple count
+    recommendation: |
+      Большой абсолютный объём мёртвых строк на крупных таблицах — vacuum lag,
+      даже если процент dead ещё умеренный.
+    actions:
+      - Ускорить autovacuum (cost_limit ↑, cost_delay ↓, maintenance_work_mem ↑)
+      - Проверить idle in transaction и long transactions
+      - Per-table autovacuum для hot tables
+    references:
+      - "PostgreSQL Documentation: Automatic Vacuuming"
+
+  - id: autovacuum.stale_vacuum
+    severity: high
+    title: Stale autovacuum on active table
+    recommendation: |
+      Давно не было autovacuum на таблице с активностью — риск bloat и wraparound.
+    actions:
+      - Проверить блокировки vacuum (idle in transaction, lock waits)
+      - Уменьшить naptime / усилить cost-параметры
+      - Ручной VACUUM (ANALYZE) в окно обслуживания
+    references:
+      - "PostgreSQL Documentation: Routine Vacuuming"
+      - "pg_stat_all_tables: last_autovacuum"
+
+  - id: autovacuum.cost_delay_high
+    severity: medium
+    title: autovacuum_vacuum_cost_delay too high
+    recommendation: |
+      Высокий cost_delay «душит» autovacuum — очистка не успевает за write-нагрузкой.
+    actions:
+      - Снизить autovacuum_vacuum_cost_delay (осторожно на shared storage)
+      - Мониторить IO и dead tuples после изменения
+    references:
+      - "PostgreSQL Documentation: Cost-Based Vacuum Delay"
+      - "Postgres Pro: autovacuum_vacuum_cost_delay"
+
+  - id: autovacuum.cost_limit_low
+    severity: medium
+    title: autovacuum_vacuum_cost_limit too low
+    recommendation: |
+      Низкий cost_limit даёт vacuum малый IO-бюджет — типичная причина медленной очистки
+      на busy OLTP.
+    actions:
+      - Увеличить autovacuum_vacuum_cost_limit
+      - Согласовать с cost_delay и нагрузкой на диск
+    references:
+      - "PostgreSQL Documentation: Cost-Based Vacuum Delay"
+      - "Postgres Pro: autovacuum cost parameters"
+
   - id: sessions.high_idle_in_transaction
     severity: critical
     title: High idle in transaction time
@@ -215,6 +294,34 @@ recommendations:
       - "PostgreSQL Wiki: Tuning Your PostgreSQL Server"
       - "PostgreSQL Documentation: work_mem"
 
+  - id: memory.work_mem_high
+    severity: medium
+    title: work_mem above typical OLTP band
+    recommendation: |
+      Глобально высокий work_mem увеличивает риск OOM при конкурентных sort/hash.
+      Для тяжёлых запросов безопаснее role/session-level, а не завышенный default.
+    actions:
+      - Снизить глобальный work_mem до типичного OLTP диапазона
+      - Вынести повышенный work_mem на роли отчётности/ETL
+      - Проверить temp spill после изменения
+    references:
+      - "PostgreSQL Documentation: work_mem"
+      - "Postgres Pro: resource consumption"
+
+  - id: memory.shared_buffers_low
+    severity: medium
+    title: shared_buffers below recommended minimum
+    recommendation: |
+      Малый shared_buffers на выделенном сервере часто даёт низкий cache hit и лишний disk IO.
+      Postgres Pro ориентирует ~25% RAM на выделенном хосте (с учётом политики).
+    actions:
+      - Увеличить shared_buffers (restart) после оценки RAM и working set
+      - Согласовать effective_cache_size и HugePages
+      - Пересчитать max_wal_size после роста буферов
+    references:
+      - "Postgres Pro: shared_buffers"
+      - "PostgreSQL Wiki: Tuning Your PostgreSQL Server"
+
   - id: memory.huge_pages_recommended
     severity: warning
     title: HugePages recommended for large shared_buffers
@@ -248,6 +355,34 @@ recommendations:
     references:
       - "PostgreSQL Wiki: Tuning Your PostgreSQL Server"
       - "PostgreSQL Documentation: shared_buffers"
+
+  - id: cache.low_table_hit_ratio
+    severity: high
+    title: Low table I/O hit ratio
+    recommendation: |
+      Горячие таблицы читаются с диска чаще ожидаемого — узкий buffer pool,
+      холодный working set или неоптимальные планы/индексы.
+    actions:
+      - Найти top I/O tables в pg_profile и проверить индексы/partitioning
+      - Оценить shared_buffers и effective_cache_size
+      - EXPLAIN (ANALYZE, BUFFERS) для запросов к этим таблицам
+    references:
+      - "pg_profile top I/O tables"
+      - "Postgres Pro: shared_buffers; caching"
+
+  - id: cache.low_slru_hit_ratio
+    severity: medium
+    title: Low SLRU cache hit ratio
+    recommendation: |
+      Низкий hit по SLRU (clog/multixact и др.) увеличивает IO на служебные структуры.
+      Часто связано с длинными транзакциями, idle in transaction или высокой конкуренцией.
+    actions:
+      - Сократить idle in transaction и long transactions
+      - Проверить нагрузку на multixact/subtrans при необходимости
+      - Сверить с sessions/autovacuum findings
+    references:
+      - "PostgreSQL Documentation: Resource Consumption"
+      - "pg_stat_slru / pg_profile SLRU"
 
   - id: io.high_seq_scan
     severity: medium
@@ -284,6 +419,141 @@ recommendations:
       - Проверить fillfactor и индексы на целевых таблицах
     references:
       - "PostgreSQL Documentation: Write Ahead Log"
+
+  - id: io.high_io_wait_query
+    severity: high
+    title: High I/O wait on SQL query
+    recommendation: |
+      Запрос тратит много времени на чтение/запись блоков — кандидат на план,
+      индексы, cache hit или проблемы storage.
+    actions:
+      - EXPLAIN (ANALYZE, BUFFERS) для топ SQL по io_time
+      - Проверить hit ratio и physical reads по затронутым таблицам
+      - Оценить disk latency и track_io_timing
+    references:
+      - "PostgreSQL Documentation: Using EXPLAIN"
+      - "Postgres Pro: I/O and storage"
+
+  - id: io.temp_spill_query
+    severity: high
+    title: Temporary spill on SQL query
+    recommendation: |
+      Запрос пишет во временные файлы (sort/hash spill) — нехватка work_mem
+      для операции или избыточный объём данных в плане.
+    actions:
+      - EXPLAIN (ANALYZE, BUFFERS) и найти Sort/Hash Aggregate со spill
+      - Поднять work_mem точечно на роль/сессию (не глобально без оценки)
+      - Упростить запрос / добавить индексы, снижающие объём сортировки
+    references:
+      - "PostgreSQL Documentation: work_mem"
+      - "Postgres Pro: temporary files"
+
+  - id: io.hot_index_reads
+    severity: medium
+    title: Hot index physical reads
+    recommendation: |
+      Индекс активно читается с диска — давление на cache или неоптимальный доступ.
+    actions:
+      - Проверить размер индекса и hit ratio таблицы
+      - Оценить shared_buffers / OS cache и планы, использующие индекс
+      - Рассмотреть covering/partial index при подтверждённом паттерне
+    references:
+      - "pg_profile top I/O indexes"
+      - "PostgreSQL Documentation: Indexes"
+
+  - id: io.table_growth
+    severity: medium
+    title: Fast-growing table
+    recommendation: |
+      Таблица заметно растёт за интервал отчёта — риск диска, vacuum lag и деградации планов.
+    actions:
+      - Проверить DML-паттерн и возможность partitioning/архивации
+      - Убедиться, что autovacuum успевает за ростом
+      - Оценить tablespace / свободное место
+    references:
+      - "pg_profile top growing tables"
+      - "Postgres Pro: table maintenance"
+
+  - id: io.index_growth
+    severity: medium
+    title: Fast-growing index
+    recommendation: |
+      Быстрый рост индекса увеличивает write/vacuum cost и место на диске.
+    actions:
+      - Проверить необходимость индекса и fillfactor
+      - Сопоставить с unused indexes и DML на таблице
+      - Планировать REINDEX в окно обслуживания при bloat
+    references:
+      - "pg_profile top growing indexes"
+      - "PostgreSQL Wiki: Index Maintenance"
+
+  - id: io.vacuum_ops_pressure
+    severity: medium
+    title: High vacuum/analyze operation count
+    recommendation: |
+      Много vacuum/analyze операций на таблице — высокая churn или агрессивные пороги;
+      конкурирует с пользовательской нагрузкой за IO/CPU.
+    actions:
+      - Проверить dead/mods % и per-table autovacuum settings
+      - Снизить ненужный churn (idle in xact, частые мелкие UPDATE)
+      - Согласовать окно обслуживания для тяжёлого VACUUM
+    references:
+      - "pg_profile vacuum-related statistics"
+      - "PostgreSQL Documentation: Automatic Vacuuming"
+
+  - id: db.statement_dominance
+    severity: medium
+    title: One database dominates statement load
+    recommendation: |
+      Одна БД кластера забирает львиную долю времени/вызовов statements —
+      фокус тюнинга и расследования должен быть на ней.
+    actions:
+      - Сузить анализ top SQL / rusage к доминирующей БД
+      - Проверить temp/JIT/WAL stats этой БД в statements_dbstats
+      - Сверить нагрузку приложения и connection pool по БД
+    references:
+      - "pg_profile statement statistics by database"
+
+  - id: wal.backend_writes_high
+    severity: medium
+    title: High backend write ratio
+    recommendation: |
+      Backend'ы сами пишут dirty buffers чаще ожидаемого — bgwriter/checkpoint
+      не успевают, растёт latency пользовательских сессий.
+    actions:
+      - Проверить shared_buffers, bgwriter и checkpoint_completion_target
+      - Сопоставить с maxwritten_clean и checkpoint write time
+      - Оценить write-heavy SQL и batch DML
+    references:
+      - "PostgreSQL Wiki: Tuning Your PostgreSQL Server"
+      - "Postgres Pro: bgwriter / checkpoints"
+
+  - id: disk.tablespace_growth
+    severity: high
+    title: Tablespace size growth
+    recommendation: |
+      Tablespace заметно вырос за интервал — риск заполнения диска и деградации IO.
+    actions:
+      - Проверить свободное место на томах tablespace
+      - Найти растущие таблицы/индексы в pg_profile
+      - Спланировать архивацию, partitioning или расширение storage
+    references:
+      - "pg_profile tablespace statistics"
+      - "Postgres Pro: tablespaces"
+
+  - id: sessions.connection_pressure
+    severity: high
+    title: Connection / session pressure
+    recommendation: |
+      Высокая утилизация соединений или много idle-сессий — риск исчерпания
+      max_connections и лишней памяти на backends.
+    actions:
+      - Внедрить/проверить PgBouncer (transaction pooling где возможно)
+      - Снизить max_connections после появления pooler
+      - Найти утечки соединений в приложении
+    references:
+      - "PostgreSQL Wiki: Number of Database Connections"
+      - "Postgres Pro: max_connections; connection pooling"
 
   - id: locks.deadlocks
     severity: critical

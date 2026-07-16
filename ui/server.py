@@ -410,6 +410,9 @@ class Handler(BaseHTTPRequestHandler):
                 result.prompt_path.read_text(encoding="utf-8") if result.prompt_path else ""
             )
             brief_text = result.brief_path.read_text(encoding="utf-8") if result.brief_path else ""
+            summary = result.summary or {}
+            findings_ui = summary.pop("findings_ui", None) or []
+            meta_out["summary"] = summary
             _json_response(
                 self,
                 200,
@@ -418,6 +421,7 @@ class Handler(BaseHTTPRequestHandler):
                     "wiki_text": wiki_text,
                     "prompt_text": prompt_text,
                     "brief_text": brief_text,
+                    "findings_ui": findings_ui,
                 },
             )
         except Exception as exc:

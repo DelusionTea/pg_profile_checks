@@ -626,88 +626,143 @@ def build_nt_runs_brief(analysis: NtRunsAnalysis) -> str:
 
 
 def build_nt_runs_confluence_wiki(analysis: NtRunsAnalysis, *, page_title: str | None = None) -> str:
+    from pgprofile_confluence import (
+        _checklist_from_symptom_causes,
+        _wiki_actions_section,
+        _wiki_anchor,
+        _wiki_checklist_table,
+        _wiki_expand,
+        _wiki_findings_summary_table,
+        _wiki_panel,
+        _wiki_toc,
+        explain_analyze_wiki_for_symptom,
+    )
+
     title = page_title or "НТ: анализ прогонов и влияние настроек"
-    lines = [f"h1. {title}", ""]
-
     symptom_titles = ", ".join(SYMPTOM_TITLES.get(s, s) for s in analysis.symptoms)
-    lines.append(f"h2. Симптомы анализа")
-    lines.append(f"* {symptom_titles}")
-    lines.append("")
 
-    lines.append("h2. Прогоны")
-    lines.append("||Метка||Файл||Интервал||")
-    for label, path in zip(analysis.report_labels, analysis.report_paths):
-        meta = parse_report_meta(path)
-        interval = f"{meta.get('from', '?')} .. {meta.get('to', '?')}"
-        lines.append(f"|{label}|{path.name}|{interval}|")
-    lines.append("")
-
-    if analysis.prod_paths:
-        lines.append("h2. PROD baseline")
-        lines.append("||Метка||Файл||Интервал||")
-        for label, path in zip(analysis.prod_labels, analysis.prod_paths):
-            meta = parse_report_meta(path)
-            interval = f"{meta.get('from', '?')} .. {meta.get('to', '?')}"
-            lines.append(f"|{label}|{path.name}|{interval}|")
-        lines.append("")
-
-    from pgprofile_confluence import explain_analyze_wiki_for_symptom
-
+    confirmed = 0
+    suspected = 0
+    finding_rows: list[tuple[str, str, str, str]] = []
+    actions: list[str] = []
+    checklist: list[tuple[str, str]] = []
     for inv in analysis.symptom_investigations:
-        lines.append(f"h2. {inv.symptom_title}")
-        for cause in inv.causes[:10]:
-            if cause.status.value in ("confirmed", "suspected"):
-                status = "Red" if cause.status.value == "confirmed" else "Yellow"
-                title_c = cause.title.replace("|", "/")
-                lines.append(
-                    f"* {{status:colour={status}|title={cause.status.value.upper()}}} "
-                    f"{title_c} — {cause.cause_id}"
+        checklist.extend(_checklist_from_symptom_causes(inv.causes))
+        for cause in inv.causes:
+            if cause.status.value == "confirmed":
+                confirmed += 1
+            elif cause.status.value == "suspected":
+                suspected += 1
+            if cause.status.value in ("confirmed", "suspected") or cause.evidence:
+                finding_rows.append(
+                    (
+                        "critical" if cause.status.value == "confirmed" else "warning",
+                        cause.cause_id,
+                        cause.title,
+                        ", ".join(cause.reports_matched) or "—",
+                    )
                 )
-                for ev in cause.evidence[:2]:
-                    lines.append(f"** {ev}")
-        lines.append("")
-        lines.extend(explain_analyze_wiki_for_symptom(inv))
+        for step in inv.action_plan[:4]:
+            if step not in actions:
+                actions.append(step)
 
-    lines.append("h2. Влияние изменений настроек (попарно)")
+    fail_n = sum(1 for row in checklist if row[1] == "FAIL")
+    suspect_n = sum(1 for row in checklist if row[1] == "SUSPECT")
+    pass_n = sum(1 for row in checklist if row[1] == "PASS")
+    guc_changed = sum(1 for pa in analysis.pair_analyses if pa.guc_impacts)
+    verdict_body = [
+        f"Симптомы: *{symptom_titles}*.",
+        f"Чеклист гипотез: FAIL *{fail_n}* · SUSPECT *{suspect_n}* · PASS *{pass_n}*.",
+        f"Прогонов НТ: *{len(analysis.report_labels)}*; пар с изменением GUC: *{guc_changed}*.",
+        f"Confirmed / Suspected гипотез: *{confirmed}* / *{suspected}*.",
+        "Сначала — влияние GUC и действия; детали симптомов — в expand ниже.",
+    ]
+
+    lines: list[str] = [f"h1. {title}", ""]
+    lines.extend(_wiki_panel("warning" if confirmed else "info", "Краткий вердикт", verdict_body))
+    lines.extend(_wiki_checklist_table(checklist, heading="Чеклист гипотез"))
+    lines.extend(_wiki_toc())
+    lines.extend(_wiki_actions_section(actions[:8]))
+
+    # GUC impact first (cross-run)
+    guc_body: list[str] = []
     for pa in analysis.pair_analyses:
-        lines.append(f"h3. {pa.run_a_label} → {pa.run_b_label}")
+        guc_body.append(f"h3. {pa.run_a_label} → {pa.run_b_label}")
         if not pa.guc_impacts:
-            lines.append("{note:title=Настройки}")
-            lines.append(pa.narrative)
-            lines.append("{note}")
+            guc_body.append("{note:title=Настройки}")
+            guc_body.append(pa.narrative)
+            guc_body.append("{note}")
         else:
-            lines.append("{info:title=Изменённые GUC и вероятный эффект}")
+            guc_body.append("{info:title=Изменённые GUC и вероятный эффект}")
             for gi in pa.guc_impacts:
-                lines.append(
+                guc_body.append(
                     f"* *{{{gi.guc}}}*: {gi.value_from} → {gi.value_to} "
                     f"({gi.direction}, уверенность: {gi.confidence})"
                 )
                 for effect in gi.likely_effects:
-                    lines.append(f"** {effect}")
-            lines.append("{info}")
-        lines.append("")
+                    guc_body.append(f"** {effect}")
+            guc_body.append("{info}")
+        guc_body.append("")
+    lines.extend(["h2. Влияние изменений настроек (попарно)", ""] + guc_body)
+
+    lines.extend(_wiki_findings_summary_table(finding_rows, heading="Сводка гипотез по симптомам"))
+
+    for inv in analysis.symptom_investigations:
+        body: list[str] = []
+        for cause in inv.causes[:10]:
+            body.append(_wiki_anchor(f"sec_{cause.cause_id}"))
+            title_c = cause.title.replace("|", "/")
+            if cause.status.value in ("confirmed", "suspected"):
+                status = "Red" if cause.status.value == "confirmed" else "Yellow"
+                body.append(
+                    f"* {{status:colour={status}|title={cause.status.value.upper()}}} "
+                    f"{title_c} — {cause.cause_id}"
+                )
+                for ev in cause.evidence[:2]:
+                    body.append(f"** {ev}")
+            else:
+                body.append(f"* {title_c} — {cause.cause_id} (possible / PASS)")
+        body.append("")
+        body.extend(explain_analyze_wiki_for_symptom(inv))
+        lines.extend(_wiki_expand(inv.symptom_title, body))
 
     if analysis.problem_overlap:
-        lines.append("h2. Что уже есть на PROD и критичность расхождения НТ")
+        overlap_body: list[str] = []
         for symptom, payload in analysis.problem_overlap.items():
-            lines.append(f"h3. {SYMPTOM_TITLES.get(symptom, symptom)}")
+            overlap_body.append(f"h3. {SYMPTOM_TITLES.get(symptom, symptom)}")
             crit = payload.get("divergence_criticality", "low")
             color = "Red" if crit == "high" else ("Yellow" if crit == "medium" else "Green")
-            lines.append(
+            overlap_body.append(
                 f"* {{status:colour={color}|title={crit.upper()}}} Критичность расхождения NT vs PROD"
             )
             existing = payload.get("existing_on_prod", [])
             nt_only = payload.get("nt_only", [])
             critical_nt_only = payload.get("critical_nt_only", [])
-            lines.append(
+            overlap_body.append(
                 f"* Уже есть на PROD: {', '.join(existing) if existing else 'нет значимых пересечений'}"
             )
-            lines.append(
-                f"* Только на НТ: {', '.join(nt_only) if nt_only else 'нет'}"
-            )
+            overlap_body.append(f"* Только на НТ: {', '.join(nt_only) if nt_only else 'нет'}")
             if critical_nt_only:
-                lines.append(f"* Критичные только на НТ: {', '.join(critical_nt_only)}")
-            lines.append("")
+                overlap_body.append(f"* Критичные только на НТ: {', '.join(critical_nt_only)}")
+            overlap_body.append("")
+        lines.extend(_wiki_expand("Что уже есть на PROD / расхождение НТ", overlap_body))
+
+    runs_body = ["||Метка||Файл||Интервал||"]
+    for label, path in zip(analysis.report_labels, analysis.report_paths):
+        meta = parse_report_meta(path)
+        interval = f"{meta.get('from', '?')} .. {meta.get('to', '?')}"
+        runs_body.append(f"|{label}|{path.name}|{interval}|")
+    runs_body.append("")
+    if analysis.prod_paths:
+        runs_body.append("h3. PROD baseline")
+        runs_body.append("")
+        runs_body.append("||Метка||Файл||Интервал||")
+        for label, path in zip(analysis.prod_labels, analysis.prod_paths):
+            meta = parse_report_meta(path)
+            interval = f"{meta.get('from', '?')} .. {meta.get('to', '?')}"
+            runs_body.append(f"|{label}|{path.name}|{interval}|")
+        runs_body.append("")
+    lines.extend(_wiki_expand("Справочно: прогоны и baseline", runs_body))
 
     if analysis.nt_prod_validations:
         lines.append("h2. NT vs PROD: оценка расхождения по прогонам")

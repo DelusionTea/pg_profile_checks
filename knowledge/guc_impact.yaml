@@ -89,3 +89,128 @@ guc_impact:
     narrative_disable: |
       huge_pages=off/try без зарезервированных страниц оставляет shared memory на 4kB —
       выше TLB miss и потенциально выше system CPU при крупном shared_buffers.
+
+  autovacuum:
+    symptoms: [high_cpu, high_memory, bloat_vacuum_debt]
+    metrics: [dead_pct, n_dead_tup]
+    enabled_improves: [dead_pct, n_dead_tup]
+    narrative_enable: |
+      Включение autovacuum=on обязательно для production OLTP — снижает bloat и риск wraparound.
+    narrative_disable: |
+      autovacuum=off — критическая misconfiguration: рост dead tuples и деградация планов.
+
+  autovacuum_naptime:
+    symptoms: [high_cpu, high_memory, bloat_vacuum_debt]
+    metrics: [dead_pct, n_dead_tup, last_autovacuum]
+    decreased_improves: [dead_pct, n_dead_tup]
+    narrative_decrease: |
+      Уменьшение autovacuum_naptime ускоряет реакцию launcher на bloat (больше фонового IO).
+    narrative_increase: |
+      Увеличение naptime замедляет запуск vacuum — dead tuples и mods% могут расти дольше.
+
+  autovacuum_vacuum_cost_delay:
+    symptoms: [high_cpu, high_memory, bloat_vacuum_debt]
+    metrics: [dead_pct, n_dead_tup, blk_write_time]
+    decreased_improves: [dead_pct, n_dead_tup]
+    narrative_decrease: |
+      Снижение cost_delay ускоряет autovacuum ценой дополнительного IO.
+    narrative_increase: |
+      Рост cost_delay «душит» vacuum — риск накопления bloat на write-heavy таблицах.
+
+  autovacuum_vacuum_cost_limit:
+    symptoms: [high_cpu, high_memory, bloat_vacuum_debt]
+    metrics: [dead_pct, n_dead_tup, blk_write_time]
+    increased_improves: [dead_pct, n_dead_tup]
+    narrative_increase: |
+      Увеличение cost_limit даёт vacuum больший IO-бюджет за цикл — быстрее очистка.
+    narrative_decrease: |
+      Снижение cost_limit замедляет autovacuum на busy системах.
+
+  statement_timeout:
+    symptoms: [slow_query, high_cpu]
+    metrics: [max_exec_time, total_exec_time]
+    enabled_improves: [runaway_queries]
+    narrative_enable: |
+      Ненулевой statement_timeout обрезает runaway queries (лучше задавать на роли).
+    narrative_disable: |
+      statement_timeout=0 убирает защиту от бесконечных запросов.
+
+  lock_timeout:
+    symptoms: [slow_query, high_cpu]
+    metrics: [deadlocks, idle_in_transaction_time]
+    enabled_improves: [lock_waits]
+    narrative_enable: |
+      lock_timeout ограничивает ожидание блокировок и снижает каскадные задержки OLTP.
+    narrative_disable: |
+      lock_timeout=0 позволяет сессиям ждать блокировку бесконечно.
+
+  max_connections:
+    symptoms: [high_memory, connection_pressure]
+    metrics: [session_time, idle_in_transaction_time, blks_hit_pct]
+    decreased_improves: [memory_pressure]
+    narrative_increase: |
+      Рост max_connections без pooler увеличивает память на backends и риск OOM (work_mem × ops).
+    narrative_decrease: |
+      Снижение max_connections после внедрения pooler снижает давление на память и процессы.
+
+  random_page_cost:
+    symptoms: [slow_query, high_cpu]
+    metrics: [seq_scan, idx_scan, blk_read_time]
+    decreased_improves: [seq_scan]
+    narrative_decrease: |
+      На SSD снижение random_page_cost (1.1–2) чаще склоняет планировщик к index scan.
+    narrative_increase: |
+      Высокий random_page_cost благоприятствует seq scan — на HDD иногда оправдано.
+
+  effective_io_concurrency:
+    symptoms: [slow_query, high_cpu]
+    metrics: [blk_read_time, blks_read]
+    increased_improves: [blk_read_time]
+    narrative_increase: |
+      Рост effective_io_concurrency на SSD улучшает prefetch bitmap/index scans.
+    narrative_decrease: |
+      Низкий effective_io_concurrency недоиспользует параллельный prefetch на быстром storage.
+
+  min_wal_size:
+    symptoms: [high_wal]
+    metrics: [checkpoints_req, wal_bytes, wal_size]
+    increased_improves: [checkpoints_req]
+    narrative_increase: |
+      Увеличение min_wal_size вместе с max_wal_size снижает «пилу» resize WAL и частые checkpoints.
+    narrative_decrease: |
+      Малый min_wal_size при переменной нагрузке может учащать recycle/resize WAL.
+
+  wal_compression:
+    symptoms: [high_wal]
+    metrics: [wal_bytes, wal_write, wal_sync]
+    enabled_improves: [wal_bytes]
+    narrative_enable: |
+      wal_compression снижает объём WAL ценой CPU на compress/decompress.
+    narrative_disable: |
+      Отключение wal_compression увеличивает объём WAL при той же DML-нагрузке.
+
+  jit:
+    symptoms: [high_cpu, slow_query]
+    metrics: [jit_compilation_time, total_exec_time, mean_exec_time]
+    disabled_improves: [jit_compilation_time]
+    narrative_enable: |
+      JIT может ускорять тяжёлые аналитические запросы, но на коротком OLTP даёт compile overhead.
+    narrative_disable: |
+      Отключение JIT (или повышение jit_*_cost) снижает CPU на compile для коротких OLTP SQL.
+
+  max_parallel_workers_per_gather:
+    symptoms: [high_cpu, slow_query]
+    metrics: [total_exec_time, user_time, system_time]
+    narrative_increase: |
+      Больше parallel workers ускоряет тяжёлые gather-запросы, но суммарно поднимает CPU кластера.
+    narrative_decrease: |
+      Снижение parallel workers уменьшает aggregate CPU на OLTP с частыми параллельными планами.
+
+  bgwriter_lru_maxpages:
+    symptoms: [high_cpu, high_wal]
+    metrics: [buffers_clean, maxwritten_clean, checkpoint_write_time]
+    increased_improves: [maxwritten_clean]
+    narrative_increase: |
+      Больше bgwriter_lru_maxpages помогает очищать dirty buffers до checkpoint (меньше backend writes).
+    narrative_decrease: |
+      Малый lru_maxpages повышает maxwritten_clean и долю backend writes.

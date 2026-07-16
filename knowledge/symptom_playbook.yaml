@@ -284,6 +284,113 @@ symptoms:
         refute_actions:
           - "Read-only SELECT с высоким exec time — WAL не причина"
 
+  high_temp:
+    title: Высокий temp spill (временные файлы)
+    description: |
+      Симптом: рост temp files / temp_bytes, spill sort/hash на диск. pg_profile: dbstat.temp_*,
+      top_statements.temp_blks_written / temp I/O time.
+    causes:
+      - id: temp.db_temp_bytes
+        title: Temp на уровне БД (temp_bytes / temp_files)
+        description: База пишет во временные файлы — нехватка work_mem или тяжёлые планы.
+        confirm_actions:
+          - "dbstat: temp_bytes, temp_files за интервал"
+          - "Найти top SQL по temp_blks_written"
+          - "Оценить work_mem на роли (не глобально без расчёта памяти)"
+        refute_actions:
+          - "temp_bytes≈0 и temp_files=0 — симптом не подтверждён в отчёте"
+
+      - id: temp.sql_spill
+        title: SQL с temp spill
+        description: Топ-запросы с temp_blks_written / temp_blk_write_time.
+        confirm_actions:
+          - "EXPLAIN (ANALYZE, BUFFERS): external sort / hash batches"
+          - "Увеличить work_mem точечно на НТ для проверки"
+        refute_actions:
+          - "temp_blks_written=0 у топ SQL — spill не в statements"
+
+      - id: temp.work_mem_low
+        title: Низкий / недостаточный work_mem
+        description: Глобальный work_mem мал относительно объёма сортировок.
+        confirm_actions:
+          - "Сверить work_mem в settings с объёмом temp"
+          - "Role-level work_mem для отчётных ролей"
+        refute_actions:
+          - "work_mem уже высок и temp всё равно растёт — проблема плана/объёма данных"
+
+  bloat_vacuum_debt:
+    title: Bloat / долг autovacuum
+    description: |
+      Симптом: высокий dead/mods %, stale vacuum, много vacuum ops, рост объектов.
+    causes:
+      - id: bloat.high_dead_pct
+        title: Высокий dead_pct на таблицах
+        description: Autovacuum не успевает за UPDATE/DELETE.
+        confirm_actions:
+          - "top_tbl_last_sample: dead_pct, n_dead_tup, last_autovacuum"
+          - "Проверить idle in transaction"
+        refute_actions:
+          - "dead_pct низкий на горячих таблицах — не bloat"
+
+      - id: bloat.stale_vacuum
+        title: Stale / редкий vacuum
+        description: Давно не было autovacuum при активности.
+        confirm_actions:
+          - "last_autovacuum vs mods_pct / DML"
+          - "Ускорить cost_limit / снизить cost_delay / naptime"
+        refute_actions:
+          - "last_autovacuum свежий — ищите другую причину latency"
+
+      - id: bloat.vacuum_ops_pressure
+        title: Высокий счётчик vacuum/analyze ops
+        description: Много операций vacuum конкурирует с нагрузкой.
+        confirm_actions:
+          - "top_tables: vacuum_count / autovacuum_count"
+          - "Согласовать окно обслуживания"
+        refute_actions:
+          - "vacuum ops низкие — давление не от частоты vacuum"
+
+      - id: bloat.growth
+        title: Быстрый рост таблиц/индексов
+        description: growth_pretty заметный за интервал отчёта.
+        confirm_actions:
+          - "pg_profile top growing tables/indexes"
+          - "Partitioning / архивация / unused indexes"
+        refute_actions:
+          - "growth мал — не диск/рост объект"
+
+  connection_pressure:
+    title: Давление на соединения
+    description: |
+      Симптом: много sessions относительно max_connections, idle/idle-in-xact, риск исчерпания слотов.
+    causes:
+      - id: conn.high_utilization
+        title: Высокая утилизация max_connections
+        description: sessions близко к max_connections.
+        confirm_actions:
+          - "dbstat.sessions vs settings.max_connections"
+          - "Внедрить/проверить PgBouncer"
+        refute_actions:
+          - "sessions << max_connections — не утилизация пула"
+
+      - id: conn.idle_in_transaction
+        title: Idle in transaction удерживает слоты
+        description: Долгий idle in transaction + отсутствие таймаута.
+        confirm_actions:
+          - "idle_in_transaction_time; idle_in_transaction_session_timeout"
+          - "Найти приложение без COMMIT"
+        refute_actions:
+          - "idle in xact низкий — слоты заняты active/idle"
+
+      - id: conn.no_pooler_hint
+        title: Высокий max_connections без pooler-паттерна
+        description: max_connections завышен — типичный признак отсутствия pooler.
+        confirm_actions:
+          - "Сверить max_connections с реальным peak и политикой pooler"
+          - "Оценить память backends (work_mem × ops)"
+        refute_actions:
+          - "max_connections умеренный и peak стабилен — ок"
+
 thresholds:
   high_cpu:
     min_sum_cpu_sec_suspected: 300
@@ -304,3 +411,17 @@ thresholds:
     mean_exec_ms_confirmed: 1000
     io_time_ms_suspected: 500
     shared_blks_read_suspected: 100000
+  high_temp:
+    temp_bytes_mb_suspected: 50
+    temp_bytes_mb_confirmed: 200
+    temp_blks_written_suspected: 5000
+  bloat_vacuum_debt:
+    dead_pct_suspected: 10.0
+    dead_pct_confirmed: 20.0
+    min_vacuum_ops: 30
+    min_growth_mb: 50
+  connection_pressure:
+    util_pct_suspected: 70.0
+    util_pct_confirmed: 90.0
+    idle_in_xact_sec: 1800
+    max_connections_high: 300

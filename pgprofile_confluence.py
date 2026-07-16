@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -14,6 +15,7 @@ from pgprofile_compare import (
     interval_diff_hours,
 )
 from pgprofile_classify import split_settings_rows
+from pgprofile_health import CATEGORY_LABELS, CHECKERS
 from pgprofile_nt_prod import NtProdValidation
 from pgprofile_stable_prod import StableFinding, StableProdAnalysis, TuningRecommendation
 from pgprofile_symptoms import CauseStatus, SymptomInvestigation
@@ -31,7 +33,14 @@ SYMPTOM_CONFLUENCE_PROMPT = (
 
 WAL_HIGHLIGHT = ("wal_bytes", "wal_records", "wal_buffers_full", "wal_write", "wal_sync")
 
-WAL_HIGHLIGHT = ("wal_bytes", "wal_records", "wal_buffers_full", "wal_write", "wal_sync")
+_SEVERITY_RANK = {
+    "critical": 0,
+    "high": 1,
+    "warning": 2,
+    "medium": 3,
+    "low": 4,
+    "info": 5,
+}
 
 _SEVERITY_STATUS = {
     "critical": "{status:colour=Red|title=CRITICAL|subtle=false}",
@@ -77,7 +86,231 @@ def _cause_status(status: str) -> str:
 
 
 def _wiki_escape(text: str) -> str:
-    return text.replace("|", "\\|").replace("\n", " ")
+    """Escape wiki-special chars; neutralize [..] so Confluence won't create pages."""
+    return (
+        str(text)
+        .replace("|", "\\|")
+        .replace("[", "(")
+        .replace("]", ")")
+        .replace("\n", " ")
+    )
+
+
+def _wiki_check_status(status: str) -> str:
+    key = (status or "PASS").upper()
+    if key == "FAIL":
+        return "{status:colour=Red|title=FAIL|subtle=false}"
+    if key == "SUSPECT":
+        return "{status:colour=Yellow|title=SUSPECT|subtle=false}"
+    return "{status:colour=Green|title=PASS|subtle=false}"
+
+
+def _wiki_internal_link(label: str, anchor: str) -> str:
+    """In-page Confluence link [text|#anchor] — never a create-page target."""
+    text = str(label).replace("|", "/").replace("[", "(").replace("]", ")")
+    safe = re.sub(r"[^\w\-]+", "_", str(anchor), flags=re.UNICODE).strip("_") or "sec"
+    return f"[{text}|#{safe}]"
+
+
+def _wiki_checklist_table(
+    rows: list[tuple[Any, ...]],
+    *,
+    heading: str = "Чеклист проверок",
+) -> list[str]:
+    """rows: (check_name, PASS|FAIL|SUSPECT[, anchor])."""
+    lines = [
+        f"h2. {heading}",
+        "",
+        "||Проверка||Статус||",
+    ]
+    for row in rows:
+        name = str(row[0])
+        status = str(row[1])
+        anchor = str(row[2]) if len(row) >= 3 and row[2] else ""
+        cell = _wiki_internal_link(name, anchor) if anchor else _wiki_escape(name)
+        lines.append(f"|{cell}|{_wiki_check_status(status)}|")
+    if not rows:
+        lines.append("|—|{status:colour=Green|title=PASS|subtle=false}|")
+    lines.append("")
+    return lines
+
+
+def _severity_to_check_status(severity: str) -> str:
+    sev = (severity or "warning").lower()
+    if sev in ("info", "low"):
+        return "SUSPECT"
+    return "FAIL"
+
+
+def _finding_category(fid: str) -> str:
+    cat = str(fid).split(".", 1)[0] if fid else ""
+    if cat == "db":
+        cat = "io"
+    if cat not in CATEGORY_LABELS and cat not in CHECKERS:
+        cat = "io" if cat else "cache"
+    return cat
+
+
+def _checklist_from_health_findings(
+    finding_rows: list[tuple[str, str, str, str]],
+) -> list[tuple[str, str, str]]:
+    """Map advisor findings to per-category PASS/FAIL/SUSPECT checklist."""
+    by_cat: dict[str, str] = {}
+    for severity, fid, _msg, _rep in finding_rows:
+        cat = _finding_category(fid)
+        rank = {"FAIL": 2, "SUSPECT": 1, "PASS": 0}
+        new_st = _severity_to_check_status(severity)
+        prev = by_cat.get(cat, "PASS")
+        if rank[new_st] > rank.get(prev, 0):
+            by_cat[cat] = new_st
+
+    rows: list[tuple[str, str, str]] = []
+    for cat in CHECKERS:
+        label = CATEGORY_LABELS.get(cat, cat)
+        rows.append((label, by_cat.get(cat, "PASS"), f"sec_{cat}"))
+    return rows
+
+
+def _checklist_from_symptom_causes(causes: list[Any]) -> list[tuple[str, str, str]]:
+    rows: list[tuple[str, str, str]] = []
+    for cause in causes:
+        status_val = getattr(cause.status, "value", None) or str(cause.status)
+        evidence = getattr(cause, "evidence", None) or []
+        if status_val == "confirmed":
+            st = "FAIL"
+        elif status_val == "suspected":
+            st = "SUSPECT"
+        elif evidence:
+            st = "SUSPECT"
+        else:
+            st = "PASS"
+        title = getattr(cause, "title", None) or getattr(cause, "cause_id", "?")
+        cause_id = getattr(cause, "cause_id", None) or title
+        rows.append((str(title), st, f"sec_{cause_id}"))
+    return rows
+
+
+def _wiki_panel(macro: str, title: str, body_lines: list[str]) -> list[str]:
+    """macro: info | warning | note"""
+    safe_title = str(title).replace("|", "/").replace("{", "(").replace("}", ")")
+    lines = [f"{{{macro}:title={safe_title}}}"]
+    lines.extend(body_lines)
+    lines.append(f"{{{macro}}}")
+    lines.append("")
+    return lines
+
+
+def _wiki_toc() -> list[str]:
+    return ["{toc:maxLevel=2}", ""]
+
+
+def _wiki_expand(title: str, body_lines: list[str]) -> list[str]:
+    """Confluence UI Expand macro (Wiki Markup short form)."""
+    safe = (title or "Детали").replace("|", "/").replace("{", "(").replace("}", ")")
+    lines = [f"{{expand:{safe}}}"]
+    lines.extend(body_lines)
+    if body_lines and body_lines[-1] != "":
+        lines.append("")
+    lines.append("{expand}")
+    lines.append("")
+    return lines
+
+
+def _wiki_anchor(name: str) -> str:
+    safe = re.sub(r"[^\w\-]+", "_", name, flags=re.UNICODE).strip("_") or "sec"
+    return f"{{anchor:{safe}}}"
+
+
+def _wiki_actions_section(actions: list[str], *, heading: str = "Что сделать сейчас", limit: int = 8) -> list[str]:
+    lines = [f"h2. {heading}", ""]
+    cleaned = [a.strip() for a in actions if a and str(a).strip()]
+    if not cleaned:
+        lines.append("_Нет приоритетных действий — см. сводку findings._")
+        lines.append("")
+        return lines
+    for idx, action in enumerate(cleaned[:limit], 1):
+        lines.append(f"# {_wiki_escape(action)}")
+    lines.append("")
+    return lines
+
+
+def _wiki_findings_summary_table(
+    rows: list[tuple[str, str, str, str]],
+    *,
+    heading: str = "Сводка findings",
+    group_by_category: bool = False,
+) -> list[str]:
+    """rows: (severity, id, message, reports)."""
+    lines = [f"h2. {heading}", ""]
+    if not group_by_category:
+        lines.append("||Severity||ID||Сообщение||Отчёт(ы)||")
+        ordered = sorted(
+            rows,
+            key=lambda r: (_SEVERITY_RANK.get(str(r[0]).lower(), 9), str(r[1])),
+        )
+        for severity, fid, message, reports in ordered:
+            lines.append(
+                f"|{_status(severity)}|{_wiki_escape(fid)}|"
+                f"{_wiki_escape(message)}|{_wiki_escape(reports or '—')}|"
+            )
+        if not ordered:
+            lines.append("|{status:colour=Green|title=OK|subtle=false}|—|Находок нет|—|")
+        lines.append("")
+        return lines
+
+    by_cat: dict[str, list[tuple[str, str, str, str]]] = {cat: [] for cat in CHECKERS}
+    for row in rows:
+        by_cat.setdefault(_finding_category(row[1]), []).append(row)
+
+    for cat in CHECKERS:
+        label = CATEGORY_LABELS.get(cat, cat)
+        lines.append(_wiki_anchor(f"sec_{cat}"))
+        lines.append(f"h3. {label}")
+        lines.append("")
+        cat_rows = sorted(
+            by_cat.get(cat, []),
+            key=lambda r: (_SEVERITY_RANK.get(str(r[0]).lower(), 9), str(r[1])),
+        )
+        if not cat_rows:
+            lines.append("_Нет findings — PASS._")
+            lines.append("")
+            continue
+        lines.append("||Severity||ID||Сообщение||Отчёт(ы)||")
+        for severity, fid, message, reports in cat_rows:
+            lines.append(
+                f"|{_status(severity)}|{_wiki_escape(fid)}|"
+                f"{_wiki_escape(message)}|{_wiki_escape(reports or '—')}|"
+            )
+        lines.append("")
+    return lines
+
+
+def _wiki_llm_footer() -> list[str]:
+    return [
+        "----",
+        "",
+        "_Ниже — вывод ИИ (Confluence Wiki Markup). Вставьте ответ gigacli или используйте merge_confluence.py._",
+        "",
+    ]
+
+
+def _collect_actions_from_advisor(reports: list[AdvisorReport], *, limit: int = 8) -> list[str]:
+    actions: list[str] = []
+    seen: set[str] = set()
+    ranked: list[tuple[int, str]] = []
+    for report in reports:
+        for item in report.advised_findings:
+            sev = str((item.finding or {}).get("severity") or "warning").lower()
+            rank = _SEVERITY_RANK.get(sev, 9)
+            for action in (item.advice or {}).get("actions") or []:
+                text = str(action).strip()
+                if text and text not in seen:
+                    seen.add(text)
+                    ranked.append((rank, text))
+    ranked.sort(key=lambda x: x[0])
+    for _, text in ranked[:limit]:
+        actions.append(text)
+    return actions
 
 
 EXPLAIN_ANALYZE_PREFIX = "EXPLAIN (ANALYZE, BUFFERS)"
@@ -300,17 +533,18 @@ def _explain_analyze_wiki_section(
 ) -> list[str]:
     if not queries:
         return []
-    lines = [
-        f"h2. {heading}",
-        "",
+    body: list[str] = [
         "{info}Ниже готовые команды для вставки в psql/клиент. "
         "На prod осторожно: ANALYZE выполняет запрос. "
         "При необходимости замените литералы/параметры на актуальные значения.{info}",
         "",
     ]
     for item in queries:
-        lines.extend(_sql_code_wiki(item.get("title") or "SQL", item["explain_sql"]))
-    return lines
+        hex_id = item.get("hexqueryid") or ""
+        preview = (item.get("title") or "SQL").replace("|", "/")[:80]
+        expand_title = f"SQL · hex={hex_id}" if hex_id else preview
+        body.extend(_wiki_expand(expand_title, _sql_code_wiki(preview, item["explain_sql"])))
+    return [f"h2. {heading}", ""] + body
 
 
 def explain_analyze_wiki_for_symptom(
@@ -420,33 +654,65 @@ def build_confluence_stub(
     page_title: str | None = None,
 ) -> str:
     title = page_title or _page_title(reports)
-    lines = [
-        f"h1. {title}",
-        "",
-        "{info:title=О документе}",
-        "Автоматическая сводка из pg_profile. Таблица находок сформирована скриптом Python.",
-        "Разделы ниже «Краткое резюме» и далее — заполняются ИИ (gigacli) и вставляются после этой части.",
-        "{info}",
-        "",
-        "h2. Параметры анализа",
-        "",
-        "||Параметр||Значение||",
+    total = sum(r.summary.get("total_findings", 0) for r in reports)
+    high = sum(r.summary.get("high_priority", 0) for r in reports)
+    finding_rows: list[tuple[str, str, str, str]] = []
+    for report in reports:
+        meta = report.meta or {}
+        rm = meta.get("report_meta") if isinstance(meta.get("report_meta"), dict) else {}
+        report_label = str(
+            (rm or {}).get("filename")
+            or meta.get("filename")
+            or meta.get("label")
+            or "—"
+        )
+        for item in report.advised_findings:
+            f = item.finding or {}
+            finding_rows.append(
+                (
+                    str(f.get("severity") or "warning"),
+                    str(f.get("id") or "?"),
+                    str(f.get("message") or "")[:160],
+                    report_label,
+                )
+            )
+
+    checklist = _checklist_from_health_findings(finding_rows)
+    fail_n = sum(1 for row in checklist if row[1] == "FAIL")
+    suspect_n = sum(1 for row in checklist if row[1] == "SUSPECT")
+    pass_n = sum(1 for row in checklist if row[1] == "PASS")
+
+    verdict_macro = "warning" if fail_n or high or total else "info"
+    verdict_title = "Краткий вердикт" if total else "Краткий вердикт — чисто"
+    verdict_body = [
+        f"Чеклист: FAIL *{fail_n}* · SUSPECT *{suspect_n}* · PASS *{pass_n}*.",
+        f"Находок: *{total}* (высокий приоритет: *{high}*).",
+        "Сначала чеклист и действия, затем детали findings / EXPLAIN в Expand.",
     ]
-    for key, value in _metadata_rows(reports):
-        lines.append(f"|{_wiki_escape(key)}|{_wiki_escape(value)}|")
-    lines.append("")
-    lines.extend(_findings_table(reports).splitlines())
+    if not total:
+        verdict_body = [
+            f"Чеклист: FAIL *{fail_n}* · SUSPECT *{suspect_n}* · PASS *{pass_n}*.",
+            "Критических/предупреждающих находок по порогам нет.",
+        ]
+
+    lines: list[str] = [f"h1. {title}", ""]
+    lines.extend(_wiki_panel(verdict_macro, verdict_title, verdict_body))
+    lines.extend(_wiki_checklist_table(checklist))
+    lines.extend(_wiki_toc())
+    lines.extend(_wiki_actions_section(_collect_actions_from_advisor(reports)))
+    lines.extend(_wiki_findings_summary_table(finding_rows, group_by_category=True))
+    lines.extend(
+        _wiki_expand(
+            "Справочно: параметры анализа",
+            ["||Параметр||Значение||"]
+            + [f"|{_wiki_escape(k)}|{_wiki_escape(v)}|" for k, v in _metadata_rows(reports)]
+            + [""],
+        )
+    )
     lines.extend(
         _explain_analyze_wiki_section(_collect_explain_queries_from_advisor(reports))
     )
-    lines.extend(
-        [
-            "----",
-            "",
-            "_Ниже — вывод ИИ (Confluence Wiki Markup). Вставьте ответ gigacli или используйте merge_confluence.py._",
-            "",
-        ]
-    )
+    lines.extend(_wiki_llm_footer())
     return "\n".join(lines).rstrip() + "\n"
 
 
@@ -891,70 +1157,88 @@ def build_stable_prod_confluence_stub(
     critical = sum(1 for r in analysis.recommendations if r.problem_severity == "critical")
     high = sum(1 for r in analysis.recommendations if r.problem_severity == "high")
 
-    lines: list[str] = [
-        f"h1. {title}",
-        "",
-        "{info:title=О документе}",
-        "Полный health-check нескольких pg_profile отчётов. "
-        "Сначала — проблемы, общие для *всех* отчётов; затем — специфичные для отдельных файлов. "
-        "Таблицы сформированы Python (analyze_prod_stability / UI full_multi).",
-        "{info}",
-        "",
+    actions: list[str] = []
+    for rec in analysis.recommendations:
+        for op in rec.operational or []:
+            if op not in actions:
+                actions.append(op)
+        for g in rec.guc_items or []:
+            text = f"Рассмотреть {g.guc}: {g.direction}"
+            if text not in actions:
+                actions.append(text)
+        if len(actions) >= 8:
+            break
+
+    finding_rows = [
+        (
+            sf.max_severity,
+            sf.rule_id,
+            (sf.sample_messages[0] if sf.sample_messages else sf.rule_id)[:160],
+            ", ".join(sf.report_labels) if sf.report_labels else "все",
+        )
+        for sf in analysis.stable_findings
+    ]
+    checklist = _checklist_from_health_findings(finding_rows)
+    fail_n = sum(1 for row in checklist if row[1] == "FAIL")
+    suspect_n = sum(1 for row in checklist if row[1] == "SUSPECT")
+    pass_n = sum(1 for row in checklist if row[1] == "PASS")
+
+    verdict_macro = "warning" if critical or high or fail_n else "info"
+    verdict_body = [
+        f"Чеклист (общие): FAIL *{fail_n}* · SUSPECT *{suspect_n}* · PASS *{pass_n}*.",
+        f"Общие findings: *{len(analysis.stable_findings)}*; tuning: *{len(analysis.recommendations)}* "
+        f"(critical/high: {critical}/{high}).",
+        f"Специфичные (не во всех): *{len(analysis.ephemeral_findings)}*. "
+        f"Min stability: {analysis.min_stability_ratio:.0%}.",
     ]
 
-    if critical > 0:
-        lines.extend(
-            [
-                "{warning:title=Общие critical-проблемы}",
-                f"Обнаружено *{critical}* рекомендаций с критичностью CRITICAL, "
-                f"повторяющихся во всех отчётах (min stability {analysis.min_stability_ratio:.0%}).",
-                "{warning}",
-                "",
-            ]
-        )
-
-    lines.extend(
-        [
-            "h2. Параметры анализа",
-            "",
-            "||Параметр||Значение||",
-            f"|Дата формирования|{datetime.now().strftime('%Y-%m-%d %H:%M')}|",
-            f"|Отчётов|{len(analysis.reports)}|",
-            f"|Общие findings (во всех)|{len(analysis.stable_findings)}|",
-            f"|Tuning-рекомендаций|{len(analysis.recommendations)}|",
-            f"|Critical / High|{critical} / {high}|",
-            f"|Специфичные findings|{len(analysis.ephemeral_findings)}|",
-            "",
-            "h2. Отчёты",
-            "",
-            "||Метка||Файл||Интервал||Длительность||Findings||",
-        ]
-    )
+    lines: list[str] = [f"h1. {title}", ""]
+    lines.extend(_wiki_panel(verdict_macro, "Краткий вердикт", verdict_body))
+    lines.extend(_wiki_checklist_table(checklist, heading="Чеклист проверок (общие findings)"))
+    lines.extend(_wiki_toc())
+    lines.extend(_wiki_actions_section(actions))
+    lines.extend(_wiki_findings_summary_table(finding_rows, heading="Сводка общих findings"))
+    lines.extend(_recommendations_summary_table(analysis.recommendations))
+    guc_lines = _guc_details_table(analysis.recommendations)
+    if guc_lines:
+        # drop leading h2 + blank for expand body
+        body = guc_lines[2:] if guc_lines and guc_lines[0].startswith("h2.") else guc_lines
+        lines.extend(_wiki_expand("Детали GUC", body))
+    ephemeral = _ephemeral_findings_by_report_wiki(analysis)
+    if ephemeral:
+        body = ephemeral[2:] if ephemeral and ephemeral[0].startswith("h2.") else ephemeral
+        lines.extend(_wiki_expand("Проблемы отдельных отчётов", body))
+    report_meta = [
+        "||Метка||Файл||Интервал||Длительность||Findings||",
+    ]
     for snap in analysis.reports:
         props = snap.ctx.properties
-        interval = (
-            f"{props.get('report_start1', '?')} .. {props.get('report_end1', '?')}"
-        )
-        lines.append(
+        interval = f"{props.get('report_start1', '?')} .. {props.get('report_end1', '?')}"
+        report_meta.append(
             f"|{_wiki_escape(snap.label)}|{_wiki_escape(snap.path.name)}|"
             f"{_wiki_escape(interval)}|{snap.ctx.interval_hours:.1f} ч|{len(snap.findings)}|"
         )
-    lines.append("")
-    lines.extend(_recommendations_summary_table(analysis.recommendations))
-    lines.extend(_guc_details_table(analysis.recommendations))
-    lines.extend(_ephemeral_findings_by_report_wiki(analysis))
+    report_meta.append("")
+    lines.extend(
+        _wiki_expand(
+            "Справочно: параметры и отчёты",
+            [
+                "||Параметр||Значение||",
+                f"|Дата формирования|{datetime.now().strftime('%Y-%m-%d %H:%M')}|",
+                f"|Отчётов|{len(analysis.reports)}|",
+                f"|Общие findings|{len(analysis.stable_findings)}|",
+                f"|Специфичные findings|{len(analysis.ephemeral_findings)}|",
+                "",
+                "h3. Отчёты",
+                "",
+                *report_meta,
+            ],
+        )
+    )
     lines.extend(
         _explain_analyze_wiki_section(_collect_explain_queries_from_stable(analysis))
     )
-
-    lines.extend(
-        [
-            "----",
-            "",
-            "_Ниже — вывод ИИ (Confluence Wiki Markup). Вставьте ответ gigacli или merge_confluence.py._",
-            "",
-        ]
-    )
+    lines.extend(_wiki_llm_footer())
     return "\n".join(lines).rstrip() + "\n"
 
 
@@ -1008,118 +1292,111 @@ def build_symptom_confluence_stub(
     confirmed = sum(1 for c in inv.causes if c.status == CauseStatus.CONFIRMED)
     suspected = sum(1 for c in inv.causes if c.status == CauseStatus.SUSPECTED)
 
-    lines: list[str] = [
-        f"h1. {title}",
-        "",
-        "{info:title=О документе}",
-        "Расследование симптома по pg_profile. Таблицы гипотез и план действий сформированы Python. "
-        "Статус confirmed = прямые данные в отчёте; suspected = косвенные признаки; possible = типичная причина.",
-        "{info}",
-        "",
+    finding_rows = [
+        (
+            "critical" if c.status == CauseStatus.CONFIRMED else "warning" if c.status == CauseStatus.SUSPECTED else "info",
+            c.cause_id,
+            c.title,
+            ", ".join(c.reports_matched) if c.reports_matched else "—",
+        )
+        for c in inv.causes
+        if c.status in (CauseStatus.CONFIRMED, CauseStatus.SUSPECTED) or c.evidence
     ]
 
-    if confirmed > 0:
-        lines.extend(
-            [
-                "{warning:title=Подтверждённые гипотезы}",
-                f"В отчёте найдены прямые признаки для *{confirmed}* гипотез(ы).",
-                "{warning}",
-                "",
-            ]
-        )
+    checklist = _checklist_from_symptom_causes(inv.causes)
+    fail_n = sum(1 for row in checklist if row[1] == "FAIL")
+    suspect_n = sum(1 for row in checklist if row[1] == "SUSPECT")
+    pass_n = sum(1 for row in checklist if row[1] == "PASS")
 
-    lines.extend(
-        [
-            "h2. Параметры расследования",
-            "",
-            "||Параметр||Значение||",
-            f"|Дата формирования|{datetime.now().strftime('%Y-%m-%d %H:%M')}|",
-            f"|Симптом|{_wiki_escape(inv.symptom_title)} ({inv.symptom})|",
-            f"|Отчётов|{len(inv.reports)}|",
-            f"|Confirmed / Suspected|{confirmed} / {suspected}|",
-        ]
-    )
-    if inv.query_target:
-        lines.append(f"|Целевой запрос|{_wiki_escape(inv.query_target.describe())}|")
-    lines.append("")
+    verdict_macro = "warning" if confirmed else ("note" if suspected else "info")
+    verdict_body = [
+        f"Симптом: *{_wiki_escape(inv.symptom_title)}* (`{inv.symptom}`).",
+        f"Чеклист гипотез: FAIL *{fail_n}* · SUSPECT *{suspect_n}* · PASS *{pass_n}*.",
+        f"Confirmed / Suspected: *{confirmed}* / *{suspected}*. "
+        "FAIL=confirmed, SUSPECT=suspected, PASS=possible без evidence.",
+    ]
 
-    lines.extend(["h2. Отчёты pg_profile", "", "||Метка||Файл||Интервал||"])
-    for snap in inv.reports:
-        props = snap.ctx.properties
-        interval = f"{props.get('report_start1', '?')} .. {props.get('report_end1', '?')}"
-        lines.append(
-            f"|{_wiki_escape(snap.label)}|{_wiki_escape(snap.path.name)}|{_wiki_escape(interval)}|"
-        )
-    lines.append("")
+    lines: list[str] = [f"h1. {title}", ""]
+    lines.extend(_wiki_panel(verdict_macro, "Краткий вердикт", verdict_body))
+    lines.extend(_wiki_checklist_table(checklist, heading="Чеклист гипотез"))
+    lines.extend(_wiki_toc())
+    lines.extend(_wiki_actions_section(inv.action_plan[:8], heading="Что сделать сейчас (verify)"))
+    lines.extend(_wiki_findings_summary_table(finding_rows, heading="Сводка гипотез"))
 
-    if inv.query_matches:
-        lines.extend(["h2. Найденные запросы (slow_query)", ""])
-        lines.append("||hexqueryid||DB||Preview||")
-        for m in inv.query_matches[:5]:
-            preview = _wiki_escape((m.get("preview") or "")[:100])
-            lines.append(
-                f"|{_wiki_escape(str(m.get('hexqueryid')))}|"
-                f"{_wiki_escape(str(m.get('dbname', '?')))}|{preview}|"
-            )
-        lines.append("")
-
-    lines.extend(
-        [
-            "h2. Гипотезы (возможные причины)",
-            "",
-            "||Статус||Причина||ID||Отчёты||Evidence (кратко)||",
-        ]
-    )
+    hyp_lines = [
+        "||Статус||Причина||ID||Отчёты||Evidence (кратко)||",
+    ]
     for cause in inv.causes:
         ev = _wiki_escape("; ".join(cause.evidence[:2])) if cause.evidence else "—"
         reports = _wiki_escape(", ".join(cause.reports_matched)) if cause.reports_matched else "—"
-        lines.append(
+        hyp_lines.append(
             f"|{_cause_status(cause.status.value)}|{_wiki_escape(cause.title)}|"
             f"{_wiki_escape(cause.cause_id)}|{reports}|{ev}|"
         )
-    lines.append("")
+    hyp_lines.append("")
+    lines.extend(["h2. Гипотезы (возможные причины)", ""] + hyp_lines)
 
-    lines.extend(["h2. План действий (verify)", "", "||#||Действие||"])
-    for idx, step in enumerate(inv.action_plan[:25], 1):
-        lines.append(f"|{idx}|{_wiki_escape(step)}|")
-    if not inv.action_plan:
-        lines.append("|—|_Нет шагов — все гипотезы possible без evidence._|")
-    lines.append("")
-
-    lines.extend(["h2. Детали: confirm / refute", ""])
+    detail_body: list[str] = []
     for cause in inv.causes[:12]:
+        detail_body.append(_wiki_anchor(f"sec_{cause.cause_id}"))
+        detail_body.append(f"h3. {_wiki_escape(cause.title)} ({cause.cause_id})")
+        detail_body.append("")
         if cause.status == CauseStatus.POSSIBLE and not cause.evidence:
+            detail_body.append("_Нет evidence в отчёте (PASS)._")
+            detail_body.append("")
             continue
-        lines.append(f"h3. {_wiki_escape(cause.title)} ({cause.cause_id})")
-        lines.append("")
         if cause.evidence:
-            lines.append("*Evidence:*")
+            detail_body.append("*Evidence:*")
             for ev in cause.evidence[:4]:
-                lines.append(f"* {_wiki_escape(ev)}")
-            lines.append("")
+                detail_body.append(f"* {_wiki_escape(ev)}")
+            detail_body.append("")
         if cause.confirm_actions:
-            lines.append("*Подтвердить:*")
+            detail_body.append("*Подтвердить:*")
             for action in cause.confirm_actions[:3]:
-                lines.append(f"# {_wiki_escape(action)}")
-            lines.append("")
+                detail_body.append(f"# {_wiki_escape(action)}")
+            detail_body.append("")
         if cause.refute_actions:
-            lines.append("*Опровергнуть:*")
+            detail_body.append("*Опровергнуть:*")
             for action in cause.refute_actions[:2]:
-                lines.append(f"# {_wiki_escape(action)}")
-            lines.append("")
+                detail_body.append(f"# {_wiki_escape(action)}")
+            detail_body.append("")
+    if detail_body:
+        lines.extend(_wiki_expand("Детали: confirm / refute", detail_body))
+
+    if inv.query_matches:
+        qm = ["||hexqueryid||DB||Preview||"]
+        for m in inv.query_matches[:5]:
+            preview = _wiki_escape((m.get("preview") or "")[:100])
+            qm.append(
+                f"|{_wiki_escape(str(m.get('hexqueryid')))}|"
+                f"{_wiki_escape(str(m.get('dbname', '?')))}|{preview}|"
+            )
+        qm.append("")
+        lines.extend(_wiki_expand("Найденные запросы (slow_query)", qm))
+
+    meta_body = [
+        "||Параметр||Значение||",
+        f"|Дата формирования|{datetime.now().strftime('%Y-%m-%d %H:%M')}|",
+        f"|Симптом|{_wiki_escape(inv.symptom_title)} ({inv.symptom})|",
+        f"|Отчётов|{len(inv.reports)}|",
+        f"|Confirmed / Suspected|{confirmed} / {suspected}|",
+    ]
+    if inv.query_target:
+        meta_body.append(f"|Целевой запрос|{_wiki_escape(inv.query_target.describe())}|")
+    meta_body.extend(["", "||Метка||Файл||Интервал||"])
+    for snap in inv.reports:
+        props = snap.ctx.properties
+        interval = f"{props.get('report_start1', '?')} .. {props.get('report_end1', '?')}"
+        meta_body.append(
+            f"|{_wiki_escape(snap.label)}|{_wiki_escape(snap.path.name)}|{_wiki_escape(interval)}|"
+        )
+    meta_body.append("")
+    lines.extend(_wiki_expand("Справочно: параметры расследования", meta_body))
 
     lines.extend(
         _explain_analyze_wiki_section(_collect_explain_queries_from_symptom(inv))
     )
-
-    lines.extend(
-        [
-            "----",
-            "",
-            "_Ниже — вывод ИИ (Confluence Wiki Markup). Вставьте ответ gigacli или merge_confluence.py._",
-            "",
-        ]
-    )
+    lines.extend(_wiki_llm_footer())
     return "\n".join(lines).rstrip() + "\n"
 
 

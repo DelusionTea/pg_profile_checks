@@ -45,6 +45,13 @@ guc_guidance:
     note: |
       Влияет на скорость VACUUM, CREATE INDEX, ALTER TABLE.
 
+  autovacuum:
+    unit: "on | off"
+    typical_oltp: "on"
+    note: |
+      Postgres Pro / PostgreSQL: для production OLTP autovacuum должен быть включён.
+      off — критическая misconfiguration (bloat, wraparound risk).
+
   autovacuum_naptime:
     unit: seconds
     typical_oltp: "15-60"
@@ -116,3 +123,35 @@ guc_guidance:
     typical_oltp: "200+ on SSD"
     note: |
       Параллельные prefetch операции. Зависит от storage.
+
+  min_wal_size:
+    unit: MB
+    typical_oltp: "обычно ≤ max_wal_size; согласуйте пару"
+    note: |
+      Нижняя граница размера WAL. Слишком малый min при переменной нагрузке даёт
+      лишний recycle/resize; поднимайте вместе с max_wal_size.
+
+  wal_compression:
+    unit: "on | off | ... (версия-зависимо)"
+    typical_oltp: "on при CPU-запасе и высоком WAL volume"
+    note: |
+      Сжимает WAL ценой CPU. Полезно при высокой генерации WAL и ограниченном диске/сети репликации.
+
+  jit:
+    unit: "on | off"
+    typical_oltp: "off или высокий cost для короткого OLTP; on для DSS"
+    note: |
+      JIT compile на коротких OLTP-запросах часто даёт overhead. Смотрите jit_compilation_time в pg_profile.
+
+  max_parallel_workers_per_gather:
+    unit: count
+    typical_oltp: "0–2 для плотного OLTP; выше для DSS"
+    note: |
+      Параллельные gather увеличивают суммарный CPU. На НТ с high_cpu проверяйте parallel plans.
+
+  bgwriter_lru_maxpages:
+    unit: pages
+    typical_oltp: "зависит от версии; смотрите maxwritten_clean"
+    note: |
+      Сколько dirty buffers bgwriter может записать за раунд. При maxwritten_clean / backend writes
+      рассмотрите увеличение (и shared_buffers / checkpoint).

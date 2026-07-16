@@ -312,6 +312,92 @@ tuning_rules:
       - Унифицировать порядок UPDATE в транзакциях
       - Настройки GUC не заменяют исправление приложения
 
+  - id: tune_unused_index
+    finding_ids:
+      - io.unused_index
+    problem_severity: low
+    title: Неиспользуемые индексы
+    guc_recommendations: []
+    operational:
+      - Подтвердить отсутствие idx_scan на длинном интервале (не только один отчёт)
+      - Удалить unused index в согласованное окно (снижает DML/vacuum cost)
+      - Не удалять уникальные/FK-supporting индексы без проверки зависимостей
+
+  - id: tune_slru
+    finding_ids:
+      - cache.low_slru_hit_ratio
+    problem_severity: medium
+    title: Низкий SLRU hit
+    guc_recommendations:
+      - guc: idle_in_transaction_session_timeout
+        direction: set_nonzero
+        change_safety: cautious
+        change_impact: medium
+        reload: false
+        postgres_pro: |
+          Длинные транзакции и idle in xact усиливают давление на clog/multixact SLRU.
+        rationale: Снижение long xact часто улучшает SLRU hit без роста shared_buffers.
+    operational:
+      - Проверить idle in transaction и long-running queries
+      - Сверить с autovacuum / wraparound risk на активных таблицах
+
+  - id: tune_backend_writes
+    finding_ids:
+      - wal.backend_writes_high
+    problem_severity: medium
+    title: Высокая доля backend writes
+    guc_recommendations:
+      - guc: checkpoint_completion_target
+        direction: review_increase
+        change_safety: safe
+        change_impact: low
+        reload: false
+        postgres_pro: |
+          Сглаживание checkpoint снижает пики dirty и долю backend writes.
+        rationale: Backend writes растут, когда bgwriter/checkpoint не успевают.
+      - guc: shared_buffers
+        direction: review_increase
+        change_safety: restart_required
+        change_impact: high
+        reload: false
+        postgres_pro: |
+          При maxwritten_clean / backend writes смотрите размер buffer pool.
+        rationale: Давление на buffer pool заставляет backends писать самим.
+    operational:
+      - Проверить bgwriter_* и maxwritten_clean
+      - Найти write-heavy SQL / batch DML
+
+  - id: tune_connection_pressure
+    finding_ids:
+      - sessions.connection_pressure
+    problem_severity: high
+    title: Давление на соединения
+    guc_recommendations:
+      - guc: max_connections
+        direction: review_decrease_with_pooler
+        change_safety: cautious
+        change_impact: high
+        reload: false
+        postgres_pro: |
+          После PgBouncer снижайте max_connections до разумного пика backends.
+        rationale: Лишние backends едят память и усложняют vacuum/locks.
+    operational:
+      - Внедрить/проверить connection pooler
+      - Найти утечки idle/idle in transaction в приложении
+
+  - id: tune_tablespace_growth
+    finding_ids:
+      - disk.tablespace_growth
+      - io.table_growth
+      - io.index_growth
+    problem_severity: high
+    title: Рост tablespace / объектов
+    guc_recommendations: []
+    operational:
+      - Проверить свободное место на томах
+      - Архивирование / partitioning горячих растущих таблиц
+      - Сопоставить с vacuum lag и unused indexes
+
   - id: tune_generic_wal
     finding_ids:
       - wal.generic

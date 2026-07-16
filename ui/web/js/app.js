@@ -1,4 +1,4 @@
-/* global API_BASE */
+/* global API_BASE, WikiPreview */
 (function () {
   "use strict";
 
@@ -7,22 +7,46 @@
   /** @type {{ id: string, file: File, env: string, label: string, order: number }[]} */
   let reports = [];
   let sessionId = null;
+  let lastWikiText = "";
+  let severityFilter = null;
+
+  const SCENARIO_HELP = {
+    auto: "Авто: симптомы+≥2 НТ → nt_runs; симптомы → symptom; ≥2 файлов → полный анализ; 1 файл → health.",
+    full_multi: "Health по каждому файлу → общие findings + специфичные по отчётам.",
+    symptom: "Точечное расследование выбранных симптомов (playbook + evidence).",
+    nt_runs: "Несколько прогонов НТ: симптомы, влияние GUC, опционально PROD baseline.",
+    health: "Пороги thresholds.yaml по одному отчёту + рекомендации.",
+    stable_prod: "Общие проблемы на нескольких PROD (или всех) отчётах + GUC tuning.",
+    nt_prod: "Gate НТ vs ПРОМ: settings + метрики.",
+    compare_runs: "Два отчёта: health первого + diff метрик и Defined settings.",
+  };
 
   const els = {
     dropzone: document.getElementById("dropzone"),
+    dropzoneHint: document.getElementById("dropzone-hint"),
     fileInput: document.getElementById("file-input"),
     reportsBody: document.getElementById("reports-body"),
     reportsEmpty: document.getElementById("reports-empty"),
+    reportsHeadSimple: document.getElementById("reports-head-simple"),
+    reportsHeadAdvanced: document.getElementById("reports-head-advanced"),
+    advancedSettings: document.getElementById("advanced-settings"),
+    simpleModeNote: document.getElementById("simple-mode-note"),
     scenario: document.getElementById("scenario"),
+    scenarioHelp: document.getElementById("scenario-help"),
+    autoPreview: document.getElementById("auto-scenario-preview"),
     symptomList: document.getElementById("symptom-list"),
     slowFields: document.getElementById("slow-query-fields"),
     runBtn: document.getElementById("run-btn"),
     runSpinner: document.getElementById("run-spinner"),
     runHint: document.getElementById("run-hint"),
     errorBanner: document.getElementById("error-banner"),
+    toast: document.getElementById("toast"),
     resultPanel: document.getElementById("result-panel"),
     statusBar: document.getElementById("status-bar"),
+    findingsCards: document.getElementById("findings-cards"),
+    checkFlow: document.getElementById("check-flow"),
     wikiText: document.getElementById("wiki-text"),
+    wikiPreview: document.getElementById("wiki-preview"),
     promptText: document.getElementById("prompt-text"),
     briefText: document.getElementById("brief-text"),
     downloadWiki: document.getElementById("download-wiki"),
@@ -32,6 +56,10 @@
     queryId: document.getElementById("query-id"),
     queryText: document.getElementById("query-text"),
   };
+
+  function isAdvancedMode() {
+    return !!(els.advancedSettings && els.advancedSettings.open);
+  }
 
   function uid() {
     return Math.random().toString(36).slice(2, 10);
@@ -60,6 +88,13 @@
     els.errorBanner.classList.toggle("visible", !!msg);
   }
 
+  function showToast(msg) {
+    if (!els.toast) return;
+    els.toast.textContent = msg;
+    els.toast.classList.add("visible");
+    setTimeout(() => els.toast.classList.remove("visible"), 1800);
+  }
+
   function selectedSymptoms() {
     return Array.from(
       els.symptomList.querySelectorAll('input[type="checkbox"]:checked')
@@ -69,95 +104,209 @@
   function updateSlowQueryVisibility() {
     const hasSlow = selectedSymptoms().includes("slow_query");
     els.slowFields.classList.toggle("visible", hasSlow);
+    updateScenarioHints();
+  }
+
+  function suggestAutoScenario() {
+    const symptoms = selectedSymptoms();
+    const nt = reports.filter((r) => r.env === "NT").length;
+    if (symptoms.length) {
+      if (nt >= 2) return "nt_runs";
+      return "symptom";
+    }
+    if (reports.length >= 2) return "full_multi";
+    if (reports.length === 1) return "health";
+    return "auto";
+  }
+
+  function updateModeUi() {
+    const adv = isAdvancedMode();
+    if (els.reportsHeadSimple) els.reportsHeadSimple.hidden = adv;
+    if (els.reportsHeadAdvanced) els.reportsHeadAdvanced.hidden = !adv;
+    if (els.dropzoneHint) {
+      els.dropzoneHint.textContent = adv
+        ? "или нажмите, чтобы выбрать файлы · можно несколько"
+        : "или нажмите, чтобы выбрать файл · полный health-check одного отчёта";
+    }
+    if (els.simpleModeNote) {
+      els.simpleModeNote.hidden = adv;
+      if (!adv && reports.length > 1) {
+        els.simpleModeNote.textContent =
+          "Будет проанализирован только первый файл («" +
+          reports.slice().sort((a, b) => a.order - b.order)[0].file.name +
+          "»). Откройте расширенные настройки для мульти-отчётов.";
+      } else if (!adv) {
+        els.simpleModeNote.textContent =
+          "По умолчанию анализируется только первый файл (все категории health-check). Мульти-отчёты и симптомы — в расширенных настройках.";
+      }
+    }
+    if (els.reportsEmpty) {
+      els.reportsEmpty.querySelector("td").colSpan = adv ? 5 : 2;
+      els.reportsEmpty.querySelector("td").textContent = adv
+        ? "файлы ещё не добавлены"
+        : "файл ещё не добавлен";
+    }
+  }
+
+  function updateScenarioHints() {
+    updateModeUi();
+    const sc = els.scenario.value;
+    if (els.scenarioHelp) {
+      els.scenarioHelp.textContent = SCENARIO_HELP[sc] || SCENARIO_HELP.auto;
+    }
+    if (els.autoPreview) {
+      if (isAdvancedMode() && sc === "auto" && reports.length) {
+        const sug = suggestAutoScenario();
+        els.autoPreview.hidden = false;
+        els.autoPreview.textContent = "Авто выберет: " + sug;
+      } else {
+        els.autoPreview.hidden = true;
+      }
+    }
+    els.runBtn.disabled = !reports.length;
+    els.runHint.textContent = reports.length ? "" : "добавьте отчёт";
   }
 
   function renderReports() {
     const body = els.reportsBody;
+    const adv = isAdvancedMode();
     body.querySelectorAll("tr[data-id]").forEach((tr) => tr.remove());
     if (!reports.length) {
       els.reportsEmpty.style.display = "";
+      updateScenarioHints();
       return;
     }
     els.reportsEmpty.style.display = "none";
-    reports
-      .slice()
-      .sort((a, b) => a.order - b.order)
-      .forEach((r) => {
-        const tr = document.createElement("tr");
-        tr.dataset.id = r.id;
+    const sorted = reports.slice().sort((a, b) => a.order - b.order);
+    sorted.forEach((r, idx) => {
+      const tr = document.createElement("tr");
+      tr.dataset.id = r.id;
+      if (!adv) {
+        const used = idx === 0;
         tr.innerHTML =
           '<td class="filename-cell"></td>' +
-          '<td><select class="env-select"><option value="NT">НТ</option><option value="PROD">ПРОМ</option></select></td>' +
-          '<td><input class="label-input" type="text"></td>' +
-          '<td><input class="order-input" type="text" inputmode="numeric" style="width:4rem"></td>' +
           '<td class="col-actions">' +
-          '<button type="button" class="icon-btn btn-up" title="Выше">↑</button> ' +
-          '<button type="button" class="icon-btn btn-down" title="Ниже">↓</button> ' +
+          (used
+            ? '<span class="status-pill">анализ</span> '
+            : '<span class="status-pill">пропуск</span> ') +
           '<button type="button" class="icon-btn btn-del" title="Удалить">×</button>' +
           "</td>";
         tr.querySelector(".filename-cell").textContent = r.file.name;
-        const envSelect = tr.querySelector(".env-select");
-        envSelect.value = r.env;
-        envSelect.addEventListener("change", () => {
-          r.env = envSelect.value;
-        });
-        const labelInput = tr.querySelector(".label-input");
-        labelInput.value = r.label;
-        labelInput.addEventListener("change", () => {
-          r.label = labelInput.value.trim() || r.label;
-        });
-        const orderInput = tr.querySelector(".order-input");
-        orderInput.value = String(r.order);
-        orderInput.addEventListener("change", () => {
-          const n = parseInt(orderInput.value, 10);
-          if (!Number.isNaN(n)) r.order = n;
-          renderReports();
-        });
         tr.querySelector(".btn-del").addEventListener("click", () => {
           reports = reports.filter((x) => x.id !== r.id);
           renderReports();
         });
-        tr.querySelector(".btn-up").addEventListener("click", () => {
-          const sorted = reports.slice().sort((a, b) => a.order - b.order);
-          const idx = sorted.findIndex((x) => x.id === r.id);
-          if (idx > 0) {
-            const prev = sorted[idx - 1];
-            const tmp = r.order;
-            r.order = prev.order;
-            prev.order = tmp;
-            renderReports();
-          }
-        });
-        tr.querySelector(".btn-down").addEventListener("click", () => {
-          const sorted = reports.slice().sort((a, b) => a.order - b.order);
-          const idx = sorted.findIndex((x) => x.id === r.id);
-          if (idx >= 0 && idx < sorted.length - 1) {
-            const next = sorted[idx + 1];
-            const tmp = r.order;
-            r.order = next.order;
-            next.order = tmp;
-            renderReports();
-          }
-        });
         body.appendChild(tr);
+        return;
+      }
+      tr.innerHTML =
+        '<td class="filename-cell"></td>' +
+        '<td><select class="env-select"><option value="NT">НТ</option><option value="PROD">ПРОМ</option></select></td>' +
+        '<td><input class="label-input" type="text"></td>' +
+        '<td><input class="order-input" type="text" inputmode="numeric" style="width:4rem"></td>' +
+        '<td class="col-actions">' +
+        '<button type="button" class="icon-btn btn-up" title="Выше">↑</button> ' +
+        '<button type="button" class="icon-btn btn-down" title="Ниже">↓</button> ' +
+        '<button type="button" class="icon-btn btn-del" title="Удалить">×</button>' +
+        "</td>";
+      tr.querySelector(".filename-cell").textContent = r.file.name;
+      const envSelect = tr.querySelector(".env-select");
+      envSelect.value = r.env;
+      envSelect.addEventListener("change", () => {
+        r.env = envSelect.value;
+        updateScenarioHints();
       });
+      const labelInput = tr.querySelector(".label-input");
+      labelInput.value = r.label;
+      labelInput.addEventListener("change", () => {
+        r.label = labelInput.value.trim() || r.label;
+      });
+      const orderInput = tr.querySelector(".order-input");
+      orderInput.value = String(r.order);
+      orderInput.addEventListener("change", () => {
+        const n = parseInt(orderInput.value, 10);
+        if (!Number.isNaN(n)) r.order = n;
+        renderReports();
+      });
+      tr.querySelector(".btn-del").addEventListener("click", () => {
+        reports = reports.filter((x) => x.id !== r.id);
+        renderReports();
+      });
+      tr.querySelector(".btn-up").addEventListener("click", () => {
+        const list = reports.slice().sort((a, b) => a.order - b.order);
+        const i = list.findIndex((x) => x.id === r.id);
+        if (i > 0) {
+          const prev = list[i - 1];
+          const tmp = r.order;
+          r.order = prev.order;
+          prev.order = tmp;
+          renderReports();
+        }
+      });
+      tr.querySelector(".btn-down").addEventListener("click", () => {
+        const list = reports.slice().sort((a, b) => a.order - b.order);
+        const i = list.findIndex((x) => x.id === r.id);
+        if (i >= 0 && i < list.length - 1) {
+          const next = list[i + 1];
+          const tmp = r.order;
+          r.order = next.order;
+          next.order = tmp;
+          renderReports();
+        }
+      });
+      body.appendChild(tr);
+    });
+    updateScenarioHints();
   }
 
   function addFiles(fileList) {
     const incoming = Array.from(fileList || []).filter((f) =>
       /\.html?$/i.test(f.name)
     );
-    incoming.forEach((file) => {
-      const env = suggestEnv(file.name);
-      const order = reports.length;
-      reports.push({
-        id: uid(),
-        file,
-        env,
-        label: suggestLabel(file.name, env, order),
-        order,
+    if (!isAdvancedMode() && incoming.length) {
+      // Simple mode: keep a single report (last selected wins if replacing).
+      if (!reports.length) {
+        const file = incoming[0];
+        const env = suggestEnv(file.name);
+        reports = [
+          {
+            id: uid(),
+            file,
+            env,
+            label: suggestLabel(file.name, env, 0),
+            order: 0,
+          },
+        ];
+        if (incoming.length > 1) {
+          showToast("простой режим: взят первый файл");
+        }
+      } else {
+        incoming.forEach((file) => {
+          const env = suggestEnv(file.name);
+          const order = reports.length;
+          reports.push({
+            id: uid(),
+            file,
+            env,
+            label: suggestLabel(file.name, env, order),
+            order,
+          });
+        });
+        showToast("будет использован только первый файл");
+      }
+    } else {
+      incoming.forEach((file) => {
+        const env = suggestEnv(file.name);
+        const order = reports.length;
+        reports.push({
+          id: uid(),
+          file,
+          env,
+          label: suggestLabel(file.name, env, order),
+          order,
+        });
       });
-    });
+    }
     renderReports();
     showError("");
   }
@@ -211,33 +360,205 @@
     });
   }
 
-  async function copyText(text) {
+  async function copyText(text, okMsg) {
     if (!text) return;
     try {
       await navigator.clipboard.writeText(text);
-      els.runHint.textContent = "скопировано";
-      setTimeout(() => {
-        if (els.runHint.textContent === "скопировано") els.runHint.textContent = "";
-      }, 1500);
+      showToast(okMsg || "скопировано");
     } catch (_) {
       showError("не удалось скопировать — выделите текст вручную");
     }
   }
 
+  function extractVerdictAndActions(wiki) {
+    const lines = String(wiki || "").split(/\r?\n/);
+    const out = [];
+    let mode = "head";
+    let actionCount = 0;
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      if (mode === "head") {
+        out.push(line);
+        if (/^h2\.\s+Что сделать/.test(line)) {
+          mode = "actions";
+        }
+        continue;
+      }
+      if (mode === "actions") {
+        if (/^h2\./.test(line) && !/^h2\.\s+Что сделать/.test(line)) break;
+        out.push(line);
+        if (/^# /.test(line)) actionCount += 1;
+        if (actionCount >= 12) break;
+      }
+    }
+    return out.join("\n").trim() + "\n";
+  }
+
+  function setWikiMode(mode) {
+    document.querySelectorAll(".wiki-mode").forEach((b) => {
+      b.classList.toggle("active", b.getAttribute("data-mode") === mode);
+    });
+    const isPreview = mode === "preview";
+    els.wikiText.hidden = isPreview;
+    els.wikiPreview.hidden = !isPreview;
+    if (isPreview && window.WikiPreview) {
+      els.wikiPreview.innerHTML = WikiPreview.render(lastWikiText);
+    }
+  }
+
+  function thresholdLink(fid) {
+    if (!fid || fid.indexOf(".") < 0) return null;
+    const section = fid.split(".")[0];
+    const map = {
+      checkpoints: "checkpoints",
+      wal: "wal",
+      queries: "queries",
+      autovacuum: "autovacuum",
+      cache: "cache",
+      sessions: "sessions",
+      memory: "memory",
+      io: "io",
+      disk: "disk",
+      locks: "locks",
+      db: "io",
+    };
+    const sec = map[section];
+    if (!sec) return null;
+    return "/thresholds#sec-" + encodeURIComponent(sec);
+  }
+
+  function renderFindingsCards(findings, filterSev) {
+    const root = els.findingsCards;
+    if (!root) return;
+    let list = findings || [];
+    if (filterSev) {
+      list = list.filter((f) => {
+        const s = String(f.severity || "").toLowerCase();
+        if (filterSev === "critical") return s === "critical" || s === "high";
+        if (filterSev === "warning") return s === "warning" || s === "medium";
+        if (filterSev === "info") return s === "info" || s === "low";
+        return true;
+      });
+    }
+    if (!list.length) {
+      root.hidden = !(findings && findings.length);
+      root.innerHTML = findings && findings.length
+        ? '<p class="empty-row">нет findings для фильтра</p>'
+        : "";
+      return;
+    }
+    root.hidden = false;
+    root.innerHTML = list
+      .slice(0, 40)
+      .map((f) => {
+        const sev = String(f.severity || "warning").toLowerCase();
+        const link = thresholdLink(f.id);
+        const thr = f.threshold
+          ? '<div class="finding-threshold">порог: <code>' +
+            escapeHtml(f.threshold) +
+            "</code></div>"
+          : "";
+        const thrLink = link
+          ? ' <a class="finding-thr-link" href="' +
+            link +
+            '">thresholds</a>'
+          : "";
+        return (
+          '<article class="finding-card sev-' +
+          escapeHtml(sev) +
+          '">' +
+          '<div class="finding-card-head">' +
+          '<span class="sev-badge">' +
+          escapeHtml(sev) +
+          "</span>" +
+          "<code>" +
+          escapeHtml(f.id || "?") +
+          "</code>" +
+          thrLink +
+          "</div>" +
+          '<p class="finding-title">' +
+          escapeHtml(f.title || f.id || "") +
+          "</p>" +
+          '<p class="finding-msg">' +
+          escapeHtml((f.message || "").slice(0, 220)) +
+          "</p>" +
+          (f.advice
+            ? '<p class="finding-advice">' + escapeHtml(f.advice) + "</p>"
+            : "") +
+          thr +
+          "</article>"
+        );
+      })
+      .join("");
+  }
+
+  function escapeHtml(text) {
+    return String(text)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function bindCheckFlow(session) {
+    if (!els.checkFlow) return;
+    els.checkFlow.hidden = false;
+    const key = "pgprofile_checkflow_" + (session || "x");
+    let saved = {};
+    try {
+      saved = JSON.parse(sessionStorage.getItem(key) || "{}");
+    } catch (_) {
+      saved = {};
+    }
+    els.checkFlow.querySelectorAll("input[type=checkbox]").forEach((cb) => {
+      const step = cb.getAttribute("data-step");
+      cb.checked = !!saved[step];
+      cb.onchange = () => {
+        saved[step] = cb.checked;
+        try {
+          sessionStorage.setItem(key, JSON.stringify(saved));
+        } catch (_) {}
+      };
+    });
+  }
+
   function showResult(data) {
     sessionId = data.session_id;
     els.resultPanel.classList.add("visible");
-    els.wikiText.value = data.wiki_text || "";
+    lastWikiText = data.wiki_text || "";
+    els.wikiText.value = lastWikiText;
     els.promptText.value = data.prompt_text || "";
     els.briefText.value = data.brief_text || "";
+    setWikiMode("source");
 
     const summary = data.summary || {};
+    const counts = summary.severity_counts || {};
     const pills = [];
     pills.push(
       '<span class="status-pill">сценарий <strong>' +
-        (data.scenario || "") +
+        escapeHtml(data.scenario || "") +
         "</strong></span>"
     );
+    const crit = counts.critical || 0;
+    const warn = counts.warning || 0;
+    const info = counts.info || 0;
+    if (crit + warn + info > 0 || summary.total_findings != null) {
+      pills.push(
+        '<button type="button" class="status-pill pill-btn" data-sev="critical">critical/high <strong>' +
+          crit +
+          "</strong></button>"
+      );
+      pills.push(
+        '<button type="button" class="status-pill pill-btn" data-sev="warning">warning <strong>' +
+          warn +
+          "</strong></button>"
+      );
+      pills.push(
+        '<button type="button" class="status-pill pill-btn" data-sev="info">info <strong>' +
+          info +
+          "</strong></button>"
+      );
+    }
     if (summary.total_findings != null) {
       pills.push(
         '<span class="status-pill">findings <strong>' +
@@ -257,14 +578,14 @@
     if (summary.symptoms && summary.symptoms.length) {
       pills.push(
         '<span class="status-pill">симптомы <strong>' +
-          summary.symptoms.join(", ") +
+          escapeHtml(summary.symptoms.join(", ")) +
           "</strong></span>"
       );
     }
     if (summary.nt_runs_symptoms && summary.nt_runs_symptoms.length) {
       pills.push(
         '<span class="status-pill">симптомы <strong>' +
-          summary.nt_runs_symptoms.join(", ") +
+          escapeHtml(summary.nt_runs_symptoms.join(", ")) +
           "</strong></span>"
       );
     }
@@ -279,10 +600,22 @@
     }
     if (data.wiki) {
       pills.push(
-        '<span class="status-pill">wiki <strong>' + data.wiki + "</strong></span>"
+        '<span class="status-pill">wiki <strong>' +
+          escapeHtml(data.wiki) +
+          "</strong></span>"
       );
     }
     els.statusBar.innerHTML = pills.join("");
+    els.statusBar.querySelectorAll(".pill-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const sev = btn.getAttribute("data-sev");
+        severityFilter = severityFilter === sev ? null : sev;
+        renderFindingsCards(data.findings_ui || [], severityFilter);
+      });
+    });
+
+    renderFindingsCards(data.findings_ui || [], severityFilter);
+    bindCheckFlow(sessionId);
 
     els.downloadWiki.href = apiBase + "/api/sessions/" + sessionId + "/wiki";
     els.downloadWiki.download = data.wiki || "confluence.wiki";
@@ -295,21 +628,33 @@
       showError("добавьте хотя бы один HTML-отчёт");
       return;
     }
-    const symptoms = selectedSymptoms();
-    const scenario = els.scenario.value;
+    const adv = isAdvancedMode();
+    const symptoms = adv ? selectedSymptoms() : [];
+    const scenario = adv ? els.scenario.value : "health";
 
     els.runBtn.disabled = true;
     els.runSpinner.classList.add("visible");
     els.runHint.textContent = "анализ…";
 
-    const sorted = reports.slice().sort((a, b) => a.order - b.order);
+    let sorted = reports.slice().sort((a, b) => a.order - b.order);
+    if (!adv) {
+      sorted = sorted.slice(0, 1);
+    }
     const meta = {
       scenario: scenario,
       symptoms: symptoms,
-      confluence_title: els.confluenceTitle.value.trim() || null,
-      query_hex: els.queryHex.value.trim() || null,
-      query_id: els.queryId.value.trim() || null,
-      query_text: els.queryText.value.trim() || null,
+      confluence_title: adv
+        ? els.confluenceTitle.value.trim() || null
+        : null,
+      query_hex: adv && symptoms.includes("slow_query")
+        ? els.queryHex.value.trim() || null
+        : null,
+      query_id: adv && symptoms.includes("slow_query")
+        ? els.queryId.value.trim() || null
+        : null,
+      query_text: adv && symptoms.includes("slow_query")
+        ? els.queryText.value.trim() || null
+        : null,
       reports: sorted.map((r) => ({
         filename: r.file.name,
         env: r.env,
@@ -335,16 +680,16 @@
       }
       showResult(data);
       els.runHint.textContent = "готово";
+      showToast("анализ готов");
     } catch (err) {
       showError(String(err.message || err));
       els.runHint.textContent = "";
     } finally {
-      els.runBtn.disabled = false;
+      els.runBtn.disabled = !reports.length;
       els.runSpinner.classList.remove("visible");
     }
   }
 
-  // dropzone
   els.dropzone.addEventListener("click", () => els.fileInput.click());
   els.dropzone.addEventListener("keydown", (e) => {
     if (e.key === "Enter" || e.key === " ") {
@@ -374,12 +719,25 @@
 
   els.runBtn.addEventListener("click", runAnalysis);
   document.getElementById("copy-wiki").addEventListener("click", () =>
-    copyText(els.wikiText.value)
+    copyText(els.wikiText.value, "wiki скопирован")
+  );
+  document.getElementById("copy-verdict").addEventListener("click", () =>
+    copyText(extractVerdictAndActions(els.wikiText.value), "вердикт скопирован")
   );
   document.getElementById("copy-prompt").addEventListener("click", () =>
-    copyText(els.promptText.value)
+    copyText(els.promptText.value, "промпт скопирован")
   );
+  document.querySelectorAll(".wiki-mode").forEach((btn) => {
+    btn.addEventListener("click", () => setWikiMode(btn.getAttribute("data-mode")));
+  });
+  els.scenario.addEventListener("change", updateScenarioHints);
+  if (els.advancedSettings) {
+    els.advancedSettings.addEventListener("toggle", () => {
+      renderReports();
+    });
+  }
 
   setTabs();
   loadSymptoms();
+  updateScenarioHints();
 })();

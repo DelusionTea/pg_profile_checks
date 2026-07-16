@@ -30,6 +30,15 @@ guidelines:
       событий) Postgres Pro советует поднять max_wal_size, иначе порог будет срабатывать постоянно.
     ref: "Postgres Pro: max_wal_size, min_wal_size, checkpoint_timeout"
 
+  max_requested_count:
+    when: |
+      Абсолютный счётчик за интервал отчёта. Поднимайте для длинных суточных окон; для коротких НТ
+      ориентируйтесь скорее на max_requested_per_hour.
+    databases: |
+      На prod с длинным sample абсолют шумит — нормируйте /час. На коротких прогонах абсолют полезен
+      как «сколько раз ударило».
+    ref: "Postgres Pro: checkpoints; pg_profile cluster statistics"
+
   max_write_time_sec:
     when: |
       Поднимайте на медленных HDD / сетевых СХД; опускайте на NVMe-dedicated, где длинный checkpoint write
@@ -161,6 +170,15 @@ guidelines:
       Postgres Pro: увеличьте max_wal_size (и min_wal_size), чтобы реже делать checkpoints при высокой записи.
     ref: "Postgres Pro: max_wal_size / min_wal_size"
 
+  warn_backend_writes_ratio:
+    when: |
+      1.0 = любой рост backend writes относительно ориентира даёт сигнал. Поднимайте на write-heavy ETL,
+      где backends закономерно пишут больше; на latency-sensitive OLTP держите строгим.
+    databases: |
+      Высокая доля backend writes — bgwriter/checkpoint не успевают. Смотрите вместе с maxwritten_clean
+      и checkpoint write time (Postgres Pro / PostgreSQL bgwriter tuning).
+    ref: "PostgreSQL Wiki: Tuning; bgwriter; checkpoints"
+
   # --- cache ---
   min_blks_hit_pct:
     when: |
@@ -177,6 +195,15 @@ guidelines:
     databases: |
       Смотрите top I/O tables в pg_profile. Часто лечится индексами/partitioning, не только shared_buffers.
     ref: "pg_profile top I/O; shared_buffers"
+
+  min_slru_hit_pct:
+    when: |
+      99% — ориентир для прогретого OLTP. Снижайте после рестарта или на системах с очень длинными
+      транзакциями, где SLRU шумный; повышайте, если ловите ранний сигнал clog/multixact pressure.
+    databases: |
+      Низкий SLRU hit часто связан с idle in transaction и long xact, а не только с shared_buffers.
+      Postgres Pro: сокращайте длинные транзакции, включайте idle_in_transaction_session_timeout.
+    ref: "pg_stat_slru / pg_profile Cluster SLRU; idle_in_transaction_session_timeout"
 
   max_blk_read_time_sec:
     when: |
@@ -207,6 +234,14 @@ guidelines:
     databases: |
       Полезно как KPI качества приложения, не только БД.
     ref: "xact_commit / xact_rollback"
+
+  warn_on_disabled_idle_timeout:
+    when: |
+      true — предупреждать, если idle_in_transaction_session_timeout=0 при наличии idle in xact.
+      false — отключить (осознанные длинные batch-транзакции без таймаута).
+    databases: |
+      Для классического OLTP оставляйте true. Для ETL с длинными xact согласуйте таймаут на роли, а не global off.
+    ref: "PostgreSQL/Postgres Pro: idle_in_transaction_session_timeout"
 
   # --- memory ---
   max_work_mem_kb:
@@ -251,6 +286,22 @@ guidelines:
       (try может тихо откатиться на 4kB).
     ref: "Postgres Pro: huge_pages, shared_memory_size_in_huge_pages"
 
+  warn_statement_timeout_zero:
+    when: |
+      true — сигнализировать statement_timeout=0. false — если таймауты заданы только на ролях/в приложении
+      и global 0 осознан.
+    databases: |
+      OLTP API — включайте предупреждение. Batch/ETL кластеры часто держат 0 глобально и лимиты на роли.
+    ref: "PostgreSQL/Postgres Pro: statement_timeout"
+
+  warn_lock_timeout_zero:
+    when: |
+      true — сигнализировать lock_timeout=0 на concurrency-sensitive OLTP. false — если блокировки
+      контролируются приложением иначе.
+    databases: |
+      Высоконкурентный OLTP выигрывает от 5–30s lock_timeout; отчётные сессии могут быть без лимита.
+    ref: "PostgreSQL/Postgres Pro: lock_timeout"
+
   # --- io ---
   queries.max_io_time_ms:
     when: |
@@ -279,6 +330,95 @@ guidelines:
     databases: |
       Учитывайте random_page_cost / effective_io_concurrency (SSD vs HDD) из Postgres Pro planner tuning.
     ref: "Planner: random_page_cost; indexes"
+
+  indexes.min_unused_index_size_mb:
+    when: |
+      Поднимайте, чтобы не шуметь мелкими служебными индексами; снижайте, если важна экономия места
+      даже на небольших unused.
+    databases: |
+      Unused index замедляет DML и vacuum. На OLTP с частым INSERT/UPDATE порог полезен с 10–50MB+;
+      перед DROP подтверждайте на длинном интервале.
+    ref: "PostgreSQL Wiki: Index Maintenance; pg_profile unused indexes"
+
+  indexes.top_n:
+    when: |
+      Больше top_n — шире обзор кандидатов на DROP; меньше — короче отчёт для triage.
+    databases: |
+      Для крупных схем с сотнями индексов поднимайте; для точечного НТ оставляйте 5–10.
+    ref: "pg_profile unused indexes"
+
+  queries.max_shared_blks_dirtied:
+    when: |
+      Поднимайте на ETL/batch с массовыми UPDATE; на OLTP оставляйте строгим как сигнал wal-heavy SQL.
+    databases: |
+      Dirtied blocks коррелируют с WAL и checkpoint pressure. Смотрите вместе с wal_bytes SQL.
+    ref: "pg_stat_statements shared_blks_dirtied; WAL"
+
+  queries.max_temp_blk_write_time_ms:
+    when: |
+      На аналитике temp I/O time выше — повышайте; на OLTP низкий порог ловит spill раньше.
+    databases: |
+      Связано с work_mem и объёмом sort/hash. Postgres Pro: точечный work_mem на роли безопаснее глобального.
+    ref: "work_mem; temporary files"
+
+  tables.min_growth_mb:
+    when: |
+      Поднимайте для длинных суточных окон и крупных партиций; снижайте на коротких НТ.
+    databases: |
+      Рост таблиц → диск и vacuum. Смотрите tablespace_stats и unused indexes.
+    ref: "pg_profile top growing tables"
+
+  tables.min_vacuum_ops:
+    when: |
+      Высокий счётчик ops на write-heavy — норма; снижайте порог, если хотите ранний сигнал churn.
+    databases: |
+      Очереди/сессии с частым UPDATE дают много vacuum ops — смотрите вместе с dead_pct.
+    ref: "pg_profile vacuum-related statistics"
+
+  indexes.min_growth_mb:
+    when: |
+      Аналогично росту таблиц: мягче на длинных окнах, строже на коротких НТ.
+    databases: |
+      Быстрый рост индекса увеличивает DML/vacuum cost — кандидат на fillfactor/REINDEX/DROP unused.
+    ref: "pg_profile top growing indexes"
+
+  indexes.min_idx_blks_read:
+    when: |
+      Поднимайте на cold archive indexes; снижайте, если важны ранние сигналы hot index reads.
+    databases: |
+      Hot index + низкий hit — cache/IO planner. Не путать с unused index.
+    ref: "pg_profile top I/O indexes"
+
+  indexes.min_hit_pct:
+    when: |
+      После рестарта hit ниже — временно снизьте; на прогретом OLTP держите ≥90–95%.
+    databases: |
+      Вместе с shared_buffers и working set горячих индексов.
+    ref: "shared_buffers; index I/O"
+
+  dbstats.min_dominance_pct:
+    when: |
+      На кластере с одной основной БД 70%+ ожидаемо — поднимите (например 95%), иначе шум.
+      На multi-tenant снижайте, чтобы ловить перекос.
+    databases: |
+      Помогает сфокусировать анализ top SQL на доминирующей БД.
+    ref: "pg_profile statement statistics by database"
+
+  min_tablespace_delta_mb:
+    when: |
+      Нормируйте под длительность отчёта. Для часовых окон 500MB дельта может быть нормой на write-heavy;
+      для коротких НТ снижайте.
+    databases: |
+      Риск заполнения диска. Postgres Pro: следите за tablespace path и свободным местом тома.
+    ref: "pg_profile tablespace statistics"
+
+  min_connection_util_pct:
+    when: |
+      70% — ранний сигнал. Без pooler и с завышенным max_connections снижайте порог осторожно
+      (sessions в pg_profile — накопительный счётчик за интервал, не всегда peak concurrent).
+    databases: |
+      OLTP с PgBouncer: смотрите peak backends. Высокий max_connections без pooler — риск памяти.
+    ref: "max_connections; PgBouncer"
 
   # --- locks ---
   max_deadlocks:

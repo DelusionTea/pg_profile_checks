@@ -113,7 +113,16 @@ python3 ui/server.py
 
 Страница **Thresholds** (ссылка в header): таблицы порогов из `thresholds.yaml` — `/thresholds`.
 У части параметров — справка «когда менять / для каких БД» из `knowledge/threshold_guidance.yaml`
-(ориентир — документация Postgres Pro).
+(ориентир — документация Postgres Pro). Поиск и фильтр «только ситуативные» — на странице.
+
+После анализа UI показывает summary pills, карточки findings, превью Wiki Markup и чеклист проверки.
+Confluence-страницы строятся по каркасу: вердикт → TOC → действия → сводка → детали в `{expand}`.
+
+Проверка согласованности knowledge (recommendations ↔ prod_tuning, guc_guidance ↔ guc_impact):
+
+```bash
+python scripts/check_knowledge_consistency.py
+```
 
 ### Сессии и хранение файлов
 

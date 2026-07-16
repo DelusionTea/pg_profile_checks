@@ -66,6 +66,19 @@ symptoms:
         refute_actions:
           - "Планы без parallel nodes при высоком CPU — ищите другие причины"
 
+      - id: cpu.huge_pages_tlb
+        title: TLB pressure без HugePages (большой shared_buffers)
+        description: |
+          При большом shared_buffers и huge_pages=try/off растёт system CPU из‑за TLB miss.
+          Postgres Pro рекомендует huge pages для крупных shared memory сегментов.
+        confirm_actions:
+          - "SHOW shared_buffers, huge_pages, shared_memory_size_in_huge_pages"
+          - "Сравнить system_time в top_rusage до/после huge_pages=on на НТ"
+          - "/proc/meminfo: HugePages_Total/Free vs потребность инстанса"
+        refute_actions:
+          - "huge_pages=on и страницы зарезервированы — не эта причина"
+          - "shared_buffers небольшой (<2GB) — эффект HugePages обычно слабый"
+
   high_memory:
     title: Высокое потребление памяти БД
     description: |
@@ -100,6 +113,19 @@ symptoms:
           - "Сравнить shared_buffers с RAM и working set"
         refute_actions:
           - "blks_hit_pct >99% — память БД скорее в connections/temp, не в buffer cache"
+
+      - id: memory.huge_pages_missing
+        title: HugePages не включены при большом shared_buffers
+        description: |
+          shared_buffers ≳ 2GB при huge_pages=try/off: Postgres Pro рекомендует huge pages
+          для снижения TLB overhead. try может тихо работать на 4kB без явной ошибки.
+        confirm_actions:
+          - "SHOW shared_buffers, huge_pages, shared_memory_size_in_huge_pages"
+          - "Сверить vm.nr_hugepages и /proc/meminfo HugePages_* с потребностью инстанса"
+          - "Убедиться, что THP отключены; сравнить system CPU до/после huge_pages=on"
+        refute_actions:
+          - "huge_pages=on и HugePages_Total ≥ shared_memory_size_in_huge_pages — уже настроено"
+          - "shared_buffers заметно меньше 2GB — выгода HugePages обычно невелика"
 
       - id: memory.maintenance_bloat
         title: Bloat / dead tuples / maintenance_work_mem

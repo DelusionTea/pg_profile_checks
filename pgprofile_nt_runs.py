@@ -651,6 +651,8 @@ def build_nt_runs_confluence_wiki(analysis: NtRunsAnalysis, *, page_title: str |
             lines.append(f"|{label}|{path.name}|{interval}|")
         lines.append("")
 
+    from pgprofile_confluence import explain_analyze_wiki_for_symptom
+
     for inv in analysis.symptom_investigations:
         lines.append(f"h2. {inv.symptom_title}")
         for cause in inv.causes[:10]:
@@ -664,6 +666,7 @@ def build_nt_runs_confluence_wiki(analysis: NtRunsAnalysis, *, page_title: str |
                 for ev in cause.evidence[:2]:
                     lines.append(f"** {ev}")
         lines.append("")
+        lines.extend(explain_analyze_wiki_for_symptom(inv))
 
     lines.append("h2. Влияние изменений настроек (попарно)")
     for pa in analysis.pair_analyses:

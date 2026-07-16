@@ -80,6 +80,12 @@ guc_impact:
 
   huge_pages:
     symptoms: [high_cpu, high_memory]
-    metrics: [blk_read_time, blks_hit_pct]
+    metrics: [blk_read_time, blks_hit_pct, shared_buffers]
+    enabled_improves: [tlb_overhead, cpu_system_time]
     narrative_enable: |
-      huge_pages может снизить TLB pressure и стабилизировать latency при большом shared_buffers.
+      Включение huge_pages=on (после vm.nr_hugepages ≥ shared_memory_size_in_huge_pages)
+      снижает TLB pressure и system CPU на большом shared_buffers (Postgres Pro kernel-resources).
+      try→on устраняет тихий fallback на 4kB страницы.
+    narrative_disable: |
+      huge_pages=off/try без зарезервированных страниц оставляет shared memory на 4kB —
+      выше TLB miss и потенциально выше system CPU при крупном shared_buffers.

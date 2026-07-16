@@ -215,6 +215,26 @@ recommendations:
       - "PostgreSQL Wiki: Tuning Your PostgreSQL Server"
       - "PostgreSQL Documentation: work_mem"
 
+  - id: memory.huge_pages_recommended
+    severity: warning
+    title: HugePages recommended for large shared_buffers
+    recommendation: |
+      При большом shared_buffers Postgres Pro рекомендует использовать huge pages:
+      снижается overhead TLB при работе с большими непрерывными блоками shared memory.
+      Значение huge_pages=try (default) при нехватке страниц в ОС тихо откатывается
+      на обычные 4kB — сервер стартует, но выгода HugePages теряется без явного сигнала.
+      Предпочтительно huge_pages=on после резервирования vm.nr_hugepages.
+    actions:
+      - "Узнать потребность: SHOW shared_memory_size_in_huge_pages / postgres -C shared_memory_size_in_huge_pages"
+      - "Зарезервировать страницы в ОС: vm.nr_hugepages ≥ shared_memory_size_in_huge_pages (+ запас)"
+      - "Отключить Transparent Huge Pages (THP) на хосте БД"
+      - "Установить huge_pages=on в postgresql.conf и выполнить restart"
+      - "Проверить /proc/meminfo (HugePages_Total/Free) и старт postmaster без fallback"
+    references:
+      - "Postgres Pro Documentation: 18.4 Managing Kernel Resources — Linux Huge Pages"
+      - "https://postgrespro.ru/docs/enterprise/current/kernel-resources"
+      - "PostgreSQL Documentation: huge_pages / shared_memory_size_in_huge_pages"
+
   - id: cache.low_hit_ratio
     severity: high
     title: Low buffer cache hit ratio

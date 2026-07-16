@@ -56,6 +56,8 @@ memory:
   max_work_mem_kb: 1000000000
   warn_work_mem_x_connections_gb: 1000000
   min_shared_buffers_mb: 0
+  recommend_huge_pages_min_shared_buffers_mb: 1000000000
+  warn_huge_pages_not_on: false
   warn_statement_timeout_zero: false
   warn_lock_timeout_zero: false
 

@@ -295,6 +295,7 @@ def check_slow_queries(
         preview = _query_preview(ctx, stmt, cfg, verbose)
         if preview:
             message = f"{message}\n  {preview}"
+        full_sql = (ctx.queries_by_id.get(hex_id) or "").strip()
         warnings.append(
             _warn(
                 "queries",
@@ -305,6 +306,7 @@ def check_slow_queries(
                 max_exec_time=max_ms,
                 total_time=total_sec,
                 calls=calls,
+                query_text=full_sql or None,
             )
         )
 
@@ -673,6 +675,25 @@ def check_memory_settings(ctx: ReportContext, cfg: dict[str, Any]) -> list[Warni
             )
         )
 
+    if cfg.get("warn_huge_pages_not_on"):
+        min_sb = float(cfg.get("recommend_huge_pages_min_shared_buffers_mb") or 2048)
+        huge = (settings.get("huge_pages") or "").strip().lower()
+        if shared_mb is not None and shared_mb >= min_sb and huge in ("", "off", "try"):
+            shm_hp = settings.get("shared_memory_size_in_huge_pages") or "?"
+            warnings.append(
+                _warn(
+                    "memory",
+                    "warning",
+                    f"huge_pages={huge or 'unset'} with shared_buffers={shared_mb:.0f}MB "
+                    f"(≥{min_sb:.0f}MB): prefer huge_pages=on; "
+                    f"shared_memory_size_in_huge_pages={shm_hp}",
+                    huge_pages=huge or "unset",
+                    shared_buffers_mb=round(shared_mb, 1),
+                    shared_memory_size_in_huge_pages=shm_hp,
+                    min_shared_buffers_mb=min_sb,
+                )
+            )
+
     if cfg.get("warn_statement_timeout_zero"):
         timeout = parse_setting_int(settings.get("statement_timeout")) or 0
         if timeout == 0:
@@ -733,8 +754,17 @@ def check_io_patterns(
         preview = _query_preview(ctx, stmt, queries_cfg, verbose)
         if preview:
             message = f"{message}\n  {preview}"
+        full_sql = (ctx.queries_by_id.get(hex_id) or "").strip()
         query_warnings.append(
-            _warn("io", "warning", message, hexqueryid=hex_id, wal_bytes=wal_bytes)
+            _warn(
+                "io",
+                "warning",
+                message,
+                hexqueryid=hex_id,
+                wal_bytes=wal_bytes,
+                io_time=io_time,
+                query_text=full_sql or None,
+            )
         )
 
     query_warnings.sort(key=lambda w: w.details.get("wal_bytes", 0), reverse=True)

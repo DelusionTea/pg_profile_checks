@@ -21,6 +21,16 @@ guc_guidance:
     typical_oltp: "~25% RAM (policy-dependent)"
     note: |
       Основной кэш страниц. Слишком низкий shared_buffers → low cache hit.
+      При shared_buffers ≳ 2GB планируйте HugePages (см. huge_pages).
+
+  huge_pages:
+    unit: "enum: off | try | on"
+    typical_oltp: "on при shared_buffers ≳ 2GB (после vm.nr_hugepages)"
+    note: |
+      Postgres Pro: huge pages снижают накладные расходы на большие shared_buffers.
+      try (default) — fallback на 4kB без ошибки старта; on — жёсткое требование к ОС.
+      Размер потребности: shared_memory_size_in_huge_pages; резерв: vm.nr_hugepages.
+      THP на хосте БД обычно отключают.
 
   work_mem:
     unit: kB

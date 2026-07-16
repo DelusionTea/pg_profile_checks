@@ -56,6 +56,9 @@ memory:
   max_work_mem_kb: 65536
   warn_work_mem_x_connections_gb: 16
   min_shared_buffers_mb: 1024
+  # Recommend huge_pages=on when shared_buffers is large (Postgres Pro kernel-resources).
+  recommend_huge_pages_min_shared_buffers_mb: 2048
+  warn_huge_pages_not_on: true
   warn_statement_timeout_zero: true
   warn_lock_timeout_zero: true
 

@@ -96,6 +96,8 @@ def infer_rule_id(warning: Warning) -> str:
             return "memory.work_mem_connections_risk"
         if "work_mem=" in message and "exceeds" in message:
             return "memory.work_mem_high"
+        if "huge_pages=" in message:
+            return "memory.huge_pages_recommended"
         if "shared_buffers" in message:
             return "memory.shared_buffers_low"
         if "statement_timeout=0" in message:

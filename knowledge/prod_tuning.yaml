@@ -179,6 +179,7 @@ tuning_rules:
         postgres_pro: |
           Postgres Pro: shared_buffers ~25% RAM (политика банка). Требует restart.
           Перед изменением — baseline cache hit и working set.
+          После увеличения shared_buffers пересчитайте vm.nr_hugepages и huge_pages.
         rationale: Низкий cache hit при стабильном паттерне — кандидат на увеличение буферов.
       - guc: effective_cache_size
         direction: review_increase
@@ -199,6 +200,32 @@ tuning_rules:
     operational:
       - Connection pooler (PgBouncer)
       - Таблицы с высоким physical read
+
+  - id: tune_huge_pages
+    finding_ids:
+      - memory.huge_pages_recommended
+    problem_severity: warning
+    title: HugePages для большого shared_buffers
+    guc_recommendations:
+      - guc: huge_pages
+        direction: set_on
+        change_safety: restart_required
+        change_impact: medium
+        reload: false
+        postgres_pro: |
+          Postgres Pro (kernel-resources): huge pages снижают overhead при большом shared_buffers.
+          Default try при нехватке страниц откатывается на 4kB без отказа старта — для prod
+          предпочтительно huge_pages=on после резерва vm.nr_hugepages.
+          Потребность: shared_memory_size_in_huge_pages (postgres -C … / SHOW).
+          Размер страницы по умолчанию обычно 2MB (Hugepagesize в /proc/meminfo).
+        rationale: |
+          При shared_buffers ≳ 2GB и huge_pages≠on возрастает TLB pressure;
+          пример НТ counter_nt_before_settings: shared_buffers=8GB, huge_pages=try.
+    operational:
+      - "SHOW shared_memory_size_in_huge_pages; зарезервировать vm.nr_hugepages (≥ значения + запас)"
+      - "Отключить Transparent Huge Pages (THP) на хосте БД"
+      - "Проверить ulimit -l / vm.hugetlb_shm_group для пользователя postgres"
+      - "После restart: HugePages_Free в /proc/meminfo и отсутствие fallback в логах"
 
   - id: tune_checkpoints_write
     finding_ids:

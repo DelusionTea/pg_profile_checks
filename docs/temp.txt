@@ -3,38 +3,38 @@
     "evtType": "GetMarkup",
     "evtVersion": 3,
     "srcModule": "CI02589137",
-    "evtId": "${__groovy(java.util.UUID.randomUUID().toString().split('-').join(''))}",
-    "evtDate": ${__groovy(System.currentTimeMillis())},
-    "sndDate": ${__groovy(System.currentTimeMillis())}
+    "evtId": "${__UUID}",
+    "evtDate": ${__time()},
+    "sndDate": ${__time()}
   },
   "body": {
     "ucpId": "${__counter(FALSE,seq)}",
-    "inn": "${__groovy((5000000000L + Long.parseLong(vars.get('seq'))).toString())}",
-    "date": "${__groovy(new java.text.SimpleDateFormat('yyyy-MM-dd').format(new Date(1704067200000L - (Long.parseLong(vars.get('seq')) % 365L) * 86400000L)))}",
+    "inn": "${__intSum(5000000000,${__counter(FALSE,innSeq)})}",
+    "date": "${__time(yyyy-MM-dd)}",
     "params": [
       {
         "key": "bordeauxZoneFlag",
-        "value": "${__groovy((Long.parseLong(vars.get('seq')) % 2L) == 0L ? 'true' : 'false')}"
+        "value": "true"
       },
       {
         "key": "whitewashMlFlag",
-        "value": "${__groovy(((Long.parseLong(vars.get('seq')) + 1L) % 2L) == 0L ? 'true' : 'false')}"
+        "value": "false"
       },
       {
         "key": "meaningfulCompliance",
-        "value": "${__groovy(((Long.parseLong(vars.get('seq')) + 2L) % 2L) == 0L ? 'true' : 'false')}"
+        "value": "true"
       },
       {
         "key": "netOperationIncome",
-        "value": "${__groovy((1000L + ((Long.parseLong(vars.get('seq')) * 7919L) % 900000L)).toString())}"
+        "value": "${__Random(1000,900000)}"
       },
       {
         "key": "serviceModel",
-        "value": "${__groovy((Long.parseLong(vars.get('seq')) % 4L) == 0L ? 'Mass' : ((Long.parseLong(vars.get('seq')) % 4L) == 1L ? 'Retail' : ((Long.parseLong(vars.get('seq')) % 4L) == 2L ? 'Corporate' : 'SME')))}"
+        "value": "Mass"
       },
       {
         "key": "trafficLightCb",
-        "value": "${__groovy((Long.parseLong(vars.get('seq')) % 3L) == 0L ? 'R' : ((Long.parseLong(vars.get('seq')) % 3L) == 1L ? 'Y' : 'G'))}"
+        "value": "R"
       }
     ]
   }

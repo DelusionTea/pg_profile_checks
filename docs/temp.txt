@@ -1,155 +1,40 @@
 {
   "header": {
-    "evtType": "ComplianceCaseDecisionBulk",
-    "evtVersion": 1.0,
-    "srcModule": "CI00359788",
-    "evtId": "pilot-bulk-10-orgs-0001",
-    "evtDate": 1683780008037,
-    "sndDate": 1683780008046
+    "evtType": "GetMarkup",
+    "evtVersion": 3,
+    "srcModule": "CI02589137",
+    "evtId": "${__groovy(java.util.UUID.randomUUID().toString().replace('-',''),)}",
+    "evtDate": ${__time(,)},
+    "sndDate": ${__time(,)}
   },
   "body": {
-    "batchId": "pilot-10-orgs",
-    "organizationsCount": 10,
-    "organizations": [
+    "ucpId": "${__counter(FALSE,seq)}",
+    "inn": "${__groovy(String.format('%010d',5000000000L + Long.parseLong(vars.get('seq'))),)}",
+    "date": "${__groovy(new java.text.SimpleDateFormat('yyyy-MM-dd').format(new Date(1704067200000L - (Long.parseLong(vars.get('seq')) % 365L) * 86400000L)),)}",
+    "params": [
       {
-        "evtId": "7f1bb67b-a5b3-4f52-8a1c-5c54fc650001",
-        "ucpId": "100001",
-        "inn": "5000000001",
-        "date": "2001-01-01",
-        "params": [
-          { "key": "bordeauxZoneFlag", "value": "true" },
-          { "key": "whitewashMlFlag", "value": "false" },
-          { "key": "meaningfulCompliance", "value": "notFound" },
-          { "key": "netOperationIncome", "value": "1011" },
-          { "key": "serviceModel", "value": "Mass" },
-          { "key": "trafficLightCb", "value": "R" }
-        ]
+        "key": "bordeauxZoneFlag",
+        "value": "${__groovy((['true','false'][(Long.parseLong(vars.get('seq')) % 2L) as int]),)}"
       },
       {
-        "evtId": "7f1bb67b-a5b3-4f52-8a1c-5c54fc650002",
-        "ucpId": "100002",
-        "inn": "5000000002",
-        "date": "2001-01-02",
-        "params": [
-          { "key": "bordeauxZoneFlag", "value": "false" },
-          { "key": "whitewashMlFlag", "value": "false" },
-          { "key": "meaningfulCompliance", "value": "lowRisk" },
-          { "key": "netOperationIncome", "value": "2080" },
-          { "key": "serviceModel", "value": "Retail" },
-          { "key": "trafficLightCb", "value": "Y" }
-        ]
+        "key": "whitewashMlFlag",
+        "value": "${__groovy((['true','false'][((Long.parseLong(vars.get('seq')) + 1L) % 2L) as int]),)}"
       },
       {
-        "evtId": "7f1bb67b-a5b3-4f52-8a1c-5c54fc650003",
-        "ucpId": "100003",
-        "inn": "5000000003",
-        "date": "2001-01-03",
-        "params": [
-          { "key": "bordeauxZoneFlag", "value": "true" },
-          { "key": "whitewashMlFlag", "value": "true" },
-          { "key": "meaningfulCompliance", "value": "mediumRisk" },
-          { "key": "netOperationIncome", "value": "3500" },
-          { "key": "serviceModel", "value": "Mass" },
-          { "key": "trafficLightCb", "value": "G" }
-        ]
+        "key": "meaningfulCompliance",
+        "value": "${__groovy((['true','false'][((Long.parseLong(vars.get('seq')) + 2L) % 2L) as int]),)}"
       },
       {
-        "evtId": "7f1bb67b-a5b3-4f52-8a1c-5c54fc650004",
-        "ucpId": "100004",
-        "inn": "5000000004",
-        "date": "2001-01-04",
-        "params": [
-          { "key": "bordeauxZoneFlag", "value": "false" },
-          { "key": "whitewashMlFlag", "value": "true" },
-          { "key": "meaningfulCompliance", "value": "highRisk" },
-          { "key": "netOperationIncome", "value": "4200" },
-          { "key": "serviceModel", "value": "Corporate" },
-          { "key": "trafficLightCb", "value": "R" }
-        ]
+        "key": "netOperationIncome",
+        "value": "${__groovy(String.valueOf(1000L + ((Long.parseLong(vars.get('seq')) * 7919L) % 900000L)),)}"
       },
       {
-        "evtId": "7f1bb67b-a5b3-4f52-8a1c-5c54fc650005",
-        "ucpId": "100005",
-        "inn": "5000000005",
-        "date": "2001-01-05",
-        "params": [
-          { "key": "bordeauxZoneFlag", "value": "true" },
-          { "key": "whitewashMlFlag", "value": "false" },
-          { "key": "meaningfulCompliance", "value": "reviewNeeded" },
-          { "key": "netOperationIncome", "value": "5120" },
-          { "key": "serviceModel", "value": "SME" },
-          { "key": "trafficLightCb", "value": "Y" }
-        ]
+        "key": "serviceModel",
+        "value": "${__groovy((['Mass','Retail','Corporate','SME'][(Long.parseLong(vars.get('seq')) % 4L) as int]),)}"
       },
       {
-        "evtId": "7f1bb67b-a5b3-4f52-8a1c-5c54fc650006",
-        "ucpId": "100006",
-        "inn": "5000000006",
-        "date": "2001-01-06",
-        "params": [
-          { "key": "bordeauxZoneFlag", "value": "false" },
-          { "key": "whitewashMlFlag", "value": "false" },
-          { "key": "meaningfulCompliance", "value": "notFound" },
-          { "key": "netOperationIncome", "value": "6800" },
-          { "key": "serviceModel", "value": "Retail" },
-          { "key": "trafficLightCb", "value": "G" }
-        ]
-      },
-      {
-        "evtId": "7f1bb67b-a5b3-4f52-8a1c-5c54fc650007",
-        "ucpId": "100007",
-        "inn": "5000000007",
-        "date": "2001-01-07",
-        "params": [
-          { "key": "bordeauxZoneFlag", "value": "true" },
-          { "key": "whitewashMlFlag", "value": "true" },
-          { "key": "meaningfulCompliance", "value": "mediumRisk" },
-          { "key": "netOperationIncome", "value": "7555" },
-          { "key": "serviceModel", "value": "Mass" },
-          { "key": "trafficLightCb", "value": "R" }
-        ]
-      },
-      {
-        "evtId": "7f1bb67b-a5b3-4f52-8a1c-5c54fc650008",
-        "ucpId": "100008",
-        "inn": "5000000008",
-        "date": "2001-01-08",
-        "params": [
-          { "key": "bordeauxZoneFlag", "value": "false" },
-          { "key": "whitewashMlFlag", "value": "true" },
-          { "key": "meaningfulCompliance", "value": "lowRisk" },
-          { "key": "netOperationIncome", "value": "8090" },
-          { "key": "serviceModel", "value": "Corporate" },
-          { "key": "trafficLightCb", "value": "Y" }
-        ]
-      },
-      {
-        "evtId": "7f1bb67b-a5b3-4f52-8a1c-5c54fc650009",
-        "ucpId": "100009",
-        "inn": "5000000009",
-        "date": "2001-01-09",
-        "params": [
-          { "key": "bordeauxZoneFlag", "value": "true" },
-          { "key": "whitewashMlFlag", "value": "false" },
-          { "key": "meaningfulCompliance", "value": "highRisk" },
-          { "key": "netOperationIncome", "value": "9300" },
-          { "key": "serviceModel", "value": "SME" },
-          { "key": "trafficLightCb", "value": "G" }
-        ]
-      },
-      {
-        "evtId": "7f1bb67b-a5b3-4f52-8a1c-5c54fc650010",
-        "ucpId": "100010",
-        "inn": "5000000010",
-        "date": "2001-01-10",
-        "params": [
-          { "key": "bordeauxZoneFlag", "value": "false" },
-          { "key": "whitewashMlFlag", "value": "true" },
-          { "key": "meaningfulCompliance", "value": "reviewNeeded" },
-          { "key": "netOperationIncome", "value": "10050" },
-          { "key": "serviceModel", "value": "Retail" },
-          { "key": "trafficLightCb", "value": "R" }
-        ]
+        "key": "trafficLightCb",
+        "value": "${__groovy((['R','Y','G'][(Long.parseLong(vars.get('seq')) % 3L) as int]),)}"
       }
     ]
   }

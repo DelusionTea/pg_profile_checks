@@ -1,0 +1,47 @@
+flags:
+  - name: -XX:+UseG1GC
+    jdk: [8, 11, 17, 21]
+    conflicts: []
+    notes: "Default in modern JDKs, but keep explicit for policy consistency."
+
+  - name: -XX:MaxGCPauseMillis
+    jdk: [8, 11, 17, 21]
+    conflicts: []
+    notes: "Primary latency target for G1."
+
+  - name: -XX:InitiatingHeapOccupancyPercent
+    jdk: [8, 11, 17, 21]
+    conflicts: []
+    notes: "Controls when concurrent GC cycle starts."
+
+  - name: -XX:G1ReservePercent
+    jdk: [8, 11, 17, 21]
+    conflicts: []
+    notes: "Reserve for allocation spikes to reduce evacuation failures."
+
+  - name: -XX:+ParallelRefProcEnabled
+    jdk: [8, 11, 17, 21]
+    conflicts: []
+    notes: "Reduces reference processing pause component for G1."
+
+  - name: -XX:+UseContainerSupport
+    jdk: [8, 11, 17, 21]
+    conflicts: []
+    notes: "Container-aware ergonomics; explicit declaration helps drift control."
+
+  - name: -XX:MaxRAMPercentage
+    jdk: [8, 11, 17, 21]
+    conflicts:
+      - -Xmx
+    notes: "Prefer one source of truth with InitialRAMPercentage."
+
+  - name: -XX:InitialRAMPercentage
+    jdk: [8, 11, 17, 21]
+    conflicts:
+      - -Xms
+    notes: "Should usually be below MaxRAMPercentage."
+
+  - name: -XX:+ExitOnOutOfMemoryError
+    jdk: [8, 11, 17, 21]
+    conflicts: []
+    notes: "Fast-fail for orchestrator restarts on OOM."

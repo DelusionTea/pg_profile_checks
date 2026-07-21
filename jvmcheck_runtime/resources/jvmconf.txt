@@ -1,0 +1,44 @@
+ZK: -XX:InitialRAMPercentage=70.0 -XX:MaxRAMPercentage=70.0
+EfsSberratingWeb:     javaToolOptions: '
+        -DloggingDir=/fluent-bit/etc/logs 
+        -Djava.io.tmpdir=/tmp
+        -Dspring.profiles.active=PROD
+        -Dlogging.config=/app/config/logging/logback.xml
+        -XX:+UseContainerSupport
+        -XX:MaxRAMPercentage=40.0
+        -XX:InitialRAMPercentage=40.0
+        -XX:MaxHeapFreeRatio=70 
+        -XX:+ExitOnOutOfMemoryError '
+EfsFinmonitoringWeb:       -XX:+UseG1GC
+      -XX:+AlwaysPreTouch
+      -XX:MaxGCPauseMillis=200
+      -XX:ParallelGCThreads=16
+      -XX:+UnlockExperimentalVMOptions
+      -XX:-ResizePLAB
+      -XX:+ParallelRefProcEnabled
+      -Xmx2048m
+      -Xms2048m
+      -XX:MaxNewSize=512m
+      -XX:MinHeapFreeRatio=25
+      -XX:MaxHeapFreeRatio=90
+EfsFinmonitoringMob:   
+	app:    
+      		-XX:+UseG1GC
+      		-XX:+AlwaysPreTouch
+      		-XX:MaxGCPauseMillis=200
+      		-XX:ParallelGCThreads=16
+      		-XX:+UnlockExperimentalVMOptions
+      		-XX:-ResizePLAB
+      		-XX:+ParallelRefProcEnabled
+      		-Xmx800m
+      		-Xms512m
+      		-XX:MaxNewSize=650m
+      		-XX:MinHeapFreeRatio=20
+      		-XX:MaxHeapFreeRatio=80
+PprbSberrating:
+	Compliance-risk-loader:
+		  -Dspring.config.import=file:/app/config/application.properties,optional:file:/app/resources/vault/secret.properties
+  -XX:InitialRAMPercentage=85.0 -XX:MaxRAMPercentage=85.0
+  -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:8011
+  -Dlogging.config=/app/config/logback.xml -Dfile.encoding=UTF-8
+  --add-opens=java.base/java.lang.invoke=ALL-UNNAMED

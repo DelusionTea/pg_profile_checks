@@ -1,0 +1,40 @@
+app:
+  application:
+    resources:
+      requests:
+        cpu: 3000m
+        memory: 5000Mi
+        ephemeralStorage: 5000Mi
+      limits:
+        cpu: 6000m
+        memory: 10000Mi
+        ephemeralStorage: 10000Mi
+  ssdSlave:
+    resources:
+      requests:
+        cpu: 600m
+        memory: 800Mi
+        ephemeralStorage: 768Mi
+      limits:
+        cpu: 1200m
+        memory: 1600Mi
+        ephemeralStorage: 768Mi
+  istioProxy:
+    resources:
+      requests:
+        cpu: 350m
+        memory: 512Mi
+        ephemeralStorage: 512Mi
+      limits:
+        cpu: 700m
+        memory: 1024Mi
+        ephemeralStorage: 512Mi
+  secman:
+    vaultAgent:
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+        limits:
+          cpu: 200m
+          memory: 512Mi

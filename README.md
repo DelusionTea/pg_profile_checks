@@ -52,6 +52,24 @@ python analyze_pgprofile.py \
 # → http://127.0.0.1:8090/
 ```
 
+### JVM-режим на рабочей машине (self-contained)
+
+Для работы вкладки JVM теперь достаточно **этой директории** `pg_profile_checks`: внутри репозитория есть встроенный рантайм `jvmcheck_runtime/` (код анализатора, knowledge, thresholds, resources).
+
+Внешний `/path/to/jvmcheck` рядом с проектом **не обязателен**.
+
+Если нужно использовать другой экземпляр `jvmcheck`, можно переопределить путь:
+
+```bash
+export JVMCHECK_ROOT=/path/to/jvmcheck
+.venv/bin/python ui/server.py
+```
+
+Приоритет поиска:
+1. `JVMCHECK_ROOT` (если задан),
+2. `pg_profile_checks/jvmcheck_runtime`,
+3. legacy-пути (`~/jvmcheck` и соседние директории).
+
 ---
 
 ## UI (локальный визард)
@@ -133,6 +151,10 @@ Confluence-страницы строятся по каркасу: вердикт
 - guardrails (например, запрет на «сжатие heap» при уже высокой утилизации);
 - copy/paste блок с предлагаемыми изменениями `jvm-config`;
 - подсказки, когда уместен scale-out (увеличение pod'ов), а когда сначала нужен JVM/memory tuning.
+
+SLA по памяти:
+- `memory usage % limit` принят как фиксированный порог `80%` для JVM-режима.
+- Порог `memory_limit_pressure_ratio` в встроенном `jvmcheck_runtime/thresholds_jvm.yaml` установлен в `0.80` для default и профилей.
 
 Проверка согласованности knowledge (recommendations ↔ prod_tuning, guc_guidance ↔ guc_impact):
 

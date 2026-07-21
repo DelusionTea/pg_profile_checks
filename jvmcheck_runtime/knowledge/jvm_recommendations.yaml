@@ -1,0 +1,204 @@
+recommendations:
+  - id: gc.long_pause_p95
+    severity: high
+    title: Reduce GC p95 pause
+    rationale: p95 pause is above profile threshold.
+    actions:
+      - Collect GC logs for 30-60 minutes after rollout.
+      - Tune G1 pause target and initiating occupancy.
+      - Compare p95 and p99 against baseline.
+    suggested_flags:
+      - -XX:+UseG1GC
+      - -XX:MaxGCPauseMillis=200
+      - -XX:InitiatingHeapOccupancyPercent=30
+    expected_gain: lower tail latency
+    risk_score: 45
+    references:
+      - https://openjdk.org/
+
+  - id: gc.long_pause_p99
+    severity: high
+    title: Reduce GC p99 pause spikes
+    rationale: p99 pause indicates periodic stop-the-world spikes.
+    actions:
+      - Validate mixed GC cycles and promotion rate.
+      - Adjust reserve and occupancy trigger.
+    suggested_flags:
+      - -XX:G1ReservePercent=20
+      - -XX:InitiatingHeapOccupancyPercent=30
+    expected_gain: fewer latency spikes
+    risk_score: 50
+    references:
+      - https://openjdk.org/
+
+  - id: gc.high_time_ratio
+    severity: high
+    title: Lower GC CPU overhead
+    rationale: GC time ratio is above target.
+    actions:
+      - Inspect allocation rate and object churn.
+      - Review metaspace/classloader churn.
+    suggested_flags:
+      - -XX:+ParallelRefProcEnabled
+    expected_gain: higher throughput
+    risk_score: 55
+    references:
+      - https://openjdk.org/
+
+  - id: heap.old_gen_pressure
+    severity: high
+    title: Stabilize OldGen occupancy
+    rationale: OldGen occupancy is persistently high.
+    actions:
+      - Track post-GC OldGen trend.
+      - Verify retained heap does not grow between full cycles.
+    suggested_flags:
+      - -XX:G1ReservePercent=20
+      - -XX:InitiatingHeapOccupancyPercent=30
+    expected_gain: fewer promotion-related stalls
+    risk_score: 60
+    references:
+      - https://openjdk.org/
+
+  - id: heap.old_gen_critical
+    severity: critical
+    title: Critical OldGen saturation risk
+    rationale: OldGen occupancy is near full capacity.
+    actions:
+      - Prepare rollback and emergency scale plan.
+      - Escalate for heap dump if no fast stabilization.
+    suggested_flags:
+      - -XX:G1ReservePercent=25
+    expected_gain: avoid OOM / long full GC
+    risk_score: 70
+    references:
+      - https://openjdk.org/
+
+  - id: heap.high_used_to_committed
+    severity: warning
+    title: Heap headroom is low
+    rationale: Used-to-committed heap ratio is high.
+    actions:
+      - Monitor spikes during peak windows.
+      - Consider raising container headroom if trend persists.
+    suggested_flags: []
+    expected_gain: safer headroom
+    risk_score: 35
+    references:
+      - https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+
+  - id: memory.limit_pressure
+    severity: critical
+    title: Reduce memory limit pressure
+    rationale: Working set is near container memory limit.
+    actions:
+      - Lower JVM max RAM percentage.
+      - Rebalance pod memory budget if needed.
+    suggested_flags:
+      - -XX:MaxRAMPercentage=60.0
+      - -XX:InitialRAMPercentage=35.0
+      - -XX:+ExitOnOutOfMemoryError
+    expected_gain: fewer OOM/restarts
+    risk_score: 65
+    references:
+      - https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+
+  - id: memory.request_pressure
+    severity: warning
+    title: Memory usage significantly exceeds request
+    rationale: Working set is above declared memory request.
+    actions:
+      - Align requests with actual baseline usage.
+      - Review HPA/VPA assumptions.
+    suggested_flags: []
+    expected_gain: better scheduling predictability
+    risk_score: 30
+    references:
+      - https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+
+  - id: container.request_limit_skew
+    severity: warning
+    title: Request-to-limit ratio is too tight
+    rationale: Memory request is almost equal to limit.
+    actions:
+      - Leave headroom between request and limit for burst tolerance.
+    suggested_flags: []
+    expected_gain: fewer throttle/eviction surprises
+    risk_score: 25
+    references:
+      - https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+
+  - id: container.missing_memory_limit
+    severity: high
+    title: Missing memory limit
+    rationale: Container has no memory limit and may impact pod stability.
+    actions:
+      - Set explicit memory limit and request.
+    suggested_flags: []
+    expected_gain: predictable OOM behavior
+    risk_score: 50
+    references:
+      - https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+
+  - id: jvm.flag_missing_container_support
+    severity: warning
+    title: Container support flag is missing
+    rationale: JVM options do not explicitly include container-awareness flag.
+    actions:
+      - Ensure container support behavior is explicit for your JDK baseline.
+    suggested_flags:
+      - -XX:+UseContainerSupport
+    expected_gain: predictable memory ergonomics
+    risk_score: 20
+    references:
+      - https://docs.oracle.com/en/java/
+
+  - id: jvm.flag_missing_exit_on_oom
+    severity: warning
+    title: ExitOnOutOfMemoryError is missing
+    rationale: Missing deterministic crash policy on OOM.
+    actions:
+      - Add ExitOnOutOfMemoryError to speed restart by orchestrator.
+    suggested_flags:
+      - -XX:+ExitOnOutOfMemoryError
+    expected_gain: faster recovery on OOM
+    risk_score: 20
+    references:
+      - https://docs.oracle.com/en/java/
+
+  - id: jvm.flag_duplicate
+    severity: warning
+    title: Duplicate JVM flags found
+    rationale: Duplicate flags increase config drift and ambiguity.
+    actions:
+      - Keep a single authoritative value for each duplicated flag.
+    suggested_flags: []
+    expected_gain: cleaner and deterministic config
+    risk_score: 15
+    references:
+      - https://docs.oracle.com/en/java/
+
+  - id: jvm.flag_conflict_maxram
+    severity: high
+    title: Conflicting RAM percentage flags
+    rationale: MaxRAM and InitialRAM percentages are conflicting or inverted.
+    actions:
+      - Keep InitialRAMPercentage below MaxRAMPercentage.
+    suggested_flags: []
+    expected_gain: avoids startup/runtime memory surprises
+    risk_score: 55
+    references:
+      - https://docs.oracle.com/en/java/
+
+  - id: jvm.gc_not_declared
+    severity: info
+    title: GC strategy not explicitly declared
+    rationale: JVM config does not pin collector strategy.
+    actions:
+      - Explicitly document/declare collector policy for consistency.
+    suggested_flags:
+      - -XX:+UseG1GC
+    expected_gain: deterministic behavior across JDK updates
+    risk_score: 10
+    references:
+      - https://openjdk.org/

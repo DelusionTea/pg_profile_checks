@@ -1,0 +1,59 @@
+defaults:
+  gc_pause_p95_ms: 250
+  gc_pause_p99_ms: 400
+  gc_time_ratio_percent: 15
+  old_gen_pressure_ratio: 0.80
+  old_gen_critical_ratio: 0.92
+  heap_used_to_committed_ratio: 0.88
+  memory_limit_pressure_ratio: 0.80
+  memory_request_pressure_ratio: 1.15
+  request_to_limit_max_ratio: 0.95
+
+profiles:
+  conservative:
+    gc_pause_p95_ms: 220
+    gc_pause_p99_ms: 350
+    gc_time_ratio_percent: 12
+    old_gen_pressure_ratio: 0.75
+    memory_limit_pressure_ratio: 0.80
+
+  normal:
+    gc_pause_p95_ms: 250
+    gc_pause_p99_ms: 400
+    gc_time_ratio_percent: 15
+    old_gen_pressure_ratio: 0.80
+
+  aggressive:
+    gc_pause_p95_ms: 300
+    gc_pause_p99_ms: 500
+    gc_time_ratio_percent: 20
+    old_gen_pressure_ratio: 0.85
+    memory_limit_pressure_ratio: 0.80
+
+  oltp-api:
+    gc_pause_p95_ms: 180
+    gc_pause_p99_ms: 280
+    gc_time_ratio_percent: 10
+    old_gen_pressure_ratio: 0.75
+    memory_limit_pressure_ratio: 0.80
+
+  batch:
+    gc_pause_p95_ms: 450
+    gc_pause_p99_ms: 700
+    gc_time_ratio_percent: 25
+    old_gen_pressure_ratio: 0.90
+    memory_limit_pressure_ratio: 0.80
+
+  streaming:
+    gc_pause_p95_ms: 220
+    gc_pause_p99_ms: 320
+    gc_time_ratio_percent: 12
+    old_gen_pressure_ratio: 0.78
+    memory_limit_pressure_ratio: 0.80
+
+  latency-critical:
+    gc_pause_p95_ms: 120
+    gc_pause_p99_ms: 220
+    gc_time_ratio_percent: 8
+    old_gen_pressure_ratio: 0.70
+    memory_limit_pressure_ratio: 0.80

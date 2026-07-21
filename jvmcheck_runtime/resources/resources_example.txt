@@ -1,0 +1,38 @@
+replicaCount: 1
+
+resources:
+  requests:
+    cpu: 1020m
+    memory: 3600Mi
+  limits:
+    cpu: 2
+    memory: 7Gi
+
+istioProxy:
+  resources:
+    requests:
+      cpu: 102m
+      memory: 256Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+sidecars:
+  fluentbit:
+    resources:
+      requests:
+        cpu: 102m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 500Mi
+
+secman:
+  agent:
+    resources:
+      requests:
+        cpu: 153m
+        memory: 256Mi
+      limits:
+        cpu: 300m
+        memory: 256Mi

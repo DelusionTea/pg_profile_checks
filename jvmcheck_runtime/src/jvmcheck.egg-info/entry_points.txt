@@ -1,0 +1,2 @@
+[console_scripts]
+jvmcheck = jvmcheck.cli:main

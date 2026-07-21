@@ -74,6 +74,8 @@ def _detect_jvmcheck_root() -> Path:
     candidates = []
     if env:
         candidates.append(Path(env))
+    # Preferred self-contained runtime bundled with this repository.
+    candidates.append(Path(__file__).resolve().parent.parent / "jvmcheck_runtime")
     candidates.extend(
         [
             Path.home() / "jvmcheck",

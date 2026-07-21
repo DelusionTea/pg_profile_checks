@@ -3,38 +3,38 @@
     "evtType": "GetMarkup",
     "evtVersion": 3,
     "srcModule": "CI02589137",
-    "evtId": "${__groovy(java.util.UUID.randomUUID().toString().replace('-',''),)}",
-    "evtDate": ${__time(,)},
-    "sndDate": ${__time(,)}
+    "evtId": "${__groovy(java.util.UUID.randomUUID().toString().split('-').join(''))}",
+    "evtDate": ${__groovy(System.currentTimeMillis())},
+    "sndDate": ${__groovy(System.currentTimeMillis())}
   },
   "body": {
     "ucpId": "${__counter(FALSE,seq)}",
-    "inn": "${__groovy(String.format('%010d',5000000000L + Long.parseLong(vars.get('seq'))),)}",
-    "date": "${__groovy(new java.text.SimpleDateFormat('yyyy-MM-dd').format(new Date(1704067200000L - (Long.parseLong(vars.get('seq')) % 365L) * 86400000L)),)}",
+    "inn": "${__groovy((5000000000L + Long.parseLong(vars.get('seq'))).toString())}",
+    "date": "${__groovy(new java.text.SimpleDateFormat('yyyy-MM-dd').format(new Date(1704067200000L - (Long.parseLong(vars.get('seq')) % 365L) * 86400000L)))}",
     "params": [
       {
         "key": "bordeauxZoneFlag",
-        "value": "${__groovy((['true','false'][(Long.parseLong(vars.get('seq')) % 2L) as int]),)}"
+        "value": "${__groovy((Long.parseLong(vars.get('seq')) % 2L) == 0L ? 'true' : 'false')}"
       },
       {
         "key": "whitewashMlFlag",
-        "value": "${__groovy((['true','false'][((Long.parseLong(vars.get('seq')) + 1L) % 2L) as int]),)}"
+        "value": "${__groovy(((Long.parseLong(vars.get('seq')) + 1L) % 2L) == 0L ? 'true' : 'false')}"
       },
       {
         "key": "meaningfulCompliance",
-        "value": "${__groovy((['true','false'][((Long.parseLong(vars.get('seq')) + 2L) % 2L) as int]),)}"
+        "value": "${__groovy(((Long.parseLong(vars.get('seq')) + 2L) % 2L) == 0L ? 'true' : 'false')}"
       },
       {
         "key": "netOperationIncome",
-        "value": "${__groovy(String.valueOf(1000L + ((Long.parseLong(vars.get('seq')) * 7919L) % 900000L)),)}"
+        "value": "${__groovy((1000L + ((Long.parseLong(vars.get('seq')) * 7919L) % 900000L)).toString())}"
       },
       {
         "key": "serviceModel",
-        "value": "${__groovy((['Mass','Retail','Corporate','SME'][(Long.parseLong(vars.get('seq')) % 4L) as int]),)}"
+        "value": "${__groovy((Long.parseLong(vars.get('seq')) % 4L) == 0L ? 'Mass' : ((Long.parseLong(vars.get('seq')) % 4L) == 1L ? 'Retail' : ((Long.parseLong(vars.get('seq')) % 4L) == 2L ? 'Corporate' : 'SME')))}"
       },
       {
         "key": "trafficLightCb",
-        "value": "${__groovy((['R','Y','G'][(Long.parseLong(vars.get('seq')) % 3L) as int]),)}"
+        "value": "${__groovy((Long.parseLong(vars.get('seq')) % 3L) == 0L ? 'R' : ((Long.parseLong(vars.get('seq')) % 3L) == 1L ? 'Y' : 'G'))}"
       }
     ]
   }

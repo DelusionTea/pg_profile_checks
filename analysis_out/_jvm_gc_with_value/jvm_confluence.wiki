@@ -1,0 +1,133 @@
+h2. Selected JVM Problems and Input Values
+*System:* DEMO_CounterAgent
+*Container:* application
+*Selected problems:* gc_latency
+
+|| Parameter || Value ||
+| gc_pause_p95_ms | 280 |
+| gc_pause_p99_ms | N/A |
+| gc_time_ratio_percent | N/A |
+| container_memory_usage_percent | N/A |
+| heap_used_mib | N/A |
+| heap_used_percent | N/A |
+| old_gen_used_mib | N/A |
+| old_gen_capacity_mib | N/A |
+| old_gen_used_percent | N/A |
+| new_gen_used_mib | N/A |
+| new_gen_capacity_mib | N/A |
+| new_gen_used_percent | N/A |
+
+
+h2. JVM Tuning Recommendation
+*System:* DEMO_CounterAgent
+*Target container:* application
+*Lifecycle status:* tuning_attempted
+
+h3. Runtime Context
+|| Parameter || Value ||
+| JDK version | N/A |
+| Spring Boot version | N/A |
+| Heap used (MiB) | N/A |
+| OldGen used (MiB) | N/A |
+| OldGen capacity (MiB) | N/A |
+| GC pause p95 (ms) | 280 |
+| GC pause p99 (ms) | N/A |
+| GC time ratio (%) | N/A |
+| Container memory working set (MiB) | N/A |
+| Container memory limit (MiB) | 8192 |
+
+h3. Findings
+* *[HIGH]* gc.long_pause_p95: GC p95 pause exceeds threshold.
+** gc_pause_p95_ms: 280
+* *[INFO]* heap.metric_missing: Heap utilization is not provided. Recommendations may be less precise.
+** source: ui.metric_input
+* *[INFO]* oldgen.metric_missing: OldGen utilization is not provided. OldGen recommendations may be less precise.
+** source: ui.metric_input
+
+h3. Recommended Java Tool Options
+h4. Recommendation 1: Reduce GC p95 pause
+*Rationale:* p95 pause is above profile threshold.
+*Confidence:* low
+*Evidence score:* 33/100
+*Risk score:* 45/100
+*Expected gain:* lower tail latency
+*Verification window:* 30-60m after deploy
+*Platform escalation required:* No
+*Suggested options:*
+** {code}-XX:+UseG1GC{code}
+** {code}-XX:MaxGCPauseMillis=200{code}
+** {code}-XX:InitiatingHeapOccupancyPercent=30{code}
+*Rollback plan:*
+** Rollback to previous JVM option set if SLA worsens.
+*Notes:*
+** Collect GC logs for 30-60 minutes after rollout.
+** Tune G1 pause target and initiating occupancy.
+** Compare p95 and p99 against baseline.
+** Config diff:
+** - add -XX:+UseG1GC=enabled
+** - add -XX:MaxGCPauseMillis=200
+** - add -XX:InitiatingHeapOccupancyPercent=30
+
+h4. Recommendation 2: Input data quality warning
+*Rationale:* Some problem-specific inputs are missing; analysis confidence is reduced.
+*Confidence:* low
+*Evidence score:* 35/100
+*Risk score:* 10/100
+*Expected gain:* higher recommendation accuracy after metric enrichment
+*Verification window:* before next tuning cycle
+*Platform escalation required:* No
+*Rollback plan:*
+** No rollback required.
+*Notes:*
+** Добавьте heap_used_mib или heap_used_percent для точной оценки pressure.
+** Добавьте old_gen_used_percent или old_gen_used_mib для точной оценки oldgen pressure.
+
+
+h3. Engineer Validation Runbook
+# Apply recommended JVM options in test/stage environment first. Keep previous values for rollback.
+# Run at least one representative load profile and compare with baseline metrics collected before the change.
+# If no measurable improvement after the observation window, set status to tuning_not_effective and prepare escalation to dump analysis.
+
+h3. Change Risks and Side Effects
+* Any JVM option change can shift latency and throughput profile; always compare SLA/SLO against baseline.
+* Rollback plan is mandatory: keep previous JVM flags and resource limits so the team can revert quickly.
+
+h3. Escalation Rule
+* If tuning recommendations do not improve GC/heap/memory-pressure metrics in the defined observation window, escalate to development team for heap dump and memory analysis.
+
+
+h3. Problem-driven Context Validation
+*Selected problems:* gc_latency
+*Target container:* application
+
+|| Problem || Input status || Missing required metrics ||
+| gc_latency | PARTIAL | GC pause p99, GC time ratio |
+
+h3. Recommendation Strategy (Safe/Balanced/Aggressive)
+h4. gc_latency
+* Safe: Зафиксировать G1 и умеренно снизить MaxGCPauseMillis без изменения общего heap budget.
+* Balanced: Снизить pause target и скорректировать InitiatingHeapOccupancyPercent c проверкой p95/p99.
+* Aggressive: Агрессивно оптимизировать GC-параметры только после стабилизации heap pressure.
+
+h3. Missing Data Collection Hints
+* GC metrics: pull p95/p99 pause and GC time ratio from APM/Prometheus or GC logs.
+* Heap metrics: collect heap used/committed and old-gen used/capacity from JMX.
+* Memory pressure: collect container working set and correlate with memory limits.
+
+h3. Targeted Outcome
+* Findings in scope: 3; recommendations in scope: 2.
+
+h3. Proposed Changes (Copy/Paste)
+h4. jvm-config
+{code:yaml}
+application:
+  javaToolOptions: >
+    -XX:+UseG1GC
+    -XX:MaxGCPauseMillis=200
+    -XX:InitiatingHeapOccupancyPercent=30
+{code}
+
+h4. Change summary
+* add -XX:+UseG1GC=enabled
+* add -XX:MaxGCPauseMillis=200
+* add -XX:InitiatingHeapOccupancyPercent=30

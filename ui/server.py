@@ -45,11 +45,16 @@ if str(_ROOT) not in sys.path:
 
 from ui.analysis_runner import (  # noqa: E402
     AnalyzeRequest,
+    JvmAnalyzeRequest,
     ReportMeta,
     build_zip,
+    list_jvm_containers,
+    list_jvm_problems,
+    list_jvm_systems,
     list_symptoms,
     list_thresholds,
     run_analysis,
+    run_jvm_analysis,
     suggest_label,
     suggest_scenario,
 )
@@ -247,6 +252,21 @@ class Handler(BaseHTTPRequestHandler):
             # lightweight suggest for scenario from query counts — used optionally
             _json_response(self, 200, {"ok": True, "hint": qs})
             return
+        if path == "/api/jvm/systems":
+            _json_response(self, 200, {"systems": list_jvm_systems()})
+            return
+        if path == "/api/jvm/problems":
+            _json_response(self, 200, {"problems": list_jvm_problems()})
+            return
+        if path == "/api/jvm/containers":
+            qs = parse_qs(parsed.query)
+            system_name = str((qs.get("system") or [""])[0]).strip()
+            _json_response(
+                self,
+                200,
+                {"containers": list_jvm_containers(system_name)},
+            )
+            return
 
         # /api/sessions/{id}/wiki|prompt|brief|zip|meta
         parts = path.strip("/").split("/")
@@ -308,11 +328,91 @@ class Handler(BaseHTTPRequestHandler):
 
             meta_raw = fields.get("meta", ["{}"])[0]
             meta = json.loads(meta_raw)
+            mode = str(meta.get("mode") or "pg_profile")
             scenario = str(meta.get("scenario") or "health")
             symptoms = list(meta.get("symptoms") or [])
             reports_meta = meta.get("reports") or []
-            if not files:
+            if mode != "jvm" and not files:
                 _json_response(self, 400, {"error": "нет загруженных файлов"})
+                return
+            if mode == "jvm":
+                selected_problems = [str(x).strip() for x in (meta.get("selected_problems") or []) if str(x).strip()]
+                session_id = str(uuid.uuid4())
+                sdir = SESSIONS_ROOT / session_id
+                uploads = sdir / "uploads"
+                out = sdir / "out"
+                uploads.mkdir(parents=True, exist_ok=True)
+                jvm_blobs = [(fname, data) for name, fname, data in files if name in ("jvm_file", "file")]
+                upload_paths: list[Path] = []
+                for i, (fname, data) in enumerate(jvm_blobs):
+                    safe_name = Path(fname).name
+                    dest = uploads / f"{i:02d}_{safe_name}"
+                    dest.write_bytes(data)
+                    upload_paths.append(dest)
+                req = JvmAnalyzeRequest(
+                    system_name=str(meta.get("system_name") or "").strip(),
+                    container_name=(str(meta.get("container_name") or "").strip() or None),
+                    selected_problems=selected_problems,
+                    threshold_profile=str(meta.get("threshold_profile") or "normal"),
+                    jdk_version=_opt_int(meta.get("jdk_version")),
+                    spring_boot_version=(str(meta.get("spring_boot_version") or "").strip() or None),
+                    confluence_title=(str(meta.get("confluence_title") or "").strip() or None),
+                    heap_used_mib=_opt_int(meta.get("heap_used_mib")),
+                    heap_committed_mib=_opt_int(meta.get("heap_committed_mib")),
+                    old_gen_used_mib=_opt_int(meta.get("old_gen_used_mib")),
+                    old_gen_capacity_mib=_opt_int(meta.get("old_gen_capacity_mib")),
+                    gc_pause_p95_ms=_opt_float(meta.get("gc_pause_p95_ms")),
+                    gc_pause_p99_ms=_opt_float(meta.get("gc_pause_p99_ms")),
+                    gc_time_ratio_percent=_opt_float(meta.get("gc_time_ratio_percent")),
+                    container_memory_usage_percent=_opt_float(meta.get("container_memory_usage_percent")),
+                    heap_used_percent=_opt_float(meta.get("heap_used_percent")),
+                    old_gen_used_percent=_opt_float(meta.get("old_gen_used_percent")),
+                    new_gen_used_mib=_opt_int(meta.get("new_gen_used_mib")),
+                    new_gen_capacity_mib=_opt_int(meta.get("new_gen_capacity_mib")),
+                    new_gen_used_percent=_opt_float(meta.get("new_gen_used_percent")),
+                    container_memory_working_set_mib=_opt_int(meta.get("container_memory_working_set_mib")),
+                )
+                if not req.system_name:
+                    _json_response(self, 400, {"error": "выберите систему АС (system_name)"})
+                    return
+                if not req.container_name:
+                    _json_response(self, 400, {"error": "выберите контейнер"})
+                    return
+                result = run_jvm_analysis(req, upload_paths, out)
+                if result.error:
+                    _json_response(self, 400, {"error": result.error, "exit_code": result.exit_code})
+                    return
+                meta_out = {
+                    "session_id": session_id,
+                    "mode": "jvm",
+                    "scenario": "jvm",
+                    "exit_code": result.exit_code,
+                    "wiki": result.wiki_path.name if result.wiki_path else None,
+                    "prompt": result.prompt_path.name if result.prompt_path else None,
+                    "brief": result.brief_path.name if result.brief_path else None,
+                    "summary": result.summary,
+                }
+                (sdir / "meta.json").write_text(
+                    json.dumps(meta_out, ensure_ascii=False, indent=2) + "\n",
+                    encoding="utf-8",
+                )
+                wiki_text = result.wiki_path.read_text(encoding="utf-8") if result.wiki_path else ""
+                prompt_text = result.prompt_path.read_text(encoding="utf-8") if result.prompt_path else ""
+                brief_text = result.brief_path.read_text(encoding="utf-8") if result.brief_path else ""
+                summary = result.summary or {}
+                findings_ui = summary.pop("findings_ui", None) or []
+                meta_out["summary"] = summary
+                _json_response(
+                    self,
+                    200,
+                    {
+                        **meta_out,
+                        "wiki_text": wiki_text,
+                        "prompt_text": prompt_text,
+                        "brief_text": brief_text,
+                        "findings_ui": findings_ui,
+                    },
+                )
                 return
             if not reports_meta:
                 # auto-build from files as NT
@@ -452,6 +552,18 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(data)))
         self.end_headers()
         self.wfile.write(data)
+
+
+def _opt_int(value: Any) -> int | None:
+    if value in (None, ""):
+        return None
+    return int(value)
+
+
+def _opt_float(value: Any) -> float | None:
+    if value in (None, ""):
+        return None
+    return float(value)
 
 
 def main(argv: list[str] | None = None) -> int:

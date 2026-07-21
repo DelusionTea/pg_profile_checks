@@ -1,0 +1,35 @@
+Подготовь краткую инженерную сводку по JVM findings и рекомендуемым действиям.
+Сфокусируйся на рисках, порядке внедрения и проверках после изменения.
+
+DATA:
+
+# JVM Analysis Brief
+
+- System: `DEMO_CounterAgent`
+- Container: `application`
+- Selected problems: `gc_latency, heap_pressure`
+- Threshold profile: `normal`
+- Findings: `4`
+
+## [HIGH] gc.long_pause_p95
+- Message: GC p95 pause exceeds threshold.
+- Threshold: gc_pause_p95_ms > 250.0
+
+## [WARNING] heap.old_gen_pressure
+- Message: Выбрано давление по heap/old gen, требуется стабилизация occupancy.
+- Threshold: selected by operator
+
+## [WARNING] heap.high_utilization_signal
+- Message: Heap utilization is high (87.0%).
+- Threshold: heap_used_percent >= 85
+
+## [WARNING] oldgen.high_utilization_signal
+- Message: OldGen utilization is high (83.0%).
+- Threshold: old_gen_used_percent >= 80
+
+## Problem input coverage
+- gc_latency: status=partial, missing_metrics=GC pause p99, GC time ratio
+- heap_pressure: status=ok, missing_metrics=-
+
+## Guardrails
+- GC latency observed with already high heap utilization: avoid heap shrinking and prioritize GC policy tuning.

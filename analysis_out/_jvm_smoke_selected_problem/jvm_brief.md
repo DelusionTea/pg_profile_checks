@@ -1,0 +1,11 @@
+# JVM Analysis Brief
+
+- System: `DEMO_CounterAgent`
+- Container: `application`
+- Selected problems: `gc_latency`
+- Threshold profile: `normal`
+- Findings: `1`
+
+## [WARNING] gc.long_pause_p95
+- Message: Выбрана проблема долгих GC пауз, требуется tuning tail latency.
+- Threshold: selected by operator

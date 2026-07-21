@@ -3,9 +3,17 @@
   "use strict";
 
   const apiBase = typeof API_BASE === "string" ? API_BASE : "";
+  const JVM_PROBLEM_REQUIRED_FIELDS = {
+    gc_latency: ["gc_pause_p95_ms"],
+    memory_pressure: ["container_memory_usage_percent"],
+    heap_pressure: ["heap_used_mib", "heap_used_percent", "old_gen_used_percent"],
+  };
 
   /** @type {{ id: string, file: File, env: string, label: string, order: number }[]} */
   let reports = [];
+  /** @type {{ id: string, file: File }[]} */
+  let jvmFiles = [];
+  let currentMode = "pg_profile";
   let sessionId = null;
   let lastWikiText = "";
   let severityFilter = null;
@@ -22,15 +30,43 @@
   };
 
   const els = {
+    modeToggleButtons: document.querySelectorAll(".mode-toggle"),
     dropzone: document.getElementById("dropzone"),
+    reportPanel: document.getElementById("report-panel"),
+    dropzoneTitle: document.querySelector("#dropzone .dropzone-title"),
     dropzoneHint: document.getElementById("dropzone-hint"),
     fileInput: document.getElementById("file-input"),
+    jvmDropzone: document.getElementById("jvm-dropzone"),
+    jvmFileInput: document.getElementById("jvm-file-input"),
     reportsBody: document.getElementById("reports-body"),
+    reportsTable: document.getElementById("reports-table"),
     reportsEmpty: document.getElementById("reports-empty"),
     reportsHeadSimple: document.getElementById("reports-head-simple"),
     reportsHeadAdvanced: document.getElementById("reports-head-advanced"),
     advancedSettings: document.getElementById("advanced-settings"),
+    jvmAdvancedSettings: document.getElementById("jvm-advanced-settings"),
     simpleModeNote: document.getElementById("simple-mode-note"),
+    jvmFilesNote: document.getElementById("jvm-files-note"),
+    jvmFilesList: document.getElementById("jvm-files-list"),
+    jvmFields: document.getElementById("jvm-fields"),
+    jvmSystemName: document.getElementById("jvm-system-name"),
+    jvmContainerName: document.getElementById("jvm-container-name"),
+    jvmProblemList: document.getElementById("jvm-problem-list"),
+    jvmThresholdProfile: document.getElementById("jvm-threshold-profile"),
+    jvmJdkVersion: document.getElementById("jvm-jdk-version"),
+    jvmSpringBootVersion: document.getElementById("jvm-spring-boot-version"),
+    jvmGcP95: document.getElementById("jvm-gc-p95"),
+    jvmGcP99: document.getElementById("jvm-gc-p99"),
+    jvmGcRatio: document.getElementById("jvm-gc-ratio"),
+    jvmMemoryUsagePercent: document.getElementById("jvm-memory-usage-percent"),
+    jvmHeapUsed: document.getElementById("jvm-heap-used"),
+    jvmHeapUsedPercent: document.getElementById("jvm-heap-used-percent"),
+    jvmOldgenUsed: document.getElementById("jvm-oldgen-used"),
+    jvmOldgenCapacity: document.getElementById("jvm-oldgen-capacity"),
+    jvmOldgenUsedPercent: document.getElementById("jvm-oldgen-used-percent"),
+    jvmNewgenUsedMib: document.getElementById("jvm-newgen-used-mib"),
+    jvmNewgenCapacityMib: document.getElementById("jvm-newgen-capacity-mib"),
+    jvmNewgenUsedPercent: document.getElementById("jvm-newgen-used-percent"),
     scenario: document.getElementById("scenario"),
     scenarioHelp: document.getElementById("scenario-help"),
     autoPreview: document.getElementById("auto-scenario-preview"),
@@ -39,6 +75,9 @@
     runBtn: document.getElementById("run-btn"),
     runSpinner: document.getElementById("run-spinner"),
     runHint: document.getElementById("run-hint"),
+    appTitle: document.getElementById("app-title"),
+    appSubtitle: document.getElementById("app-subtitle"),
+    simpleAnalysisHint: document.getElementById("simple-analysis-hint"),
     errorBanner: document.getElementById("error-banner"),
     toast: document.getElementById("toast"),
     resultPanel: document.getElementById("result-panel"),
@@ -59,6 +98,58 @@
 
   function isAdvancedMode() {
     return !!(els.advancedSettings && els.advancedSettings.open);
+  }
+
+  function isJvmMode() {
+    return currentMode === "jvm";
+  }
+
+  function selectedJvmProblems() {
+    if (!els.jvmProblemList) return [];
+    return Array.from(
+      els.jvmProblemList.querySelectorAll('input[type="checkbox"]:checked')
+    ).map((el) => el.value);
+  }
+
+  function jvmMetricMeta() {
+    return {
+      gc_pause_p95_ms: _numberOrNull(els.jvmGcP95 && els.jvmGcP95.value),
+      gc_pause_p99_ms: _numberOrNull(els.jvmGcP99 && els.jvmGcP99.value),
+      gc_time_ratio_percent: _numberOrNull(els.jvmGcRatio && els.jvmGcRatio.value),
+      container_memory_usage_percent: _numberOrNull(
+        els.jvmMemoryUsagePercent && els.jvmMemoryUsagePercent.value
+      ),
+      heap_used_mib: _numberOrNull(els.jvmHeapUsed && els.jvmHeapUsed.value),
+      heap_used_percent: _numberOrNull(els.jvmHeapUsedPercent && els.jvmHeapUsedPercent.value),
+      old_gen_used_mib: _numberOrNull(els.jvmOldgenUsed && els.jvmOldgenUsed.value),
+      old_gen_capacity_mib: _numberOrNull(els.jvmOldgenCapacity && els.jvmOldgenCapacity.value),
+      old_gen_used_percent: _numberOrNull(
+        els.jvmOldgenUsedPercent && els.jvmOldgenUsedPercent.value
+      ),
+      new_gen_used_mib: _numberOrNull(els.jvmNewgenUsedMib && els.jvmNewgenUsedMib.value),
+      new_gen_capacity_mib: _numberOrNull(
+        els.jvmNewgenCapacityMib && els.jvmNewgenCapacityMib.value
+      ),
+      new_gen_used_percent: _numberOrNull(
+        els.jvmNewgenUsedPercent && els.jvmNewgenUsedPercent.value
+      ),
+    };
+  }
+
+  function hasAnyJvmMetric(meta) {
+    return Object.values(meta || {}).some((v) => typeof v === "number");
+  }
+
+  function validateJvmProblemInputs(selectedProblems, meta) {
+    const missing = [];
+    selectedProblems.forEach((pid) => {
+      const required = JVM_PROBLEM_REQUIRED_FIELDS[pid] || [];
+      const nonePresent = required.length && required.every((k) => meta[k] == null);
+      if (nonePresent) {
+        missing.push(pid);
+      }
+    });
+    return missing;
   }
 
   function uid() {
@@ -120,7 +211,87 @@
   }
 
   function updateModeUi() {
+    if (els.modeToggleButtons) {
+      els.modeToggleButtons.forEach((btn) => {
+        btn.classList.toggle("active", btn.getAttribute("data-mode") === currentMode);
+      });
+    }
+    if (isJvmMode()) {
+      if (els.appTitle) els.appTitle.textContent = "JVM CHECKS";
+      if (els.appSubtitle) {
+        els.appSubtitle.textContent =
+          "// ресурсы АС · проблемы · impact · рекомендации";
+      }
+      if (els.simpleAnalysisHint) {
+        els.simpleAnalysisHint.textContent =
+          "Анализ JVM проблем выбранного контейнера: оценка влияния, рисков и практических шагов исправления.";
+      }
+      if (els.reportPanel) els.reportPanel.hidden = true;
+      if (els.dropzone) els.dropzone.hidden = true;
+      if (els.reportsTable) els.reportsTable.hidden = true;
+      if (els.simpleModeNote) els.simpleModeNote.hidden = true;
+      if (els.advancedSettings) els.advancedSettings.hidden = true;
+      if (els.jvmFields) els.jvmFields.hidden = false;
+      if (els.jvmAdvancedSettings) els.jvmAdvancedSettings.hidden = false;
+      if (els.jvmFilesList) {
+        els.jvmFilesList.textContent = jvmFiles.length
+          ? "Загружены файлы: " + jvmFiles.map((f) => f.file.name).join(", ")
+          : "Файлы обновления не загружены.";
+      }
+      if (els.runBtn) {
+        const metricMeta = jvmMetricMeta();
+        const selectedProblems = selectedJvmProblems();
+        const hasProblemOrMetrics = selectedProblems.length > 0 || hasAnyJvmMetric(metricMeta);
+        const ready = !!(
+          els.jvmSystemName &&
+          els.jvmSystemName.value &&
+          els.jvmContainerName &&
+          els.jvmContainerName.value &&
+          hasProblemOrMetrics
+        );
+        els.runBtn.disabled = !ready;
+      }
+      if (els.runHint) {
+        const metricMeta = jvmMetricMeta();
+        const selectedProblems = selectedJvmProblems();
+        const hasProblemOrMetrics = selectedProblems.length > 0 || hasAnyJvmMetric(metricMeta);
+        const missingByProblem = validateJvmProblemInputs(selectedProblems, metricMeta);
+        if (!els.jvmSystemName || !els.jvmSystemName.value) {
+          els.runHint.textContent = "выберите АС";
+        } else if (!els.jvmContainerName || !els.jvmContainerName.value) {
+          els.runHint.textContent = "выберите контейнер";
+        } else if (!hasProblemOrMetrics) {
+          els.runHint.textContent = "выберите проблему или заполните метрики";
+        } else if (missingByProblem.length) {
+          els.runHint.textContent =
+            "для отмеченных проблем заполните обязательные значения";
+        } else {
+          els.runHint.textContent = "";
+        }
+      }
+      return;
+    }
+    if (els.dropzone) els.dropzone.hidden = false;
+    if (els.reportPanel) els.reportPanel.hidden = false;
+    if (els.appTitle) els.appTitle.textContent = "PG PROFILE CHECKS";
+    if (els.appSubtitle) {
+      els.appSubtitle.textContent = "// отчёты · health-check · confluence";
+    }
+    if (els.simpleAnalysisHint) {
+      els.simpleAnalysisHint.textContent =
+        "Полный health-check одного отчёта: checkpoints, WAL, cache, sessions, memory, IO, autovacuum, locks и др. Результат — Confluence wiki с чеклистом PASS / FAIL / SUSPECT.";
+    }
     const adv = isAdvancedMode();
+    if (els.reportsTable) els.reportsTable.hidden = false;
+    if (els.advancedSettings) els.advancedSettings.hidden = false;
+    if (els.jvmAdvancedSettings) els.jvmAdvancedSettings.hidden = true;
+    if (els.jvmFields) els.jvmFields.hidden = true;
+    if (els.dropzoneTitle) {
+      els.dropzoneTitle.textContent = "Перетащите HTML отчёт pg_profile";
+    }
+    if (els.fileInput) {
+      els.fileInput.setAttribute("accept", ".html,text/html");
+    }
     if (els.reportsHeadSimple) els.reportsHeadSimple.hidden = adv;
     if (els.reportsHeadAdvanced) els.reportsHeadAdvanced.hidden = !adv;
     if (els.dropzoneHint) {
@@ -150,6 +321,15 @@
 
   function updateScenarioHints() {
     updateModeUi();
+    if (isJvmMode()) {
+      if (els.scenarioHelp) {
+        els.scenarioHelp.textContent = "Для check jvm сценарий не используется.";
+      }
+      if (els.autoPreview) {
+        els.autoPreview.hidden = true;
+      }
+      return;
+    }
     const sc = els.scenario.value;
     if (els.scenarioHelp) {
       els.scenarioHelp.textContent = SCENARIO_HELP[sc] || SCENARIO_HELP.auto;
@@ -311,6 +491,17 @@
     showError("");
   }
 
+  function addJvmFiles(fileList) {
+    const incoming = Array.from(fileList || []).filter((f) =>
+      /\.(yaml|yml|txt)$/i.test(f.name)
+    );
+    incoming.forEach((file) => {
+      jvmFiles.push({ id: uid(), file: file });
+    });
+    updateModeUi();
+    showError("");
+  }
+
   async function loadSymptoms() {
     try {
       const res = await fetch(apiBase + "/api/symptoms");
@@ -344,6 +535,107 @@
     } catch (err) {
       els.symptomList.innerHTML =
         '<p class="alert alert-error">не удалось загрузить симптомы</p>';
+    }
+  }
+
+  async function loadJvmSystems() {
+    if (!els.jvmSystemName) return;
+    try {
+      const res = await fetch(apiBase + "/api/jvm/systems");
+      const data = await res.json();
+      const systems = data.systems || [];
+      els.jvmSystemName.innerHTML = "";
+      if (!systems.length) {
+        const opt = document.createElement("option");
+        opt.value = "";
+        opt.textContent = "системы не найдены";
+        els.jvmSystemName.appendChild(opt);
+        updateModeUi();
+        return;
+      }
+      const first = document.createElement("option");
+      first.value = "";
+      first.textContent = "выберите систему";
+      els.jvmSystemName.appendChild(first);
+      systems.forEach((name) => {
+        const opt = document.createElement("option");
+        opt.value = name;
+        opt.textContent = name === "__root__" ? "(resources root)" : name;
+        els.jvmSystemName.appendChild(opt);
+      });
+      await loadJvmContainers();
+      updateModeUi();
+    } catch (err) {
+      els.jvmSystemName.innerHTML = '<option value="">ошибка загрузки систем</option>';
+      updateModeUi();
+    }
+  }
+
+  async function loadJvmProblems() {
+    if (!els.jvmProblemList) return;
+    try {
+      const res = await fetch(apiBase + "/api/jvm/problems");
+      const data = await res.json();
+      const problems = data.problems || [];
+      els.jvmProblemList.innerHTML = "";
+      if (!problems.length) {
+        els.jvmProblemList.innerHTML =
+          '<p class="empty-row" style="padding:0.5rem 0;">проблемы не найдены</p>';
+        return;
+      }
+      problems.forEach((p) => {
+        const label = document.createElement("label");
+        label.className = "symptom-item";
+        const input = document.createElement("input");
+        input.type = "checkbox";
+        input.value = p.id;
+        input.addEventListener("change", updateModeUi);
+        const wrap = document.createElement("div");
+        const strong = document.createElement("strong");
+        strong.textContent = p.title || p.id;
+        const span = document.createElement("span");
+        span.textContent = p.description || "";
+        wrap.appendChild(strong);
+        wrap.appendChild(span);
+        label.appendChild(input);
+        label.appendChild(wrap);
+        els.jvmProblemList.appendChild(label);
+      });
+    } catch (err) {
+      els.jvmProblemList.innerHTML =
+        '<p class="alert alert-error">не удалось загрузить JVM проблемы</p>';
+    }
+  }
+
+  async function loadJvmContainers() {
+    if (!els.jvmContainerName || !els.jvmSystemName) return;
+    const systemName = els.jvmSystemName.value || "";
+    if (!systemName) {
+      els.jvmContainerName.innerHTML = '<option value="">сначала выберите АС</option>';
+      updateModeUi();
+      return;
+    }
+    try {
+      const res = await fetch(
+        apiBase + "/api/jvm/containers?system=" + encodeURIComponent(systemName)
+      );
+      const data = await res.json();
+      const containers = data.containers || [];
+      els.jvmContainerName.innerHTML = "";
+      const first = document.createElement("option");
+      first.value = "";
+      first.textContent = containers.length ? "выберите контейнер" : "контейнеры не найдены";
+      els.jvmContainerName.appendChild(first);
+      containers.forEach((name) => {
+        const opt = document.createElement("option");
+        opt.value = name;
+        opt.textContent = name;
+        els.jvmContainerName.appendChild(opt);
+      });
+      updateModeUi();
+    } catch (err) {
+      els.jvmContainerName.innerHTML = '<option value="">ошибка загрузки контейнеров</option>';
+      updateModeUi();
     }
   }
 
@@ -624,6 +916,70 @@
 
   async function runAnalysis() {
     showError("");
+    if (isJvmMode()) {
+      if (!els.jvmSystemName || !els.jvmSystemName.value) {
+        showError("выберите АС для check jvm");
+        return;
+      }
+      if (!els.jvmContainerName || !els.jvmContainerName.value) {
+        showError("выберите контейнер");
+        return;
+      }
+      const selectedProblems = selectedJvmProblems();
+      const metricMeta = jvmMetricMeta();
+      if (!selectedProblems.length && !hasAnyJvmMetric(metricMeta)) {
+        showError("выберите проблему или заполните метрики контекста");
+        return;
+      }
+      const missingByProblem = validateJvmProblemInputs(selectedProblems, metricMeta);
+      if (missingByProblem.length) {
+        showError(
+          "Для выбранных проблем заполните обязательные поля: " +
+            missingByProblem.join(", ")
+        );
+        return;
+      }
+      els.runBtn.disabled = true;
+      els.runSpinner.classList.add("visible");
+      els.runHint.textContent = "анализ…";
+      const meta = {
+        mode: "jvm",
+        system_name: els.jvmSystemName.value,
+        container_name: els.jvmContainerName.value,
+        selected_problems: selectedProblems,
+        threshold_profile: (els.jvmThresholdProfile && els.jvmThresholdProfile.value) || "normal",
+        jdk_version: _numberOrNull(els.jvmJdkVersion && els.jvmJdkVersion.value),
+        spring_boot_version:
+          (els.jvmSpringBootVersion && els.jvmSpringBootVersion.value.trim()) || null,
+        confluence_title: (els.confluenceTitle && els.confluenceTitle.value.trim()) || null,
+        ...metricMeta,
+      };
+      const form = new FormData();
+      form.append("meta", JSON.stringify(meta));
+      jvmFiles.forEach((f) => form.append("jvm_file", f.file, f.file.name));
+      try {
+        const res = await fetch(apiBase + "/api/analyze", {
+          method: "POST",
+          body: form,
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          showError(data.error || "ошибка анализа jvm");
+          els.runHint.textContent = "";
+          return;
+        }
+        showResult(data);
+        els.runHint.textContent = "готово";
+        showToast("jvm анализ готов");
+      } catch (err) {
+        showError(String(err.message || err));
+        els.runHint.textContent = "";
+      } finally {
+        els.runSpinner.classList.remove("visible");
+        updateModeUi();
+      }
+      return;
+    }
     if (!reports.length) {
       showError("добавьте хотя бы один HTML-отчёт");
       return;
@@ -690,6 +1046,14 @@
     }
   }
 
+  function _numberOrNull(value) {
+    if (value == null) return null;
+    const txt = String(value).trim();
+    if (!txt) return null;
+    const n = Number(txt);
+    return Number.isFinite(n) ? n : null;
+  }
+
   els.dropzone.addEventListener("click", () => els.fileInput.click());
   els.dropzone.addEventListener("keydown", (e) => {
     if (e.key === "Enter" || e.key === " ") {
@@ -716,6 +1080,34 @@
   els.dropzone.addEventListener("drop", (e) => {
     addFiles(e.dataTransfer.files);
   });
+  if (els.jvmDropzone && els.jvmFileInput) {
+    els.jvmDropzone.addEventListener("click", () => els.jvmFileInput.click());
+    els.jvmDropzone.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        els.jvmFileInput.click();
+      }
+    });
+    els.jvmFileInput.addEventListener("change", () => {
+      addJvmFiles(els.jvmFileInput.files);
+      els.jvmFileInput.value = "";
+    });
+    ["dragenter", "dragover"].forEach((ev) => {
+      els.jvmDropzone.addEventListener(ev, (e) => {
+        e.preventDefault();
+        els.jvmDropzone.classList.add("dragover");
+      });
+    });
+    ["dragleave", "drop"].forEach((ev) => {
+      els.jvmDropzone.addEventListener(ev, (e) => {
+        e.preventDefault();
+        els.jvmDropzone.classList.remove("dragover");
+      });
+    });
+    els.jvmDropzone.addEventListener("drop", (e) => {
+      addJvmFiles(e.dataTransfer.files);
+    });
+  }
 
   els.runBtn.addEventListener("click", runAnalysis);
   document.getElementById("copy-wiki").addEventListener("click", () =>
@@ -731,6 +1123,46 @@
     btn.addEventListener("click", () => setWikiMode(btn.getAttribute("data-mode")));
   });
   els.scenario.addEventListener("change", updateScenarioHints);
+  if (els.modeToggleButtons) {
+    els.modeToggleButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        currentMode = btn.getAttribute("data-mode") || "pg_profile";
+        if (!isJvmMode()) {
+          jvmFiles = [];
+        }
+        updateModeUi();
+        updateScenarioHints();
+      });
+    });
+  }
+  if (els.jvmSystemName) {
+    els.jvmSystemName.addEventListener("change", async () => {
+      await loadJvmContainers();
+      updateModeUi();
+    });
+  }
+  if (els.jvmContainerName) {
+    els.jvmContainerName.addEventListener("change", updateModeUi);
+  }
+  if (els.jvmProblemList) {
+    els.jvmProblemList.addEventListener("change", updateModeUi);
+  }
+  [
+    els.jvmGcP95,
+    els.jvmGcP99,
+    els.jvmGcRatio,
+    els.jvmMemoryUsagePercent,
+    els.jvmHeapUsed,
+    els.jvmHeapUsedPercent,
+    els.jvmOldgenUsed,
+    els.jvmOldgenCapacity,
+    els.jvmOldgenUsedPercent,
+    els.jvmNewgenUsedMib,
+    els.jvmNewgenCapacityMib,
+    els.jvmNewgenUsedPercent,
+  ].forEach((input) => {
+    if (input) input.addEventListener("input", updateModeUi);
+  });
   if (els.advancedSettings) {
     els.advancedSettings.addEventListener("toggle", () => {
       renderReports();
@@ -739,5 +1171,7 @@
 
   setTabs();
   loadSymptoms();
+  loadJvmSystems();
+  loadJvmProblems();
   updateScenarioHints();
 })();

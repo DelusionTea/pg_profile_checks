@@ -14,8 +14,12 @@
       <img class="mascot" src="/img/mascot.png" alt="PG Profile Checks" width="130" height="130">
     </div>
     <div class="title-block">
-      <h1>PG PROFILE CHECKS</h1>
-      <p class="subtitle">// отчёты · health-check · confluence</p>
+      <h1 id="app-title">PG PROFILE CHECKS</h1>
+      <p id="app-subtitle" class="subtitle">// отчёты · health-check · confluence</p>
+      <div class="wiki-mode-toggle" role="group" aria-label="Режим проверки">
+        <button type="button" class="btn-secondary mode-toggle active" data-mode="pg_profile">PG</button>
+        <button type="button" class="btn-secondary mode-toggle" data-mode="jvm">JVM</button>
+      </div>
     </div>
     <nav class="header-nav">
       <a href="/" class="nav-link nav-link-active">Анализ</a>
@@ -26,7 +30,7 @@
   <div id="error-banner" class="alert alert-error error-banner"></div>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-  <section class="panel section">
+  <section id="report-panel" class="panel section">
     <div class="panel-head">
       <span>01 · ОТЧЁТ</span>
     </div>
@@ -38,7 +42,6 @@
       </div>
 
       <p id="simple-mode-note" class="field-help">По умолчанию анализируется только первый файл (все категории health-check). Мульти-отчёты и симптомы — в расширенных настройках.</p>
-
       <table class="reports-table" id="reports-table">
         <thead>
           <tr id="reports-head-simple">
@@ -71,6 +74,112 @@
         Полный health-check одного отчёта: checkpoints, WAL, cache, sessions, memory, IO, autovacuum, locks и др.
         Результат — Confluence wiki с чеклистом PASS / FAIL / SUSPECT.
       </p>
+
+      <div id="jvm-fields" hidden>
+        <div class="field-grid">
+          <div class="field">
+            <label for="jvm-system-name">АС</label>
+            <select id="jvm-system-name"></select>
+            <p class="field-help">В списке есть реальные и demo АС.</p>
+          </div>
+          <div class="field">
+            <label for="jvm-container-name">Контейнер</label>
+            <select id="jvm-container-name"></select>
+          </div>
+        </div>
+        <p class="section-title" style="margin-top: 1rem;">Проблемы</p>
+        <p class="dropzone-hint" style="margin: -0.35rem 0 0.75rem;">Отметьте проблему, если хотите точечный план решения. Можно не отмечать, но заполнить метрики для контекстного анализа.</p>
+        <div id="jvm-problem-list" class="symptom-list">
+          <p class="empty-row" style="padding: 0.5rem 0;">загрузка списка проблем…</p>
+        </div>
+        <p class="section-title" style="margin-top: 1rem;">Значения проблем и контекста</p>
+        <p class="dropzone-hint" style="margin: -0.35rem 0 0.75rem;">Если проблема отмечена, её ключевые поля становятся обязательными. Эти значения используются в анализе и попадают в первый блок Confluence.</p>
+        <div class="field-grid">
+          <div class="field">
+            <label for="jvm-gc-p95">GC pause p95 (ms)</label>
+            <input id="jvm-gc-p95" type="number" placeholder="250">
+          </div>
+          <div class="field">
+            <label for="jvm-gc-p99">GC pause p99 (ms)</label>
+            <input id="jvm-gc-p99" type="number" placeholder="450">
+          </div>
+          <div class="field">
+            <label for="jvm-gc-ratio">GC time ratio (%)</label>
+            <input id="jvm-gc-ratio" type="number" placeholder="12">
+          </div>
+          <div class="field">
+            <label for="jvm-memory-usage-percent">Container memory usage (%)</label>
+            <input id="jvm-memory-usage-percent" type="number" placeholder="82">
+          </div>
+          <div class="field">
+            <label for="jvm-heap-used">Heap used (MiB)</label>
+            <input id="jvm-heap-used" type="number" placeholder="3072">
+          </div>
+          <div class="field">
+            <label for="jvm-heap-used-percent">Heap used (%)</label>
+            <input id="jvm-heap-used-percent" type="number" placeholder="85">
+          </div>
+          <div class="field">
+            <label for="jvm-oldgen-used">OldGen used (MiB)</label>
+            <input id="jvm-oldgen-used" type="number" placeholder="2048">
+          </div>
+          <div class="field">
+            <label for="jvm-oldgen-capacity">OldGen capacity (MiB)</label>
+            <input id="jvm-oldgen-capacity" type="number" placeholder="2560">
+          </div>
+          <div class="field">
+            <label for="jvm-oldgen-used-percent">OldGen used (%)</label>
+            <input id="jvm-oldgen-used-percent" type="number" placeholder="80">
+          </div>
+          <div class="field">
+            <label for="jvm-newgen-used-mib">NewGen used (MiB)</label>
+            <input id="jvm-newgen-used-mib" type="number" placeholder="512">
+          </div>
+          <div class="field">
+            <label for="jvm-newgen-capacity-mib">NewGen capacity (MiB)</label>
+            <input id="jvm-newgen-capacity-mib" type="number" placeholder="1024">
+          </div>
+          <div class="field">
+            <label for="jvm-newgen-used-percent">NewGen used (%)</label>
+            <input id="jvm-newgen-used-percent" type="number" placeholder="50">
+          </div>
+        </div>
+      </div>
+
+      <details id="jvm-advanced-settings" class="advanced-settings" hidden>
+        <summary class="advanced-summary">Дополнительно</summary>
+        <div class="advanced-body">
+          <div class="field-grid">
+            <div class="field">
+              <label for="jvm-threshold-profile">Threshold profile</label>
+              <select id="jvm-threshold-profile">
+                <option value="normal" selected>normal</option>
+                <option value="conservative">conservative</option>
+                <option value="aggressive">aggressive</option>
+                <option value="oltp-api">oltp-api</option>
+                <option value="batch">batch</option>
+                <option value="streaming">streaming</option>
+                <option value="latency-critical">latency-critical</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="jvm-jdk-version">JDK version (опционально)</label>
+              <input id="jvm-jdk-version" type="number" placeholder="17">
+            </div>
+            <div class="field">
+              <label for="jvm-spring-boot-version">Spring Boot version (опционально)</label>
+              <input id="jvm-spring-boot-version" type="text" placeholder="3.3.1">
+            </div>
+          </div>
+          <p id="jvm-files-note" class="field-help" style="margin-top:0.75rem;">Можно перетащить обновлённые `resources` / `jvm-config` — они перезапишут конфиг выбранной АС.</p>
+          <div id="jvm-dropzone" class="dropzone" tabindex="0" style="margin-top:0.5rem;">
+            <p class="dropzone-title">Перетащите resources/jvm-config файлы</p>
+            <p class="dropzone-hint">или нажмите, чтобы выбрать файлы</p>
+            <input id="jvm-file-input" class="hidden-file" type="file" accept=".yaml,.yml,.txt" multiple>
+          </div>
+          <div id="jvm-files-list" class="field-help"></div>
+        </div>
+      </details>
 
       <details id="advanced-settings" class="advanced-settings">
         <summary class="advanced-summary">Расширенные настройки</summary>

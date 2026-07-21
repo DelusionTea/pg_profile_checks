@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: credithistory-demo
+spec:
+  template:
+    spec:
+      containers:
+        - name: application
+          resources:
+            requests:
+              cpu: "3000m"
+              memory: "6144Mi"
+            limits:
+              cpu: "6000m"
+              memory: "10240Mi"
+        - name: agent
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "384Mi"
+            limits:
+              cpu: "500m"
+              memory: "768Mi"
+        - name: fluentbit
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "256Mi"
+            limits:
+              cpu: "400m"
+              memory: "512Mi"

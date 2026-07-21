@@ -1,0 +1,18 @@
+application:
+  javaToolOptions: >
+    -XX:+UseContainerSupport
+    -XX:+UseG1GC
+    -XX:MaxRAMPercentage=70.0
+    -XX:InitialRAMPercentage=45.0
+    -XX:MaxGCPauseMillis=250
+    -XX:+ExitOnOutOfMemoryError
+
+istioProxy:
+  javaToolOptions: >
+    -XX:+UseContainerSupport
+    -XX:MaxRAMPercentage=60.0
+
+vaultAgent:
+  javaToolOptions: >
+    -XX:+UseContainerSupport
+    -XX:MaxRAMPercentage=50.0

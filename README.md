@@ -109,6 +109,15 @@ python3 ui/server.py
    - brief;
    - ZIP со всем `analysis_out` сессии + `README_AI.txt`.
 
+6. Режим **JVM checks** (переключатель в header `PG/JVM`):
+   - выбор АС и контейнера;
+   - выбор проблем (опционально, но для точечного сценария рекомендуется);
+   - ввод контекстных метрик (GC/heap/oldgen/newgen/memory%), которые усиливают точность;
+   - если проблема отмечена, для неё обязательны ключевые поля (например, для `gc_latency` нужен `gc_pause_p95_ms`);
+   - если проблемы не отмечены, анализ всё равно возможен при заполненных контекстных метриках;
+   - drag-and-drop `resources/jvm-config` в секции «Дополнительно» для перезаписи конфигов выбранной АС;
+   - встроенные demo АС и контейнеры видны всегда.
+
 Список симптомов берётся из `knowledge/symptom_playbook.yaml`.
 
 Страница **Thresholds** (ссылка в header): таблицы порогов из `thresholds.yaml` — `/thresholds`.
@@ -117,6 +126,13 @@ python3 ui/server.py
 
 После анализа UI показывает summary pills, карточки findings, превью Wiki Markup и чеклист проверки.
 Confluence-страницы строятся по каркасу: вердикт → TOC → действия → сводка → детали в `{expand}`.
+
+Для JVM-анализа в wiki добавляются:
+- первый блок с выбранными проблемами и введёнными значениями;
+- блок context-validation (чего не хватает для точности);
+- guardrails (например, запрет на «сжатие heap» при уже высокой утилизации);
+- copy/paste блок с предлагаемыми изменениями `jvm-config`;
+- подсказки, когда уместен scale-out (увеличение pod'ов), а когда сначала нужен JVM/memory tuning.
 
 Проверка согласованности knowledge (recommendations ↔ prod_tuning, guc_guidance ↔ guc_impact):
 
@@ -700,6 +716,10 @@ python analyze_pgprofile.py \
 | `symptom_confluence_stub.wiki` | Python | Таблицы гипотез и план verify |
 | `symptom_confluence_prompt.txt` | Python | Промпт gigacli для симптома |
 | `symptom_brief.md` | Python | Brief для симптома |
+| `jvm_analysis.json` | Python | Findings/recommendations JVM-анализа (режим JVM в UI) |
+| `jvm_confluence.wiki` | Python | Wiki Markup для JVM-анализа |
+| `jvm_prompt.txt` | Python | Промпт ИИ для JVM-анализа |
+| `jvm_brief.md` | Python | Brief JVM-анализа |
 | `confluence_body.wiki` | **ИИ** | Текстовые разделы (резюме, рекомендации) |
 | `confluence_page.wiki` | `merge_confluence.py` | Готовая страница |
 
@@ -733,6 +753,12 @@ python analyze_pgprofile.py \
 
 ```bash
 gigacli < analysis_out/confluence_prompt.txt > analysis_out/confluence_body.wiki
+```
+
+Для JVM-режима UI используйте `jvm_prompt.txt` (если он есть в артефактах сессии):
+
+```bash
+gigacli < analysis_out/jvm_prompt.txt > analysis_out/jvm_body.wiki
 ```
 
 **Не передавайте в gigacli:**

@@ -70,6 +70,115 @@ export JVMCHECK_ROOT=/path/to/jvmcheck
 2. `pg_profile_checks/jvmcheck_runtime`,
 3. legacy-пути (`~/jvmcheck` и соседние директории).
 
+### Инструкция пользователя: как подготовить данные для JVM
+
+Ниже — практический формат, который приложение ожидает для корректного парсинга в режиме `JVM`.
+
+#### 1) Куда добавлять папки АС
+
+По умолчанию складывайте данные сюда:
+
+```text
+pg_profile_checks/jvmcheck_runtime/resources/
+```
+
+Для каждой АС создавайте отдельную папку. Имя папки будет показано в UI в списке `АС`.
+
+Пример:
+
+```text
+pg_profile_checks/
+  jvmcheck_runtime/
+    resources/
+      CounterAgent/
+      CreditHistory/
+```
+
+#### 2) Какие файлы обязательны внутри папки АС
+
+Минимально нужен ресурсный файл контейнера:
+
+- `resources.yaml` (или `resources.yml`)
+
+Рекомендуется также добавить JVM-конфиг:
+
+- `jvm-config.txt` (можно `jvm-config.yaml` / `jvm-config.yml`)
+
+Рекомендуемый шаблон:
+
+```text
+jvmcheck_runtime/resources/<AS_NAME>/
+  resources.yaml
+  jvm-config.txt
+```
+
+#### 3) Что должно быть в `resources.yaml`
+
+Парсер ожидает Kubernetes-подобное описание контейнеров, где у контейнеров есть:
+
+- `name`
+- `resources.requests.memory`
+- `resources.limits.memory`
+
+Именно из этого файла берётся список контейнеров для выпадающего списка `Контейнер`.
+
+#### 4) Что должно быть в `jvm-config.*`
+
+Ожидается мапа по имени контейнера, например:
+
+```yaml
+application:
+  javaToolOptions: >
+    -XX:+UseContainerSupport
+    -XX:+UseG1GC
+    -XX:MaxRAMPercentage=70.0
+```
+
+Имя контейнера в `jvm-config` должно совпадать с именем контейнера из `resources.yaml`.
+
+#### 5) Drag-and-drop в UI (секция «Дополнительно»)
+
+При загрузке через UI файл классифицируется по имени:
+
+- ресурсный: имя содержит `resource` или `values` и расширение `.yaml/.yml`;
+- JVM-конфиг: имя содержит `jvm` или `java` и расширение `.txt/.yaml/.yml`.
+
+Чтобы избежать ошибок распознавания, используйте имена:
+
+- `resources.yaml`
+- `jvm-config.txt`
+
+Загруженные файлы перезаписывают конфиг выбранной АС.
+
+#### 6) Если хотите использовать внешний jvmcheck
+
+Можно хранить данные вне репозитория и переключить источник:
+
+```bash
+export JVMCHECK_ROOT=/path/to/jvmcheck
+```
+
+Тогда структура должна быть аналогичной:
+
+```text
+/path/to/jvmcheck/
+  src/jvmcheck/
+  resources/<AS_NAME>/resources.yaml
+  resources/<AS_NAME>/jvm-config.txt
+  knowledge/
+  thresholds_jvm.yaml
+```
+
+#### 7) Demo-данные
+
+Demo-системы (`DEMO_*`) всегда видны в UI и находятся в:
+
+```text
+pg_profile_checks/resources/jvm_demo/
+```
+
+Их можно использовать как образец для своих АС.
+
 ---
 
 ## UI (локальный визард)
@@ -930,6 +1039,11 @@ pg_profile_checks/
 ├── thresholds.yaml
 ├── thresholds_relaxed.yaml
 ├── requirements.txt
+├── jvmcheck_runtime/         # встроенный JVM-рантайм (self-contained)
+│   ├── src/jvmcheck/         # код JVM-анализатора
+│   ├── resources/            # АС-папки и конфиги для JVM
+│   ├── knowledge/            # база правил/рекомендаций JVM
+│   └── thresholds_jvm.yaml   # JVM-пороги (в т.ч. SLA memory 80%)
 ├── resources/               # Примеры HTML
 └── README.md
 ```

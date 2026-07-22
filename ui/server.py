@@ -49,6 +49,7 @@ from ui.analysis_runner import (  # noqa: E402
     ReportMeta,
     build_zip,
     list_jvm_containers,
+    load_jvm_last_input,
     list_jvm_problems,
     list_jvm_systems,
     list_symptoms,
@@ -267,6 +268,16 @@ class Handler(BaseHTTPRequestHandler):
                 {"containers": list_jvm_containers(system_name)},
             )
             return
+        if path == "/api/jvm/last-input":
+            qs = parse_qs(parsed.query)
+            system_name = str((qs.get("system") or [""])[0]).strip()
+            container_name = str((qs.get("container") or [""])[0]).strip()
+            values = load_jvm_last_input(system_name, container_name)
+            if not values:
+                _json_response(self, 404, {"error": "last input not found"})
+                return
+            _json_response(self, 200, {"values": values})
+            return
 
         # /api/sessions/{id}/wiki|prompt|brief|zip|meta
         parts = path.strip("/").split("/")
@@ -377,6 +388,18 @@ class Handler(BaseHTTPRequestHandler):
                     return
                 if not req.container_name:
                     _json_response(self, 400, {"error": "выберите контейнер"})
+                    return
+                if req.gc_pause_p95_ms is None or req.heap_used_mib is None or req.container_memory_usage_percent is None:
+                    _json_response(
+                        self,
+                        400,
+                        {
+                            "error": (
+                                "Обязательные JVM поля: gc_pause_p95_ms, "
+                                "heap_used_mib, container_memory_usage_percent"
+                            )
+                        },
+                    )
                     return
                 result = run_jvm_analysis(req, upload_paths, out)
                 if result.error:

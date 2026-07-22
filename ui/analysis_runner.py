@@ -11,6 +11,7 @@ import os
 import re
 import zipfile
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -133,6 +134,12 @@ JVM_PROBLEM_REQUIRED_INPUTS: dict[str, tuple[str, ...]] = {
     "memory_pressure": ("container_memory_usage_percent",),
     "heap_pressure": ("heap_used_mib", "heap_used_percent", "old_gen_used_percent"),
 }
+
+JVM_ALWAYS_REQUIRED_INPUTS: tuple[str, ...] = (
+    "gc_pause_p95_ms",
+    "heap_used_mib",
+    "container_memory_usage_percent",
+)
 
 JVM_PROBLEM_SEED_FINDINGS: dict[str, tuple[tuple[str, str, str], ...]] = {
     "gc_latency": (
@@ -991,6 +998,70 @@ def list_jvm_containers(system_name: str, root: Path | None = None) -> list[str]
                 resources_file, _ = _resolve_root_jvm_input_files(system_dir)
     except Exception:
         return []
+
+
+def load_jvm_last_input(
+    system_name: str,
+    container_name: str,
+    *,
+    root: Path | None = None,
+) -> dict[str, Any] | None:
+    if not system_name or not container_name:
+        return None
+    jroot = root or DEFAULT_JVMCHECK_ROOT
+    resources_root = jroot / "resources"
+    system_dir = _resolve_jvm_system_dir(system_name, resources_root)
+    path = system_dir / "last_input.json"
+    if not path.is_file():
+        return None
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+    containers = payload.get("containers") if isinstance(payload, dict) else None
+    if not isinstance(containers, dict):
+        return None
+    entry = containers.get(container_name)
+    return entry if isinstance(entry, dict) else None
+
+
+def save_jvm_last_input(
+    req: JvmAnalyzeRequest,
+    *,
+    root: Path | None = None,
+) -> None:
+    if not req.system_name or not req.container_name:
+        return
+    jroot = root or DEFAULT_JVMCHECK_ROOT
+    resources_root = jroot / "resources"
+    system_dir = _resolve_jvm_system_dir(req.system_name, resources_root)
+    system_dir.mkdir(parents=True, exist_ok=True)
+    path = system_dir / "last_input.json"
+    payload: dict[str, Any] = {"containers": {}}
+    if path.is_file():
+        try:
+            existing = json.loads(path.read_text(encoding="utf-8"))
+            if isinstance(existing, dict) and isinstance(existing.get("containers"), dict):
+                payload = existing
+        except Exception:
+            payload = {"containers": {}}
+    payload.setdefault("containers", {})
+    payload["containers"][req.container_name] = {
+        "gc_pause_p95_ms": req.gc_pause_p95_ms,
+        "gc_pause_p99_ms": req.gc_pause_p99_ms,
+        "gc_time_ratio_percent": req.gc_time_ratio_percent,
+        "container_memory_usage_percent": req.container_memory_usage_percent,
+        "heap_used_mib": req.heap_used_mib,
+        "heap_used_percent": req.heap_used_percent,
+        "old_gen_used_mib": req.old_gen_used_mib,
+        "old_gen_capacity_mib": req.old_gen_capacity_mib,
+        "old_gen_used_percent": req.old_gen_used_percent,
+        "new_gen_used_mib": req.new_gen_used_mib,
+        "new_gen_capacity_mib": req.new_gen_capacity_mib,
+        "new_gen_used_percent": req.new_gen_used_percent,
+        "updated_at": _utc_now_iso(),
+    }
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     try:
         import sys
 
@@ -1175,6 +1246,7 @@ def run_jvm_analysis(
         prompt_path = output_dir / "jvm_prompt.txt"
         prompt_path.write_text(_build_jvm_prompt(brief), encoding="utf-8")
         summary = _build_jvm_summary(req, analysis_dict)
+        save_jvm_last_input(req, root=root)
         return AnalyzeResult(
             exit_code=0,
             error=None,
@@ -1377,8 +1449,14 @@ def _audit_selected_problem_inputs(req: JvmAnalyzeRequest) -> list[dict[str, Any
 
 
 def _validate_jvm_problem_input_contract(req: JvmAnalyzeRequest) -> str | None:
-    if not req.selected_problems and not _has_any_context_metrics(req):
-        return "Выберите проблему или заполните метрики контекста JVM."
+    missing_global = [
+        field_name for field_name in JVM_ALWAYS_REQUIRED_INPUTS if getattr(req, field_name, None) is None
+    ]
+    if missing_global:
+        return (
+            "Заполните обязательные поля JVM: gc_pause_p95_ms, "
+            "heap_used_mib, container_memory_usage_percent."
+        )
     for pid in req.selected_problems:
         required_fields = JVM_PROBLEM_REQUIRED_INPUTS.get(pid, ())
         if not required_fields:
@@ -1693,6 +1771,10 @@ def _build_jvm_problem_statement_block(req: JvmAnalyzeRequest, container_name: s
 
 def _display_or_na(value: Any) -> str:
     return "N/A" if value is None else str(value)
+
+
+def _utc_now_iso() -> str:
+    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
 def _build_jvm_targeted_context_section(

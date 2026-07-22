@@ -1,0 +1,19 @@
+{
+  "containers": {
+    "application": {
+      "gc_pause_p95_ms": 265,
+      "gc_pause_p99_ms": 410,
+      "gc_time_ratio_percent": 13,
+      "container_memory_usage_percent": 78,
+      "heap_used_mib": 3200,
+      "heap_used_percent": null,
+      "old_gen_used_mib": null,
+      "old_gen_capacity_mib": null,
+      "old_gen_used_percent": null,
+      "new_gen_used_mib": null,
+      "new_gen_capacity_mib": null,
+      "new_gen_used_percent": null,
+      "updated_at": "2026-07-22T20:10:04Z"
+    }
+  }
+}

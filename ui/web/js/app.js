@@ -13,6 +13,7 @@
   let reports = [];
   /** @type {{ id: string, file: File }[]} */
   let jvmFiles = [];
+  let jvmLastInput = null;
   let currentMode = "pg_profile";
   let sessionId = null;
   let lastWikiText = "";
@@ -67,6 +68,8 @@
     jvmNewgenUsedMib: document.getElementById("jvm-newgen-used-mib"),
     jvmNewgenCapacityMib: document.getElementById("jvm-newgen-capacity-mib"),
     jvmNewgenUsedPercent: document.getElementById("jvm-newgen-used-percent"),
+    jvmFillLastValuesBtn: document.getElementById("jvm-fill-last-values-btn"),
+    jvmHistoryHint: document.getElementById("jvm-history-hint"),
     scenario: document.getElementById("scenario"),
     scenarioHelp: document.getElementById("scenario-help"),
     autoPreview: document.getElementById("auto-scenario-preview"),
@@ -140,6 +143,14 @@
     return Object.values(meta || {}).some((v) => typeof v === "number");
   }
 
+  function hasRequiredJvmMetrics(meta) {
+    return (
+      meta.gc_pause_p95_ms != null &&
+      meta.heap_used_mib != null &&
+      meta.container_memory_usage_percent != null
+    );
+  }
+
   function validateJvmProblemInputs(selectedProblems, meta) {
     const missing = [];
     selectedProblems.forEach((pid) => {
@@ -150,6 +161,27 @@
       }
     });
     return missing;
+  }
+
+  function _setJvmMetricValue(input, value) {
+    if (!input) return;
+    input.value = value == null ? "" : String(value);
+  }
+
+  function applyLastJvmValues(values) {
+    if (!values) return;
+    _setJvmMetricValue(els.jvmGcP95, values.gc_pause_p95_ms);
+    _setJvmMetricValue(els.jvmGcP99, values.gc_pause_p99_ms);
+    _setJvmMetricValue(els.jvmGcRatio, values.gc_time_ratio_percent);
+    _setJvmMetricValue(els.jvmMemoryUsagePercent, values.container_memory_usage_percent);
+    _setJvmMetricValue(els.jvmHeapUsed, values.heap_used_mib);
+    _setJvmMetricValue(els.jvmHeapUsedPercent, values.heap_used_percent);
+    _setJvmMetricValue(els.jvmOldgenUsed, values.old_gen_used_mib);
+    _setJvmMetricValue(els.jvmOldgenCapacity, values.old_gen_capacity_mib);
+    _setJvmMetricValue(els.jvmOldgenUsedPercent, values.old_gen_used_percent);
+    _setJvmMetricValue(els.jvmNewgenUsedMib, values.new_gen_used_mib);
+    _setJvmMetricValue(els.jvmNewgenCapacityMib, values.new_gen_capacity_mib);
+    _setJvmMetricValue(els.jvmNewgenUsedPercent, values.new_gen_used_percent);
   }
 
   function uid() {
@@ -240,28 +272,43 @@
       }
       if (els.runBtn) {
         const metricMeta = jvmMetricMeta();
-        const selectedProblems = selectedJvmProblems();
-        const hasProblemOrMetrics = selectedProblems.length > 0 || hasAnyJvmMetric(metricMeta);
+        const requiredReady = hasRequiredJvmMetrics(metricMeta);
         const ready = !!(
           els.jvmSystemName &&
           els.jvmSystemName.value &&
           els.jvmContainerName &&
           els.jvmContainerName.value &&
-          hasProblemOrMetrics
+          requiredReady
         );
         els.runBtn.disabled = !ready;
+      }
+      if (els.jvmFillLastValuesBtn) {
+        els.jvmFillLastValuesBtn.disabled = !jvmLastInput;
+      }
+      if (els.jvmHistoryHint) {
+        const hasSystem = !!(els.jvmSystemName && els.jvmSystemName.value);
+        const hasContainer = !!(els.jvmContainerName && els.jvmContainerName.value);
+        if (!hasSystem || !hasContainer) {
+          els.jvmHistoryHint.textContent = "выберите АС и контейнер для истории";
+        } else if (jvmLastInput) {
+          const updatedAt = jvmLastInput.updated_at ? " · " + jvmLastInput.updated_at : "";
+          els.jvmHistoryHint.textContent = "история найдена" + updatedAt;
+        } else {
+          els.jvmHistoryHint.textContent =
+            "история для выбранной АС/контейнера не найдена";
+        }
       }
       if (els.runHint) {
         const metricMeta = jvmMetricMeta();
         const selectedProblems = selectedJvmProblems();
-        const hasProblemOrMetrics = selectedProblems.length > 0 || hasAnyJvmMetric(metricMeta);
+        const requiredReady = hasRequiredJvmMetrics(metricMeta);
         const missingByProblem = validateJvmProblemInputs(selectedProblems, metricMeta);
         if (!els.jvmSystemName || !els.jvmSystemName.value) {
           els.runHint.textContent = "выберите АС";
         } else if (!els.jvmContainerName || !els.jvmContainerName.value) {
           els.runHint.textContent = "выберите контейнер";
-        } else if (!hasProblemOrMetrics) {
-          els.runHint.textContent = "выберите проблему или заполните метрики";
+        } else if (!requiredReady) {
+          els.runHint.textContent = "заполните GC p95, Heap used (MiB), Memory usage (%)";
         } else if (missingByProblem.length) {
           els.runHint.textContent =
             "для отмеченных проблем заполните обязательные значения";
@@ -286,6 +333,8 @@
     if (els.advancedSettings) els.advancedSettings.hidden = false;
     if (els.jvmAdvancedSettings) els.jvmAdvancedSettings.hidden = true;
     if (els.jvmFields) els.jvmFields.hidden = true;
+    if (els.jvmFillLastValuesBtn) els.jvmFillLastValuesBtn.disabled = true;
+    if (els.jvmHistoryHint) els.jvmHistoryHint.textContent = "";
     if (els.dropzoneTitle) {
       els.dropzoneTitle.textContent = "Перетащите HTML отчёт pg_profile";
     }
@@ -639,6 +688,34 @@
     }
   }
 
+  async function loadJvmLastInput() {
+    jvmLastInput = null;
+    const hasSystem = !!(els.jvmSystemName && els.jvmSystemName.value);
+    const hasContainer = !!(els.jvmContainerName && els.jvmContainerName.value);
+    if (!hasSystem || !hasContainer) {
+      updateModeUi();
+      return;
+    }
+    try {
+      const res = await fetch(
+        apiBase +
+          "/api/jvm/last-input?system=" +
+          encodeURIComponent(els.jvmSystemName.value) +
+          "&container=" +
+          encodeURIComponent(els.jvmContainerName.value)
+      );
+      if (!res.ok) {
+        updateModeUi();
+        return;
+      }
+      const data = await res.json();
+      jvmLastInput = data.values || null;
+    } catch (_) {
+      jvmLastInput = null;
+    }
+    updateModeUi();
+  }
+
   function setTabs() {
     document.querySelectorAll(".tab-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
@@ -927,8 +1004,8 @@
       }
       const selectedProblems = selectedJvmProblems();
       const metricMeta = jvmMetricMeta();
-      if (!selectedProblems.length && !hasAnyJvmMetric(metricMeta)) {
-        showError("выберите проблему или заполните метрики контекста");
+      if (!hasRequiredJvmMetrics(metricMeta)) {
+        showError("заполните обязательные поля: GC p95, Heap used (MiB), Memory usage (%)");
         return;
       }
       const missingByProblem = validateJvmProblemInputs(selectedProblems, metricMeta);
@@ -1138,11 +1215,15 @@
   if (els.jvmSystemName) {
     els.jvmSystemName.addEventListener("change", async () => {
       await loadJvmContainers();
+      await loadJvmLastInput();
       updateModeUi();
     });
   }
   if (els.jvmContainerName) {
-    els.jvmContainerName.addEventListener("change", updateModeUi);
+    els.jvmContainerName.addEventListener("change", async () => {
+      await loadJvmLastInput();
+      updateModeUi();
+    });
   }
   if (els.jvmProblemList) {
     els.jvmProblemList.addEventListener("change", updateModeUi);
@@ -1163,6 +1244,14 @@
   ].forEach((input) => {
     if (input) input.addEventListener("input", updateModeUi);
   });
+  if (els.jvmFillLastValuesBtn) {
+    els.jvmFillLastValuesBtn.addEventListener("click", () => {
+      if (!jvmLastInput) return;
+      applyLastJvmValues(jvmLastInput);
+      showToast("подставлены последние значения");
+      updateModeUi();
+    });
+  }
   if (els.advancedSettings) {
     els.advancedSettings.addEventListener("toggle", () => {
       renderReports();
@@ -1173,5 +1262,6 @@
   loadSymptoms();
   loadJvmSystems();
   loadJvmProblems();
+  loadJvmLastInput();
   updateScenarioHints();
 })();

@@ -1,0 +1,155 @@
+h2. Выбранные JVM-проблемы и входные значения
+*Система:* DEMO_CounterAgent
+*Контейнер:* application
+*Выбранные проблемы:* gc_latency
+
+|| Параметр || Значение ||
+| gc_pause_p95_ms | 265 |
+| gc_pause_p99_ms | 410 |
+| gc_time_ratio_percent | 13 |
+| container_memory_usage_percent | 78 |
+| heap_used_mib | 3200 |
+| heap_used_percent | N/A |
+| old_gen_used_mib | N/A |
+| old_gen_capacity_mib | N/A |
+| old_gen_used_percent | N/A |
+| new_gen_used_mib | N/A |
+| new_gen_capacity_mib | N/A |
+| new_gen_used_percent | N/A |
+
+
+h2. Рекомендации по JVM-тюнингу
+*Система:* DEMO_CounterAgent
+*Целевой контейнер:* application
+*Статус жизненного цикла:* tuning_attempted
+
+h3. Контекст рантайма
+|| Параметр || Значение ||
+| JDK version | N/A |
+| Spring Boot version | N/A |
+| Heap used (MiB) | 3200 |
+| OldGen used (MiB) | N/A |
+| OldGen capacity (MiB) | N/A |
+| GC pause p95 (ms) | 265 |
+| GC pause p99 (ms) | 410 |
+| GC time ratio (%) | 13 |
+| Container memory working set (MiB) | 6389 |
+| Container memory limit (MiB) | 8192 |
+
+h3. Findings
+* *[HIGH]* gc.long_pause_p95: GC p95 pause exceeds threshold.
+** gc_pause_p95_ms: 265
+* *[HIGH]* gc.long_pause_p99: GC p99 pause exceeds threshold.
+** gc_pause_p99_ms: 410
+* *[INFO]* oldgen.metric_missing: OldGen utilization is not provided. OldGen recommendations may be less precise.
+** source: ui.metric_input
+
+h3. Рекомендованные Java Tool Options
+h4. Recommendation 1: Reduce GC p95 pause
+*Обоснование:* p95 pause is above profile threshold.
+*Уверенность:* low
+*Оценка доказательности:* 33/100
+*Оценка риска:* 45/100
+*Ожидаемый эффект:* lower tail latency
+*Окно верификации:* 30-60m after deploy
+*Нужна платформенная эскалация:* No
+*Предлагаемые опции:*
+** {code}-XX:+UseG1GC{code}
+** {code}-XX:MaxGCPauseMillis=200{code}
+** {code}-XX:InitiatingHeapOccupancyPercent=30{code}
+*План отката:*
+** Rollback to previous JVM option set if SLA worsens.
+*Примечания:*
+** Collect GC logs for 30-60 minutes after rollout.
+** Tune G1 pause target and initiating occupancy.
+** Compare p95 and p99 against baseline.
+** Config diff:
+** - add -XX:+UseG1GC=enabled
+** - add -XX:MaxGCPauseMillis=200
+** - add -XX:InitiatingHeapOccupancyPercent=30
+
+h4. Recommendation 2: Reduce GC p99 pause spikes
+*Обоснование:* p99 pause indicates periodic stop-the-world spikes.
+*Уверенность:* low
+*Оценка доказательности:* 33/100
+*Оценка риска:* 50/100
+*Ожидаемый эффект:* fewer latency spikes
+*Окно верификации:* 30-60m after deploy
+*Нужна платформенная эскалация:* No
+*Предлагаемые опции:*
+** {code}-XX:G1ReservePercent=20{code}
+** {code}-XX:InitiatingHeapOccupancyPercent=30{code}
+*План отката:*
+** Rollback to previous JVM option set if SLA worsens.
+*Примечания:*
+** Validate mixed GC cycles and promotion rate.
+** Adjust reserve and occupancy trigger.
+** Config diff:
+** - add -XX:G1ReservePercent=20
+** - add -XX:InitiatingHeapOccupancyPercent=30
+
+h4. Recommendation 3: Input data quality warning
+*Обоснование:* Some problem-specific inputs are missing; analysis confidence is reduced.
+*Уверенность:* low
+*Оценка доказательности:* 35/100
+*Оценка риска:* 10/100
+*Ожидаемый эффект:* higher recommendation accuracy after metric enrichment
+*Окно верификации:* before next tuning cycle
+*Нужна платформенная эскалация:* No
+*План отката:*
+** No rollback required.
+*Примечания:*
+** Добавьте old_gen_used_percent или old_gen_used_mib для точной оценки oldgen pressure.
+
+
+h3. Инженерный план валидации
+# Apply recommended JVM options in test/stage environment first. Keep previous values for rollback.
+# Run at least one representative load profile and compare with baseline metrics collected before the change.
+# Current heap spike observed: 3200 MiB. Re-check that spikes fit with new headroom and do not trigger long GC pauses.
+# If no measurable improvement after the observation window, set status to tuning_not_effective and prepare escalation to dump analysis.
+
+h3. Риски и побочные эффекты изменений
+* Any JVM option change can shift latency and throughput profile; always compare SLA/SLO against baseline.
+* Rollback plan is mandatory: keep previous JVM flags and resource limits so the team can revert quickly.
+
+h3. Правило эскалации
+* If tuning recommendations do not improve GC/heap/memory-pressure metrics in the defined observation window, escalate to development team for heap dump and memory analysis.
+
+
+h3. Проверка контекста по выбранным проблемам
+*Выбранные проблемы:* gc_latency
+*Целевой контейнер:* application
+
+|| Проблема || Статус входных данных || Не хватает метрик ||
+| gc_latency | OK | - |
+
+h3. Стратегия рекомендаций (Safe/Balanced/Aggressive)
+h4. gc_latency
+* Safe: Зафиксировать G1 и умеренно снизить MaxGCPauseMillis без изменения общего heap budget.
+* Balanced: Снизить pause target и скорректировать InitiatingHeapOccupancyPercent c проверкой p95/p99.
+* Aggressive: Агрессивно оптимизировать GC-параметры только после стабилизации heap pressure.
+
+h3. Результат таргетного анализа
+* Findings в области анализа: 3; рекомендаций: 3.
+
+h3. Когда помогает увеличение количества pod'ов
+* Масштабирование pod'ов обычно помогает при CPU/GC перегрузке под стабильной высокой нагрузкой, когда память одного pod не упирается в лимит.
+* Для GC latency scale-out полезен, если паузы растут из-за высокой конкурентной нагрузки и при этом нет выраженного memory pressure.
+* Не рекомендуется рассчитывать только на scale-out, если проблема вызвана утечкой памяти или некорректными JVM-флагами.
+
+h3. Предлагаемые изменения (Copy/Paste)
+h4. jvm-config
+{code:yaml}
+application:
+  javaToolOptions: >
+    -XX:+UseG1GC
+    -XX:MaxGCPauseMillis=200
+    -XX:InitiatingHeapOccupancyPercent=30
+    -XX:G1ReservePercent=20
+{code}
+
+h4. Сводка изменений
+* добавить -XX:+UseG1GC=enabled
+* добавить -XX:MaxGCPauseMillis=200
+* добавить -XX:InitiatingHeapOccupancyPercent=30
+* добавить -XX:G1ReservePercent=20

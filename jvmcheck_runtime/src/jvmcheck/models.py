@@ -14,6 +14,7 @@ class ResourceSpec:
 @dataclass
 class ContainerResources:
     name: str
+    pod_name: Optional[str] = None
     requests: ResourceSpec = field(default_factory=ResourceSpec)
     limits: ResourceSpec = field(default_factory=ResourceSpec)
     java_tool_options: List[str] = field(default_factory=list)
@@ -24,6 +25,8 @@ class PodResourcesBudget:
     containers: List[ContainerResources]
     pod_memory_limit_mib: Optional[int] = None
     pod_memory_request_mib: Optional[int] = None
+    pod_memory_limit_mib_by_pod: Dict[str, int] = field(default_factory=dict)
+    pod_memory_request_mib_by_pod: Dict[str, int] = field(default_factory=dict)
 
     @property
     def summed_container_memory_limit_mib(self) -> int:

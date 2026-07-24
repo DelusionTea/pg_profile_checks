@@ -11,7 +11,7 @@ from jvmcheck.analyzers.multi_run_analyzer import analyze_multi_run_stability, m
 from jvmcheck.analyzers.jvm_health_analyzer import analyze_jvm_health
 from jvmcheck.formatters.confluence_formatter import format_analysis_for_confluence
 from jvmcheck.input_resolver import resolve_system_input_files
-from jvmcheck.models import RuntimeContext, RuntimeMetrics
+from jvmcheck.models import ContainerResources, PodResourcesBudget, RuntimeContext, RuntimeMetrics
 from jvmcheck.parsers.custom_config_parser import parse_jvm_options_file
 from jvmcheck.parsers.k8s_yaml_parser import parse_k8s_or_stand_yaml
 from jvmcheck.recommenders.java_tool_options_recommender import enrich_with_recommendations
@@ -29,6 +29,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Root directory with per-system folders. Example: resources/<SystemName>/...",
     )
     parser.add_argument("--system-name", help="System directory name inside --systems-root.")
+    parser.add_argument("--pod-name", help="Target pod/workload name for analysis.")
     parser.add_argument("--container-name", help="Target container for analysis.")
 
     parser.add_argument("--heap-used-mib", type=int)
@@ -141,7 +142,12 @@ def main() -> None:
         if jvm_config_file:
             custom_options = parse_jvm_options_file(jvm_config_file)
 
-        target_container = _choose_target_container(budget, args.container_name)
+        target_container = _choose_target_container(
+            budget,
+            requested_container=args.container_name,
+            requested_pod=args.pod_name,
+        )
+        analysis_budget = _build_analysis_budget(budget, target_container.pod_name)
         if target_container.name in custom_options:
             target_container.java_tool_options = custom_options[target_container.name]
 
@@ -177,7 +183,7 @@ def main() -> None:
         )
         analysis = enrich_with_recommendations(
             container=target_container,
-            budget=budget,
+            budget=analysis_budget,
             analysis=analysis,
             runtime_context=context,
         )
@@ -197,7 +203,7 @@ def main() -> None:
             ai_bundle_dir = build_ai_analysis_bundle(
                 analysis=analysis,
                 container=target_container,
-                budget=budget,
+                budget=analysis_budget,
                 runtime_metrics=metrics,
                 runtime_context=context,
                 system_name=args.system_name,
@@ -227,6 +233,7 @@ def main() -> None:
             return
 
         out = asdict(analysis)
+        out["tuning_target_snapshot"] = _build_tuning_target_snapshot(target_container)
         out["_threshold_profile"] = args.threshold_profile
         if trend:
             out["trend_analysis"] = multi_run_to_dict(trend)
@@ -238,18 +245,87 @@ def main() -> None:
         raise SystemExit(f"Validation error: {exc}") from exc
 
 
-def _choose_target_container(budget, requested_name: str | None):
-    if requested_name:
-        for container in budget.containers:
-            if container.name == requested_name:
-                return container
-        raise ValueError(f"Container '{requested_name}' not found in resources input.")
+def _choose_target_container(
+    budget: PodResourcesBudget,
+    requested_container: str | None,
+    requested_pod: str | None,
+):
+    candidates = budget.containers
+
+    if requested_pod:
+        candidates = [c for c in candidates if c.pod_name == requested_pod]
+        if not candidates:
+            known_pods = sorted({c.pod_name for c in budget.containers if c.pod_name})
+            known = ", ".join(known_pods) if known_pods else "none"
+            raise ValueError(
+                f"Pod '{requested_pod}' not found in resources input. Known pods: {known}"
+            )
+
+    if requested_container:
+        candidates = [c for c in candidates if c.name == requested_container]
+        if not candidates:
+            pod_scope = f" in pod '{requested_pod}'" if requested_pod else ""
+            raise ValueError(
+                f"Container '{requested_container}' not found{pod_scope}."
+            )
+        if len(candidates) > 1 and not requested_pod:
+            pods = sorted({c.pod_name for c in candidates if c.pod_name})
+            pod_list = ", ".join(pods) if pods else "unknown pods"
+            raise ValueError(
+                f"Container '{requested_container}' is present in multiple pods ({pod_list}). "
+                f"Pass --pod-name to choose the correct pod."
+            )
+        return candidates[0]
 
     for preferred in ("application", "app"):
-        for container in budget.containers:
+        for container in candidates:
             if container.name == preferred:
                 return container
-    return max(budget.containers, key=lambda c: c.limits.memory_mib or 0)
+    return max(candidates, key=lambda c: c.limits.memory_mib or 0)
+
+
+def _build_analysis_budget(budget: PodResourcesBudget, pod_name: str | None) -> PodResourcesBudget:
+    if not pod_name:
+        return budget
+
+    pod_containers = [container for container in budget.containers if container.pod_name == pod_name]
+    if not pod_containers:
+        return budget
+
+    return PodResourcesBudget(
+        containers=pod_containers,
+        pod_memory_limit_mib=budget.pod_memory_limit_mib_by_pod.get(pod_name, budget.pod_memory_limit_mib),
+        pod_memory_request_mib=budget.pod_memory_request_mib_by_pod.get(
+            pod_name, budget.pod_memory_request_mib
+        ),
+        pod_memory_limit_mib_by_pod={pod_name: budget.pod_memory_limit_mib_by_pod[pod_name]}
+        if pod_name in budget.pod_memory_limit_mib_by_pod
+        else {},
+        pod_memory_request_mib_by_pod={pod_name: budget.pod_memory_request_mib_by_pod[pod_name]}
+        if pod_name in budget.pod_memory_request_mib_by_pod
+        else {},
+    )
+
+
+def _build_tuning_target_snapshot(container: ContainerResources) -> dict[str, object]:
+    return {
+        "title": "Ресурсы и JVM настройки контейнера (актуально для настройки)",
+        "pod_name": container.pod_name,
+        "container_name": container.name,
+        "resources": {
+            "requests": {
+                "cpu_millicores": container.requests.cpu_millicores,
+                "memory_mib": container.requests.memory_mib,
+                "ephemeral_storage_mib": container.requests.ephemeral_storage_mib,
+            },
+            "limits": {
+                "cpu_millicores": container.limits.cpu_millicores,
+                "memory_mib": container.limits.memory_mib,
+                "ephemeral_storage_mib": container.limits.ephemeral_storage_mib,
+            },
+        },
+        "java_tool_options": list(container.java_tool_options),
+    }
 
 
 def _parse_framework_hints(values: list[str]) -> dict[str, str]:

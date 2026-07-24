@@ -19,12 +19,15 @@ def parse_k8s_or_stand_yaml(text: str, source_path: Path | None = None) -> PodRe
     containers: List[ContainerResources] = []
     pod_memory_limit_mib = None
     pod_memory_request_mib = None
+    pod_memory_limit_mib_by_pod: Dict[str, int] = {}
+    pod_memory_request_mib_by_pod: Dict[str, int] = {}
 
     try:
         for doc in yaml.safe_load_all(text):
             if not isinstance(doc, dict):
                 continue
-            maybe_containers = _extract_k8s_containers(doc)
+            pod_name = _extract_doc_pod_name(doc)
+            maybe_containers = _extract_k8s_containers(doc, pod_name=pod_name)
             if maybe_containers:
                 containers.extend(maybe_containers)
             else:
@@ -36,6 +39,7 @@ def parse_k8s_or_stand_yaml(text: str, source_path: Path | None = None) -> PodRe
                     containers.append(
                         ContainerResources(
                             name="application",
+                            pod_name=pod_name,
                             requests=_parse_resource_spec(top_resources.get("requests") or {}),
                             limits=_parse_resource_spec(top_resources.get("limits") or {}),
                             java_tool_options=[],
@@ -43,6 +47,10 @@ def parse_k8s_or_stand_yaml(text: str, source_path: Path | None = None) -> PodRe
                     )
                 pod_memory_limit_mib = _memory_from_bucket(top_resources, "limits")
                 pod_memory_request_mib = _memory_from_bucket(top_resources, "requests")
+                if pod_name and pod_memory_limit_mib is not None:
+                    pod_memory_limit_mib_by_pod[pod_name] = pod_memory_limit_mib
+                if pod_name and pod_memory_request_mib is not None:
+                    pod_memory_request_mib_by_pod[pod_name] = pod_memory_request_mib
     except YAMLError as exc:
         mark = getattr(exc, "problem_mark", None)
         raise InputValidationError(
@@ -57,10 +65,12 @@ def parse_k8s_or_stand_yaml(text: str, source_path: Path | None = None) -> PodRe
         containers=containers,
         pod_memory_limit_mib=pod_memory_limit_mib,
         pod_memory_request_mib=pod_memory_request_mib,
+        pod_memory_limit_mib_by_pod=pod_memory_limit_mib_by_pod,
+        pod_memory_request_mib_by_pod=pod_memory_request_mib_by_pod,
     )
 
 
-def _extract_k8s_containers(doc: Dict[str, Any]) -> List[ContainerResources]:
+def _extract_k8s_containers(doc: Dict[str, Any], pod_name: str | None = None) -> List[ContainerResources]:
     template_spec = (
         doc.get("spec", {})
         .get("template", {})
@@ -85,6 +95,7 @@ def _extract_k8s_containers(doc: Dict[str, Any]) -> List[ContainerResources]:
         containers.append(
             ContainerResources(
                 name=name,
+                pod_name=pod_name,
                 requests=requests,
                 limits=limits,
                 java_tool_options=jto,
@@ -114,6 +125,15 @@ def _extract_structured_resource_sections(doc: Dict[str, Any]) -> List[Container
             )
         )
     return out
+
+
+def _extract_doc_pod_name(doc: Dict[str, Any]) -> str | None:
+    metadata = doc.get("metadata")
+    if isinstance(metadata, dict):
+        name = metadata.get("name")
+        if name:
+            return str(name)
+    return None
 
 
 def _parse_resource_spec(bucket: Dict[str, Any]) -> ResourceSpec:

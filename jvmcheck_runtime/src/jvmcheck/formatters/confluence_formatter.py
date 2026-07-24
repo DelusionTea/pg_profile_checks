@@ -16,8 +16,27 @@ def format_analysis_for_confluence(
     lines.append("h2. JVM Tuning Recommendation")
     if system_name:
         lines.append(f"*System:* {system_name}")
+    if container.pod_name:
+        lines.append(f"*Target pod:* {container.pod_name}")
     lines.append(f"*Target container:* {container.name}")
     lines.append(f"*Lifecycle status:* {analysis.lifecycle_status}")
+    lines.append("")
+
+    lines.append("h3. Ресурсы и JVM настройки контейнера (актуально для настройки)")
+    lines.append("|| Parameter || Value ||")
+    lines.append(f"| CPU request (m) | {_display(container.requests.cpu_millicores)} |")
+    lines.append(f"| CPU limit (m) | {_display(container.limits.cpu_millicores)} |")
+    lines.append(f"| Memory request (MiB) | {_display(container.requests.memory_mib)} |")
+    lines.append(f"| Memory limit (MiB) | {_display(container.limits.memory_mib)} |")
+    lines.append(
+        f"| Ephemeral storage request (MiB) | {_display(container.requests.ephemeral_storage_mib)} |"
+    )
+    lines.append(
+        f"| Ephemeral storage limit (MiB) | {_display(container.limits.ephemeral_storage_mib)} |"
+    )
+    lines.append(
+        f"| Current JVM options | {_display_jvm_options(container.java_tool_options)} |"
+    )
     lines.append("")
 
     lines.append("h3. Runtime Context")
@@ -135,6 +154,12 @@ def _display(value: object) -> str:
     if value is None:
         return "N/A"
     return str(value)
+
+
+def _display_jvm_options(options: list[str]) -> str:
+    if not options:
+        return "N/A"
+    return "{{code}}" + " ".join(options) + "{{code}}"
 
 
 def _build_validation_steps(analysis: AnalysisResult, runtime_metrics: RuntimeMetrics) -> list[str]:

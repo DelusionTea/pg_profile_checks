@@ -35,6 +35,7 @@ jvmcheck \
 jvmcheck \
   --systems-root resources \
   --system-name EFSFinmonitoringWeb \
+  --pod-name efs-finmonitoringweb \
   --container-name application \
   --old-gen-used-mib 4200 \
   --old-gen-capacity-mib 5000 \
@@ -49,6 +50,7 @@ jvmcheck \
 jvmcheck \
   --systems-root resources \
   --system-name EFSFinmonitoringWeb \
+  --pod-name efs-finmonitoringweb \
   --container-name application \
   --old-gen-used-mib 4200 \
   --old-gen-capacity-mib 5000 \
@@ -72,15 +74,45 @@ resources/
 
 When `--system-name` is used, the tool selects resource YAML and JVM config from that system folder automatically.
 
+If the same container name exists in several pods/workloads (for example `istio-proxy`), pass `--pod-name` together with `--container-name`.  
+Without `--pod-name`, `jvmcheck` will stop with an explicit ambiguity error for such containers.
+
+Example for ambiguous sidecar names:
+
+```bash
+jvmcheck \
+  --systems-root resources \
+  --system-name CounterAgent \
+  --pod-name counteragent-app \
+  --container-name istio-proxy \
+  --gc-pause-p95-ms 320 \
+  --container-memory-working-set-mib 960
+```
+
 ## Confluence output
 
 Use `--output-format confluence` to print wiki markup (`h2.`, `h3.`, `||table||`, `{code}` blocks), suitable for direct paste into a Confluence page.  
 The output includes:
+- top header block with target pod/container resources and current JVM options *(актуально для настройки)*;
 - findings and recommended JVM flags;
 - step-by-step validation runbook for engineers;
 - risk and side-effect notes for each class of changes;
 - escalation guidance when tuning does not improve metrics.
 - stable/ephemeral findings block when multi-run snapshots are passed.
+
+## JSON output contract
+
+Default output format is JSON.  
+In addition to findings/recommendations, output now includes `tuning_target_snapshot` with the exact target used for tuning:
+
+- `title` — fixed label: `Ресурсы и JVM настройки контейнера (актуально для настройки)`;
+- `pod_name` — selected pod/workload name (if detected from YAML);
+- `container_name` — selected container name;
+- `resources.requests` / `resources.limits`:
+  - `cpu_millicores`
+  - `memory_mib`
+  - `ephemeral_storage_mib`
+- `java_tool_options` — list of current JVM flags detected for the selected container.
 
 ## Knowledge and consistency
 

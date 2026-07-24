@@ -119,8 +119,9 @@ jvmcheck_runtime/resources/<AS_NAME>/
 - `name`
 - `resources.requests.memory`
 - `resources.limits.memory`
+- для явного выбора pod в CLI/UI желательно `metadata.name` у каждого workload/pod-манифеста
 
-Именно из этого файла берётся список контейнеров для выпадающего списка `Контейнер`.
+Именно из этого файла берётся список целей для выбора в JVM-режиме: `pod + container`.
 
 #### 4) Что должно быть в `jvm-config.*`
 
@@ -135,6 +136,8 @@ application:
 ```
 
 Имя контейнера в `jvm-config` должно совпадать с именем контейнера из `resources.yaml`.
+
+Если одинаковое имя контейнера встречается в нескольких pod (например, `istio-proxy`), для запуска CLI указывайте оба параметра: `--pod-name` и `--container-name`.
 
 #### 5) Drag-and-drop в UI (секция «Дополнительно»)
 
@@ -237,13 +240,14 @@ python3 ui/server.py
    - ZIP со всем `analysis_out` сессии + `README_AI.txt`.
 
 6. Режим **JVM checks** (переключатель в header `PG/JVM`):
-   - выбор АС и контейнера;
+   - выбор АС, pod и контейнера;
    - выбор проблем (опционально, но для точечного сценария рекомендуется);
    - ввод контекстных метрик (GC/heap/oldgen/newgen/memory%), которые усиливают точность;
    - если проблема отмечена, для неё обязательны ключевые поля (например, для `gc_latency` нужен `gc_pause_p95_ms`);
    - если проблемы не отмечены, анализ всё равно возможен при заполненных контекстных метриках;
    - drag-and-drop `resources/jvm-config` в секции «Дополнительно» для перезаписи конфигов выбранной АС;
    - встроенные demo АС и контейнеры видны всегда.
+   - при неоднозначном имени контейнера (одинаковый контейнер в нескольких pod) CLI требует явный `--pod-name`.
 
 Список симптомов берётся из `knowledge/symptom_playbook.yaml`.
 
@@ -256,6 +260,7 @@ Confluence-страницы строятся по каркасу: вердикт
 
 Для JVM-анализа в wiki добавляются:
 - первый блок с выбранными проблемами и введёнными значениями;
+- шапка с целевым `pod/container`, ресурсами контейнера и текущими JVM-опциями *(актуально для настройки)*;
 - блок context-validation (чего не хватает для точности);
 - guardrails (например, запрет на «сжатие heap» при уже высокой утилизации);
 - copy/paste блок с предлагаемыми изменениями `jvm-config`;
@@ -847,8 +852,8 @@ python analyze_pgprofile.py \
 | `symptom_confluence_stub.wiki` | Python | Таблицы гипотез и план verify |
 | `symptom_confluence_prompt.txt` | Python | Промпт gigacli для симптома |
 | `symptom_brief.md` | Python | Brief для симптома |
-| `jvm_analysis.json` | Python | Findings/recommendations JVM-анализа (режим JVM в UI) |
-| `jvm_confluence.wiki` | Python | Wiki Markup для JVM-анализа |
+| `jvm_analysis.json` | Python | Findings/recommendations JVM-анализа + `tuning_target_snapshot` (pod/container/resources/JVM options) |
+| `jvm_confluence.wiki` | Python | Wiki Markup для JVM-анализа (в шапке: ресурсы и JVM-настройки целевого контейнера) |
 | `jvm_prompt.txt` | Python | Промпт ИИ для JVM-анализа |
 | `jvm_brief.md` | Python | Brief JVM-анализа |
 | `confluence_body.wiki` | **ИИ** | Текстовые разделы (резюме, рекомендации) |

@@ -30,10 +30,17 @@ def parse_custom_jvm_options(text: str) -> Dict[str, List[str]]:
             continue
         match = SECTION_RE.match(line)
         if match and not line.lstrip().startswith("-"):
+            key = match.group(1).strip()
+            remainder = match.group(2).strip()
+            # Keep javaToolOptions/JAVA_TOOL_OPTIONS as a field of the current section,
+            # not as a new top-level section.
+            if current_section and key in JAVA_KEYS:
+                if remainder:
+                    buffer.append(remainder)
+                continue
             if current_section:
                 result[current_section] = _extract_opts(" ".join(buffer))
-            current_section = match.group(1)
-            remainder = match.group(2).strip()
+            current_section = key
             buffer = [remainder] if remainder else []
             continue
         if current_section:

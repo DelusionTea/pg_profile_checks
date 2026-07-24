@@ -242,6 +242,7 @@ class AnalyzeResult:
 @dataclass
 class JvmAnalyzeRequest:
     system_name: str
+    pod_name: str | None = None
     container_name: str | None = None
     selected_problems: list[str] = field(default_factory=list)
     threshold_profile: str = "normal"
@@ -978,11 +979,18 @@ def list_jvm_problems() -> list[dict[str, str]]:
     return JVM_PROBLEM_CATALOG
 
 
-def list_jvm_containers(system_name: str, root: Path | None = None) -> list[str]:
+def list_jvm_containers(system_name: str, root: Path | None = None) -> list[dict[str, str]]:
     if not system_name:
         return []
     if system_name in DEMO_JVM_SYSTEMS:
-        return list(DEMO_JVM_SYSTEMS[system_name]["containers"])
+        return [
+            {
+                "pod_name": "",
+                "container_name": name,
+                "display_name": name,
+            }
+            for name in DEMO_JVM_SYSTEMS[system_name]["containers"]
+        ]
 
     jroot = root or DEFAULT_JVMCHECK_ROOT
     resources_root = jroot / "resources"
@@ -996,6 +1004,37 @@ def list_jvm_containers(system_name: str, root: Path | None = None) -> list[str]
                 resources_file = system_dir / "resources.yml"
             if not resources_file.is_file():
                 resources_file, _ = _resolve_root_jvm_input_files(system_dir)
+        import sys
+
+        src_dir = jroot / "src"
+        if str(src_dir) not in sys.path:
+            sys.path.insert(0, str(src_dir))
+        from jvmcheck.parsers.k8s_yaml_parser import parse_k8s_or_stand_yaml
+
+        budget = parse_k8s_or_stand_yaml(
+            resources_file.read_text(encoding="utf-8"),
+            source_path=resources_file,
+        )
+        targets: list[dict[str, str]] = []
+        seen: set[tuple[str, str]] = set()
+        for container in budget.containers or []:
+            name = str(container.name or "").strip()
+            if not name:
+                continue
+            pod = str(container.pod_name or "").strip()
+            key = (pod, name)
+            if key in seen:
+                continue
+            seen.add(key)
+            targets.append(
+                {
+                    "pod_name": pod,
+                    "container_name": name,
+                    "display_name": f"{pod} / {name}" if pod else name,
+                }
+            )
+        targets.sort(key=lambda item: (item["display_name"].lower(), item["container_name"].lower()))
+        return targets
     except Exception:
         return []
 
@@ -1003,6 +1042,7 @@ def list_jvm_containers(system_name: str, root: Path | None = None) -> list[str]
 def load_jvm_last_input(
     system_name: str,
     container_name: str,
+    pod_name: str | None = None,
     *,
     root: Path | None = None,
 ) -> dict[str, Any] | None:
@@ -1021,7 +1061,8 @@ def load_jvm_last_input(
     containers = payload.get("containers") if isinstance(payload, dict) else None
     if not isinstance(containers, dict):
         return None
-    entry = containers.get(container_name)
+    composite_key = _last_input_key(container_name, pod_name)
+    entry = containers.get(composite_key) or containers.get(container_name)
     return entry if isinstance(entry, dict) else None
 
 
@@ -1046,7 +1087,7 @@ def save_jvm_last_input(
         except Exception:
             payload = {"containers": {}}
     payload.setdefault("containers", {})
-    payload["containers"][req.container_name] = {
+    payload["containers"][_last_input_key(req.container_name, req.pod_name)] = {
         "gc_pause_p95_ms": req.gc_pause_p95_ms,
         "gc_pause_p99_ms": req.gc_pause_p99_ms,
         "gc_time_ratio_percent": req.gc_time_ratio_percent,
@@ -1062,22 +1103,6 @@ def save_jvm_last_input(
         "updated_at": _utc_now_iso(),
     }
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    try:
-        import sys
-
-        src_dir = jroot / "src"
-        if str(src_dir) not in sys.path:
-            sys.path.insert(0, str(src_dir))
-        from jvmcheck.parsers.k8s_yaml_parser import parse_k8s_or_stand_yaml
-
-        budget = parse_k8s_or_stand_yaml(
-            resources_file.read_text(encoding="utf-8"),
-            source_path=resources_file,
-        )
-        names = [c.name for c in (budget.containers or []) if c.name]
-        return sorted(dict.fromkeys(names))
-    except Exception:
-        return []
 
 
 def run_jvm_analysis(
@@ -1107,7 +1132,11 @@ def run_jvm_analysis(
 
     try:
         from jvmcheck.analyzers.jvm_health_analyzer import analyze_jvm_health
-        from jvmcheck.cli import _choose_target_container
+        from jvmcheck.cli import (
+            _build_analysis_budget,
+            _build_tuning_target_snapshot,
+            _choose_target_container,
+        )
         from jvmcheck.formatters.confluence_formatter import format_analysis_for_confluence
         from jvmcheck.input_resolver import resolve_system_input_files
         from jvmcheck.models import Finding, Recommendation, RuntimeContext, RuntimeMetrics
@@ -1165,7 +1194,12 @@ def run_jvm_analysis(
         if not budget.containers:
             raise ValueError("No containers with resources found in input file.")
         custom_options = parse_jvm_options_file(jvm_cfg_file) if jvm_cfg_file else {}
-        container = _choose_target_container(budget, req.container_name)
+        container = _choose_target_container(
+            budget,
+            requested_container=req.container_name,
+            requested_pod=req.pod_name,
+        )
+        analysis_budget = _build_analysis_budget(budget, container.pod_name)
         if container.name in custom_options:
             container.java_tool_options = custom_options[container.name]
 
@@ -1195,7 +1229,7 @@ def run_jvm_analysis(
         _add_contextual_signal_findings(analysis, req, finding_cls=Finding)
         analysis = enrich_with_recommendations(
             container=container,
-            budget=budget,
+            budget=analysis_budget,
             analysis=analysis,
             runtime_context=context,
         )
@@ -1211,6 +1245,7 @@ def run_jvm_analysis(
         _annotate_recommendation_diffs(analysis, container)
         output_dir.mkdir(parents=True, exist_ok=True)
         analysis_dict = dataclasses.asdict(analysis)
+        analysis_dict["tuning_target_snapshot"] = _build_tuning_target_snapshot(container)
         (output_dir / "jvm_analysis.json").write_text(
             json.dumps(analysis_dict, ensure_ascii=False, indent=2) + "\n",
             encoding="utf-8",
@@ -1223,7 +1258,7 @@ def run_jvm_analysis(
             system_name=req.system_name,
         )
         base_wiki_text = _localize_jvm_wiki_text(base_wiki_text)
-        wiki_text = _build_jvm_problem_statement_block(req, container.name) + "\n\n" + base_wiki_text
+        wiki_text = _build_jvm_problem_statement_block(req, container) + "\n\n" + base_wiki_text
         wiki_text += "\n\n" + _build_jvm_targeted_context_section(
             req=req,
             container_name=container.name,
@@ -1357,6 +1392,13 @@ def _resolve_demo_jvm_input_files(system_name: str) -> tuple[Path, Path | None]:
     if not resources_file.is_file():
         raise ValueError(f"Для demo системы не найден resources файл: {resources_file}")
     return resources_file, (jvm_file if jvm_file.is_file() else None)
+
+
+def _last_input_key(container_name: str, pod_name: str | None) -> str:
+    pod = str(pod_name or "").strip()
+    if not pod:
+        return container_name
+    return f"{pod}::{container_name}"
 
 
 def _filter_jvm_analysis_by_selected_problems(
@@ -1745,10 +1787,13 @@ def _ratio(numerator: int | None, denominator: int | None) -> float | None:
     return float(numerator) / float(denominator)
 
 
-def _build_jvm_problem_statement_block(req: JvmAnalyzeRequest, container_name: str) -> str:
+def _build_jvm_problem_statement_block(req: JvmAnalyzeRequest, container: Any) -> str:
+    container_name = str(getattr(container, "name", "") or "")
+    pod_name = str(getattr(container, "pod_name", "") or "")
     lines = [
         "h2. Выбранные JVM-проблемы и входные значения",
         f"*Система:* {req.system_name}",
+        f"*Pod:* {pod_name or 'N/A'}",
         f"*Контейнер:* {container_name}",
         f"*Выбранные проблемы:* {', '.join(req.selected_problems) if req.selected_problems else 'нет (только контекстные метрики)'}",
         "",

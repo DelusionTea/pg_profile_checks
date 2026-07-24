@@ -272,7 +272,8 @@ class Handler(BaseHTTPRequestHandler):
             qs = parse_qs(parsed.query)
             system_name = str((qs.get("system") or [""])[0]).strip()
             container_name = str((qs.get("container") or [""])[0]).strip()
-            values = load_jvm_last_input(system_name, container_name)
+            pod_name = str((qs.get("pod") or [""])[0]).strip() or None
+            values = load_jvm_last_input(system_name, container_name, pod_name=pod_name)
             if not values:
                 _json_response(self, 404, {"error": "last input not found"})
                 return
@@ -362,6 +363,7 @@ class Handler(BaseHTTPRequestHandler):
                     upload_paths.append(dest)
                 req = JvmAnalyzeRequest(
                     system_name=str(meta.get("system_name") or "").strip(),
+                    pod_name=(str(meta.get("pod_name") or "").strip() or None),
                     container_name=(str(meta.get("container_name") or "").strip() or None),
                     selected_problems=selected_problems,
                     threshold_profile=str(meta.get("threshold_profile") or "normal"),

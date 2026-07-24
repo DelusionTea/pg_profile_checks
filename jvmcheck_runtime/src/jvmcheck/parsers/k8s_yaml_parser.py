@@ -112,13 +112,16 @@ def _extract_structured_resource_sections(doc: Dict[str, Any]) -> List[Container
         resources = node.get("resources")
         if not isinstance(resources, dict):
             continue
-        name = path.split(".")[-1]
+        path_parts = path.split(".")
+        name = path_parts[-1]
+        pod_name = path_parts[0] if len(path_parts) > 1 else None
         requests = _parse_resource_spec(resources.get("requests") or {})
         limits = _parse_resource_spec(resources.get("limits") or {})
         jto = _extract_java_options_from_inline(node)
         out.append(
             ContainerResources(
                 name=name,
+                pod_name=pod_name,
                 requests=requests,
                 limits=limits,
                 java_tool_options=jto,

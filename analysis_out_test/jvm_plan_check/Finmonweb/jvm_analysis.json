@@ -1,0 +1,160 @@
+{
+  "findings": [
+    {
+      "code": "memory.request_pressure",
+      "severity": "warning",
+      "message": "Working set significantly exceeds memory request.",
+      "evidence": {
+        "memory_request_ratio": "1.500"
+      },
+      "threshold": "working_set/request >= 1.15",
+      "details": {
+        "container_memory_working_set_mib": "7500",
+        "container_memory_request_mib": "5000"
+      }
+    },
+    {
+      "code": "jvm.flag_missing_container_support",
+      "severity": "warning",
+      "message": "JVM flag -XX:+UseContainerSupport is not explicitly configured.",
+      "evidence": {},
+      "threshold": "",
+      "details": {}
+    },
+    {
+      "code": "jvm.flag_missing_exit_on_oom",
+      "severity": "warning",
+      "message": "JVM flag -XX:+ExitOnOutOfMemoryError is not configured.",
+      "evidence": {},
+      "threshold": "",
+      "details": {}
+    },
+    {
+      "code": "jvm.gc_not_declared",
+      "severity": "info",
+      "message": "No explicit GC policy flag found.",
+      "evidence": {},
+      "threshold": "",
+      "details": {}
+    }
+  ],
+  "recommendations": [
+    {
+      "title": "Memory usage significantly exceeds request",
+      "rationale": "Working set is above declared memory request.",
+      "suggested_java_tool_options": [],
+      "confidence": "low",
+      "evidence_score": 30,
+      "risk_score": 30,
+      "expected_gain": "better scheduling predictability",
+      "verification_window": "30-60m after deploy",
+      "rollback_plan": [
+        "Rollback to previous JVM option set if SLA worsens."
+      ],
+      "rule_ids": [
+        "memory.request_pressure"
+      ],
+      "blocking_conditions": [],
+      "requires_platform_escalation": false,
+      "notes": [
+        "Align requests with actual baseline usage.",
+        "Review HPA/VPA assumptions."
+      ]
+    },
+    {
+      "title": "Container support flag is missing",
+      "rationale": "JVM options do not explicitly include container-awareness flag.",
+      "suggested_java_tool_options": [
+        "-XX:+UseContainerSupport"
+      ],
+      "confidence": "low",
+      "evidence_score": 30,
+      "risk_score": 20,
+      "expected_gain": "predictable memory ergonomics",
+      "verification_window": "30-60m after deploy",
+      "rollback_plan": [
+        "Rollback to previous JVM option set if SLA worsens."
+      ],
+      "rule_ids": [
+        "jvm.flag_missing_container_support"
+      ],
+      "blocking_conditions": [],
+      "requires_platform_escalation": false,
+      "notes": [
+        "Ensure container support behavior is explicit for your JDK baseline.",
+        "Config diff:",
+        "- add -XX:+UseContainerSupport=enabled"
+      ]
+    },
+    {
+      "title": "ExitOnOutOfMemoryError is missing",
+      "rationale": "Missing deterministic crash policy on OOM.",
+      "suggested_java_tool_options": [
+        "-XX:+ExitOnOutOfMemoryError"
+      ],
+      "confidence": "low",
+      "evidence_score": 30,
+      "risk_score": 20,
+      "expected_gain": "faster recovery on OOM",
+      "verification_window": "30-60m after deploy",
+      "rollback_plan": [
+        "Rollback to previous JVM option set if SLA worsens."
+      ],
+      "rule_ids": [
+        "jvm.flag_missing_exit_on_oom"
+      ],
+      "blocking_conditions": [],
+      "requires_platform_escalation": false,
+      "notes": [
+        "Add ExitOnOutOfMemoryError to speed restart by orchestrator.",
+        "Config diff:",
+        "- add -XX:+ExitOnOutOfMemoryError=enabled"
+      ]
+    },
+    {
+      "title": "GC strategy not explicitly declared",
+      "rationale": "JVM config does not pin collector strategy.",
+      "suggested_java_tool_options": [
+        "-XX:+UseG1GC"
+      ],
+      "confidence": "low",
+      "evidence_score": 30,
+      "risk_score": 10,
+      "expected_gain": "deterministic behavior across JDK updates",
+      "verification_window": "30-60m after deploy",
+      "rollback_plan": [
+        "Rollback to previous JVM option set if SLA worsens."
+      ],
+      "rule_ids": [
+        "jvm.gc_not_declared"
+      ],
+      "blocking_conditions": [],
+      "requires_platform_escalation": false,
+      "notes": [
+        "Explicitly document/declare collector policy for consistency.",
+        "Config diff:",
+        "- add -XX:+UseG1GC=enabled"
+      ]
+    }
+  ],
+  "memory_plan": null,
+  "lifecycle_status": "tuning_attempted",
+  "tuning_target_snapshot": {
+    "title": "Ресурсы и JVM настройки контейнера (актуально для настройки)",
+    "pod_name": "app",
+    "container_name": "application",
+    "resources": {
+      "requests": {
+        "cpu_millicores": 3000,
+        "memory_mib": 5000,
+        "ephemeral_storage_mib": 5000
+      },
+      "limits": {
+        "cpu_millicores": 6000,
+        "memory_mib": 10000,
+        "ephemeral_storage_mib": 10000
+      }
+    },
+    "java_tool_options": []
+  }
+}

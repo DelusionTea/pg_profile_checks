@@ -1,0 +1,18 @@
+application:
+  javaToolOptions: >
+    -XX:+UseContainerSupport
+    -XX:+UseG1GC
+    -XX:MaxRAMPercentage=68.0
+    -XX:InitialRAMPercentage=40.0
+    -XX:InitiatingHeapOccupancyPercent=30
+    -XX:+ExitOnOutOfMemoryError
+
+agent:
+  javaToolOptions: >
+    -XX:+UseContainerSupport
+    -XX:MaxRAMPercentage=55.0
+
+fluentbit:
+  javaToolOptions: >
+    -XX:+UseContainerSupport
+    -XX:MaxRAMPercentage=45.0

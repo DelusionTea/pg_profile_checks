@@ -1,0 +1,15 @@
+application:
+  javaToolOptions: >
+    -XX:MaxRAM=10485760000
+    -XX:+UseG1GC
+    -XX:+AlwaysPreTouch
+    -XX:MaxGCPauseMillis=200
+    -XX:ParallelGCThreads=16
+    -XX:+UnlockExperimentalVMOptions
+    -XX:-ResizePLAB
+    -XX:+ParallelRefProcEnabled
+    -Xmx2048m
+    -Xms2048m
+    -XX:MaxNewSize=512m
+    -XX:MinHeapFreeRatio=25
+    -XX:MaxHeapFreeRatio=90

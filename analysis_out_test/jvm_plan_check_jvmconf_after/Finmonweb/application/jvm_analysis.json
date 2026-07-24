@@ -1,0 +1,174 @@
+{
+  "findings": [
+    {
+      "code": "memory.request_pressure",
+      "severity": "warning",
+      "message": "Working set significantly exceeds memory request.",
+      "evidence": {
+        "memory_request_ratio": "1.400"
+      },
+      "threshold": "working_set/request >= 1.15",
+      "details": {
+        "container_memory_working_set_mib": "7000",
+        "container_memory_request_mib": "5000"
+      }
+    },
+    {
+      "code": "jvm.flag_missing_container_support",
+      "severity": "warning",
+      "message": "JVM flag -XX:+UseContainerSupport is not explicitly configured.",
+      "evidence": {},
+      "threshold": "",
+      "details": {}
+    },
+    {
+      "code": "jvm.flag_missing_exit_on_oom",
+      "severity": "warning",
+      "message": "JVM flag -XX:+ExitOnOutOfMemoryError is not configured.",
+      "evidence": {},
+      "threshold": "",
+      "details": {}
+    },
+    {
+      "code": "oldgen.metric_missing",
+      "severity": "info",
+      "message": "OldGen utilization is not provided. OldGen recommendations may be less precise.",
+      "evidence": {
+        "source": "context_metric"
+      },
+      "threshold": "provide old_gen_used_percent or old_gen_used_mib",
+      "details": {
+        "source": "ui.metric_input"
+      }
+    }
+  ],
+  "recommendations": [
+    {
+      "title": "Memory usage significantly exceeds request",
+      "rationale": "Working set is above declared memory request.",
+      "suggested_java_tool_options": [],
+      "confidence": "low",
+      "evidence_score": 30,
+      "risk_score": 30,
+      "expected_gain": "better scheduling predictability",
+      "verification_window": "30-60m after deploy",
+      "rollback_plan": [
+        "Rollback to previous JVM option set if SLA worsens."
+      ],
+      "rule_ids": [
+        "memory.request_pressure"
+      ],
+      "blocking_conditions": [],
+      "requires_platform_escalation": false,
+      "notes": [
+        "Align requests with actual baseline usage.",
+        "Review HPA/VPA assumptions."
+      ]
+    },
+    {
+      "title": "Container support flag is missing",
+      "rationale": "JVM options do not explicitly include container-awareness flag.",
+      "suggested_java_tool_options": [
+        "-XX:+UseContainerSupport"
+      ],
+      "confidence": "low",
+      "evidence_score": 30,
+      "risk_score": 20,
+      "expected_gain": "predictable memory ergonomics",
+      "verification_window": "30-60m after deploy",
+      "rollback_plan": [
+        "Rollback to previous JVM option set if SLA worsens."
+      ],
+      "rule_ids": [
+        "jvm.flag_missing_container_support"
+      ],
+      "blocking_conditions": [],
+      "requires_platform_escalation": false,
+      "notes": [
+        "Ensure container support behavior is explicit for your JDK baseline.",
+        "Config diff:",
+        "- add -XX:+UseContainerSupport=enabled"
+      ]
+    },
+    {
+      "title": "ExitOnOutOfMemoryError is missing",
+      "rationale": "Missing deterministic crash policy on OOM.",
+      "suggested_java_tool_options": [
+        "-XX:+ExitOnOutOfMemoryError"
+      ],
+      "confidence": "low",
+      "evidence_score": 30,
+      "risk_score": 20,
+      "expected_gain": "faster recovery on OOM",
+      "verification_window": "30-60m after deploy",
+      "rollback_plan": [
+        "Rollback to previous JVM option set if SLA worsens."
+      ],
+      "rule_ids": [
+        "jvm.flag_missing_exit_on_oom"
+      ],
+      "blocking_conditions": [],
+      "requires_platform_escalation": false,
+      "notes": [
+        "Add ExitOnOutOfMemoryError to speed restart by orchestrator.",
+        "Config diff:",
+        "- add -XX:+ExitOnOutOfMemoryError=enabled"
+      ]
+    },
+    {
+      "title": "Input data quality warning",
+      "rationale": "Some problem-specific inputs are missing; analysis confidence is reduced.",
+      "suggested_java_tool_options": [],
+      "confidence": "low",
+      "evidence_score": 35,
+      "risk_score": 10,
+      "expected_gain": "higher recommendation accuracy after metric enrichment",
+      "verification_window": "before next tuning cycle",
+      "rollback_plan": [
+        "No rollback required."
+      ],
+      "rule_ids": [
+        "input.metric_missing"
+      ],
+      "blocking_conditions": [],
+      "requires_platform_escalation": false,
+      "notes": [
+        "Добавьте old_gen_used_percent или old_gen_used_mib для точной оценки oldgen pressure."
+      ]
+    }
+  ],
+  "memory_plan": null,
+  "lifecycle_status": "tuning_attempted",
+  "tuning_target_snapshot": {
+    "title": "Ресурсы и JVM настройки контейнера (актуально для настройки)",
+    "pod_name": "app",
+    "container_name": "application",
+    "resources": {
+      "requests": {
+        "cpu_millicores": 3000,
+        "memory_mib": 5000,
+        "ephemeral_storage_mib": 5000
+      },
+      "limits": {
+        "cpu_millicores": 6000,
+        "memory_mib": 10000,
+        "ephemeral_storage_mib": 10000
+      }
+    },
+    "java_tool_options": [
+      "-XX:MaxRAM=10485760000",
+      "-XX:+UseG1GC",
+      "-XX:+AlwaysPreTouch",
+      "-XX:MaxGCPauseMillis=200",
+      "-XX:ParallelGCThreads=16",
+      "-XX:+UnlockExperimentalVMOptions",
+      "-XX:-ResizePLAB",
+      "-XX:+ParallelRefProcEnabled",
+      "-Xmx2048m",
+      "-Xms2048m",
+      "-XX:MaxNewSize=512m",
+      "-XX:MinHeapFreeRatio=25",
+      "-XX:MaxHeapFreeRatio=90"
+    ]
+  }
+}

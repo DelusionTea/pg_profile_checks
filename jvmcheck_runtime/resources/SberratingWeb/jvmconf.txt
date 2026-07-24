@@ -1,0 +1,37 @@
+application:
+  javaToolOptions: >
+    -Dspring.config.location=file:/tmp/config/application.properties
+    -XX:MaxRAM=4718592000
+    -Djavax.net.ssl.keyStore=NONE
+    -Djavax.net.ssl.trustStore=NONE
+    --add-opens=java.base/java.net=ALL-UNNAMED
+    --add-opens=java.base/java.util=ALL-UNNAMED
+    --add-opens=java.base/java.time=ALL-UNNAMED
+    --add-opens=java.base/java.lang=ALL-UNNAMED
+    --add-opens=java.base/java.lang.reflect=ALL-UNNAMED
+    --add-opens=java.base/java.io=ALL-UNNAMED
+    -XX:+AlwaysPreTouch
+    -XX:+UseG1GC
+    -XX:MaxGCPauseMillis=200
+    -XX:ParallelGCThreads=2
+    -XX:+ParallelRefProcEnabled
+    -XX:-ResizePLAB
+    -XX:G1ReservePercent=10
+    -XX:+UnlockExperimentalVMOptions
+    -XX:G1NewSizePercent=20
+    -XX:+HeapDumpOnOutOfMemoryError
+    -XX:+DisableExplicitGC
+    -XX:+ScavengeBeforeFullGC
+    -XX:HeapDumpPath=/tmp/heapdump.bin
+    -Dcom.sun.management.jmxremote=true
+    -Dcom.sun.management.jmxremote.port=3000
+    -Dcom.sun.management.jmxremote.rmi.port=3001
+    -Djava.rmi.server.hostname=127.0.0.1
+    -Dcom.sun.management.jmxremote.authenticate=false
+    -Dcom.sun.management.jmxremote.ssl=false
+    -Dufs.tenant.code=SBBOL
+    -Dufs-logger.kafka.bootstrap.servers=tvldq-efs001491.delta.sbrf.ru:9093,tvldq-efs001492.delta.sbrf.ru:9093,tvldq-efs001493.delta.sbrf.ru:9093,tvldq-efs001494.delta.sbrf.ru:9093,tvldq-efs001495.delta.sbrf.ru:9093,tvldq-efs001490.delta.sbrf.ru:9093
+    -Dufs-logger.kafka.security.protocol=PLAINTEXT
+    -Dufs.logger.client.mode=FRONTEND
+    -Dufs-logger.kafka.topic=sbbol
+    -Dufs-logger.parameters.url=http://sb.logger.nt-all-ufs-ul.delta.sbrf.ru:80/ufs-logger-parameters-ng/parameters

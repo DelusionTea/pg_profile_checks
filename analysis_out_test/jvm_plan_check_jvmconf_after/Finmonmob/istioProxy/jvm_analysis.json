@@ -1,0 +1,158 @@
+{
+  "findings": [
+    {
+      "code": "jvm.flag_missing_container_support",
+      "severity": "warning",
+      "message": "JVM flag -XX:+UseContainerSupport is not explicitly configured.",
+      "evidence": {},
+      "threshold": "",
+      "details": {}
+    },
+    {
+      "code": "jvm.flag_missing_exit_on_oom",
+      "severity": "warning",
+      "message": "JVM flag -XX:+ExitOnOutOfMemoryError is not configured.",
+      "evidence": {},
+      "threshold": "",
+      "details": {}
+    },
+    {
+      "code": "jvm.gc_not_declared",
+      "severity": "info",
+      "message": "No explicit GC policy flag found.",
+      "evidence": {},
+      "threshold": "",
+      "details": {}
+    },
+    {
+      "code": "oldgen.metric_missing",
+      "severity": "info",
+      "message": "OldGen utilization is not provided. OldGen recommendations may be less precise.",
+      "evidence": {
+        "source": "context_metric"
+      },
+      "threshold": "provide old_gen_used_percent or old_gen_used_mib",
+      "details": {
+        "source": "ui.metric_input"
+      }
+    }
+  ],
+  "recommendations": [
+    {
+      "title": "Container support flag is missing",
+      "rationale": "JVM options do not explicitly include container-awareness flag.",
+      "suggested_java_tool_options": [
+        "-XX:+UseContainerSupport"
+      ],
+      "confidence": "low",
+      "evidence_score": 30,
+      "risk_score": 20,
+      "expected_gain": "predictable memory ergonomics",
+      "verification_window": "30-60m after deploy",
+      "rollback_plan": [
+        "Rollback to previous JVM option set if SLA worsens."
+      ],
+      "rule_ids": [
+        "jvm.flag_missing_container_support"
+      ],
+      "blocking_conditions": [],
+      "requires_platform_escalation": false,
+      "notes": [
+        "Ensure container support behavior is explicit for your JDK baseline.",
+        "Config diff:",
+        "- add -XX:+UseContainerSupport=enabled"
+      ]
+    },
+    {
+      "title": "ExitOnOutOfMemoryError is missing",
+      "rationale": "Missing deterministic crash policy on OOM.",
+      "suggested_java_tool_options": [
+        "-XX:+ExitOnOutOfMemoryError"
+      ],
+      "confidence": "low",
+      "evidence_score": 30,
+      "risk_score": 20,
+      "expected_gain": "faster recovery on OOM",
+      "verification_window": "30-60m after deploy",
+      "rollback_plan": [
+        "Rollback to previous JVM option set if SLA worsens."
+      ],
+      "rule_ids": [
+        "jvm.flag_missing_exit_on_oom"
+      ],
+      "blocking_conditions": [],
+      "requires_platform_escalation": false,
+      "notes": [
+        "Add ExitOnOutOfMemoryError to speed restart by orchestrator.",
+        "Config diff:",
+        "- add -XX:+ExitOnOutOfMemoryError=enabled"
+      ]
+    },
+    {
+      "title": "GC strategy not explicitly declared",
+      "rationale": "JVM config does not pin collector strategy.",
+      "suggested_java_tool_options": [
+        "-XX:+UseG1GC"
+      ],
+      "confidence": "low",
+      "evidence_score": 30,
+      "risk_score": 10,
+      "expected_gain": "deterministic behavior across JDK updates",
+      "verification_window": "30-60m after deploy",
+      "rollback_plan": [
+        "Rollback to previous JVM option set if SLA worsens."
+      ],
+      "rule_ids": [
+        "jvm.gc_not_declared"
+      ],
+      "blocking_conditions": [],
+      "requires_platform_escalation": false,
+      "notes": [
+        "Explicitly document/declare collector policy for consistency.",
+        "Config diff:",
+        "- add -XX:+UseG1GC=enabled"
+      ]
+    },
+    {
+      "title": "Input data quality warning",
+      "rationale": "Some problem-specific inputs are missing; analysis confidence is reduced.",
+      "suggested_java_tool_options": [],
+      "confidence": "low",
+      "evidence_score": 35,
+      "risk_score": 10,
+      "expected_gain": "higher recommendation accuracy after metric enrichment",
+      "verification_window": "before next tuning cycle",
+      "rollback_plan": [
+        "No rollback required."
+      ],
+      "rule_ids": [
+        "input.metric_missing"
+      ],
+      "blocking_conditions": [],
+      "requires_platform_escalation": false,
+      "notes": [
+        "Добавьте old_gen_used_percent или old_gen_used_mib для точной оценки oldgen pressure."
+      ]
+    }
+  ],
+  "memory_plan": null,
+  "lifecycle_status": "tuning_attempted",
+  "tuning_target_snapshot": {
+    "title": "Ресурсы и JVM настройки контейнера (актуально для настройки)",
+    "pod_name": "app",
+    "container_name": "istioProxy",
+    "resources": {
+      "requests": {
+        "cpu_millicores": 1000,
+        "memory_mib": 256,
+        "ephemeral_storage_mib": 1024
+      },
+      "limits": {
+        "cpu_millicores": 2000,
+        "memory_mib": 512,
+        "ephemeral_storage_mib": 1024
+      }
+    },
+    "java_tool_options": []
+  }
+}

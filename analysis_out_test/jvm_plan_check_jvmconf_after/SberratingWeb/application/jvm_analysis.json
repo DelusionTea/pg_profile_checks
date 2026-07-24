@@ -1,0 +1,227 @@
+{
+  "findings": [
+    {
+      "code": "memory.request_pressure",
+      "severity": "warning",
+      "message": "Working set significantly exceeds memory request.",
+      "evidence": {
+        "memory_request_ratio": "1.400"
+      },
+      "threshold": "working_set/request >= 1.15",
+      "details": {
+        "container_memory_working_set_mib": "3150",
+        "container_memory_request_mib": "2250"
+      }
+    },
+    {
+      "code": "jvm.flag_missing_container_support",
+      "severity": "warning",
+      "message": "JVM flag -XX:+UseContainerSupport is not explicitly configured.",
+      "evidence": {},
+      "threshold": "",
+      "details": {}
+    },
+    {
+      "code": "jvm.flag_missing_exit_on_oom",
+      "severity": "warning",
+      "message": "JVM flag -XX:+ExitOnOutOfMemoryError is not configured.",
+      "evidence": {},
+      "threshold": "",
+      "details": {}
+    },
+    {
+      "code": "jvm.flag_duplicate",
+      "severity": "warning",
+      "message": "Duplicate JVM flags detected.",
+      "evidence": {},
+      "threshold": "",
+      "details": {
+        "duplicates": "--add-opens"
+      }
+    },
+    {
+      "code": "oldgen.metric_missing",
+      "severity": "info",
+      "message": "OldGen utilization is not provided. OldGen recommendations may be less precise.",
+      "evidence": {
+        "source": "context_metric"
+      },
+      "threshold": "provide old_gen_used_percent or old_gen_used_mib",
+      "details": {
+        "source": "ui.metric_input"
+      }
+    }
+  ],
+  "recommendations": [
+    {
+      "title": "Memory usage significantly exceeds request",
+      "rationale": "Working set is above declared memory request.",
+      "suggested_java_tool_options": [],
+      "confidence": "low",
+      "evidence_score": 30,
+      "risk_score": 30,
+      "expected_gain": "better scheduling predictability",
+      "verification_window": "30-60m after deploy",
+      "rollback_plan": [
+        "Rollback to previous JVM option set if SLA worsens."
+      ],
+      "rule_ids": [
+        "memory.request_pressure"
+      ],
+      "blocking_conditions": [],
+      "requires_platform_escalation": false,
+      "notes": [
+        "Align requests with actual baseline usage.",
+        "Review HPA/VPA assumptions."
+      ]
+    },
+    {
+      "title": "Container support flag is missing",
+      "rationale": "JVM options do not explicitly include container-awareness flag.",
+      "suggested_java_tool_options": [
+        "-XX:+UseContainerSupport"
+      ],
+      "confidence": "low",
+      "evidence_score": 30,
+      "risk_score": 20,
+      "expected_gain": "predictable memory ergonomics",
+      "verification_window": "30-60m after deploy",
+      "rollback_plan": [
+        "Rollback to previous JVM option set if SLA worsens."
+      ],
+      "rule_ids": [
+        "jvm.flag_missing_container_support"
+      ],
+      "blocking_conditions": [],
+      "requires_platform_escalation": false,
+      "notes": [
+        "Ensure container support behavior is explicit for your JDK baseline.",
+        "Config diff:",
+        "- add -XX:+UseContainerSupport=enabled"
+      ]
+    },
+    {
+      "title": "ExitOnOutOfMemoryError is missing",
+      "rationale": "Missing deterministic crash policy on OOM.",
+      "suggested_java_tool_options": [
+        "-XX:+ExitOnOutOfMemoryError"
+      ],
+      "confidence": "low",
+      "evidence_score": 30,
+      "risk_score": 20,
+      "expected_gain": "faster recovery on OOM",
+      "verification_window": "30-60m after deploy",
+      "rollback_plan": [
+        "Rollback to previous JVM option set if SLA worsens."
+      ],
+      "rule_ids": [
+        "jvm.flag_missing_exit_on_oom"
+      ],
+      "blocking_conditions": [],
+      "requires_platform_escalation": false,
+      "notes": [
+        "Add ExitOnOutOfMemoryError to speed restart by orchestrator.",
+        "Config diff:",
+        "- add -XX:+ExitOnOutOfMemoryError=enabled"
+      ]
+    },
+    {
+      "title": "Duplicate JVM flags found",
+      "rationale": "Duplicate flags increase config drift and ambiguity.",
+      "suggested_java_tool_options": [],
+      "confidence": "low",
+      "evidence_score": 30,
+      "risk_score": 15,
+      "expected_gain": "cleaner and deterministic config",
+      "verification_window": "30-60m after deploy",
+      "rollback_plan": [
+        "Rollback to previous JVM option set if SLA worsens."
+      ],
+      "rule_ids": [
+        "jvm.flag_duplicate"
+      ],
+      "blocking_conditions": [],
+      "requires_platform_escalation": false,
+      "notes": [
+        "Keep a single authoritative value for each duplicated flag."
+      ]
+    },
+    {
+      "title": "Input data quality warning",
+      "rationale": "Some problem-specific inputs are missing; analysis confidence is reduced.",
+      "suggested_java_tool_options": [],
+      "confidence": "low",
+      "evidence_score": 35,
+      "risk_score": 10,
+      "expected_gain": "higher recommendation accuracy after metric enrichment",
+      "verification_window": "before next tuning cycle",
+      "rollback_plan": [
+        "No rollback required."
+      ],
+      "rule_ids": [
+        "input.metric_missing"
+      ],
+      "blocking_conditions": [],
+      "requires_platform_escalation": false,
+      "notes": [
+        "Добавьте old_gen_used_percent или old_gen_used_mib для точной оценки oldgen pressure."
+      ]
+    }
+  ],
+  "memory_plan": null,
+  "lifecycle_status": "tuning_attempted",
+  "tuning_target_snapshot": {
+    "title": "Ресурсы и JVM настройки контейнера (актуально для настройки)",
+    "pod_name": "app",
+    "container_name": "application",
+    "resources": {
+      "requests": {
+        "cpu_millicores": 1800,
+        "memory_mib": 2250,
+        "ephemeral_storage_mib": 750
+      },
+      "limits": {
+        "cpu_millicores": 2500,
+        "memory_mib": 4500,
+        "ephemeral_storage_mib": 1500
+      }
+    },
+    "java_tool_options": [
+      "-Dspring.config.location=file:/tmp/config/application.properties",
+      "-XX:MaxRAM=4718592000",
+      "-Djavax.net.ssl.keyStore=NONE",
+      "-Djavax.net.ssl.trustStore=NONE",
+      "--add-opens=java.base/java.net=ALL-UNNAMED",
+      "--add-opens=java.base/java.util=ALL-UNNAMED",
+      "--add-opens=java.base/java.time=ALL-UNNAMED",
+      "--add-opens=java.base/java.lang=ALL-UNNAMED",
+      "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED",
+      "--add-opens=java.base/java.io=ALL-UNNAMED",
+      "-XX:+AlwaysPreTouch",
+      "-XX:+UseG1GC",
+      "-XX:MaxGCPauseMillis=200",
+      "-XX:ParallelGCThreads=2",
+      "-XX:+ParallelRefProcEnabled",
+      "-XX:-ResizePLAB",
+      "-XX:G1ReservePercent=10",
+      "-XX:+UnlockExperimentalVMOptions",
+      "-XX:G1NewSizePercent=20",
+      "-XX:+HeapDumpOnOutOfMemoryError",
+      "-XX:+DisableExplicitGC",
+      "-XX:+ScavengeBeforeFullGC",
+      "-XX:HeapDumpPath=/tmp/heapdump.bin",
+      "-Dcom.sun.management.jmxremote=true",
+      "-Dcom.sun.management.jmxremote.port=3000",
+      "-Dcom.sun.management.jmxremote.rmi.port=3001",
+      "-Djava.rmi.server.hostname=127.0.0.1",
+      "-Dcom.sun.management.jmxremote.authenticate=false",
+      "-Dcom.sun.management.jmxremote.ssl=false",
+      "-Dufs.tenant.code=SBBOL",
+      "-Dufs-logger.kafka.bootstrap.servers=tvldq-efs001491.delta.sbrf.ru:9093,tvldq-efs001492.delta.sbrf.ru:9093,tvldq-efs001493.delta.sbrf.ru:9093,tvldq-efs001494.delta.sbrf.ru:9093,tvldq-efs001495.delta.sbrf.ru:9093,tvldq-efs001490.delta.sbrf.ru:9093",
+      "-Dufs-logger.kafka.security.protocol=PLAINTEXT",
+      "-Dufs.logger.client.mode=FRONTEND",
+      "-Dufs-logger.kafka.topic=sbbol",
+      "-Dufs-logger.parameters.url=http://sb.logger.nt-all-ufs-ul.delta.sbrf.ru:80/ufs-logger-parameters-ng/parameters"
+    ]
+  }
+}

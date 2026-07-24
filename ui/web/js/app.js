@@ -13,6 +13,8 @@
   let reports = [];
   /** @type {{ id: string, file: File }[]} */
   let jvmFiles = [];
+  /** @type {{ pod_name: string, container_name: string, display_name: string }[]} */
+  let jvmTargets = [];
   let jvmLastInput = null;
   let currentMode = "pg_profile";
   let sessionId = null;
@@ -51,6 +53,7 @@
     jvmFilesList: document.getElementById("jvm-files-list"),
     jvmFields: document.getElementById("jvm-fields"),
     jvmSystemName: document.getElementById("jvm-system-name"),
+    jvmPodName: document.getElementById("jvm-pod-name"),
     jvmContainerName: document.getElementById("jvm-container-name"),
     jvmProblemList: document.getElementById("jvm-problem-list"),
     jvmThresholdProfile: document.getElementById("jvm-threshold-profile"),
@@ -149,6 +152,10 @@
       meta.heap_used_mib != null &&
       meta.container_memory_usage_percent != null
     );
+  }
+
+  function hasPodChoices() {
+    return jvmTargets.some((target) => !!(target.pod_name || "").trim());
   }
 
   function validateJvmProblemInputs(selectedProblems, meta) {
@@ -276,6 +283,7 @@
         const ready = !!(
           els.jvmSystemName &&
           els.jvmSystemName.value &&
+          (!hasPodChoices() || (els.jvmPodName && els.jvmPodName.value)) &&
           els.jvmContainerName &&
           els.jvmContainerName.value &&
           requiredReady
@@ -305,6 +313,8 @@
         const missingByProblem = validateJvmProblemInputs(selectedProblems, metricMeta);
         if (!els.jvmSystemName || !els.jvmSystemName.value) {
           els.runHint.textContent = "выберите АС";
+        } else if (hasPodChoices() && (!els.jvmPodName || !els.jvmPodName.value)) {
+          els.runHint.textContent = "выберите pod";
         } else if (!els.jvmContainerName || !els.jvmContainerName.value) {
           els.runHint.textContent = "выберите контейнер";
         } else if (!requiredReady) {
@@ -660,7 +670,11 @@
     if (!els.jvmContainerName || !els.jvmSystemName) return;
     const systemName = els.jvmSystemName.value || "";
     if (!systemName) {
+      if (els.jvmPodName) {
+        els.jvmPodName.innerHTML = '<option value="">сначала выберите АС</option>';
+      }
       els.jvmContainerName.innerHTML = '<option value="">сначала выберите АС</option>';
+      jvmTargets = [];
       updateModeUi();
       return;
     }
@@ -669,22 +683,85 @@
         apiBase + "/api/jvm/containers?system=" + encodeURIComponent(systemName)
       );
       const data = await res.json();
-      const containers = data.containers || [];
-      els.jvmContainerName.innerHTML = "";
-      const first = document.createElement("option");
-      first.value = "";
-      first.textContent = containers.length ? "выберите контейнер" : "контейнеры не найдены";
-      els.jvmContainerName.appendChild(first);
-      containers.forEach((name) => {
-        const opt = document.createElement("option");
-        opt.value = name;
-        opt.textContent = name;
-        els.jvmContainerName.appendChild(opt);
+      const rawTargets = data.containers || [];
+      jvmTargets = rawTargets.map((item) => {
+        if (typeof item === "string") {
+          return { pod_name: "", container_name: item, display_name: item };
+        }
+        return {
+          pod_name: item.pod_name || "",
+          container_name: item.container_name || "",
+          display_name:
+            item.display_name ||
+            ((item.pod_name ? item.pod_name + " / " : "") + (item.container_name || "")),
+        };
       });
+      renderJvmPodAndContainerSelectors();
       updateModeUi();
     } catch (err) {
+      if (els.jvmPodName) {
+        els.jvmPodName.innerHTML = '<option value="">ошибка загрузки pod</option>';
+      }
       els.jvmContainerName.innerHTML = '<option value="">ошибка загрузки контейнеров</option>';
+      jvmTargets = [];
       updateModeUi();
+    }
+  }
+
+  function renderJvmPodAndContainerSelectors() {
+    if (!els.jvmContainerName) return;
+    const pods = Array.from(
+      new Set(
+        jvmTargets
+          .map((target) => (target.pod_name || "").trim())
+          .filter((name) => !!name)
+      )
+    ).sort((a, b) => a.localeCompare(b));
+
+    const previousPod = els.jvmPodName ? els.jvmPodName.value : "";
+    if (els.jvmPodName) {
+      els.jvmPodName.innerHTML = "";
+      const firstPod = document.createElement("option");
+      firstPod.value = "";
+      firstPod.textContent = pods.length ? "выберите pod" : "pod не требуется";
+      els.jvmPodName.appendChild(firstPod);
+      pods.forEach((podName) => {
+        const opt = document.createElement("option");
+        opt.value = podName;
+        opt.textContent = podName;
+        els.jvmPodName.appendChild(opt);
+      });
+      if (previousPod && pods.includes(previousPod)) {
+        els.jvmPodName.value = previousPod;
+      }
+    }
+
+    const selectedPod = (els.jvmPodName && els.jvmPodName.value) || "";
+    const filtered = pods.length && !selectedPod
+      ? []
+      : jvmTargets.filter((target) => !selectedPod || target.pod_name === selectedPod);
+    const names = Array.from(
+      new Set(filtered.map((target) => (target.container_name || "").trim()).filter(Boolean))
+    ).sort((a, b) => a.localeCompare(b));
+
+    const previousContainer = els.jvmContainerName.value;
+    els.jvmContainerName.innerHTML = "";
+    const first = document.createElement("option");
+    first.value = "";
+    if (pods.length && !selectedPod) {
+      first.textContent = "сначала выберите pod";
+    } else {
+      first.textContent = names.length ? "выберите контейнер" : "контейнеры не найдены";
+    }
+    els.jvmContainerName.appendChild(first);
+    names.forEach((name) => {
+      const opt = document.createElement("option");
+      opt.value = name;
+      opt.textContent = name;
+      els.jvmContainerName.appendChild(opt);
+    });
+    if (previousContainer && names.includes(previousContainer)) {
+      els.jvmContainerName.value = previousContainer;
     }
   }
 
@@ -701,6 +778,8 @@
         apiBase +
           "/api/jvm/last-input?system=" +
           encodeURIComponent(els.jvmSystemName.value) +
+          "&pod=" +
+          encodeURIComponent((els.jvmPodName && els.jvmPodName.value) || "") +
           "&container=" +
           encodeURIComponent(els.jvmContainerName.value)
       );
@@ -998,6 +1077,10 @@
         showError("выберите АС для check jvm");
         return;
       }
+      if (hasPodChoices() && (!els.jvmPodName || !els.jvmPodName.value)) {
+        showError("выберите pod");
+        return;
+      }
       if (!els.jvmContainerName || !els.jvmContainerName.value) {
         showError("выберите контейнер");
         return;
@@ -1022,6 +1105,7 @@
       const meta = {
         mode: "jvm",
         system_name: els.jvmSystemName.value,
+        pod_name: (els.jvmPodName && els.jvmPodName.value) || null,
         container_name: els.jvmContainerName.value,
         selected_problems: selectedProblems,
         threshold_profile: (els.jvmThresholdProfile && els.jvmThresholdProfile.value) || "normal",
@@ -1215,6 +1299,13 @@
   if (els.jvmSystemName) {
     els.jvmSystemName.addEventListener("change", async () => {
       await loadJvmContainers();
+      await loadJvmLastInput();
+      updateModeUi();
+    });
+  }
+  if (els.jvmPodName) {
+    els.jvmPodName.addEventListener("change", async () => {
+      renderJvmPodAndContainerSelectors();
       await loadJvmLastInput();
       updateModeUi();
     });

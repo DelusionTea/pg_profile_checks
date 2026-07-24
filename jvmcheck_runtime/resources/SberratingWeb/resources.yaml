@@ -1,0 +1,119 @@
+ingress:
+  fluentbit:
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+        ephemeralStorage: 256Mi
+      limits:
+        cpu: 200m
+        memory: 512Mi
+        ephemeralStorage: 512Mi
+  istioProxy:
+    resources:
+      requests:
+        cpu: 1150m
+        memory: 450Mi
+        ephemeralStorage: 1Gi
+      limits:
+        cpu: 2300m
+        memory: 900Mi
+        ephemeralStorage: 2Gi
+  secman:
+    vaultAgent:
+      resources:
+        requests:
+          cpu: 250m
+          memory: 96Mi
+        limits:
+          cpu: 500m
+          memory: 192Mi
+
+egress:
+  fluentbit:
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+        ephemeralStorage: 128Mi
+      limits:
+        cpu: 200m
+        memory: 512Mi
+        ephemeralStorage: 256Mi
+  istioProxy:
+    resources:
+      requests:
+        cpu: 1450m
+        memory: 450Mi
+        ephemeralStorage: 1Gi
+      limits:
+        cpu: 2900m
+        memory: 900Mi
+        ephemeralStorage: 2Gi
+  secman:
+    vaultAgent:
+      resources:
+        requests:
+          cpu: 350m
+          memory: 400Mi
+        limits:
+          cpu: 700m
+          memory: 800Mi
+
+app:
+  application:
+    resources:
+      requests:
+        cpu: 1800m
+        memory: 2250Mi
+        ephemeralStorage: 750Mi
+      limits:
+        cpu: 2500m
+        memory: 4500Mi
+        ephemeralStorage: 1500Mi
+  istioProxy:
+    resources:
+      requests:
+        cpu: 575m
+        memory: 300Mi
+      limits:
+        cpu: 1150m
+        memory: 600Mi
+  secman:
+    vaultAgent:
+      resources:
+        requests:
+          cpu: 75m
+          memory: 256Mi
+        limits:
+          cpu: 150m
+          memory: 512Mi
+
+msdkAudit:
+  msdkAuditSidecar:
+    resources:
+      requests:
+        cpu: 1600m
+        memory: 1000Mi
+        ephemeralStorage: 1000Mi
+      limits:
+        cpu: 3
+        memory: 2000Mi
+        ephemeralStorage: 2000Mi
+  istioProxy:
+    resources:
+      requests:
+        cpu: 100m
+        memory: 1000Mi
+      limits:
+        cpu: 200m
+        memory: 2000Mi
+  secman:
+    vaultAgent:
+      resources:
+        requests:
+          cpu: 250m
+          memory: 500Mi
+        limits:
+          cpu: 500m
+          memory: 1000Mi

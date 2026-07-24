@@ -1,0 +1,212 @@
+h2. Выбранные JVM-проблемы и входные значения
+*Система:* SberratingWeb
+*Pod:* app
+*Контейнер:* application
+*Выбранные проблемы:* нет (только контекстные метрики)
+
+|| Параметр || Значение ||
+| gc_pause_p95_ms | 250 |
+| gc_pause_p99_ms | N/A |
+| gc_time_ratio_percent | N/A |
+| container_memory_usage_percent | 70 |
+| heap_used_mib | 2048 |
+| heap_used_percent | N/A |
+| old_gen_used_mib | N/A |
+| old_gen_capacity_mib | N/A |
+| old_gen_used_percent | N/A |
+| new_gen_used_mib | N/A |
+| new_gen_capacity_mib | N/A |
+| new_gen_used_percent | N/A |
+
+
+h2. Рекомендации по JVM-тюнингу
+*Система:* SberratingWeb
+*Target pod:* app
+*Целевой контейнер:* application
+*Статус жизненного цикла:* tuning_attempted
+
+h3. Ресурсы и JVM настройки контейнера (актуально для настройки)
+|| Параметр || Значение ||
+| CPU request (m) | 1800 |
+| CPU limit (m) | 2500 |
+| Memory request (MiB) | 2250 |
+| Memory limit (MiB) | 4500 |
+| Ephemeral storage request (MiB) | 750 |
+| Ephemeral storage limit (MiB) | 1500 |
+| Current JVM options | {{code}}-Dspring.config.location=file:/tmp/config/application.properties -XX:MaxRAM=4718592000 -Djavax.net.ssl.keyStore=NONE -Djavax.net.ssl.trustStore=NONE --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.time=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED -XX:+AlwaysPreTouch -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:ParallelGCThreads=2 -XX:+ParallelRefProcEnabled -XX:-ResizePLAB -XX:G1ReservePercent=10 -XX:+UnlockExperimentalVMOptions -XX:G1NewSizePercent=20 -XX:+HeapDumpOnOutOfMemoryError -XX:+DisableExplicitGC -XX:+ScavengeBeforeFullGC -XX:HeapDumpPath=/tmp/heapdump.bin -Dcom.sun.management.jmxremote=true -Dcom.sun.management.jmxremote.port=3000 -Dcom.sun.management.jmxremote.rmi.port=3001 -Djava.rmi.server.hostname=127.0.0.1 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dufs.tenant.code=SBBOL -Dufs-logger.kafka.bootstrap.servers=tvldq-efs001491.delta.sbrf.ru:9093,tvldq-efs001492.delta.sbrf.ru:9093,tvldq-efs001493.delta.sbrf.ru:9093,tvldq-efs001494.delta.sbrf.ru:9093,tvldq-efs001495.delta.sbrf.ru:9093,tvldq-efs001490.delta.sbrf.ru:9093 -Dufs-logger.kafka.security.protocol=PLAINTEXT -Dufs.logger.client.mode=FRONTEND -Dufs-logger.kafka.topic=sbbol -Dufs-logger.parameters.url=http://sb.logger.nt-all-ufs-ul.delta.sbrf.ru:80/ufs-logger-parameters-ng/parameters{{code}} |
+
+h3. Контекст рантайма
+|| Параметр || Значение ||
+| JDK version | N/A |
+| Spring Boot version | N/A |
+| Heap used (MiB) | 2048 |
+| OldGen used (MiB) | N/A |
+| OldGen capacity (MiB) | N/A |
+| GC pause p95 (ms) | 250 |
+| GC pause p99 (ms) | N/A |
+| GC time ratio (%) | N/A |
+| Container memory working set (MiB) | 3150 |
+| Container memory limit (MiB) | 4500 |
+
+h3. Findings
+* *[WARNING]* memory.request_pressure: Working set significantly exceeds memory request.
+** container_memory_working_set_mib: 3150
+** container_memory_request_mib: 2250
+* *[WARNING]* jvm.flag_missing_container_support: JVM flag -XX:+UseContainerSupport is not explicitly configured.
+* *[WARNING]* jvm.flag_missing_exit_on_oom: JVM flag -XX:+ExitOnOutOfMemoryError is not configured.
+* *[WARNING]* jvm.flag_duplicate: Duplicate JVM flags detected.
+** duplicates: --add-opens
+* *[INFO]* oldgen.metric_missing: OldGen utilization is not provided. OldGen recommendations may be less precise.
+** source: ui.metric_input
+
+h3. Рекомендованные Java Tool Options
+h4. Recommendation 1: Memory usage significantly exceeds request
+*Обоснование:* Working set is above declared memory request.
+*Уверенность:* low
+*Оценка доказательности:* 30/100
+*Оценка риска:* 30/100
+*Ожидаемый эффект:* better scheduling predictability
+*Окно верификации:* 30-60m after deploy
+*Нужна платформенная эскалация:* No
+*План отката:*
+** Rollback to previous JVM option set if SLA worsens.
+*Примечания:*
+** Align requests with actual baseline usage.
+** Review HPA/VPA assumptions.
+
+h4. Recommendation 2: Container support flag is missing
+*Обоснование:* JVM options do not explicitly include container-awareness flag.
+*Уверенность:* low
+*Оценка доказательности:* 30/100
+*Оценка риска:* 20/100
+*Ожидаемый эффект:* predictable memory ergonomics
+*Окно верификации:* 30-60m after deploy
+*Нужна платформенная эскалация:* No
+*Предлагаемые опции:*
+** {code}-XX:+UseContainerSupport{code}
+*План отката:*
+** Rollback to previous JVM option set if SLA worsens.
+*Примечания:*
+** Ensure container support behavior is explicit for your JDK baseline.
+** Config diff:
+** - add -XX:+UseContainerSupport=enabled
+
+h4. Recommendation 3: ExitOnOutOfMemoryError is missing
+*Обоснование:* Missing deterministic crash policy on OOM.
+*Уверенность:* low
+*Оценка доказательности:* 30/100
+*Оценка риска:* 20/100
+*Ожидаемый эффект:* faster recovery on OOM
+*Окно верификации:* 30-60m after deploy
+*Нужна платформенная эскалация:* No
+*Предлагаемые опции:*
+** {code}-XX:+ExitOnOutOfMemoryError{code}
+*План отката:*
+** Rollback to previous JVM option set if SLA worsens.
+*Примечания:*
+** Add ExitOnOutOfMemoryError to speed restart by orchestrator.
+** Config diff:
+** - add -XX:+ExitOnOutOfMemoryError=enabled
+
+h4. Recommendation 4: Duplicate JVM flags found
+*Обоснование:* Duplicate flags increase config drift and ambiguity.
+*Уверенность:* low
+*Оценка доказательности:* 30/100
+*Оценка риска:* 15/100
+*Ожидаемый эффект:* cleaner and deterministic config
+*Окно верификации:* 30-60m after deploy
+*Нужна платформенная эскалация:* No
+*План отката:*
+** Rollback to previous JVM option set if SLA worsens.
+*Примечания:*
+** Keep a single authoritative value for each duplicated flag.
+
+h4. Recommendation 5: Input data quality warning
+*Обоснование:* Some problem-specific inputs are missing; analysis confidence is reduced.
+*Уверенность:* low
+*Оценка доказательности:* 35/100
+*Оценка риска:* 10/100
+*Ожидаемый эффект:* higher recommendation accuracy after metric enrichment
+*Окно верификации:* before next tuning cycle
+*Нужна платформенная эскалация:* No
+*План отката:*
+** No rollback required.
+*Примечания:*
+** Добавьте old_gen_used_percent или old_gen_used_mib для точной оценки oldgen pressure.
+
+
+h3. Инженерный план валидации
+# Apply recommended JVM options in test/stage environment first. Keep previous values for rollback.
+# Run at least one representative load profile and compare with baseline metrics collected before the change.
+# Current heap spike observed: 2048 MiB. Re-check that spikes fit with new headroom and do not trigger long GC pauses.
+# If no measurable improvement after the observation window, set status to tuning_not_effective and prepare escalation to dump analysis.
+
+h3. Риски и побочные эффекты изменений
+* Any JVM option change can shift latency and throughput profile; always compare SLA/SLO against baseline.
+* Rollback plan is mandatory: keep previous JVM flags and resource limits so the team can revert quickly.
+
+h3. Правило эскалации
+* If tuning recommendations do not improve GC/heap/memory-pressure metrics in the defined observation window, escalate to development team for heap dump and memory analysis.
+
+
+h3. Проверка контекста по выбранным проблемам
+*Выбранные проблемы:* -
+*Целевой контейнер:* application
+
+|| Проблема || Статус входных данных || Не хватает метрик ||
+
+h3. Стратегия рекомендаций (Safe/Balanced/Aggressive)
+h3. Результат таргетного анализа
+* Findings в области анализа: 5; рекомендаций: 5.
+
+h3. Когда помогает увеличение количества pod'ов
+* Масштабирование pod'ов обычно помогает при CPU/GC перегрузке под стабильной высокой нагрузкой, когда память одного pod не упирается в лимит.
+* Не рекомендуется рассчитывать только на scale-out, если проблема вызвана утечкой памяти или некорректными JVM-флагами.
+
+h3. Предлагаемые изменения (Copy/Paste)
+h4. jvm-config
+{code:yaml}
+application:
+  javaToolOptions: >
+    -Dspring.config.location=file:/tmp/config/application.properties
+    -XX:MaxRAM=4718592000
+    -Djavax.net.ssl.keyStore=NONE
+    -Djavax.net.ssl.trustStore=NONE
+    --add-opens=java.base/java.net=ALL-UNNAMED
+    --add-opens=java.base/java.util=ALL-UNNAMED
+    --add-opens=java.base/java.time=ALL-UNNAMED
+    --add-opens=java.base/java.lang=ALL-UNNAMED
+    --add-opens=java.base/java.lang.reflect=ALL-UNNAMED
+    --add-opens=java.base/java.io=ALL-UNNAMED
+    -XX:+AlwaysPreTouch
+    -XX:+UseG1GC
+    -XX:MaxGCPauseMillis=200
+    -XX:ParallelGCThreads=2
+    -XX:+ParallelRefProcEnabled
+    -XX:-ResizePLAB
+    -XX:G1ReservePercent=10
+    -XX:+UnlockExperimentalVMOptions
+    -XX:G1NewSizePercent=20
+    -XX:+HeapDumpOnOutOfMemoryError
+    -XX:+DisableExplicitGC
+    -XX:+ScavengeBeforeFullGC
+    -XX:HeapDumpPath=/tmp/heapdump.bin
+    -Dcom.sun.management.jmxremote=true
+    -Dcom.sun.management.jmxremote.port=3000
+    -Dcom.sun.management.jmxremote.rmi.port=3001
+    -Djava.rmi.server.hostname=127.0.0.1
+    -Dcom.sun.management.jmxremote.authenticate=false
+    -Dcom.sun.management.jmxremote.ssl=false
+    -Dufs.tenant.code=SBBOL
+    -Dufs-logger.kafka.bootstrap.servers=tvldq-efs001491.delta.sbrf.ru:9093,tvldq-efs001492.delta.sbrf.ru:9093,tvldq-efs001493.delta.sbrf.ru:9093,tvldq-efs001494.delta.sbrf.ru:9093,tvldq-efs001495.delta.sbrf.ru:9093,tvldq-efs001490.delta.sbrf.ru:9093
+    -Dufs-logger.kafka.security.protocol=PLAINTEXT
+    -Dufs.logger.client.mode=FRONTEND
+    -Dufs-logger.kafka.topic=sbbol
+    -Dufs-logger.parameters.url=http://sb.logger.nt-all-ufs-ul.delta.sbrf.ru:80/ufs-logger-parameters-ng/parameters
+    -XX:+UseContainerSupport
+    -XX:+ExitOnOutOfMemoryError
+{code}
+
+h4. Сводка изменений
+* добавить -XX:+UseContainerSupport=enabled
+* добавить -XX:+ExitOnOutOfMemoryError=enabled

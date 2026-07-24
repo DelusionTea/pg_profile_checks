@@ -66,6 +66,14 @@ def normalize_value(value: object) -> str:
     return str(value).strip()
 
 
+def normalize_setting_name(name: object) -> str:
+    """Normalize a setting name for stable matching across reports."""
+    if name is None:
+        return ""
+    text = str(name).replace("\u00a0", " ").strip().lower()
+    return " ".join(text.split())
+
+
 def load_settings(
     html_path: Path,
     *,
@@ -87,12 +95,13 @@ def load_settings(
 
     settings: dict[str, str] = {}
     for row in rows:
-        name = row.get("name")
+        raw_name = row.get("name")
+        name = normalize_setting_name(raw_name)
         if not name:
             continue
         if name in settings:
             print(
-                f"warning: duplicate setting '{name}' in {html_path}, using last value",
+                f"warning: duplicate setting '{raw_name}' in {html_path}, using last value",
                 file=sys.stderr,
             )
         settings[name] = normalize_value(row.get("reset_val"))
@@ -140,7 +149,7 @@ def load_all_settings(data: dict) -> dict[str, str]:
     """Build a name -> value map from all settings rows in report data."""
     settings: dict[str, str] = {}
     for row in data.get("datasets", {}).get("settings", []):
-        name = row.get("name")
+        name = normalize_setting_name(row.get("name"))
         if name:
             settings[name] = normalize_value(row.get("reset_val"))
     return settings

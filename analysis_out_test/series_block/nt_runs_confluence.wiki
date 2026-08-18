@@ -1,0 +1,252 @@
+h1. НТ: анализ прогонов и влияние настроек
+
+{warning:title=Краткий вердикт}
+Симптомы: *Высокая утилизация CPU БД, Высокая генерация WAL*.
+Чеклист гипотез: FAIL *3* · SUSPECT *6* · PASS *4*.
+Прогонов НТ: *3*; пар с изменением GUC: *2*.
+Confirmed / Suspected гипотез: *3* / *6*.
+Сначала — влияние GUC и действия; детали симптомов — в expand ниже.
+{warning}
+
+h2. Чеклист гипотез
+
+||Проверка||Статус||
+|[Доминирующие SQL по CPU (pg_stat_kcache)|#sec_cpu_dominant_queries]|{status:colour=Red|title=FAIL|subtle=false}|
+|[Высокий объём вызовов (CPU × calls)|#sec_cpu_high_call_volume]|{status:colour=Yellow|title=SUSPECT|subtle=false}|
+|[Checkpoint / bgwriter / IO wait в kernel CPU|#sec_cpu_checkpoint_bgwriter]|{status:colour=Yellow|title=SUSPECT|subtle=false}|
+|[Autovacuum / analyze во время нагрузки|#sec_cpu_autovacuum_pressure]|{status:colour=Yellow|title=SUSPECT|subtle=false}|
+|[Параллельные запросы / max_parallel_workers|#sec_cpu_parallel_workers]|{status:colour=Green|title=PASS|subtle=false}|
+|[JIT-компиляция запросов|#sec_cpu_jit_overhead]|{status:colour=Green|title=PASS|subtle=false}|
+|[TLB pressure без HugePages (большой shared_buffers)|#sec_cpu_huge_pages_tlb]|{status:colour=Green|title=PASS|subtle=false}|
+|[Высокая скорость генерации WAL (wal_bytes)|#sec_wal_high_generation_rate]|{status:colour=Red|title=FAIL|subtle=false}|
+|[Переполнение wal_buffers|#sec_wal_buffers_full]|{status:colour=Red|title=FAIL|subtle=false}|
+|[WAL-heavy SQL|#sec_wal_wal_heavy_queries]|{status:colour=Yellow|title=SUSPECT|subtle=false}|
+|[Write-heavy таблицы (DML volume)|#sec_wal_high_dml_tables]|{status:colour=Yellow|title=SUSPECT|subtle=false}|
+|[Checkpoint pressure (requested checkpoints)|#sec_wal_checkpoint_pressure]|{status:colour=Yellow|title=SUSPECT|subtle=false}|
+|[Малый max_wal_size|#sec_wal_small_max_wal_size]|{status:colour=Green|title=PASS|subtle=false}|
+
+{toc:maxLevel=2}
+
+h2. Что сделать сейчас
+
+# (подтвердить cpu.dominant_queries) EXPLAIN (ANALYZE, BUFFERS) для топ-3 SQL по sum_cpu_time из отчёта
+# (подтвердить cpu.dominant_queries) Сопоставить pg_stat_statements (calls, mean_exec_time) с pg_stat_kcache (sum_cpu_time)
+# (подтвердить cpu.dominant_queries) Проверить, совпадает ли пик CPU на OS с интервалом отчёта pg_profile
+# (опровергнуть cpu.dominant_queries) Если sum_cpu_time топ-запросов <5% интервала — CPU уходит не в SQL (фон, autovacuum, checkpoint)
+# (подтвердить wal.high_generation_rate) wal_stats: wal_bytes, wal_bytes_per_sec за интервал
+# (подтвердить wal.high_generation_rate) Сравнить WAL MB/h между периодами (compare_runs / compare_nt_prod)
+# (опровергнуть wal.high_generation_rate) wal_bytes низкий за интервал — симптом мог быть кратковременным вне окна отчёта
+# (подтвердить wal.buffers_full) wal_stats.wal_buffers_full
+
+h2. Влияние изменений настроек (попарно)
+
+h3. nt_before → nt_after
+{info:title=Изменённые GUC и вероятный эффект}
+* *{huge_pages}*: — → on (changed, уверенность: possible)
+** В этом сравнении: blk_read_time -32.3% — направление согласуется с ожидаемым эффектом настройки
+* *{max_wal_size}*: 16384 (128.0 MB) → 24576 (192.0 MB) (increased, уверенность: possible)
+** Увеличение max_wal_size снижает частоту requested checkpoints при высокой WAL generation.
+** В этом сравнении: checkpoints_req -59.5%, checkpoint_write_time -7.6%, wal_buffers_full +105.6%, wal_bytes -36.1% — направление согласуется с ожидаемым эффектом настройки
+* *{shared_buffers}*: 1048576 (8192.0 MB) → 1258240 (9830.0 MB) (increased, уверенность: likely)
+** Увеличение shared_buffers повышает cache hit и снижает физические чтения (CPU/IO).
+** В этом сравнении: blks_read -9.7%, blk_read_time -32.3%, blk_write_time -29.9% — направление согласуется с ожидаемым эффектом настройки
+* *{wal_buffers}*: 2048 (16.0 MB) → 3072 (24.0 MB) (increased, уверенность: possible)
+** Увеличение wal_buffers снижает ожидание освобождения WAL buffer (wal_buffers_full).
+** В этом сравнении: wal_buffers_full +105.6%, wal_bytes -36.1%, wal_sync +13.0%, wal_write +13.8% — направление согласуется с ожидаемым эффектом настройки
+{info}
+
+h3. nt_after → nt_old
+{info:title=Изменённые GUC и вероятный эффект}
+* *{huge_pages}*: on → — (changed, уверенность: possible)
+** В этом сравнении: blk_read_time -93.6%, blks_hit_pct +16.6% — направление согласуется с ожидаемым эффектом настройки
+* *{max_wal_size}*: 24576 (192.0 MB) → 16384 (128.0 MB) (decreased, уверенность: possible)
+** Уменьшение max_wal_size усиливает requested checkpoints и IO-пики checkpoint.
+** В этом сравнении: checkpoints_req -46.4%, checkpoint_write_time +27.0%, wal_buffers_full +230.6%, wal_bytes -62.0% — направление согласуется с ожидаемым эффектом настройки
+* *{shared_buffers}*: 1258240 (9830.0 MB) → 1048576 (8192.0 MB) (decreased, уверенность: weak)
+** Уменьшение shared_buffers снижает cache hit и увеличивает чтения с диска.
+** В этом сравнении: blks_hit_pct +16.6%, blks_read -90.1%, blk_read_time -93.6%, blk_write_time -86.7% — эффект настройки не подтверждается метриками (возможна доминирующая нагрузка приложения)
+* *{wal_buffers}*: 3072 (24.0 MB) → 2048 (16.0 MB) (decreased, уверенность: possible)
+** Уменьшение wal_buffers может повысить wal_buffers_full и latency commit.
+** В этом сравнении: wal_buffers_full +230.6%, wal_bytes -62.0%, wal_write +9.7% — направление согласуется с ожидаемым эффектом настройки
+{info}
+
+h2. Сводка гипотез по симптомам
+
+||Severity||ID||Сообщение||Отчёт(ы)||
+|{status:colour=Red|title=CRITICAL|subtle=false}|cpu.dominant_queries|Доминирующие SQL по CPU (pg_stat_kcache)|nt_before, nt_after, nt_old|
+|{status:colour=Red|title=CRITICAL|subtle=false}|wal.buffers_full|Переполнение wal_buffers|nt_before, nt_after, nt_old|
+|{status:colour=Red|title=CRITICAL|subtle=false}|wal.high_generation_rate|Высокая скорость генерации WAL (wal_bytes)|nt_before, nt_after, nt_old|
+|{status:colour=Yellow|title=WARNING|subtle=false}|cpu.autovacuum_pressure|Autovacuum / analyze во время нагрузки|nt_before, nt_after, nt_old|
+|{status:colour=Yellow|title=WARNING|subtle=false}|cpu.checkpoint_bgwriter|Checkpoint / bgwriter / IO wait в kernel CPU|nt_before, nt_after, nt_old|
+|{status:colour=Yellow|title=WARNING|subtle=false}|cpu.high_call_volume|Высокий объём вызовов (CPU × calls)|nt_before, nt_after, nt_old|
+|{status:colour=Yellow|title=WARNING|subtle=false}|wal.checkpoint_pressure|Checkpoint pressure (requested checkpoints)|nt_before, nt_after, nt_old|
+|{status:colour=Yellow|title=WARNING|subtle=false}|wal.high_dml_tables|Write-heavy таблицы (DML volume)|nt_before, nt_after, nt_old|
+|{status:colour=Yellow|title=WARNING|subtle=false}|wal.wal_heavy_queries|WAL-heavy SQL|nt_before, nt_after, nt_old|
+
+{expand:Высокая утилизация CPU БД}
+{anchor:sec_cpu_dominant_queries}
+* {status:colour=Red|title=CONFIRMED} Доминирующие SQL по CPU (pg_stat_kcache) — cpu.dominant_queries
+** [nt_before] Топ CPU: sum_cpu_time=34754.0s, user_time_pct=14.1%
+** [nt_before] hex=aabf68fb55a475ea: update counteragent.t_feedbackwaitinglist set sys_lastchangedate=$1,refreshdate=…
+{anchor:sec_cpu_high_call_volume}
+* {status:colour=Yellow|title=SUSPECTED} Высокий объём вызовов (CPU × calls) — cpu.high_call_volume
+** [nt_before] Высокий объём: calls=126,454,697, total_exec_time=661064.2s, mean=5.23ms hex=aabf68fb55a475ea
+** [nt_before] Высокий объём: calls=328,542, total_exec_time=335069.3s, mean=1019.87ms hex=947d3792bf3c6b66
+{anchor:sec_cpu_checkpoint_bgwriter}
+* {status:colour=Yellow|title=SUSPECTED} Checkpoint / bgwriter / IO wait в kernel CPU — cpu.checkpoint_bgwriter
+** [nt_before] checkpoints_req=309, checkpoint_write_time=56617.2s
+** [nt_after] checkpoints_req=125, checkpoint_write_time=52294.3s
+{anchor:sec_cpu_autovacuum_pressure}
+* {status:colour=Yellow|title=SUSPECTED} Autovacuum / analyze во время нагрузки — cpu.autovacuum_pressure
+** [nt_before] Bloat: counteragent.t_feedback dead_pct=100.0%
+** [nt_after] Bloat: counteragent.t_feedback dead_pct=100.0%
+{anchor:sec_cpu_parallel_workers}
+* Параллельные запросы / max_parallel_workers — cpu.parallel_workers (possible / PASS)
+{anchor:sec_cpu_jit_overhead}
+* JIT-компиляция запросов — cpu.jit_overhead (possible / PASS)
+{anchor:sec_cpu_huge_pages_tlb}
+* TLB pressure без HugePages (большой shared_buffers) — cpu.huge_pages_tlb (possible / PASS)
+
+h2. EXPLAIN (ANALYZE, BUFFERS) — Высокая утилизация CPU БД
+
+{info}Ниже готовые команды для вставки в psql/клиент. На prod осторожно: ANALYZE выполняет запрос. При необходимости замените литералы/параметры на актуальные значения.{info}
+
+{expand:SQL · hex=aabf68fb55a475ea}
+{code:language=sql|title=nt_before · hex=aabf68fb55a475ea · sum_cpu_time=34754.0s}
+EXPLAIN (ANALYZE, BUFFERS)
+update counteragent.t_feedbackwaitinglist set sys_lastchangedate=$1,refreshdate=$2 where object_id=$3;
+{code}
+
+{expand}
+
+{expand:SQL · hex=b62bf356da94bd81}
+{code:language=sql|title=nt_before · hex=b62bf356da94bd81 · sum_cpu_time=32346.3s}
+EXPLAIN (ANALYZE, BUFFERS)
+select f1_0.object_id from counteragent.t_feedbackwaitinglist f1_0 where f1_0.destinationclient_entityid is not null and f1_0.destinationclient_entityid=$1 and f1_0.referencedclient_entityid is not null and f1_0.referencedclient_entityid=$2;
+{code}
+
+{expand}
+
+{expand:SQL · hex=bc341d0886926024}
+{code:language=sql|title=nt_before · hex=bc341d0886926024 · sum_cpu_time=24777.3s}
+EXPLAIN (ANALYZE, BUFFERS)
+select f1_0.object_id,f1_0.chgcnt,f1_0.destinationclient_entityid,f1_0.sys_isdeleted,f1_0.sys_lastchangedate,f1_0.offflag,f1_0.sys_ownerid,f1_0.sys_partitionid,f1_0.sys_recmodelversion,f1_0.referencedclient_entityid,f1_0.refreshdate,f1_0.type,f1_0.uuid,f1_0.viewdatetime from counteragent.t_feedbackwaitinglist f1_0 where f1_0.object_id=$1;
+{code}
+
+{expand}
+
+{expand:SQL · hex=a82eb1cdc7e93a20}
+{code:language=sql|title=nt_old · hex=a82eb1cdc7e93a20 · sum_cpu_time=9636.3s}
+EXPLAIN (ANALYZE, BUFFERS)
+update counteragent.t_transaction set sys_lastchangedate=$1,rquid=$2,validto=$3 where object_id=$4;
+{code}
+
+{expand}
+
+{expand}
+
+{expand:Высокая генерация WAL}
+{anchor:sec_wal_high_generation_rate}
+* {status:colour=Red|title=CONFIRMED} Высокая скорость генерации WAL (wal_bytes) — wal.high_generation_rate
+** [nt_before] WAL generation ≈ 145821.2 MB/h
+** [nt_after] WAL generation ≈ 88272.4 MB/h
+{anchor:sec_wal_buffers_full}
+* {status:colour=Red|title=CONFIRMED} Переполнение wal_buffers — wal.buffers_full
+** [nt_before] wal_buffers_full=19453
+** [nt_after] wal_buffers_full=39986
+{anchor:sec_wal_wal_heavy_queries}
+* {status:colour=Yellow|title=SUSPECTED} WAL-heavy SQL — wal.wal_heavy_queries
+** [nt_before] WAL-heavy SQL: wal_bytes=1348 GB hex=aabf68fb55a475ea
+** [nt_after] WAL-heavy SQL: wal_bytes=783 GB hex=aabf68fb55a475ea
+{anchor:sec_wal_high_dml_tables}
+* {status:colour=Yellow|title=SUSPECTED} Write-heavy таблицы (DML volume) — wal.high_dml_tables
+** [nt_before] DML table counteragent.t_feedbackwaitinglist: ins=3291458 upd=126531975 del=2071909
+** [nt_after] DML table counteragent.t_feedbackwaitinglist: ins=2640704 upd=89998684 del=2013773
+{anchor:sec_wal_checkpoint_pressure}
+* {status:colour=Yellow|title=SUSPECTED} Checkpoint pressure (requested checkpoints) — wal.checkpoint_pressure
+** [nt_before] checkpoints_req=309
+** [nt_after] checkpoints_req=125
+{anchor:sec_wal_small_max_wal_size}
+* Малый max_wal_size — wal.small_max_wal_size (possible / PASS)
+
+h2. EXPLAIN (ANALYZE, BUFFERS) — Высокая генерация WAL
+
+{info}Ниже готовые команды для вставки в psql/клиент. На prod осторожно: ANALYZE выполняет запрос. При необходимости замените литералы/параметры на актуальные значения.{info}
+
+{expand:SQL · hex=aabf68fb55a475ea}
+{code:language=sql|title=nt_before · hex=aabf68fb55a475ea · wal_bytes}
+EXPLAIN (ANALYZE, BUFFERS)
+update counteragent.t_feedbackwaitinglist set sys_lastchangedate=$1,refreshdate=$2 where object_id=$3;
+{code}
+
+{expand}
+
+{expand:SQL · hex=5049b7f719abb763}
+{code:language=sql|title=nt_before · hex=5049b7f719abb763 · wal_bytes}
+EXPLAIN (ANALYZE, BUFFERS)
+update counteragent.t_transaction set sys_lastchangedate=$1,rquid=$2 where object_id=$3;
+{code}
+
+{expand}
+
+{expand:SQL · hex=5a68bd6f1f3a0ef1}
+{code:language=sql|title=nt_before · hex=5a68bd6f1f3a0ef1 · wal_bytes}
+EXPLAIN (ANALYZE, BUFFERS)
+UPDATE counteragent.T_REPL_AGGLOCK_FEEDBACKWAITINGLIST SET siversion = $1, guid = $2, version = $3, sys_lastchangedate = LOCALTIMESTAMP WHERE rootid = $4 RETURNING "sys_lastchangedate";
+{code}
+
+{expand}
+
+{expand:SQL · hex=a82eb1cdc7e93a20}
+{code:language=sql|title=nt_old · hex=a82eb1cdc7e93a20 · wal_bytes}
+EXPLAIN (ANALYZE, BUFFERS)
+update counteragent.t_transaction set sys_lastchangedate=$1,rquid=$2,validto=$3 where object_id=$4;
+{code}
+
+{expand}
+
+{expand:SQL · hex=2460dc7a83938005}
+{code:language=sql|title=nt_old · hex=2460dc7a83938005 · wal_bytes}
+EXPLAIN (ANALYZE, BUFFERS)
+update counteragent.t_processednotificationcandidate set sys_lastchangedate=$1,status=$2 where object_id=$3;
+{code}
+
+{expand}
+
+{expand}
+
+{expand:Что уже есть на PROD / расхождение НТ}
+h3. Высокая утилизация CPU БД
+* {status:colour=Green|title=LOW} Критичность расхождения NT vs PROD
+* Уже есть на PROD: cpu.autovacuum_pressure, cpu.checkpoint_bgwriter, cpu.dominant_queries, cpu.high_call_volume
+* Только на НТ: нет
+
+h3. Высокая генерация WAL
+* {status:colour=Green|title=LOW} Критичность расхождения NT vs PROD
+* Уже есть на PROD: wal.buffers_full, wal.checkpoint_pressure, wal.high_dml_tables, wal.high_generation_rate, wal.wal_heavy_queries
+* Только на НТ: нет
+
+{expand}
+
+{expand:Справочно: прогоны и baseline}
+||Метка||Файл||Интервал||
+|nt_before|counter_nt_before_settings.html| .. |
+|nt_after|counter_nt_with_settings.html| .. |
+|nt_old|counter_nt_old_version.html| .. |
+
+h3. PROD baseline
+
+||Метка||Файл||Интервал||
+|prod1|counteragent_prom1.html| .. |
+|prod2|counteragent_prom2.html| .. |
+
+{expand}
+
+h2. NT vs PROD: оценка расхождения по прогонам
+||NT||PROD||Settings valid||Perf warnings||Critical settings||
+|nt_before|prod1|no|60|22|
+|nt_before|prod2|no|63|22|
+|nt_after|prod1|no|59|23|
+|nt_after|prod2|no|62|23|
+|nt_old|prod1|no|56|22|
+|nt_old|prod2|no|59|22|

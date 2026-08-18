@@ -1,0 +1,564 @@
+{
+  "type": "influence_table",
+  "run_identity": {
+    "mode": "pair",
+    "runs": [
+      {
+        "role": "before",
+        "run_id": "before",
+        "server": "pslod-pprb00823.cloud.omega.sbrf.ru",
+        "report_start": "2026-07-06 21:00:02+03",
+        "report_end": "2026-07-07 21:00:02+03",
+        "interval_hours": 24.0
+      },
+      {
+        "role": "after",
+        "run_id": "after",
+        "server": "tvldd-pprb06733.delta.sbrf.ru",
+        "report_start": "2026-03-13 12:30:02+03",
+        "report_end": "2026-03-14 03:30:02+03",
+        "interval_hours": 15.0
+      }
+    ]
+  },
+  "workload_match": {
+    "workload_match_score": 0.5875,
+    "level": "low",
+    "components": {
+      "interval_similarity": 0.625,
+      "server_similarity": 0.5
+    },
+    "notes": "Higher score means better run comparability for influence interpretation."
+  },
+  "confidence_meta": {
+    "mode": "pair",
+    "changed_params_count": 26,
+    "changed_params_threshold": 10,
+    "workload_match_score": 0.8,
+    "isolated_change": false,
+    "confidence": "low",
+    "evidence_type": "probable",
+    "proven_criteria": {
+      "requires_isolated_change": true,
+      "requires_changed_params_count": 1,
+      "requires_workload_match_score_at_least": 0.85
+    },
+    "notes": "Confidence downgraded because too many parameters changed simultaneously."
+  },
+  "functional_summary": {
+    "total_metrics_analyzed": 94,
+    "improved_count": 11,
+    "degraded_count": 28,
+    "neutral_count": 55,
+    "top_improved": [
+      {
+        "metric": "sessions.credithistory.idle_in_transaction_time",
+        "direction": "down",
+        "impact": "improved",
+        "delta": -13277.74,
+        "delta_pct": -100.0
+      },
+      {
+        "metric": "sessions.credithistory.active_time",
+        "direction": "down",
+        "impact": "improved",
+        "delta": -856.78,
+        "delta_pct": -100.0
+      },
+      {
+        "metric": "sessions.credithistory.session_time",
+        "direction": "down",
+        "impact": "improved",
+        "delta": -10444216.46,
+        "delta_pct": -100.0
+      },
+      {
+        "metric": "cache.credithistory.blks_read",
+        "direction": "down",
+        "impact": "improved",
+        "delta": -700346.0,
+        "delta_pct": -100.0
+      },
+      {
+        "metric": "cache.credithistory.blk_read_time",
+        "direction": "down",
+        "impact": "improved",
+        "delta": -117.06,
+        "delta_pct": -100.0
+      },
+      {
+        "metric": "cache.credithistory.blk_write_time",
+        "direction": "down",
+        "impact": "improved",
+        "delta": -3.67,
+        "delta_pct": -100.0
+      },
+      {
+        "metric": "cache.taxes.blks_hit_pct",
+        "direction": "up",
+        "impact": "improved",
+        "delta": 99.81,
+        "delta_pct": null
+      },
+      {
+        "metric": "cluster.checkpoints_timed",
+        "direction": "down",
+        "impact": "improved",
+        "delta": -31.0,
+        "delta_pct": -62.0
+      },
+      {
+        "metric": "sessions.postgres.session_time",
+        "direction": "down",
+        "impact": "improved",
+        "delta": -421504.62,
+        "delta_pct": -60.553667358546384
+      },
+      {
+        "metric": "sessions.Total.session_time",
+        "direction": "down",
+        "impact": "improved",
+        "delta": -2285552.2300000004,
+        "delta_pct": -20.516072795750464
+      }
+    ],
+    "top_degraded": [
+      {
+        "metric": "sessions.taxes.session_time",
+        "direction": "up",
+        "impact": "degraded",
+        "delta": 8580168.85,
+        "delta_pct": null
+      },
+      {
+        "metric": "cache.taxes.blks_read",
+        "direction": "up",
+        "impact": "degraded",
+        "delta": 7342868.0,
+        "delta_pct": null
+      },
+      {
+        "metric": "sessions.taxes.idle_in_transaction_time",
+        "direction": "up",
+        "impact": "degraded",
+        "delta": 1112045.67,
+        "delta_pct": null
+      },
+      {
+        "metric": "dml.Total.ROLLBACK",
+        "direction": "up",
+        "impact": "degraded",
+        "delta": 2699.0,
+        "delta_pct": 269900.0
+      },
+      {
+        "metric": "dml.postgres.ROLLBACK",
+        "direction": "up",
+        "impact": "degraded",
+        "delta": 899.0,
+        "delta_pct": 89900.0
+      },
+      {
+        "metric": "sessions.taxes.active_time",
+        "direction": "up",
+        "impact": "degraded",
+        "delta": 81518.15,
+        "delta_pct": null
+      },
+      {
+        "metric": "sessions.Total.idle_in_transaction_time",
+        "direction": "up",
+        "impact": "degraded",
+        "delta": 1098784.25,
+        "delta_pct": 8267.646313026846
+      },
+      {
+        "metric": "sessions.Total.active_time",
+        "direction": "up",
+        "impact": "degraded",
+        "delta": 80611.9,
+        "delta_pct": 7012.108454171414
+      },
+      {
+        "metric": "wal.wal_records",
+        "direction": "up",
+        "impact": "degraded",
+        "delta": 877221322.0,
+        "delta_pct": 6127.198456195857
+      },
+      {
+        "metric": "wal.wal_sync",
+        "direction": "up",
+        "impact": "degraded",
+        "delta": 4000612.0,
+        "delta_pct": 4614.103155563757
+      }
+    ]
+  },
+  "rows": [
+    {
+      "parameter": "archive_command",
+      "old": "/opt/pangolin-backup-tools/bin/pg_probackup archive-push -B /pgarclogs/06 --instance pprb_prom-86vc1o --wal-file-path=%p --wal-file-name=%f --compress --overwrite -j 4 --batch-size=100",
+      "new": "/opt/pangolin-backup-tools/bin/pg_probackup archive-push -B /pgarclogs/06 --instance pprb_test-7ti63t --wal-file-path=%p --wal-file-name=%f --compress --overwrite -j 4 --batch-size=100",
+      "delta_pct": null,
+      "affected_metric": "dml.taxes.INSERT",
+      "direction": "up",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 94,
+      "workload_match_score": 0.5875,
+      "notes": "Confidence downgraded because too many parameters changed simultaneously. Low workload match; treat attribution as hypothesis. Many settings changed simultaneously; causal confidence is reduced."
+    },
+    {
+      "parameter": "archive_mode",
+      "old": "always",
+      "new": null,
+      "delta_pct": null,
+      "affected_metric": "dml.taxes.INSERT",
+      "direction": "up",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 94,
+      "workload_match_score": 0.5875,
+      "notes": "Confidence downgraded because too many parameters changed simultaneously. Low workload match; treat attribution as hypothesis. Many settings changed simultaneously; causal confidence is reduced."
+    },
+    {
+      "parameter": "authentication_max_workers",
+      "old": "8",
+      "new": "4",
+      "delta_pct": null,
+      "affected_metric": "dml.taxes.INSERT",
+      "direction": "up",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 94,
+      "workload_match_score": 0.5875,
+      "notes": "Confidence downgraded because too many parameters changed simultaneously. Low workload match; treat attribution as hypothesis. Many settings changed simultaneously; causal confidence is reduced."
+    },
+    {
+      "parameter": "autovacuum_work_mem",
+      "old": "254976",
+      "new": "163840",
+      "delta_pct": null,
+      "affected_metric": "dml.taxes.INSERT",
+      "direction": "up",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 94,
+      "workload_match_score": 0.5875,
+      "notes": "Confidence downgraded because too many parameters changed simultaneously. Low workload match; treat attribution as hypothesis. Many settings changed simultaneously; causal confidence is reduced."
+    },
+    {
+      "parameter": "cluster_name",
+      "old": "pprb_prom-86vc1o",
+      "new": "pprb_test-7ti63t",
+      "delta_pct": null,
+      "affected_metric": "dml.taxes.INSERT",
+      "direction": "up",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 94,
+      "workload_match_score": 0.5875,
+      "notes": "Confidence downgraded because too many parameters changed simultaneously. Low workload match; treat attribution as hypothesis. Many settings changed simultaneously; causal confidence is reduced."
+    },
+    {
+      "parameter": "commit_timestamp_buffers",
+      "old": "736",
+      "new": "1024",
+      "delta_pct": null,
+      "affected_metric": "dml.taxes.INSERT",
+      "direction": "up",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 94,
+      "workload_match_score": 0.5875,
+      "notes": "Confidence downgraded because too many parameters changed simultaneously. Low workload match; treat attribution as hypothesis. Many settings changed simultaneously; causal confidence is reduced."
+    },
+    {
+      "parameter": "disk_retry_count",
+      "old": "21",
+      "new": null,
+      "delta_pct": null,
+      "affected_metric": "dml.taxes.INSERT",
+      "direction": "up",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 94,
+      "workload_match_score": 0.5875,
+      "notes": "Confidence downgraded because too many parameters changed simultaneously. Low workload match; treat attribution as hypothesis. Many settings changed simultaneously; causal confidence is reduced."
+    },
+    {
+      "parameter": "effective_cache_size",
+      "old": "1147520",
+      "new": "2286976",
+      "delta_pct": null,
+      "affected_metric": "cache.taxes.blks_read",
+      "direction": "up",
+      "impact": "degraded",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 9,
+      "workload_match_score": 0.5875,
+      "notes": "Confidence downgraded because too many parameters changed simultaneously. Low workload match; treat attribution as hypothesis. Many settings changed simultaneously; causal confidence is reduced."
+    },
+    {
+      "parameter": "force_failover_timeout",
+      "old": "85",
+      "new": "108",
+      "delta_pct": null,
+      "affected_metric": "dml.taxes.INSERT",
+      "direction": "up",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 94,
+      "workload_match_score": 0.5875,
+      "notes": "Confidence downgraded because too many parameters changed simultaneously. Low workload match; treat attribution as hypothesis. Many settings changed simultaneously; causal confidence is reduced."
+    },
+    {
+      "parameter": "maintenance_work_mem",
+      "old": "1223680",
+      "new": "2439168",
+      "delta_pct": null,
+      "affected_metric": "dml.taxes.INSERT",
+      "direction": "up",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 94,
+      "workload_match_score": 0.5875,
+      "notes": "Confidence downgraded because too many parameters changed simultaneously. Low workload match; treat attribution as hypothesis. Many settings changed simultaneously; causal confidence is reduced."
+    },
+    {
+      "parameter": "max_parallel_workers",
+      "old": "3",
+      "new": "20",
+      "delta_pct": null,
+      "affected_metric": "dml.taxes.INSERT",
+      "direction": "up",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 94,
+      "workload_match_score": 0.5875,
+      "notes": "Confidence downgraded because too many parameters changed simultaneously. Low workload match; treat attribution as hypothesis. Many settings changed simultaneously; causal confidence is reduced."
+    },
+    {
+      "parameter": "max_prepared_transactions",
+      "old": "18",
+      "new": "12",
+      "delta_pct": null,
+      "affected_metric": "dml.taxes.INSERT",
+      "direction": "up",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 94,
+      "workload_match_score": 0.5875,
+      "notes": "Confidence downgraded because too many parameters changed simultaneously. Low workload match; treat attribution as hypothesis. Many settings changed simultaneously; causal confidence is reduced."
+    },
+    {
+      "parameter": "max_worker_processes",
+      "old": "32",
+      "new": null,
+      "delta_pct": null,
+      "affected_metric": "dml.taxes.INSERT",
+      "direction": "up",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 94,
+      "workload_match_score": 0.5875,
+      "notes": "Confidence downgraded because too many parameters changed simultaneously. Low workload match; treat attribution as hypothesis. Many settings changed simultaneously; causal confidence is reduced."
+    },
+    {
+      "parameter": "performance_insights.directory",
+      "old": "/pgdata/pg_perf_insights",
+      "new": null,
+      "delta_pct": null,
+      "affected_metric": "dml.taxes.INSERT",
+      "direction": "up",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 94,
+      "workload_match_score": 0.5875,
+      "notes": "Confidence downgraded because too many parameters changed simultaneously. Low workload match; treat attribution as hypothesis. Many settings changed simultaneously; causal confidence is reduced."
+    },
+    {
+      "parameter": "pg_conf_load_time",
+      "old": "2026-07-04 03:44:40.49286+03",
+      "new": "2026-02-28 19:58:48.556477+03",
+      "delta_pct": null,
+      "affected_metric": "dml.taxes.INSERT",
+      "direction": "up",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 94,
+      "workload_match_score": 0.5875,
+      "notes": "Confidence downgraded because too many parameters changed simultaneously. Low workload match; treat attribution as hypothesis. Many settings changed simultaneously; causal confidence is reduced."
+    },
+    {
+      "parameter": "pg_postmaster_start_time",
+      "old": "2026-05-23 13:21:22.197985+03",
+      "new": "2026-02-18 18:18:45.940638+03",
+      "delta_pct": null,
+      "affected_metric": "dml.taxes.INSERT",
+      "direction": "up",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 94,
+      "workload_match_score": 0.5875,
+      "notes": "Confidence downgraded because too many parameters changed simultaneously. Low workload match; treat attribution as hypothesis. Many settings changed simultaneously; causal confidence is reduced."
+    },
+    {
+      "parameter": "pg_stat_kcache.linux_hz",
+      "old": "1000000",
+      "new": "500000",
+      "delta_pct": null,
+      "affected_metric": "dml.taxes.INSERT",
+      "direction": "up",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 94,
+      "workload_match_score": 0.5875,
+      "notes": "Confidence downgraded because too many parameters changed simultaneously. Low workload match; treat attribution as hypothesis. Many settings changed simultaneously; causal confidence is reduced."
+    },
+    {
+      "parameter": "primary_slot_name",
+      "old": "pslod_pprb00823_cloud_omega_sbrf_ru",
+      "new": "tvldd_pprb06733_delta_sbrf_ru",
+      "delta_pct": null,
+      "affected_metric": "dml.taxes.INSERT",
+      "direction": "up",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 94,
+      "workload_match_score": 0.5875,
+      "notes": "Confidence downgraded because too many parameters changed simultaneously. Low workload match; treat attribution as hypothesis. Many settings changed simultaneously; causal confidence is reduced."
+    },
+    {
+      "parameter": "sec_admin_default_auth",
+      "old": null,
+      "new": "",
+      "delta_pct": null,
+      "affected_metric": "dml.taxes.INSERT",
+      "direction": "up",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 94,
+      "workload_match_score": 0.5875,
+      "notes": "Confidence downgraded because too many parameters changed simultaneously. Low workload match; treat attribution as hypothesis. Many settings changed simultaneously; causal confidence is reduced."
+    },
+    {
+      "parameter": "shared_buffers",
+      "old": "382464",
+      "new": "762240",
+      "delta_pct": null,
+      "affected_metric": "cache.taxes.blks_read",
+      "direction": "up",
+      "impact": "degraded",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 9,
+      "workload_match_score": 0.5875,
+      "notes": "Confidence downgraded because too many parameters changed simultaneously. Low workload match; treat attribution as hypothesis. Many settings changed simultaneously; causal confidence is reduced."
+    },
+    {
+      "parameter": "shared_memory_size",
+      "old": "3536",
+      "new": "6571",
+      "delta_pct": null,
+      "affected_metric": "dml.taxes.INSERT",
+      "direction": "up",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 94,
+      "workload_match_score": 0.5875,
+      "notes": "Confidence downgraded because too many parameters changed simultaneously. Low workload match; treat attribution as hypothesis. Many settings changed simultaneously; causal confidence is reduced."
+    },
+    {
+      "parameter": "shared_memory_size_in_huge_pages",
+      "old": "1768",
+      "new": "3286",
+      "delta_pct": null,
+      "affected_metric": "dml.taxes.INSERT",
+      "direction": "up",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 94,
+      "workload_match_score": 0.5875,
+      "notes": "Confidence downgraded because too many parameters changed simultaneously. Low workload match; treat attribution as hypothesis. Many settings changed simultaneously; causal confidence is reduced."
+    },
+    {
+      "parameter": "subtransaction_buffers",
+      "old": "736",
+      "new": "1024",
+      "delta_pct": null,
+      "affected_metric": "dml.taxes.INSERT",
+      "direction": "up",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 94,
+      "workload_match_score": 0.5875,
+      "notes": "Confidence downgraded because too many parameters changed simultaneously. Low workload match; treat attribution as hypothesis. Many settings changed simultaneously; causal confidence is reduced."
+    },
+    {
+      "parameter": "synchronous_standby_names",
+      "old": "\"pslod-pprb00824.cloud.omega.sbrf.ru\"",
+      "new": "\"tvldd-pprb06732.delta.sbrf.ru\"",
+      "delta_pct": null,
+      "affected_metric": "dml.taxes.INSERT",
+      "direction": "up",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 94,
+      "workload_match_score": 0.5875,
+      "notes": "Confidence downgraded because too many parameters changed simultaneously. Low workload match; treat attribution as hypothesis. Many settings changed simultaneously; causal confidence is reduced."
+    },
+    {
+      "parameter": "transaction_buffers",
+      "old": "736",
+      "new": "1024",
+      "delta_pct": null,
+      "affected_metric": "dml.taxes.INSERT",
+      "direction": "up",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 94,
+      "workload_match_score": 0.5875,
+      "notes": "Confidence downgraded because too many parameters changed simultaneously. Low workload match; treat attribution as hypothesis. Many settings changed simultaneously; causal confidence is reduced."
+    },
+    {
+      "parameter": "version",
+      "old": "PostgreSQL 15.5 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 11.5.0 20240719 (Platform V SberLinux 11.5.0-5), 64-bit",
+      "new": "PostgreSQL 15.5 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 8.5.0 20210514 (Platform V SberLinux 8.5.0-28), 64-bit",
+      "delta_pct": null,
+      "affected_metric": "dml.taxes.INSERT",
+      "direction": "up",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 94,
+      "workload_match_score": 0.5875,
+      "notes": "Confidence downgraded because too many parameters changed simultaneously. Low workload match; treat attribution as hypothesis. Many settings changed simultaneously; causal confidence is reduced."
+    }
+  ]
+}

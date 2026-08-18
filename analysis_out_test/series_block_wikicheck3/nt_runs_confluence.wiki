@@ -1,0 +1,516 @@
+h1. НТ: анализ прогонов и влияние настроек
+
+{warning:title=Краткий вердикт}
+Симптомы: *Высокая утилизация CPU БД, Высокая генерация WAL*.
+Чеклист гипотез: FAIL *3* · SUSPECT *6* · PASS *4*.
+Прогонов НТ: *3*; пар с изменением GUC: *2*.
+Confirmed / Suspected гипотез: *3* / *6*.
+Сначала — влияние GUC и действия; детали симптомов — в expand ниже.
+{warning}
+
+h2. Чеклист гипотез
+
+||Проверка||Статус||
+|[Доминирующие SQL по CPU (pg_stat_kcache)|#sec_cpu_dominant_queries]|{status:colour=Red|title=FAIL|subtle=false}|
+|[Высокий объём вызовов (CPU × calls)|#sec_cpu_high_call_volume]|{status:colour=Yellow|title=SUSPECT|subtle=false}|
+|[Checkpoint / bgwriter / IO wait в kernel CPU|#sec_cpu_checkpoint_bgwriter]|{status:colour=Yellow|title=SUSPECT|subtle=false}|
+|[Autovacuum / analyze во время нагрузки|#sec_cpu_autovacuum_pressure]|{status:colour=Yellow|title=SUSPECT|subtle=false}|
+|[Параллельные запросы / max_parallel_workers|#sec_cpu_parallel_workers]|{status:colour=Green|title=PASS|subtle=false}|
+|[JIT-компиляция запросов|#sec_cpu_jit_overhead]|{status:colour=Green|title=PASS|subtle=false}|
+|[TLB pressure без HugePages (большой shared_buffers)|#sec_cpu_huge_pages_tlb]|{status:colour=Green|title=PASS|subtle=false}|
+|[Высокая скорость генерации WAL (wal_bytes)|#sec_wal_high_generation_rate]|{status:colour=Red|title=FAIL|subtle=false}|
+|[Переполнение wal_buffers|#sec_wal_buffers_full]|{status:colour=Red|title=FAIL|subtle=false}|
+|[WAL-heavy SQL|#sec_wal_wal_heavy_queries]|{status:colour=Yellow|title=SUSPECT|subtle=false}|
+|[Write-heavy таблицы (DML volume)|#sec_wal_high_dml_tables]|{status:colour=Yellow|title=SUSPECT|subtle=false}|
+|[Checkpoint pressure (requested checkpoints)|#sec_wal_checkpoint_pressure]|{status:colour=Yellow|title=SUSPECT|subtle=false}|
+|[Малый max_wal_size|#sec_wal_small_max_wal_size]|{status:colour=Green|title=PASS|subtle=false}|
+
+{toc:maxLevel=2}
+
+h2. Что сделать сейчас
+
+# (подтвердить cpu.dominant_queries) EXPLAIN (ANALYZE, BUFFERS) для топ-3 SQL по sum_cpu_time из отчёта
+# (подтвердить cpu.dominant_queries) Сопоставить pg_stat_statements (calls, mean_exec_time) с pg_stat_kcache (sum_cpu_time)
+# (подтвердить cpu.dominant_queries) Проверить, совпадает ли пик CPU на OS с интервалом отчёта pg_profile
+# (опровергнуть cpu.dominant_queries) Если sum_cpu_time топ-запросов <5% интервала — CPU уходит не в SQL (фон, autovacuum, checkpoint)
+# (подтвердить wal.high_generation_rate) wal_stats: wal_bytes, wal_bytes_per_sec за интервал
+# (подтвердить wal.high_generation_rate) Сравнить WAL MB/h между периодами (compare_runs / compare_nt_prod)
+# (опровергнуть wal.high_generation_rate) wal_bytes низкий за интервал — симптом мог быть кратковременным вне окна отчёта
+# (подтвердить wal.buffers_full) wal_stats.wal_buffers_full
+
+h2. Влияние изменений настроек (попарно)
+
+h3. nt_before → nt_after
+
+||Параметр||Было||Стало||Направление||Связь||
+|huge_pages|—|on|changed|{status:colour=Yellow|title=PROBABLE|subtle=false}|
+|max_wal_size|16384 (128.0 MB)|24576 (192.0 MB)|increased|{status:colour=Yellow|title=PROBABLE|subtle=false}|
+|shared_buffers|1048576 (8192.0 MB)|1258240 (9830.0 MB)|increased|{status:colour=Yellow|title=PROBABLE|subtle=false}|
+|wal_buffers|2048 (16.0 MB)|3072 (24.0 MB)|increased|{status:colour=Yellow|title=PROBABLE|subtle=false}|
+
+||Параметр||Метрика||Δ||Интерпретация||
+|huge_pages|blk_read_time|-1167637 (-32.3%)|неоднозначно|
+|max_wal_size|checkpoints_req|-184.00 (-59.5%)|улучшение|
+|max_wal_size|checkpoint_write_time|-4323 (-7.6%)|улучшение|
+|max_wal_size|wal_buffers_full|+20533 (+105.6%)|ухудшение|
+|max_wal_size|wal_bytes|-993637853744 (-36.1%)|улучшение|
+|max_wal_size|wal_size|-1017839774296 (-36.5%)|улучшение|
+|shared_buffers|blks_read|-47278 (-9.7%)|улучшение|
+|shared_buffers|blk_read_time|-1167637 (-32.3%)|улучшение|
+|shared_buffers|blk_write_time|-130085 (-29.9%)|улучшение|
+|wal_buffers|wal_buffers_full|+20533 (+105.6%)|ухудшение|
+|wal_buffers|wal_bytes|-993637853744 (-36.1%)|улучшение|
+|wal_buffers|wal_sync|+654259 (+13.0%)|неоднозначно|
+|wal_buffers|wal_write|+707739 (+13.8%)|неоднозначно|
+
+{expand:Комментарий по паре}
+Между прогонами nt_before → nt_after изменены настройки; ниже — вероятное влияние на метрики (корреляция, не доказательство причинности): - huge_pages: — → on (changed); уверенность: possible   • В этом сравнении: blk_read_time -32.3% — направление согласуется с ожидаемым эффектом настройки - max_wal_size: 16384 (128.0 MB) → 24576 (192.0 MB) (increased); уверенность: possible   • Увеличение max_wal_size снижает частоту requested checkpoints при высокой WAL generation.   • В этом сравнении: checkpoints_req -59.5%, checkpoint_write_time -7.6%, wal_buffers_full +105.6%, wal_bytes -36.1% — направление согласуется с ожидаемым эффектом настройки - shared_buffers: 1048576 (8192.0 MB) → 1258240 (9830.0 MB) (increased); уверенность: likely   • Увеличение shared_buffers повышает cache hit и снижает физические чтения (CPU/IO).   • В этом сравнении: blks_read -9.7%, blk_read_time -32.3%, blk_write_time -29.9% — направление согласуется с ожидаемым эффектом настройки - wal_buffers: 2048 (16.0 MB) → 3072 (24.0 MB) (increased); уверенность: possible   • Увеличение wal_buffers снижает ожидание освобождения WAL buffer (wal_buffers_full).   • В этом сравнении: wal_buffers_full +105.6%, wal_bytes -36.1%, wal_sync +13.0%, wal_write +13.8% — направление согласуется с ожидаемым эффектом настройки
+{expand}
+
+
+h3. nt_after → nt_old
+
+||Параметр||Было||Стало||Направление||Связь||
+|huge_pages|on|—|changed|{status:colour=Yellow|title=PROBABLE|subtle=false}|
+|max_wal_size|24576 (192.0 MB)|16384 (128.0 MB)|decreased|{status:colour=Yellow|title=PROBABLE|subtle=false}|
+|shared_buffers|1258240 (9830.0 MB)|1048576 (8192.0 MB)|decreased|{status:colour=Blue|title=WEAK|subtle=false}|
+|wal_buffers|3072 (24.0 MB)|2048 (16.0 MB)|decreased|{status:colour=Yellow|title=PROBABLE|subtle=false}|
+
+||Параметр||Метрика||Δ||Интерпретация||
+|huge_pages|blk_read_time|-2289344 (-93.6%)|неоднозначно|
+|huge_pages|blks_hit_pct|+13.57 (+16.6%)|неоднозначно|
+|max_wal_size|checkpoints_req|-58.00 (-46.4%)|ухудшение|
+|max_wal_size|checkpoint_write_time|+14106 (+27.0%)|улучшение|
+|max_wal_size|wal_buffers_full|+92226 (+230.6%)|улучшение|
+|max_wal_size|wal_bytes|-1089647898493 (-62.0%)|ухудшение|
+|max_wal_size|wal_size|-1098184338376 (-61.9%)|ухудшение|
+|shared_buffers|blks_hit_pct|+13.57 (+16.6%)|ухудшение|
+|shared_buffers|blks_read|-3336755263 (-90.1%)|ухудшение|
+|shared_buffers|blk_read_time|-2289344 (-93.6%)|ухудшение|
+|shared_buffers|blk_write_time|-264222 (-86.7%)|ухудшение|
+|wal_buffers|wal_buffers_full|+92226 (+230.6%)|улучшение|
+|wal_buffers|wal_bytes|-1089647898493 (-62.0%)|ухудшение|
+|wal_buffers|wal_write|+565142 (+9.7%)|неоднозначно|
+
+{expand:Комментарий по паре}
+Между прогонами nt_after → nt_old изменены настройки; ниже — вероятное влияние на метрики (корреляция, не доказательство причинности): - huge_pages: on → — (changed); уверенность: possible   • В этом сравнении: blk_read_time -93.6%, blks_hit_pct +16.6% — направление согласуется с ожидаемым эффектом настройки - max_wal_size: 24576 (192.0 MB) → 16384 (128.0 MB) (decreased); уверенность: possible   • Уменьшение max_wal_size усиливает requested checkpoints и IO-пики checkpoint.   • В этом сравнении: checkpoints_req -46.4%, checkpoint_write_time +27.0%, wal_buffers_full +230.6%, wal_bytes -62.0% — направление согласуется с ожидаемым эффектом настройки - shared_buffers: 1258240 (9830.0 MB) → 1048576 (8192.0 MB) (decreased); уверенность: weak   • Уменьшение shared_buffers снижает cache hit и увеличивает чтения с диска.   • В этом сравнении: blks_hit_pct +16.6%, blks_read -90.1%, blk_read_time -93.6%, blk_write_time -86.7% — эффект настройки не подтверждается метриками (возможна доминирующая нагрузка приложения) - wal_buffers: 3072 (24.0 MB) → 2048 (16.0 MB) (decreased); уверенность: possible   • Уменьшение wal_buffers может повысить wal_buffers_full и latency commit.   • В этом сравнении: wal_buffers_full +230.6%, wal_bytes -62.0%, wal_write +9.7% — направление согласуется с ожидаемым эффектом настройки
+{expand}
+
+
+h2. Отличающиеся настройки по прогонам
+
+||Параметр||nt_before||nt_after||nt_old||
+|max_wal_size|16384|24576|16384|
+|shared_buffers|1048576|1258240|1048576|
+|shared_memory_size|9194|10877|9194|
+|shared_memory_size_in_huge_pages|4597|5439|4597|
+|synchronous_standby_names|"tsldd-pprb02835.cloud.delta.sbrf.ru"|"tsldd-pprb02835.cloud.delta.sbrf.ru"|"tsldd-pprb02833.cloud.delta.sbrf.ru"|
+|wal_buffers|2048|3072|2048|
+
+h2. Изменения результатов по метрикам
+
+||Метрика||nt_before||nt_after||Δ nt_before→nt_after||nt_old||Δ nt_after→nt_old||Тренд||
+|cache.Total.blk_read_time|3613927|2446290|-1167637 (-32.3%)|156946|-2289344 (-93.6%)|становится лучше|
+|cache.Total.blk_write_time|434889|304804|-130085 (-29.9%)|40582|-264222 (-86.7%)|становится лучше|
+|cache.Total.blks_hit_pct|—|81.64|—|95.21|+13.57 (+16.6%)|становится лучше|
+|cache.Total.blks_read|—|3703014875|—|366259612|-3336755263 (-90.1%)|становится лучше|
+|cache.counteragent.blk_read_time|3613339|2445919|-1167420 (-32.3%)|156907|-2289012 (-93.6%)|становится лучше|
+|cache.counteragent.blk_write_time|434840|304778|-130061 (-29.9%)|40579|-264200 (-86.7%)|становится лучше|
+|cache.counteragent.blks_hit_pct|—|81.56|—|95.15|+13.59 (+16.7%)|становится лучше|
+|cache.counteragent.blks_read|—|3702573433|—|366089935|-3336483498 (-90.1%)|становится лучше|
+|cache.postgres.blk_read_time|588.01|370.78|-217.23 (-36.9%)|38.64|-332.14 (-89.6%)|становится лучше|
+|cache.postgres.blk_write_time|49.28|26.01|-23.27 (-47.2%)|3.730|-22.28 (-85.7%)|становится лучше|
+|cache.postgres.blks_read|488720|441442|-47278 (-9.7%)|169677|-271765 (-61.6%)|становится лучше|
+|cluster.buffers_backend|463195650|365372858|-97822792 (-21.1%)|89192225|-276180633 (-75.6%)|стабильный результат|
+|cluster.buffers_checkpoint|4136935|1812275|-2324660 (-56.2%)|12848030|+11035755 (+608.9%)|стабильный результат|
+|cluster.checkpoint_sync_time|831.19|385.16|-446.03 (-53.7%)|64.90|-320.26 (-83.1%)|становится лучше|
+|cluster.checkpoint_write_time|56617|52294|-4323 (-7.6%)|66400|+14106 (+27.0%)|нестабильный результат|
+|cluster.checkpoints_req|309.00|125.00|-184.00 (-59.5%)|67.00|-58.00 (-46.4%)|становится лучше|
+|cluster.checkpoints_timed|1.000|12.00|+11.00 (+1100.0%)|19.00|+7.000 (+58.3%)|становится хуже|
+|cluster.maxwritten_clean|234051|220108|-13943 (-6.0%)|208253|-11855 (-5.4%)|становится лучше|
+|cluster.wal_size|2791663375072|1773823600776|-1017839774296 (-36.5%)|675639262400|-1098184338376 (-61.9%)|становится лучше|
+|dml.Total.COMMIT|—|135847529|—|67277748|-68569781 (-50.5%)|стабильный результат|
+|dml.Total.DELETE|2517941|4455676|+1937735 (+77.0%)|5897098|+1441422 (+32.4%)|стабильный результат|
+|dml.Total.FETCH|8225454680|9509738346|+1284283666 (+15.6%)|965854897|-8543883449 (-89.8%)|стабильный результат|
+|dml.Total.INSERT|9916495|18269131|+8352636 (+84.2%)|136821891|+118552760 (+648.9%)|стабильный результат|
+|dml.Total.ROLLBACK|19471|4373|-15098 (-77.5%)|3907|-466.00 (-10.7%)|становится лучше|
+|dml.Total.UPDATE|447271146|376281572|-70989574 (-15.9%)|109237801|-267043771 (-71.0%)|стабильный результат|
+|dml.counteragent.COMMIT|—|135603182|—|67019224|-68583958 (-50.6%)|стабильный результат|
+|dml.counteragent.DELETE|2322038|4252897|+1930859 (+83.2%)|5677656|+1424759 (+33.5%)|стабильный результат|
+|dml.counteragent.FETCH|8050858991|9335288277|+1284429286 (+16.0%)|791447635|-8543840642 (-91.5%)|стабильный результат|
+|dml.counteragent.INSERT|9723591|18068126|+8344535 (+85.8%)|136603247|+118535121 (+656.0%)|стабильный результат|
+|dml.counteragent.ROLLBACK|18389|3233|-15156 (-82.4%)|2646|-587.00 (-18.2%)|становится лучше|
+|dml.counteragent.UPDATE|447215608|376221066|-70994542 (-15.9%)|109167757|-267053309 (-71.0%)|стабильный результат|
+|dml.postgres.COMMIT|217174|244347|+27173 (+12.5%)|258524|+14177 (+5.8%)|стабильный результат|
+|dml.postgres.DELETE|—|202779|—|219442|+16663 (+8.2%)|стабильный результат|
+|dml.postgres.INSERT|—|201005|—|218644|+17639 (+8.8%)|стабильный результат|
+|dml.postgres.ROLLBACK|1082|1140|+58.00 (+5.4%)|1261|+121.00 (+10.6%)|становится хуже|
+|dml.postgres.UPDATE|55538|60506|+4968 (+8.9%)|70044|+9538 (+15.8%)|стабильный результат|
+|queries.counteragent/as_admin|661064|366978|-6417 (-100.0%)|—|-10907 (-100.0%)|стабильный результат|
+|sessions.Total.active_time|6131644|4200456|-1931188 (-31.5%)|537501|-3662955 (-87.2%)|становится лучше|
+|sessions.Total.deadlocks|913.00|52.00|-861.00 (-94.3%)|—|-52.00 (-100.0%)|становится лучше|
+|sessions.Total.idle_in_transaction_time|—|3040657|—|1178606|-1862051 (-61.2%)|становится лучше|
+|sessions.Total.session_time|34163492|32393172|-1770320 (-5.2%)|26170837|-6222335 (-19.2%)|становится лучше|
+|sessions.Total.sessions|—|26492|—|23858|-2634 (-9.9%)|стабильный результат|
+|sessions.Total.sessions_fatal|—|244.00|—|—|-244.00 (-100.0%)|становится лучше|
+|sessions.counteragent.active_time|6128625|4198136|-1930489 (-31.5%)|536415|-3661721 (-87.2%)|становится лучше|
+|sessions.counteragent.deadlocks|913.00|52.00|-861.00 (-94.3%)|—|-52.00 (-100.0%)|становится лучше|
+|sessions.counteragent.idle_in_transaction_time|—|3040548|—|1178565|-1861983 (-61.2%)|становится лучше|
+|sessions.counteragent.session_time|33695877|31898105|-1797772 (-5.3%)|25618659|-6279446 (-19.7%)|становится лучше|
+|sessions.counteragent.sessions|—|22814|—|19709|-3105 (-13.6%)|стабильный результат|
+|sessions.counteragent.sessions_fatal|—|244.00|—|—|-244.00 (-100.0%)|становится лучше|
+|sessions.postgres.active_time|3019|2320|-698.89 (-23.2%)|1086|-1234 (-53.2%)|становится лучше|
+|sessions.postgres.idle_in_transaction_time|142.77|108.34|-34.43 (-24.1%)|40.81|-67.53 (-62.3%)|становится лучше|
+|sessions.postgres.session_time|467615|495067|+27452 (+5.9%)|552179|+57112 (+11.5%)|становится хуже|
+|sessions.postgres.sessions|3496|3678|+182.00 (+5.2%)|4149|+471.00 (+12.8%)|стабильный результат|
+|sessions.postgres.sessions_fatal|2.000|—|-2.000 (-100.0%)|—|—|становится лучше|
+|tables.counteragent.counteragent.t_client.idx_scan|—|353738990|—|204564654|-149174336 (-42.2%)|стабильный результат|
+|tables.counteragent.counteragent.t_client.n_tup_ins|760000|4000000|+3240000 (+426.3%)|—|—|стабильный результат|
+|tables.counteragent.counteragent.t_clientfeaturemapping.idx_scan|4619434|4017957|-601477 (-13.0%)|—|—|стабильный результат|
+|tables.counteragent.counteragent.t_feedback.idx_scan|—|74326716|—|24103019|-50223697 (-67.6%)|стабильный результат|
+|tables.counteragent.counteragent.t_feedbackwaitinglist.idx_scan|391706753|355896840|-35809913 (-9.1%)|112454717|-243442123 (-68.4%)|стабильный результат|
+|tables.counteragent.counteragent.t_feedbackwaitinglist.n_tup_ins|3291458|2640704|-650754 (-19.8%)|—|—|стабильный результат|
+|tables.counteragent.counteragent.t_feedbackwaitinglist.n_tup_upd|126531975|89998684|-36533291 (-28.9%)|32946064|-57052620 (-63.4%)|стабильный результат|
+|tables.counteragent.counteragent.t_notificationcandidate.idx_scan|—|58890445|—|16903788|-41986657 (-71.3%)|стабильный результат|
+|tables.counteragent.counteragent.t_repl_agglock_client.idx_scan|63519950|70000000|+6480050 (+10.2%)|—|—|стабильный результат|
+|tables.counteragent.counteragent.t_repl_agglock_client.n_tup_ins|760000|4000000|+3240000 (+426.3%)|35000000|+31000000 (+775.0%)|стабильный результат|
+|tables.counteragent.counteragent.t_repl_agglock_client.n_tup_upd|—|31000000|—|—|-31000000 (-100.0%)|стабильный результат|
+|tables.counteragent.counteragent.t_repl_agglock_feedbackwaitinglist.idx_scan|263511432|189300064|-74211368 (-28.2%)|76920758|-112379306 (-59.4%)|стабильный результат|
+|tables.counteragent.counteragent.t_repl_agglock_feedbackwaitinglist.n_tup_ins|3281017|2639756|-641261 (-19.5%)|38460379|+35820623 (+1357.0%)|стабильный результат|
+|tables.counteragent.counteragent.t_repl_agglock_feedbackwaitinglist.n_tup_upd|128474660|92010273|-36464387 (-28.4%)|—|-92010273 (-100.0%)|стабильный результат|
+|tables.counteragent.counteragent.t_repl_agglock_transaction.idx_scan|130756832|138000000|+7243168 (+5.5%)|70000000|-68000000 (-49.3%)|стабильный результат|
+|tables.counteragent.counteragent.t_repl_agglock_transaction.n_tup_ins|378488|2000000|+1621512 (+428.4%)|35000000|+33000000 (+1650.0%)|стабильный результат|
+|tables.counteragent.counteragent.t_repl_agglock_transaction.n_tup_upd|—|67000000|—|—|-67000000 (-100.0%)|стабильный результат|
+|tables.counteragent.counteragent.t_transaction.idx_scan|—|206854826|—|103107105|-103747721 (-50.2%)|стабильный результат|
+|tables.counteragent.counteragent.t_transaction.n_tup_del|—|2000000|+2000000|—|—|изменения незначительны|
+|tables.counteragent.counteragent.t_transaction.n_tup_ins|378488|2000000|+1621512 (+428.4%)|—|—|стабильный результат|
+|tables.counteragent.counteragent.t_transaction.n_tup_upd|—|65000000|—|33000000|-32000000 (-49.2%)|стабильный результат|
+|tables.counteragent.pg_catalog.pg_statistic.idx_scan|3930742|3142288|-788454 (-20.1%)|—|—|стабильный результат|
+|wal.wal_buffers_full|19453|39986|+20533 (+105.6%)|132212|+92226 (+230.6%)|становится хуже|
+|wal.wal_bytes|2752283715507|1758645861763|-993637853744 (-36.1%)|668997963270|-1089647898493 (-62.0%)|становится лучше|
+|wal.wal_records|2826136364|2436237022|-389899342 (-13.8%)|1174300797|-1261936225 (-51.8%)|становится лучше|
+|wal.wal_sync|5028688|5682947|+654259 (+13.0%)|—|—|становится хуже|
+|wal.wal_write|5125951|5833690|+707739 (+13.8%)|6398832|+565142 (+9.7%)|становится хуже|
+
+h2. Детализация по каждой паре прогонов
+
+h3. nt_before → nt_after
+
+||Метрика||nt_before||nt_after||Δ||
+|cluster.buffers_backend|463195650|365372858|-97822792 (-21.1%)|
+|cluster.buffers_checkpoint|4136935|1812275|-2324660 (-56.2%)|
+|cluster.checkpoint_sync_time|831.19|385.16|-446.03 (-53.7%)|
+|cluster.checkpoint_write_time|56617|52294|-4323 (-7.6%)|
+|cluster.checkpoints_req|309.00|125.00|-184.00 (-59.5%)|
+|cluster.checkpoints_timed|1.000|12.00|+11.00 (+1100.0%)|
+|cluster.maxwritten_clean|234051|220108|-13943 (-6.0%)|
+|cluster.wal_size|2791663375072|1773823600776|-1017839774296 (-36.5%)|
+|wal.wal_buffers_full|19453|39986|+20533 (+105.6%)|
+|wal.wal_bytes|2752283715507|1758645861763|-993637853744 (-36.1%)|
+|wal.wal_records|2826136364|2436237022|-389899342 (-13.8%)|
+|wal.wal_sync|5028688|5682947|+654259 (+13.0%)|
+|wal.wal_write|5125951|5833690|+707739 (+13.8%)|
+|dml.Total.INSERT|9916495|18269131|+8352636 (+84.2%)|
+|dml.Total.UPDATE|447271146|376281572|-70989574 (-15.9%)|
+|dml.Total.DELETE|2517941|4455676|+1937735 (+77.0%)|
+|dml.Total.ROLLBACK|19471|4373|-15098 (-77.5%)|
+|dml.Total.FETCH|8225454680|9509738346|+1284283666 (+15.6%)|
+|dml.counteragent.INSERT|9723591|18068126|+8344535 (+85.8%)|
+|dml.counteragent.UPDATE|447215608|376221066|-70994542 (-15.9%)|
+|dml.counteragent.DELETE|2322038|4252897|+1930859 (+83.2%)|
+|dml.counteragent.ROLLBACK|18389|3233|-15156 (-82.4%)|
+|dml.counteragent.FETCH|8050858991|9335288277|+1284429286 (+16.0%)|
+|dml.postgres.UPDATE|55538|60506|+4968 (+8.9%)|
+|dml.postgres.COMMIT|217174|244347|+27173 (+12.5%)|
+|dml.postgres.ROLLBACK|1082|1140|+58.00 (+5.4%)|
+|tables.counteragent.counteragent.t_repl_agglock_feedbackwaitinglist.idx_scan|263511432|189300064|-74211368 (-28.2%)|
+|tables.counteragent.counteragent.t_feedbackwaitinglist.n_tup_upd|126531975|89998684|-36533291 (-28.9%)|
+|tables.counteragent.counteragent.t_repl_agglock_feedbackwaitinglist.n_tup_upd|128474660|92010273|-36464387 (-28.4%)|
+|tables.counteragent.counteragent.t_feedbackwaitinglist.idx_scan|391706753|355896840|-35809913 (-9.1%)|
+|tables.counteragent.counteragent.t_repl_agglock_transaction.idx_scan|130756832|138000000|+7243168 (+5.5%)|
+|tables.counteragent.counteragent.t_repl_agglock_client.idx_scan|63519950|70000000|+6480050 (+10.2%)|
+|tables.counteragent.counteragent.t_repl_agglock_client.n_tup_ins|760000|4000000|+3240000 (+426.3%)|
+|tables.counteragent.counteragent.t_client.n_tup_ins|760000|4000000|+3240000 (+426.3%)|
+|tables.counteragent.counteragent.t_transaction.n_tup_del|—|2000000|+2000000|
+|tables.counteragent.counteragent.t_transaction.n_tup_ins|378488|2000000|+1621512 (+428.4%)|
+|tables.counteragent.counteragent.t_repl_agglock_transaction.n_tup_ins|378488|2000000|+1621512 (+428.4%)|
+|tables.counteragent.pg_catalog.pg_statistic.idx_scan|3930742|3142288|-788454 (-20.1%)|
+|tables.counteragent.counteragent.t_feedbackwaitinglist.n_tup_ins|3291458|2640704|-650754 (-19.8%)|
+|tables.counteragent.counteragent.t_repl_agglock_feedbackwaitinglist.n_tup_ins|3281017|2639756|-641261 (-19.5%)|
+|tables.counteragent.counteragent.t_clientfeaturemapping.idx_scan|4619434|4017957|-601477 (-13.0%)|
+|queries.counteragent/as_admin|661064|366978|-294086 (-44.5%)|
+|queries.counteragent/as_admin|335069|255052|-80017 (-23.9%)|
+|queries.counteragent/as_admin|68712|127332|+58620 (+85.3%)|
+|queries.counteragent/as_admin|326101|273224|-52877 (-16.2%)|
+|queries.counteragent/as_admin|69766|39215|-30551 (-43.8%)|
+|queries.counteragent/as_admin|152059|131317|-20741 (-13.6%)|
+|queries.counteragent/as_admin|47527|26980|-20547 (-43.2%)|
+|queries.counteragent/as_admin|75798|55728|-20070 (-26.5%)|
+|queries.counteragent/as_admin|67771|56137|-11635 (-17.2%)|
+|queries.counteragent/as_admin|10612|—|-10612 (-100.0%)|
+|queries.counteragent/as_admin|9551|—|-9551 (-100.0%)|
+|queries.counteragent/as_admin|7802|—|-7802 (-100.0%)|
+|queries.counteragent/as_admin|—|6941|+6941|
+|queries.counteragent/as_admin|24719|17824|-6895 (-27.9%)|
+|queries.counteragent/as_admin|6417|—|-6417 (-100.0%)|
+|sessions.Total.active_time|6131644|4200456|-1931188 (-31.5%)|
+|sessions.Total.session_time|34163492|32393172|-1770320 (-5.2%)|
+|sessions.Total.deadlocks|913.00|52.00|-861.00 (-94.3%)|
+|sessions.counteragent.active_time|6128625|4198136|-1930489 (-31.5%)|
+|sessions.counteragent.session_time|33695877|31898105|-1797772 (-5.3%)|
+|sessions.counteragent.deadlocks|913.00|52.00|-861.00 (-94.3%)|
+|sessions.postgres.sessions|3496|3678|+182.00 (+5.2%)|
+|sessions.postgres.idle_in_transaction_time|142.77|108.34|-34.43 (-24.1%)|
+|sessions.postgres.active_time|3019|2320|-698.89 (-23.2%)|
+|sessions.postgres.session_time|467615|495067|+27452 (+5.9%)|
+|sessions.postgres.sessions_fatal|2.000|—|-2.000 (-100.0%)|
+|cache.Total.blk_read_time|3613927|2446290|-1167637 (-32.3%)|
+|cache.Total.blk_write_time|434889|304804|-130085 (-29.9%)|
+|cache.counteragent.blk_read_time|3613339|2445919|-1167420 (-32.3%)|
+|cache.counteragent.blk_write_time|434840|304778|-130061 (-29.9%)|
+|cache.postgres.blks_read|488720|441442|-47278 (-9.7%)|
+|cache.postgres.blk_read_time|588.01|370.78|-217.23 (-36.9%)|
+|cache.postgres.blk_write_time|49.28|26.01|-23.27 (-47.2%)|
+
+h3. nt_after → nt_old
+
+||Метрика||nt_after||nt_old||Δ||
+|cluster.buffers_backend|365372858|89192225|-276180633 (-75.6%)|
+|cluster.buffers_checkpoint|1812275|12848030|+11035755 (+608.9%)|
+|cluster.checkpoint_sync_time|385.16|64.90|-320.26 (-83.1%)|
+|cluster.checkpoint_write_time|52294|66400|+14106 (+27.0%)|
+|cluster.checkpoints_req|125.00|67.00|-58.00 (-46.4%)|
+|cluster.checkpoints_timed|12.00|19.00|+7.000 (+58.3%)|
+|cluster.maxwritten_clean|220108|208253|-11855 (-5.4%)|
+|cluster.wal_size|1773823600776|675639262400|-1098184338376 (-61.9%)|
+|wal.wal_buffers_full|39986|132212|+92226 (+230.6%)|
+|wal.wal_bytes|1758645861763|668997963270|-1089647898493 (-62.0%)|
+|wal.wal_records|2436237022|1174300797|-1261936225 (-51.8%)|
+|wal.wal_write|5833690|6398832|+565142 (+9.7%)|
+|dml.Total.INSERT|18269131|136821891|+118552760 (+648.9%)|
+|dml.Total.UPDATE|376281572|109237801|-267043771 (-71.0%)|
+|dml.Total.DELETE|4455676|5897098|+1441422 (+32.4%)|
+|dml.Total.COMMIT|135847529|67277748|-68569781 (-50.5%)|
+|dml.Total.ROLLBACK|4373|3907|-466.00 (-10.7%)|
+|dml.Total.FETCH|9509738346|965854897|-8543883449 (-89.8%)|
+|dml.counteragent.INSERT|18068126|136603247|+118535121 (+656.0%)|
+|dml.counteragent.UPDATE|376221066|109167757|-267053309 (-71.0%)|
+|dml.counteragent.DELETE|4252897|5677656|+1424759 (+33.5%)|
+|dml.counteragent.COMMIT|135603182|67019224|-68583958 (-50.6%)|
+|dml.counteragent.ROLLBACK|3233|2646|-587.00 (-18.2%)|
+|dml.counteragent.FETCH|9335288277|791447635|-8543840642 (-91.5%)|
+|dml.postgres.INSERT|201005|218644|+17639 (+8.8%)|
+|dml.postgres.UPDATE|60506|70044|+9538 (+15.8%)|
+|dml.postgres.DELETE|202779|219442|+16663 (+8.2%)|
+|dml.postgres.COMMIT|244347|258524|+14177 (+5.8%)|
+|dml.postgres.ROLLBACK|1140|1261|+121.00 (+10.6%)|
+|tables.counteragent.counteragent.t_feedbackwaitinglist.idx_scan|355896840|112454717|-243442123 (-68.4%)|
+|tables.counteragent.counteragent.t_client.idx_scan|353738990|204564654|-149174336 (-42.2%)|
+|tables.counteragent.counteragent.t_repl_agglock_feedbackwaitinglist.idx_scan|189300064|76920758|-112379306 (-59.4%)|
+|tables.counteragent.counteragent.t_transaction.idx_scan|206854826|103107105|-103747721 (-50.2%)|
+|tables.counteragent.counteragent.t_repl_agglock_feedbackwaitinglist.n_tup_upd|92010273|—|-92010273 (-100.0%)|
+|tables.counteragent.counteragent.t_repl_agglock_transaction.idx_scan|138000000|70000000|-68000000 (-49.3%)|
+|tables.counteragent.counteragent.t_repl_agglock_transaction.n_tup_upd|67000000|—|-67000000 (-100.0%)|
+|tables.counteragent.counteragent.t_feedbackwaitinglist.n_tup_upd|89998684|32946064|-57052620 (-63.4%)|
+|tables.counteragent.counteragent.t_feedback.idx_scan|74326716|24103019|-50223697 (-67.6%)|
+|tables.counteragent.counteragent.t_notificationcandidate.idx_scan|58890445|16903788|-41986657 (-71.3%)|
+|tables.counteragent.counteragent.t_repl_agglock_feedbackwaitinglist.n_tup_ins|2639756|38460379|+35820623 (+1357.0%)|
+|tables.counteragent.counteragent.t_repl_agglock_transaction.n_tup_ins|2000000|35000000|+33000000 (+1650.0%)|
+|tables.counteragent.counteragent.t_transaction.n_tup_upd|65000000|33000000|-32000000 (-49.2%)|
+|tables.counteragent.counteragent.t_repl_agglock_client.n_tup_ins|4000000|35000000|+31000000 (+775.0%)|
+|tables.counteragent.counteragent.t_repl_agglock_client.n_tup_upd|31000000|—|-31000000 (-100.0%)|
+|queries.counteragent/as_admin|366978|63795|-303183 (-82.6%)|
+|queries.counteragent/as_admin|273224|—|-273224 (-100.0%)|
+|queries.counteragent/as_admin|255052|27803|-227249 (-89.1%)|
+|queries.counteragent/as_admin|127332|500.35|-126831 (-99.6%)|
+|queries.counteragent/as_admin|131317|24098|-107220 (-81.6%)|
+|queries.counteragent/as_admin|—|72217|+72217|
+|queries.counteragent/as_admin|56137|—|-56137 (-100.0%)|
+|queries.counteragent/as_admin|55728|9443|-46285 (-83.1%)|
+|queries.counteragent/as_admin|39215|—|-39215 (-100.0%)|
+|queries.counteragent/as_admin|26980|5421|-21560 (-79.9%)|
+|queries.counteragent/as_admin|1170|20008|+18838 (+1610.5%)|
+|queries.counteragent/as_admin|17824|—|-17824 (-100.0%)|
+|queries.counteragent/as_admin|14748|3290|-11458 (-77.7%)|
+|queries.counteragent/as_admin|—|11006|+11006|
+|queries.counteragent/as_admin|10907|—|-10907 (-100.0%)|
+|sessions.Total.sessions|26492|23858|-2634 (-9.9%)|
+|sessions.Total.idle_in_transaction_time|3040657|1178606|-1862051 (-61.2%)|
+|sessions.Total.active_time|4200456|537501|-3662955 (-87.2%)|
+|sessions.Total.session_time|32393172|26170837|-6222335 (-19.2%)|
+|sessions.Total.sessions_fatal|244.00|—|-244.00 (-100.0%)|
+|sessions.Total.deadlocks|52.00|—|-52.00 (-100.0%)|
+|sessions.counteragent.sessions|22814|19709|-3105 (-13.6%)|
+|sessions.counteragent.idle_in_transaction_time|3040548|1178565|-1861983 (-61.2%)|
+|sessions.counteragent.active_time|4198136|536415|-3661721 (-87.2%)|
+|sessions.counteragent.session_time|31898105|25618659|-6279446 (-19.7%)|
+|sessions.counteragent.sessions_fatal|244.00|—|-244.00 (-100.0%)|
+|sessions.counteragent.deadlocks|52.00|—|-52.00 (-100.0%)|
+|sessions.postgres.sessions|3678|4149|+471.00 (+12.8%)|
+|sessions.postgres.idle_in_transaction_time|108.34|40.81|-67.53 (-62.3%)|
+|sessions.postgres.active_time|2320|1086|-1234 (-53.2%)|
+|sessions.postgres.session_time|495067|552179|+57112 (+11.5%)|
+|cache.Total.blks_hit_pct|81.64|95.21|+13.57 (+16.6%)|
+|cache.Total.blks_read|3703014875|366259612|-3336755263 (-90.1%)|
+|cache.Total.blk_read_time|2446290|156946|-2289344 (-93.6%)|
+|cache.Total.blk_write_time|304804|40582|-264222 (-86.7%)|
+|cache.counteragent.blks_hit_pct|81.56|95.15|+13.59 (+16.7%)|
+|cache.counteragent.blks_read|3702573433|366089935|-3336483498 (-90.1%)|
+|cache.counteragent.blk_read_time|2445919|156907|-2289012 (-93.6%)|
+|cache.counteragent.blk_write_time|304778|40579|-264200 (-86.7%)|
+|cache.postgres.blks_read|441442|169677|-271765 (-61.6%)|
+|cache.postgres.blk_read_time|370.78|38.64|-332.14 (-89.6%)|
+|cache.postgres.blk_write_time|26.01|3.730|-22.28 (-85.7%)|
+
+h2. Сводка гипотез по симптомам
+
+||Severity||ID||Сообщение||Отчёт(ы)||
+|{status:colour=Red|title=CRITICAL|subtle=false}|cpu.dominant_queries|Доминирующие SQL по CPU (pg_stat_kcache)|nt_before, nt_after, nt_old|
+|{status:colour=Red|title=CRITICAL|subtle=false}|wal.buffers_full|Переполнение wal_buffers|nt_before, nt_after, nt_old|
+|{status:colour=Red|title=CRITICAL|subtle=false}|wal.high_generation_rate|Высокая скорость генерации WAL (wal_bytes)|nt_before, nt_after, nt_old|
+|{status:colour=Yellow|title=WARNING|subtle=false}|cpu.autovacuum_pressure|Autovacuum / analyze во время нагрузки|nt_before, nt_after, nt_old|
+|{status:colour=Yellow|title=WARNING|subtle=false}|cpu.checkpoint_bgwriter|Checkpoint / bgwriter / IO wait в kernel CPU|nt_before, nt_after, nt_old|
+|{status:colour=Yellow|title=WARNING|subtle=false}|cpu.high_call_volume|Высокий объём вызовов (CPU × calls)|nt_before, nt_after, nt_old|
+|{status:colour=Yellow|title=WARNING|subtle=false}|wal.checkpoint_pressure|Checkpoint pressure (requested checkpoints)|nt_before, nt_after, nt_old|
+|{status:colour=Yellow|title=WARNING|subtle=false}|wal.high_dml_tables|Write-heavy таблицы (DML volume)|nt_before, nt_after, nt_old|
+|{status:colour=Yellow|title=WARNING|subtle=false}|wal.wal_heavy_queries|WAL-heavy SQL|nt_before, nt_after, nt_old|
+
+{expand:Высокая утилизация CPU БД}
+{anchor:sec_cpu_dominant_queries}
+* {status:colour=Red|title=CONFIRMED} Доминирующие SQL по CPU (pg_stat_kcache) — cpu.dominant_queries
+** [nt_before] Топ CPU: sum_cpu_time=34754.0s, user_time_pct=14.1%
+** [nt_before] hex=aabf68fb55a475ea: update counteragent.t_feedbackwaitinglist set sys_lastchangedate=$1,refreshdate=…
+{anchor:sec_cpu_high_call_volume}
+* {status:colour=Yellow|title=SUSPECTED} Высокий объём вызовов (CPU × calls) — cpu.high_call_volume
+** [nt_before] Высокий объём: calls=126,454,697, total_exec_time=661064.2s, mean=5.23ms hex=aabf68fb55a475ea
+** [nt_before] Высокий объём: calls=328,542, total_exec_time=335069.3s, mean=1019.87ms hex=947d3792bf3c6b66
+{anchor:sec_cpu_checkpoint_bgwriter}
+* {status:colour=Yellow|title=SUSPECTED} Checkpoint / bgwriter / IO wait в kernel CPU — cpu.checkpoint_bgwriter
+** [nt_before] checkpoints_req=309, checkpoint_write_time=56617.2s
+** [nt_after] checkpoints_req=125, checkpoint_write_time=52294.3s
+{anchor:sec_cpu_autovacuum_pressure}
+* {status:colour=Yellow|title=SUSPECTED} Autovacuum / analyze во время нагрузки — cpu.autovacuum_pressure
+** [nt_before] Bloat: counteragent.t_feedback dead_pct=100.0%
+** [nt_after] Bloat: counteragent.t_feedback dead_pct=100.0%
+{anchor:sec_cpu_parallel_workers}
+* Параллельные запросы / max_parallel_workers — cpu.parallel_workers (possible / PASS)
+{anchor:sec_cpu_jit_overhead}
+* JIT-компиляция запросов — cpu.jit_overhead (possible / PASS)
+{anchor:sec_cpu_huge_pages_tlb}
+* TLB pressure без HugePages (большой shared_buffers) — cpu.huge_pages_tlb (possible / PASS)
+
+h2. EXPLAIN (ANALYZE, BUFFERS) — Высокая утилизация CPU БД
+
+{info}Ниже готовые команды для вставки в psql/клиент. На prod осторожно: ANALYZE выполняет запрос. При необходимости замените литералы/параметры на актуальные значения.{info}
+
+{expand:SQL · hex=aabf68fb55a475ea}
+{code:language=sql|title=nt_before · hex=aabf68fb55a475ea · sum_cpu_time=34754.0s}
+EXPLAIN (ANALYZE, BUFFERS)
+update counteragent.t_feedbackwaitinglist set sys_lastchangedate=$1,refreshdate=$2 where object_id=$3;
+{code}
+
+{expand}
+
+{expand:SQL · hex=b62bf356da94bd81}
+{code:language=sql|title=nt_before · hex=b62bf356da94bd81 · sum_cpu_time=32346.3s}
+EXPLAIN (ANALYZE, BUFFERS)
+select f1_0.object_id from counteragent.t_feedbackwaitinglist f1_0 where f1_0.destinationclient_entityid is not null and f1_0.destinationclient_entityid=$1 and f1_0.referencedclient_entityid is not null and f1_0.referencedclient_entityid=$2;
+{code}
+
+{expand}
+
+{expand:SQL · hex=bc341d0886926024}
+{code:language=sql|title=nt_before · hex=bc341d0886926024 · sum_cpu_time=24777.3s}
+EXPLAIN (ANALYZE, BUFFERS)
+select f1_0.object_id,f1_0.chgcnt,f1_0.destinationclient_entityid,f1_0.sys_isdeleted,f1_0.sys_lastchangedate,f1_0.offflag,f1_0.sys_ownerid,f1_0.sys_partitionid,f1_0.sys_recmodelversion,f1_0.referencedclient_entityid,f1_0.refreshdate,f1_0.type,f1_0.uuid,f1_0.viewdatetime from counteragent.t_feedbackwaitinglist f1_0 where f1_0.object_id=$1;
+{code}
+
+{expand}
+
+{expand:SQL · hex=a82eb1cdc7e93a20}
+{code:language=sql|title=nt_old · hex=a82eb1cdc7e93a20 · sum_cpu_time=9636.3s}
+EXPLAIN (ANALYZE, BUFFERS)
+update counteragent.t_transaction set sys_lastchangedate=$1,rquid=$2,validto=$3 where object_id=$4;
+{code}
+
+{expand}
+
+{expand}
+
+{expand:Высокая генерация WAL}
+{anchor:sec_wal_high_generation_rate}
+* {status:colour=Red|title=CONFIRMED} Высокая скорость генерации WAL (wal_bytes) — wal.high_generation_rate
+** [nt_before] WAL generation ≈ 145821.2 MB/h
+** [nt_after] WAL generation ≈ 88272.4 MB/h
+{anchor:sec_wal_buffers_full}
+* {status:colour=Red|title=CONFIRMED} Переполнение wal_buffers — wal.buffers_full
+** [nt_before] wal_buffers_full=19453
+** [nt_after] wal_buffers_full=39986
+{anchor:sec_wal_wal_heavy_queries}
+* {status:colour=Yellow|title=SUSPECTED} WAL-heavy SQL — wal.wal_heavy_queries
+** [nt_before] WAL-heavy SQL: wal_bytes=1348 GB hex=aabf68fb55a475ea
+** [nt_after] WAL-heavy SQL: wal_bytes=783 GB hex=aabf68fb55a475ea
+{anchor:sec_wal_high_dml_tables}
+* {status:colour=Yellow|title=SUSPECTED} Write-heavy таблицы (DML volume) — wal.high_dml_tables
+** [nt_before] DML table counteragent.t_feedbackwaitinglist: ins=3291458 upd=126531975 del=2071909
+** [nt_after] DML table counteragent.t_feedbackwaitinglist: ins=2640704 upd=89998684 del=2013773
+{anchor:sec_wal_checkpoint_pressure}
+* {status:colour=Yellow|title=SUSPECTED} Checkpoint pressure (requested checkpoints) — wal.checkpoint_pressure
+** [nt_before] checkpoints_req=309
+** [nt_after] checkpoints_req=125
+{anchor:sec_wal_small_max_wal_size}
+* Малый max_wal_size — wal.small_max_wal_size (possible / PASS)
+
+h2. EXPLAIN (ANALYZE, BUFFERS) — Высокая генерация WAL
+
+{info}Ниже готовые команды для вставки в psql/клиент. На prod осторожно: ANALYZE выполняет запрос. При необходимости замените литералы/параметры на актуальные значения.{info}
+
+{expand:SQL · hex=aabf68fb55a475ea}
+{code:language=sql|title=nt_before · hex=aabf68fb55a475ea · wal_bytes}
+EXPLAIN (ANALYZE, BUFFERS)
+update counteragent.t_feedbackwaitinglist set sys_lastchangedate=$1,refreshdate=$2 where object_id=$3;
+{code}
+
+{expand}
+
+{expand:SQL · hex=5049b7f719abb763}
+{code:language=sql|title=nt_before · hex=5049b7f719abb763 · wal_bytes}
+EXPLAIN (ANALYZE, BUFFERS)
+update counteragent.t_transaction set sys_lastchangedate=$1,rquid=$2 where object_id=$3;
+{code}
+
+{expand}
+
+{expand:SQL · hex=5a68bd6f1f3a0ef1}
+{code:language=sql|title=nt_before · hex=5a68bd6f1f3a0ef1 · wal_bytes}
+EXPLAIN (ANALYZE, BUFFERS)
+UPDATE counteragent.T_REPL_AGGLOCK_FEEDBACKWAITINGLIST SET siversion = $1, guid = $2, version = $3, sys_lastchangedate = LOCALTIMESTAMP WHERE rootid = $4 RETURNING "sys_lastchangedate";
+{code}
+
+{expand}
+
+{expand:SQL · hex=a82eb1cdc7e93a20}
+{code:language=sql|title=nt_old · hex=a82eb1cdc7e93a20 · wal_bytes}
+EXPLAIN (ANALYZE, BUFFERS)
+update counteragent.t_transaction set sys_lastchangedate=$1,rquid=$2,validto=$3 where object_id=$4;
+{code}
+
+{expand}
+
+{expand:SQL · hex=2460dc7a83938005}
+{code:language=sql|title=nt_old · hex=2460dc7a83938005 · wal_bytes}
+EXPLAIN (ANALYZE, BUFFERS)
+update counteragent.t_processednotificationcandidate set sys_lastchangedate=$1,status=$2 where object_id=$3;
+{code}
+
+{expand}
+
+{expand}
+
+{expand:Справочно: прогоны и baseline}
+||Метка||Файл||Интервал||
+|nt_before|counter_nt_before_settings.html| .. |
+|nt_after|counter_nt_with_settings.html| .. |
+|nt_old|counter_nt_old_version.html| .. |
+
+{expand}

@@ -1,0 +1,373 @@
+# System prompt: Confluence report (DeepSeek V4 Flash)
+
+You are a PostgreSQL performance analyst for a bank environment.
+
+## Rules (strict)
+
+1. Use **only** the data in the brief below. Do not invent metrics, thresholds, or server names.
+2. Do not change severity levels from the brief.
+3. For each finding, explain the problem in 1–2 sentences using the provided recommendation and actions.
+4. Group findings by priority: critical first, then warning.
+5. If the brief mentions interval mismatch between test runs, remind the reader to compare per-hour values, not only absolute counters.
+6. Do not suggest changing production without change management approval.
+7. If data is insufficient, write «недостаточно данных» — do not guess.
+8. Write in Russian.
+
+## Output format: Confluence Wiki Markup
+
+Output **only** Confluence Wiki Markup (not Markdown). No code fences, no preamble, no «вот отчёт».
+
+Use these macros:
+
+| Severity | Macro |
+|----------|--------|
+| critical | `{warning:title=...}...{warning}` |
+| warning  | `{note:title=...}...{note}` |
+| info     | `{info:title=...}...{info}` |
+
+Formatting rules:
+
+- Section headings: `h2.`, `h3.` (do **not** repeat page title `h1.` — it is already in the stub).
+- Bullet lists: lines starting with `*`.
+- Numbered actions: lines starting with `#`.
+- Tables: header `||Col1||Col2||`, rows `|val1|val2|`.
+- Optional details per finding: `{expand:title=ID: finding.id}...{expand}`.
+- Do not use HTML, Markdown `#`, or backticks for code — plain text only.
+
+## Required sections (in this order)
+
+```
+h2. Краткое резюме
+{info:title=Итог}
+* ...
+{info}
+
+h2. Критические находки
+{warning:title=<title from brief>}
+<explanation 1-2 sentences>
+* <action from brief>
+{warning}
+...
+
+h2. Предупреждения
+{note:title=<title from brief>}
+...
+{note}
+...
+
+h2. Рекомендуемые действия
+# <deduplicated action>
+# ...
+
+h2. Что проверить в следующем прогоне
+* ...
+```
+
+If a section has no items, write: `_Нет находок в этой категории._`
+
+Do not add findings that are not in the brief.
+
+
+---
+
+# DATA FOR ANALYSIS
+
+# pg_profile Analysis Brief
+
+Source type: `health_check`
+
+- Server: tvldd-pprb06733.delta.sbrf.ru
+- Interval: 2026-03-13 12:30:02+03 .. 2026-03-14 03:30:02+03 (15.0 h)
+- Report: _test_modified.html
+
+Total findings: 56
+
+## [CRITICAL] High ratio of requested checkpoints
+- **ID:** `checkpoints.high_requested_ratio`
+- **Message:** Requested checkpoints: 45/64 (70.3%), threshold 30%
+- **Recommendation:** Большая доля requested checkpoints означает, что WAL заполняется быстрее,
+чем срабатывают плановые checkpoints. Это типичный признак слишком малого
+max_wal_size или высокой write-нагрузки.
+- **Actions:**
+  - Увеличить max_wal_size (часто 1–4 GB+ для OLTP под нагрузкой)
+  - Проверить wal_buffers_full и общий объём WAL за интервал
+  - Сопоставить с checkpoint_timeout — не уменьшать timeout вместо max_wal_size
+
+## [WARNING] High absolute count of requested checkpoints
+- **ID:** `checkpoints.high_requested_count`
+- **Message:** Requested checkpoints: 45 (threshold 10)
+- **Recommendation:** За интервал отчёта зафиксировано много requested checkpoints.
+Сравните нормализованное значение /час с предыдущими прогонами.
+- **Actions:**
+  - Проверить max_wal_size и рост WAL
+  - Оценить пики INSERT/UPDATE и wal-heavy запросы
+
+## [WARNING] High checkpoint write time per hour
+- **ID:** `checkpoints.high_write_time_per_hour`
+- **Message:** Checkpoint write time: 905.1s/hour (threshold 60s/hour)
+- **Recommendation:** Нормализованное время записи checkpoint за час высокое — устойчивое IO-давление
+от checkpoints, а не только длинный единичный интервал отчёта.
+- **Actions:**
+  - Поднять checkpoint_completion_target (0.7–0.9) для сглаживания записи
+  - Согласовать max_wal_size и checkpoint_timeout с объёмом WAL
+  - Проверить latency диска (iostat) в окнах checkpoint
+
+## [WARNING] Long total checkpoint write time
+- **ID:** `checkpoints.high_write_time`
+- **Message:** Checkpoint write time: 13576.6s over 15.0h interval (threshold 300s)
+- **Recommendation:** Длительная запись checkpoint увеличивает IO latency и может влиять на
+время отклика запросов во время checkpoint.
+- **Actions:**
+  - Проверить производительность диска (IOPS, latency)
+  - Оценить checkpoint_completion_target
+  - Снизить write-нагрузку или распределить её во времени
+
+## [WARNING] Bgwriter interrupts (maxwritten_clean)
+- **ID:** `checkpoints.maxwritten_clean`
+- **Message:** Bgwriter interrupts (maxwritten_clean): 1821 (threshold 100)
+- **Recommendation:** Bgwriter часто прерывается из-за max_write_pages — буферы сбрасываются
+медленнее, чем backend их загрязняет.
+- **Actions:**
+  - Увеличить shared_buffers при низком cache hit
+  - Настроить bgwriter (в новых версиях часто autotune)
+  - Проверить checkpoint и WAL pressure
+
+## [WARNING] Slow SQL queries detected
+- **ID:** `queries.slow_execution`
+- **Message:** postgres/postgres: mean=6461.9ms, max=18142.9ms, total=193.9s, calls=30
+  SELECT pgse_profile.take_sample()
+- **Recommendation:** Запросы с высоким mean/max/total execution time — кандидаты на оптимизацию
+плана, индексов или переписывания SQL.
+- **Actions:**
+  - Выполнить EXPLAIN (ANALYZE, BUFFERS) для топ-запросов
+  - Проверить индексы и статистику (ANALYZE)
+  - Оценить work_mem при temp spills
+
+## [WARNING] Slow SQL queries detected
+- **ID:** `queries.slow_execution`
+- **Message:** taxes/as_admin: total=18341.2s, calls=86988667
+  insert into taxes.t_value (chgcnt,inn,sys_isdeleted,kpp,sys_lastchangedate,level_entityid,metrictype_entityid,offflag...
+- **Recommendation:** Запросы с высоким mean/max/total execution time — кандидаты на оптимизацию
+плана, индексов или переписывания SQL.
+- **Actions:**
+  - Выполнить EXPLAIN (ANALYZE, BUFFERS) для топ-запросов
+  - Проверить индексы и статистику (ANALYZE)
+  - Оценить work_mem при temp spills
+
+## [WARNING] Slow SQL queries detected
+- **ID:** `queries.slow_execution`
+- **Message:** taxes/as_admin: total=10238.5s, calls=86987557
+  INSERT INTO taxes.T_REPL_AGGLOCK_VALUE (rootid, siversion, guid, version, sys_lastchangedate) VALUES ($1, $2, $3, $4,...
+- **Recommendation:** Запросы с высоким mean/max/total execution time — кандидаты на оптимизацию
+плана, индексов или переписывания SQL.
+- **Actions:**
+  - Выполнить EXPLAIN (ANALYZE, BUFFERS) для топ-запросов
+  - Проверить индексы и статистику (ANALYZE)
+  - Оценить work_mem при temp spills
+
+## [WARNING] Slow SQL queries detected
+- **ID:** `queries.slow_execution`
+- **Message:** taxes/as_admin: total=3074.6s, calls=86988671
+  select v1_0.object_id from taxes.t_value v1_0 where v1_0.inn is not null and v1_0.inn=$1 and v1_0.kpp is not null and...
+- **Recommendation:** Запросы с высоким mean/max/total execution time — кандидаты на оптимизацию
+плана, индексов или переписывания SQL.
+- **Actions:**
+  - Выполнить EXPLAIN (ANALYZE, BUFFERS) для топ-запросов
+  - Проверить индексы и статистику (ANALYZE)
+  - Оценить work_mem при temp spills
+
+## [WARNING] Slow SQL queries detected
+- **ID:** `queries.slow_execution`
+- **Message:** taxes/as_admin: total=3415.0s, calls=86987567
+  SELECT txtype, changeeventmask, aggtype, ownerid, migrationstatus, silock, siversion, guid, version FROM taxes.T_REPL...
+- **Recommendation:** Запросы с высоким mean/max/total execution time — кандидаты на оптимизацию
+плана, индексов или переписывания SQL.
+- **Actions:**
+  - Выполнить EXPLAIN (ANALYZE, BUFFERS) для топ-запросов
+  - Проверить индексы и статистику (ANALYZE)
+  - Оценить work_mem при temp spills
+
+## [WARNING] autovacuum_naptime too high
+- **ID:** `autovacuum.naptime_high`
+- **Message:** autovacuum_naptime=99s exceeds threshold 60s (autovacuum runs too rarely)
+- **Recommendation:** Большой naptime замедляет реакцию autovacuum на bloat.
+Для OLTP часто используют 15–60 сек, не минуты.
+- **Actions:**
+  - Уменьшить autovacuum_naptime
+  - Мониторить dead tuples после изменения
+
+## [WARNING] High modified tuples ratio since analyze
+- **ID:** `autovacuum.table_high_mods_pct`
+- **Message:** taxes.taxes.t_repl_agglock_auditevent: mods_pct=167.6%, last_autoanalyze=never
+- **Recommendation:** Высокий n_mod_since_analyze — статистика устаревает, планировщик может выбирать
+плохие планы. Autovacuum analyze не успевает за DML.
+- **Actions:**
+  - Снизить autovacuum_analyze_scale_factor / threshold на горячих таблицах
+  - Ускорить autovacuum (naptime, cost_delay/limit)
+  - Выполнить ANALYZE в окно обслуживания при необходимости
+
+## [WARNING] High dead tuples ratio on table
+- **ID:** `autovacuum.table_high_dead_pct`
+- **Message:** taxes.taxes.t_repl_agglock_auditevent: dead_pct=16.2%, n_dead=633, last_autovacuum=never
+- **Recommendation:** Высокий процент мёртвых строк — autovacuum не успевает или заблокирован
+long transactions.
+- **Actions:**
+  - Проверить idle in transaction и lock waits
+  - Настроить per-table autovacuum при необходимости
+  - Рассмотреть VACUUM (ANALYZE) в окно обслуживания
+
+## [WARNING] WAL buffers frequently full
+- **ID:** `wal.buffers_full`
+- **Message:** wal_buffers_full: 40937 (threshold 1000)
+- **Recommendation:** wal_buffers переполняется — процессы ждут освобождения WAL buffer.
+Типичная рекомендация коммьюнити: увеличить wal_buffers (часто 64MB на busy systems).
+- **Actions:**
+  - Увеличить wal_buffers (единицы 8kB в pg_profile settings)
+  - Проверить пики WAL generation
+
+## [WARNING] Cache or I/O read finding
+- **ID:** `cache.high_read_time`
+- **Message:** taxes: blk_read_time=214.5s (threshold 60s)
+- **Recommendation:** Review cache hit ratios and disk read patterns.
+- **Actions:**
+  - Identify tables with high physical reads
+
+## [WARNING] Low table I/O hit ratio
+- **ID:** `cache.low_table_hit_ratio`
+- **Message:** postgres.pgse_profile.sample_statements: table hit_pct=91.84% (threshold 95.0%)
+- **Recommendation:** Горячие таблицы читаются с диска чаще ожидаемого — узкий buffer pool,
+холодный working set или неоптимальные планы/индексы.
+- **Actions:**
+  - Найти top I/O tables в pg_profile и проверить индексы/partitioning
+  - Оценить shared_buffers и effective_cache_size
+  - EXPLAIN (ANALYZE, BUFFERS) для запросов к этим таблицам
+
+## [WARNING] Low table I/O hit ratio
+- **ID:** `cache.low_table_hit_ratio`
+- **Message:** postgres.pgse_profile.sample_kcache: table hit_pct=89.36% (threshold 95.0%)
+- **Recommendation:** Горячие таблицы читаются с диска чаще ожидаемого — узкий buffer pool,
+холодный working set или неоптимальные планы/индексы.
+- **Actions:**
+  - Найти top I/O tables в pg_profile и проверить индексы/partitioning
+  - Оценить shared_buffers и effective_cache_size
+  - EXPLAIN (ANALYZE, BUFFERS) для запросов к этим таблицам
+
+## [WARNING] Low table I/O hit ratio
+- **ID:** `cache.low_table_hit_ratio`
+- **Message:** postgres.pgse_profile.sample_stat_indexes: table hit_pct=94.27% (threshold 95.0%)
+- **Recommendation:** Горячие таблицы читаются с диска чаще ожидаемого — узкий buffer pool,
+холодный working set или неоптимальные планы/индексы.
+- **Actions:**
+  - Найти top I/O tables в pg_profile и проверить индексы/partitioning
+  - Оценить shared_buffers и effective_cache_size
+  - EXPLAIN (ANALYZE, BUFFERS) для запросов к этим таблицам
+
+## [WARNING] Low table I/O hit ratio
+- **ID:** `cache.low_table_hit_ratio`
+- **Message:** postgres.pgse_profile.sample_settings: table hit_pct=93.11% (threshold 95.0%)
+- **Recommendation:** Горячие таблицы читаются с диска чаще ожидаемого — узкий buffer pool,
+холодный working set или неоптимальные планы/индексы.
+- **Actions:**
+  - Найти top I/O tables в pg_profile и проверить индексы/partitioning
+  - Оценить shared_buffers и effective_cache_size
+  - EXPLAIN (ANALYZE, BUFFERS) для запросов к этим таблицам
+
+## [CRITICAL] High idle in transaction time
+- **ID:** `sessions.high_idle_in_transaction`
+- **Message:** taxes: idle_in_transaction_time=1112045.7s (threshold 3600s), idle_in_transaction_session_timeout=0
+- **Recommendation:** Долгие idle in transaction сессии держат snapshots, блокируют vacuum
+и увеличивают bloat — одна из самых частых рекомендаций коммьюнити.
+- **Actions:**
+  - Установить idle_in_transaction_session_timeout
+  - Исправить application connection pooling / missing COMMIT
+  - Найти источник зависших транзакций в pg_stat_activity
+
+## [WARNING] Connection / session pressure
+- **ID:** `sessions.connection_pressure`
+- **Message:** postgres: connection pressure sessions=2884 (412% of max_connections=700)
+- **Recommendation:** Высокая утилизация соединений или много idle-сессий — риск исчерпания
+max_connections и лишней памяти на backends.
+- **Actions:**
+  - Внедрить/проверить PgBouncer (transaction pooling где возможно)
+  - Снизить max_connections после появления pooler
+  - Найти утечки соединений в приложении
+
+## [WARNING] Connection / session pressure
+- **ID:** `sessions.connection_pressure`
+- **Message:** taxes: connection pressure sessions=6912 (987% of max_connections=700)
+- **Recommendation:** Высокая утилизация соединений или много idle-сессий — риск исчерпания
+max_connections и лишней памяти на backends.
+- **Actions:**
+  - Внедрить/проверить PgBouncer (transaction pooling где возможно)
+  - Снизить max_connections после появления pooler
+  - Найти утечки соединений в приложении
+
+## [CRITICAL] idle_in_transaction_session_timeout is zero
+- **ID:** `sessions.idle_timeout_disabled`
+- **Message:** idle_in_transaction_session_timeout=0 while idle in transaction time is high
+- **Recommendation:** Таймаут отключён при наличии idle in transaction — нет защиты от утечки сессий.
+- **Actions:**
+  - Установить idle_in_transaction_session_timeout (например 60s–300s)
+
+## [WARNING] HugePages recommended for large shared_buffers
+- **ID:** `memory.huge_pages_recommended`
+- **Message:** huge_pages=try with shared_buffers=5955MB (≥2048MB): prefer huge_pages=on; shared_memory_size_in_huge_pages=3286
+- **Recommendation:** При большом shared_buffers Postgres Pro рекомендует использовать huge pages:
+снижается overhead TLB при работе с большими непрерывными блоками shared memory.
+Значение huge_pages=try (default) при нехватке страниц в ОС тихо откатывается
+на обычные 4kB — сервер стартует, но выгода HugePages теряется без явного сигнала.
+Предпочтительно huge_pages=on после резервирования vm.nr_hugepages.
+- **Actions:**
+  - Узнать потребность: SHOW shared_memory_size_in_huge_pages / postgres -C shared_memory_size_in_huge_pages
+  - Зарезервировать страницы в ОС: vm.nr_hugepages ≥ shared_memory_size_in_huge_pages (+ запас)
+  - Отключить Transparent Huge Pages (THP) на хосте БД
+  - Установить huge_pages=on в postgresql.conf и выполнить restart
+  - Проверить /proc/meminfo (HugePages_Total/Free) и старт postmaster без fallback
+
+## [WARNING] statement_timeout is disabled
+- **ID:** `memory.statement_timeout_zero`
+- **Message:** statement_timeout=0 (queries may run indefinitely)
+- **Recommendation:** Без statement_timeout runaway-запросы могут выполняться бесконечно.
+Коммьюнити рекомендует задавать разумный timeout на уровне роли/БД.
+- **Actions:**
+  - Установить statement_timeout для application roles
+  - Отдельный лимит для batch/ETL при необходимости
+
+... and 31 more findings
+
+
+---
+
+# pg_profile Analysis Brief
+
+Source type: `settings_diff`
+
+- Run A: NT
+- Run B: PROD
+
+Total findings: 2
+
+## [WARNING] PostgreSQL setting differs between environments
+- **ID:** `settings.only_nt.archive_timeout`
+- **Message:** archive_timeout
+- **Recommendation:** Параметр явно задан (Defined) в одной среде и отличается от другой.
+Убедитесь, что расхождение намеренное и соответствует политике банка.
+- **Actions:**
+  - Сверить с guc_guidance.yaml для данного параметра
+  - Документировать обоснование расхождения
+
+## [WARNING] PostgreSQL setting differs between environments
+- **ID:** `settings.differ.autovacuum_naptime`
+- **Message:** autovacuum_naptime
+- **Recommendation:** Параметр явно задан (Defined) в одной среде и отличается от другой.
+Убедитесь, что расхождение намеренное и соответствует политике банка.
+- **Actions:**
+  - Сверить с guc_guidance.yaml для данного параметра
+  - Документировать обоснование расхождения
+- **GUC note:** Как часто autovacuum launcher просыпается. Высокие значения замедляют реакцию на bloat.
+- **Typical OLTP:** 15-60
+
+
+---
+
+Начни ответ сразу с `h2. Краткое резюме` (без h1 и без пояснений).

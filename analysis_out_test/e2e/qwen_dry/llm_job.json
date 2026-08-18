@@ -1,0 +1,39 @@
+{
+  "status": "success",
+  "task": "summary",
+  "provider": "dry_run",
+  "started_at": "2026-08-18T16:09:43+00:00",
+  "extra_instructions": "",
+  "trace_id": "ec0fefdb66014bb299465cd6e5ec2b6a",
+  "char_count": 29825,
+  "sources": [
+    "brief.md",
+    "influence_summary.md"
+  ],
+  "policy": {
+    "name": "none",
+    "sanitization": false,
+    "enabled": false,
+    "allow_sections": [],
+    "deny_sections": [],
+    "mask_rules": [],
+    "dropped_sections": [],
+    "mask_hits": {},
+    "unchanged": true
+  },
+  "model": "dry-run",
+  "finished_at": "2026-08-18T16:09:43+00:00",
+  "latency_ms": 0,
+  "attempts": 1,
+  "request_file": "llm_request_summary.json",
+  "response_file": "llm_response_summary.json",
+  "answer_file": "llm_summary.md",
+  "quality_file": "llm_quality_summary.json",
+  "publishable": false,
+  "quality_score": 90,
+  "quality_verdict": "warning",
+  "quality_reasons": [
+    "influence table has attributed rows, but the answer cites no claims",
+    "dry-run answer is not publishable"
+  ]
+}

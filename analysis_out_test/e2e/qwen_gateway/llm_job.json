@@ -1,0 +1,36 @@
+{
+  "status": "success",
+  "task": "summary",
+  "provider": "qwen_gateway",
+  "started_at": "2026-08-18T16:09:44+00:00",
+  "extra_instructions": "",
+  "trace_id": "e2f54be62b164e3a830bba970622ef82",
+  "char_count": 29825,
+  "sources": [
+    "brief.md",
+    "influence_summary.md"
+  ],
+  "policy": {
+    "name": "none",
+    "sanitization": false,
+    "enabled": false,
+    "allow_sections": [],
+    "deny_sections": [],
+    "mask_rules": [],
+    "dropped_sections": [],
+    "mask_hits": {},
+    "unchanged": true
+  },
+  "model": "qwen-e2e",
+  "finished_at": "2026-08-18T16:09:44+00:00",
+  "latency_ms": 0,
+  "attempts": 1,
+  "request_file": "llm_request_summary.json",
+  "response_file": "llm_response_summary.json",
+  "answer_file": "llm_summary.md",
+  "quality_file": "llm_quality_summary.json",
+  "publishable": true,
+  "quality_score": 100,
+  "quality_verdict": "pass",
+  "quality_reasons": []
+}

@@ -1,0 +1,3934 @@
+{
+  "type": "combined_analysis",
+  "analyses": [
+    {
+      "type": "health_check",
+      "report_meta": {
+        "path": "/Users/svetlanachernysheva/Documents/pg_profile_checks/resources/pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html",
+        "filename": "pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html",
+        "server": "tsldd-pprb01138.delta.sbrf.ru",
+        "report_start": "2026-08-11 16:30:02+03",
+        "report_end": "2026-08-12 09:00:02+03",
+        "interval_hours": 16.5,
+        "pgprofile_version": "4.7"
+      },
+      "findings": [
+        {
+          "id": "checkpoints.high_requested_ratio",
+          "category": "checkpoints",
+          "severity": "critical",
+          "message": "Requested checkpoints: 39/46 (84.8%), threshold 30%",
+          "details": {
+            "requested": 39,
+            "timed": 7,
+            "ratio": 0.847826
+          }
+        },
+        {
+          "id": "checkpoints.high_requested_count",
+          "category": "checkpoints",
+          "severity": "warning",
+          "message": "Requested checkpoints: 39 (threshold 10)",
+          "details": {
+            "requested": 39
+          }
+        },
+        {
+          "id": "checkpoints.high_write_time_per_hour",
+          "category": "checkpoints",
+          "severity": "warning",
+          "message": "Checkpoint write time: 2357.5s/hour (threshold 60s/hour)",
+          "details": {
+            "write_per_hour": 2357.475758
+          }
+        },
+        {
+          "id": "checkpoints.high_write_time",
+          "category": "checkpoints",
+          "severity": "warning",
+          "message": "Checkpoint write time: 38898.3s over 16.5h interval (threshold 300s)",
+          "details": {
+            "write_time": 38898.35
+          }
+        },
+        {
+          "id": "checkpoints.maxwritten_clean",
+          "category": "checkpoints",
+          "severity": "warning",
+          "message": "Bgwriter interrupts (maxwritten_clean): 80728 (threshold 100)",
+          "details": {
+            "maxwritten_clean": 80728
+          }
+        },
+        {
+          "id": "queries.slow_execution",
+          "category": "queries",
+          "severity": "warning",
+          "message": "statecontracts/as_admin: max=35536.1ms, calls=1\n  select $3, t0.OBJECT_ID c2 from statecontracts.T_CONTRACTS t0 where t0.RQUID &lt;> $1 limit $2",
+          "details": {
+            "hexqueryid": "7e098fea4f36a9d",
+            "mean_exec_time": 35536.11,
+            "max_exec_time": 35536.11,
+            "total_time": 35.54,
+            "calls": 1,
+            "query_text": "select $3, t0.OBJECT_ID c2 from statecontracts.T_CONTRACTS t0 where t0.RQUID &lt;> $1 limit $2"
+          }
+        },
+        {
+          "id": "queries.slow_execution",
+          "category": "queries",
+          "severity": "warning",
+          "message": "statecontracts/as_admin: max=26526.6ms, calls=1\n  select $3, t0.OBJECT_ID c2 from statecontracts.T_PARTICIPANT t0 where t0.RQUID &lt;> $1 limit $2",
+          "details": {
+            "hexqueryid": "1bd9e392e5d44395",
+            "mean_exec_time": 26526.58,
+            "max_exec_time": 26526.58,
+            "total_time": 26.53,
+            "calls": 1,
+            "query_text": "select $3, t0.OBJECT_ID c2 from statecontracts.T_PARTICIPANT t0 where t0.RQUID &lt;> $1 limit $2"
+          }
+        },
+        {
+          "id": "queries.slow_execution",
+          "category": "queries",
+          "severity": "warning",
+          "message": "postgres/postgres: mean=6674.5ms, max=12758.8ms, total=220.3s, calls=33\n  SELECT pgse_profile.take_sample()",
+          "details": {
+            "hexqueryid": "b59c46b67088420d",
+            "mean_exec_time": 6674.5,
+            "max_exec_time": 12758.78,
+            "total_time": 220.26,
+            "calls": 33,
+            "query_text": "SELECT pgse_profile.take_sample()"
+          }
+        },
+        {
+          "id": "queries.slow_execution",
+          "category": "queries",
+          "severity": "warning",
+          "message": "postgres/\"sa-d00000011757\": total=76.7s, calls=5939\n  SELECT spcname, pg_tablespace_size(spcname) AS size FROM pg_tablespace ORDER BY size DESC LIMIT 25",
+          "details": {
+            "hexqueryid": "566f5112e6ebf965",
+            "mean_exec_time": 12.92,
+            "max_exec_time": 106.86,
+            "total_time": 76.74,
+            "calls": 5939,
+            "query_text": "SELECT spcname, pg_tablespace_size(spcname) AS size FROM pg_tablespace ORDER BY size DESC LIMIT 25"
+          }
+        },
+        {
+          "id": "queries.slow_execution",
+          "category": "queries",
+          "severity": "warning",
+          "message": "statecontracts/as_admin: total=5698.0s, calls=23999073\n  insert into statecontracts.t_participant (aggregateroot_id,chgcnt,inn,sys_isdeleted,sys_lastchangedate,name,offflag,s...",
+          "details": {
+            "hexqueryid": "37b83dead5b5b9e9",
+            "mean_exec_time": 0.24,
+            "max_exec_time": 80.53,
+            "total_time": 5698.0,
+            "calls": 23999073,
+            "query_text": "insert into statecontracts.t_participant (aggregateroot_id,chgcnt,inn,sys_isdeleted,sys_lastchangedate,name,offflag,sys_ownerid,parentcontract_id,sys_partitionid,sys_recmodelversion,role,rquid,type,object_id) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$15,$14)"
+          }
+        },
+        {
+          "id": "queries.slow_execution",
+          "category": "queries",
+          "severity": "warning",
+          "message": "statecontracts/as_admin: total=723.4s, calls=23999073\n  select p1_0.object_id from statecontracts.t_participant p1_0 where p1_0.inn is not null and p1_0.inn=$1 and p1_0.pare...",
+          "details": {
+            "hexqueryid": "d1cf715414ffc2ac",
+            "mean_exec_time": 0.03,
+            "max_exec_time": 61.43,
+            "total_time": 723.35,
+            "calls": 23999073,
+            "query_text": "select p1_0.object_id from statecontracts.t_participant p1_0 where p1_0.inn is not null and p1_0.inn=$1 and p1_0.parentcontract_id is not null and p1_0.parentcontract_id=$2"
+          }
+        },
+        {
+          "id": "queries.slow_execution",
+          "category": "queries",
+          "severity": "warning",
+          "message": "statecontracts/as_admin: total=20024.2s, calls=144991055\n  insert into statecontracts.t_value (chgcnt,date_,inn,sys_isdeleted,kpp,sys_lastchangedate,level_entityid,metrictype_e...",
+          "details": {
+            "hexqueryid": "d5e326dff67d955a",
+            "mean_exec_time": 0.14,
+            "max_exec_time": 59.58,
+            "total_time": 20024.23,
+            "calls": 144991055,
+            "query_text": "insert into statecontracts.t_value (chgcnt,date_,inn,sys_isdeleted,kpp,sys_lastchangedate,level_entityid,metrictype_entityid,offflag,sys_ownerid,sys_partitionid,sys_recmodelversion,rquid,sourcedatetime,value_,type,object_id) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,'Value',$16)"
+          }
+        },
+        {
+          "id": "queries.slow_execution",
+          "category": "queries",
+          "severity": "warning",
+          "message": "statecontracts/as_admin: total=2888.0s, calls=11999535\n  insert into statecontracts.t_contracts (chgcnt,claimed,contractid,customerinn,customername,enddate,fined,sys_isdelete...",
+          "details": {
+            "hexqueryid": "3f7ffea106f6e78e",
+            "mean_exec_time": 0.24,
+            "max_exec_time": 57.83,
+            "total_time": 2888.04,
+            "calls": 11999535,
+            "query_text": "insert into statecontracts.t_contracts (chgcnt,claimed,contractid,customerinn,customername,enddate,fined,sys_isdeleted,sys_lastchangedate,number_,offflag,sys_ownerid,sys_partitionid,purchasetype,sys_recmodelversion,rquid,sourcedatetime,startdate,startyear,status,subject,sum_,supplierinn,suppliername,terminationdate,terminationkind,terminationreason,type,object_id) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$29,$28)"
+          }
+        },
+        {
+          "id": "queries.slow_execution",
+          "category": "queries",
+          "severity": "warning",
+          "message": "statecontracts/as_admin: total=1373.1s, calls=11999539\n  INSERT INTO statecontracts.T_REPL_AGGLOCK_CONTRACTS (rootid, siversion, guid, version, sys_lastchangedate) VALUES ($1...",
+          "details": {
+            "hexqueryid": "5925970c215e2e8a",
+            "mean_exec_time": 0.11,
+            "max_exec_time": 51.97,
+            "total_time": 1373.14,
+            "calls": 11999539,
+            "query_text": "INSERT INTO statecontracts.T_REPL_AGGLOCK_CONTRACTS (rootid, siversion, guid, version, sys_lastchangedate) VALUES ($1, $2, $3, $4, LOCALTIMESTAMP) ON CONFLICT (rootid) DO NOTHING RETURNING \"sys_lastchangedate\""
+          }
+        },
+        {
+          "id": "queries.slow_execution",
+          "category": "queries",
+          "severity": "warning",
+          "message": "statecontracts/as_admin: total=15378.4s, calls=144989282\n  INSERT INTO statecontracts.T_REPL_AGGLOCK_VALUE (rootid, siversion, guid, version, sys_lastchangedate) VALUES ($1, $2...",
+          "details": {
+            "hexqueryid": "31df6528995548cf",
+            "mean_exec_time": 0.11,
+            "max_exec_time": 51.52,
+            "total_time": 15378.41,
+            "calls": 144989282,
+            "query_text": "INSERT INTO statecontracts.T_REPL_AGGLOCK_VALUE (rootid, siversion, guid, version, sys_lastchangedate) VALUES ($1, $2, $3, $4, LOCALTIMESTAMP) ON CONFLICT (rootid) DO NOTHING RETURNING \"sys_lastchangedate\""
+          }
+        },
+        {
+          "id": "autovacuum.table_high_dead_pct",
+          "category": "autovacuum",
+          "severity": "warning",
+          "message": "postgres.pgse_profile.sample_stat_tables: dead_pct=16.5%, n_dead=112895, last_autovacuum=never",
+          "details": {
+            "dead_pct": 16.53657
+          }
+        },
+        {
+          "id": "autovacuum.table_high_dead_pct",
+          "category": "autovacuum",
+          "severity": "warning",
+          "message": "postgres.pgse_profile.sample_stat_tables_total: dead_pct=16.4%, n_dead=5688, last_autovacuum=never",
+          "details": {
+            "dead_pct": 16.438356
+          }
+        },
+        {
+          "id": "autovacuum.table_high_dead_pct",
+          "category": "autovacuum",
+          "severity": "warning",
+          "message": "postgres.pgse_profile.sample_kcache: dead_pct=16.0%, n_dead=40596, last_autovacuum=never",
+          "details": {
+            "dead_pct": 15.99061
+          }
+        },
+        {
+          "id": "autovacuum.table_high_dead_pct",
+          "category": "autovacuum",
+          "severity": "warning",
+          "message": "postgres.pgse_profile.sample_stat_indexes: dead_pct=15.8%, n_dead=44728, last_autovacuum=never",
+          "details": {
+            "dead_pct": 15.773567
+          }
+        },
+        {
+          "id": "autovacuum.table_high_dead_pct",
+          "category": "autovacuum",
+          "severity": "warning",
+          "message": "postgres.pgse_profile.sample_statements: dead_pct=15.7%, n_dead=43183, last_autovacuum=never",
+          "details": {
+            "dead_pct": 15.742982
+          }
+        },
+        {
+          "id": "wal.buffers_full",
+          "category": "wal",
+          "severity": "warning",
+          "message": "wal_buffers_full: 664448 (threshold 1000)",
+          "details": {}
+        },
+        {
+          "id": "wal.backend_writes_high",
+          "category": "wal",
+          "severity": "warning",
+          "message": "Backend buffers written (21842039) exceed checkpoint buffers written (11698150)",
+          "details": {
+            "buffers_backend": 21842039,
+            "buffers_checkpoint": 11698150
+          }
+        },
+        {
+          "id": "cache.high_read_time",
+          "category": "cache",
+          "severity": "warning",
+          "message": "statecontracts: blk_read_time=260.5s (threshold 60s)",
+          "details": {}
+        },
+        {
+          "id": "cache.low_table_hit_ratio",
+          "category": "cache",
+          "severity": "warning",
+          "message": "postgres.pgse_profile.sample_statements: table hit_pct=94.92% (threshold 95.0%)",
+          "details": {}
+        },
+        {
+          "id": "cache.low_table_hit_ratio",
+          "category": "cache",
+          "severity": "warning",
+          "message": "postgres.pgse_profile.sample_kcache: table hit_pct=92.32% (threshold 95.0%)",
+          "details": {}
+        },
+        {
+          "id": "cache.low_table_hit_ratio",
+          "category": "cache",
+          "severity": "warning",
+          "message": "postgres.pgse_profile.sample_stat_indexes: table hit_pct=93.56% (threshold 95.0%)",
+          "details": {}
+        },
+        {
+          "id": "cache.low_table_hit_ratio",
+          "category": "cache",
+          "severity": "warning",
+          "message": "postgres.pgse_profile.last_stat_indexes_srv2: table hit_pct=52.66% (threshold 95.0%)",
+          "details": {}
+        },
+        {
+          "id": "cache.low_table_hit_ratio",
+          "category": "cache",
+          "severity": "warning",
+          "message": "postgres.pgse_profile.last_stat_indexes_srv3: table hit_pct=52.68% (threshold 95.0%)",
+          "details": {}
+        },
+        {
+          "id": "sessions.high_idle_in_transaction",
+          "category": "sessions",
+          "severity": "critical",
+          "message": "statecontracts: idle_in_transaction_time=1372155.5s (threshold 3600s), idle_in_transaction_session_timeout=0",
+          "details": {
+            "idle_time": 1372155.52
+          }
+        },
+        {
+          "id": "sessions.connection_pressure",
+          "category": "sessions",
+          "severity": "warning",
+          "message": "postgres: connection pressure sessions=3241 (589% of max_connections=550)",
+          "details": {
+            "sessions": 3241,
+            "max_connections": 550,
+            "util_pct": 589.272727
+          }
+        },
+        {
+          "id": "sessions.connection_pressure",
+          "category": "sessions",
+          "severity": "warning",
+          "message": "statecontracts: connection pressure sessions=6475 (1177% of max_connections=550)",
+          "details": {
+            "sessions": 6475,
+            "max_connections": 550,
+            "util_pct": 1177.272727
+          }
+        },
+        {
+          "id": "sessions.idle_timeout_disabled",
+          "category": "sessions",
+          "severity": "critical",
+          "message": "idle_in_transaction_session_timeout=0 while idle in transaction time is high",
+          "details": {}
+        },
+        {
+          "id": "memory.statement_timeout_zero",
+          "category": "memory",
+          "severity": "warning",
+          "message": "statement_timeout=0 (queries may run indefinitely)",
+          "details": {}
+        },
+        {
+          "id": "memory.lock_timeout_zero",
+          "category": "memory",
+          "severity": "warning",
+          "message": "lock_timeout=0 (no protection against lock waits)",
+          "details": {}
+        },
+        {
+          "id": "io.wal_heavy_query",
+          "category": "io",
+          "severity": "warning",
+          "message": "statecontracts/as_admin: wal=105.9GB, shared_blks_dirtied=5802883\n  insert into statecontracts.t_value (chgcnt,date_,inn,sys_isdeleted,kpp,sys_lastchangedate,level_entityid,metrictype_e...",
+          "details": {
+            "hexqueryid": "d5e326dff67d955a",
+            "wal_bytes": 113755959127.0,
+            "io_time": 0.0,
+            "query_text": "insert into statecontracts.t_value (chgcnt,date_,inn,sys_isdeleted,kpp,sys_lastchangedate,level_entityid,metrictype_entityid,offflag,sys_ownerid,sys_partitionid,sys_recmodelversion,rquid,sourcedatetime,value_,type,object_id) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,'Value',$16)"
+          }
+        },
+        {
+          "id": "io.wal_heavy_query",
+          "category": "io",
+          "severity": "warning",
+          "message": "statecontracts/as_admin: wal=46.0GB, shared_blks_dirtied=5763415\n  insert into statecontracts.t_contracts (chgcnt,claimed,contractid,customerinn,customername,enddate,fined,sys_isdelete...",
+          "details": {
+            "hexqueryid": "3f7ffea106f6e78e",
+            "wal_bytes": 49338477696.0,
+            "io_time": 0.0,
+            "query_text": "insert into statecontracts.t_contracts (chgcnt,claimed,contractid,customerinn,customername,enddate,fined,sys_isdeleted,sys_lastchangedate,number_,offflag,sys_ownerid,sys_partitionid,purchasetype,sys_recmodelversion,rquid,sourcedatetime,startdate,startyear,status,subject,sum_,supplierinn,suppliername,terminationdate,terminationkind,terminationreason,type,object_id) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$29,$28)"
+          }
+        },
+        {
+          "id": "io.wal_heavy_query",
+          "category": "io",
+          "severity": "warning",
+          "message": "statecontracts/as_admin: wal=44.2GB, shared_blks_dirtied=3634005\n  INSERT INTO statecontracts.T_REPL_AGGLOCK_VALUE (rootid, siversion, guid, version, sys_lastchangedate) VALUES ($1, $2...",
+          "details": {
+            "hexqueryid": "31df6528995548cf",
+            "wal_bytes": 47410778021.0,
+            "io_time": 0.0,
+            "query_text": "INSERT INTO statecontracts.T_REPL_AGGLOCK_VALUE (rootid, siversion, guid, version, sys_lastchangedate) VALUES ($1, $2, $3, $4, LOCALTIMESTAMP) ON CONFLICT (rootid) DO NOTHING RETURNING \"sys_lastchangedate\""
+          }
+        },
+        {
+          "id": "io.wal_heavy_query",
+          "category": "io",
+          "severity": "warning",
+          "message": "statecontracts/as_admin: wal=29.2GB, shared_blks_dirtied=2348496\n  insert into statecontracts.t_participant (aggregateroot_id,chgcnt,inn,sys_isdeleted,sys_lastchangedate,name,offflag,s...",
+          "details": {
+            "hexqueryid": "37b83dead5b5b9e9",
+            "wal_bytes": 31309310652.0,
+            "io_time": 0.0,
+            "query_text": "insert into statecontracts.t_participant (aggregateroot_id,chgcnt,inn,sys_isdeleted,sys_lastchangedate,name,offflag,sys_ownerid,parentcontract_id,sys_partitionid,sys_recmodelversion,role,rquid,type,object_id) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$15,$14)"
+          }
+        },
+        {
+          "id": "io.high_heap_reads",
+          "category": "io",
+          "severity": "warning",
+          "message": "statecontracts.statecontracts.t_contracts: heap_blks_read=4806511",
+          "details": {
+            "heap_blks_read": 4806511
+          }
+        },
+        {
+          "id": "io.high_heap_reads",
+          "category": "io",
+          "severity": "warning",
+          "message": "statecontracts.pg_toast.pg_toast_76725: heap_blks_read=4699490",
+          "details": {
+            "heap_blks_read": 4699490
+          }
+        },
+        {
+          "id": "io.high_heap_reads",
+          "category": "io",
+          "severity": "warning",
+          "message": "statecontracts.statecontracts.t_value: heap_blks_read=4339914",
+          "details": {
+            "heap_blks_read": 4339914
+          }
+        },
+        {
+          "id": "io.high_heap_reads",
+          "category": "io",
+          "severity": "warning",
+          "message": "statecontracts.statecontracts.t_repl_agglock_value: heap_blks_read=4068522",
+          "details": {
+            "heap_blks_read": 4068522
+          }
+        },
+        {
+          "id": "io.high_heap_reads",
+          "category": "io",
+          "severity": "warning",
+          "message": "statecontracts.statecontracts.t_participant: heap_blks_read=3304492",
+          "details": {
+            "heap_blks_read": 3304492
+          }
+        },
+        {
+          "id": "io.high_seq_scan",
+          "category": "io",
+          "severity": "warning",
+          "message": "postgres.pg_catalog.pg_db_role_setting: seq_scan=3003316, idx_scan=121956, ratio=24.6",
+          "details": {
+            "seq_scan": 3003316
+          }
+        },
+        {
+          "id": "io.high_seq_scan",
+          "category": "io",
+          "severity": "warning",
+          "message": "statecontracts.pg_catalog.pg_db_role_setting: seq_scan=3003316, idx_scan=121956, ratio=24.6",
+          "details": {
+            "seq_scan": 3003316
+          }
+        },
+        {
+          "id": "io.high_heap_reads",
+          "category": "io",
+          "severity": "warning",
+          "message": "statecontracts.statecontracts.t_repl_agglock_contracts: heap_blks_read=787920",
+          "details": {
+            "heap_blks_read": 787920
+          }
+        },
+        {
+          "id": "io.high_seq_scan",
+          "category": "io",
+          "severity": "warning",
+          "message": "statecontracts.statecontracts.t_loadertask: seq_scan=117637, idx_scan=168, ratio=700.2",
+          "details": {
+            "seq_scan": 117637
+          }
+        },
+        {
+          "id": "io.high_seq_scan",
+          "category": "io",
+          "severity": "warning",
+          "message": "postgres.pgse_profile.last_stat_database_srv4: seq_scan=28416, idx_scan=0, ratio=28416.0",
+          "details": {
+            "seq_scan": 28416
+          }
+        },
+        {
+          "id": "io.table_growth",
+          "category": "io",
+          "severity": "warning",
+          "message": "statecontracts.statecontracts.t_value: table growth=21 GB (≥100MB)",
+          "details": {
+            "growth_mb": 21504.0,
+            "kind": "table_growth"
+          }
+        },
+        {
+          "id": "io.table_growth",
+          "category": "io",
+          "severity": "warning",
+          "message": "statecontracts.statecontracts.t_repl_agglock_value: table growth=19 GB (≥100MB)",
+          "details": {
+            "growth_mb": 19456.0,
+            "kind": "table_growth"
+          }
+        },
+        {
+          "id": "io.table_growth",
+          "category": "io",
+          "severity": "warning",
+          "message": "statecontracts.statecontracts.t_contracts: table growth=14 GB (≥100MB)",
+          "details": {
+            "growth_mb": 14336.0,
+            "kind": "table_growth"
+          }
+        },
+        {
+          "id": "io.table_growth",
+          "category": "io",
+          "severity": "warning",
+          "message": "statecontracts.statecontracts.t_participant: table growth=9505 MB (≥100MB)",
+          "details": {
+            "growth_mb": 9505.0,
+            "kind": "table_growth"
+          }
+        },
+        {
+          "id": "io.table_growth",
+          "category": "io",
+          "severity": "warning",
+          "message": "statecontracts.statecontracts.t_repl_agglock_contracts: table growth=1617 MB (≥100MB)",
+          "details": {
+            "growth_mb": 1617.0,
+            "kind": "table_growth"
+          }
+        },
+        {
+          "id": "io.vacuum_ops_pressure",
+          "category": "io",
+          "severity": "warning",
+          "message": "statecontracts.statecontracts.t_dspc_sys_config: vacuum_ops=151, analyze_ops=150",
+          "details": {
+            "vacuum_ops": 151,
+            "analyze_ops": 150,
+            "kind": "vacuum_ops"
+          }
+        },
+        {
+          "id": "io.vacuum_ops_pressure",
+          "category": "io",
+          "severity": "warning",
+          "message": "statecontracts.pg_catalog.pg_statistic: vacuum_ops=56, analyze_ops=0",
+          "details": {
+            "vacuum_ops": 56,
+            "analyze_ops": 0,
+            "kind": "vacuum_ops"
+          }
+        },
+        {
+          "id": "io.vacuum_ops_pressure",
+          "category": "io",
+          "severity": "warning",
+          "message": "statecontracts.statecontracts.t_repl_agglock_commonparam: vacuum_ops=49, analyze_ops=76",
+          "details": {
+            "vacuum_ops": 49,
+            "analyze_ops": 76,
+            "kind": "vacuum_ops"
+          }
+        },
+        {
+          "id": "io.vacuum_ops_pressure",
+          "category": "io",
+          "severity": "warning",
+          "message": "postgres.pgse_profile.last_stat_tables_srv4: vacuum_ops=36, analyze_ops=66",
+          "details": {
+            "vacuum_ops": 36,
+            "analyze_ops": 66,
+            "kind": "vacuum_ops"
+          }
+        },
+        {
+          "id": "io.vacuum_ops_pressure",
+          "category": "io",
+          "severity": "warning",
+          "message": "postgres.pgse_profile.last_stat_kcache_srv5: vacuum_ops=36, analyze_ops=66",
+          "details": {
+            "vacuum_ops": 36,
+            "analyze_ops": 66,
+            "kind": "vacuum_ops"
+          }
+        },
+        {
+          "id": "io.vacuum_ops_pressure",
+          "category": "io",
+          "severity": "warning",
+          "message": "statecontracts.statecontracts.t_value: vacuum_ops=35, analyze_ops=64",
+          "details": {
+            "vacuum_ops": 35,
+            "analyze_ops": 64,
+            "kind": "vacuum_ops"
+          }
+        },
+        {
+          "id": "io.vacuum_ops_pressure",
+          "category": "io",
+          "severity": "warning",
+          "message": "statecontracts.statecontracts.t_repl_agglock_value: vacuum_ops=35, analyze_ops=64",
+          "details": {
+            "vacuum_ops": 35,
+            "analyze_ops": 64,
+            "kind": "vacuum_ops"
+          }
+        },
+        {
+          "id": "io.vacuum_ops_pressure",
+          "category": "io",
+          "severity": "warning",
+          "message": "postgres.pgse_profile.last_stat_indexes_srv4: vacuum_ops=35, analyze_ops=66",
+          "details": {
+            "vacuum_ops": 35,
+            "analyze_ops": 66,
+            "kind": "vacuum_ops"
+          }
+        },
+        {
+          "id": "io.vacuum_ops_pressure",
+          "category": "io",
+          "severity": "warning",
+          "message": "postgres.pgse_profile.last_stat_indexes_srv5: vacuum_ops=35, analyze_ops=66",
+          "details": {
+            "vacuum_ops": 35,
+            "analyze_ops": 66,
+            "kind": "vacuum_ops"
+          }
+        },
+        {
+          "id": "io.vacuum_ops_pressure",
+          "category": "io",
+          "severity": "warning",
+          "message": "postgres.pgse_profile.last_stat_tables_srv5: vacuum_ops=35, analyze_ops=66",
+          "details": {
+            "vacuum_ops": 35,
+            "analyze_ops": 66,
+            "kind": "vacuum_ops"
+          }
+        },
+        {
+          "id": "io.unused_index",
+          "category": "io",
+          "severity": "warning",
+          "message": "Unused index statecontracts.statecontracts.t_value.i_value_metrictype: size=1537 MB",
+          "details": {}
+        },
+        {
+          "id": "io.unused_index",
+          "category": "io",
+          "severity": "warning",
+          "message": "Unused index statecontracts.statecontracts.t_value.i_value_level: size=1506 MB",
+          "details": {}
+        },
+        {
+          "id": "io.unused_index",
+          "category": "io",
+          "severity": "warning",
+          "message": "Unused index statecontracts.statecontracts.t_value.i_value_rquid: size=1414 MB",
+          "details": {}
+        },
+        {
+          "id": "io.unused_index",
+          "category": "io",
+          "severity": "warning",
+          "message": "Unused index statecontracts.statecontracts.t_value.i_value_sourcedatetime: size=1325 MB",
+          "details": {}
+        },
+        {
+          "id": "io.unused_index",
+          "category": "io",
+          "severity": "warning",
+          "message": "Unused index statecontracts.statecontracts.t_value.i_value_type: size=1325 MB",
+          "details": {}
+        },
+        {
+          "id": "io.unused_index",
+          "category": "io",
+          "severity": "warning",
+          "message": "Unused index statecontracts.statecontracts.t_participant.i_participant_aggregateroot_id: size=1050 MB",
+          "details": {}
+        },
+        {
+          "id": "io.unused_index",
+          "category": "io",
+          "severity": "warning",
+          "message": "Unused index statecontracts.statecontracts.t_participant.t_participant_parentcontract_id_idx: size=1050 MB",
+          "details": {}
+        },
+        {
+          "id": "io.unused_index",
+          "category": "io",
+          "severity": "warning",
+          "message": "Unused index statecontracts.statecontracts.t_participant.i_participant_rquid: size=254 MB",
+          "details": {}
+        },
+        {
+          "id": "io.unused_index",
+          "category": "io",
+          "severity": "warning",
+          "message": "Unused index statecontracts.statecontracts.t_participant.i_participant_type: size=243 MB",
+          "details": {}
+        },
+        {
+          "id": "io.unused_index",
+          "category": "io",
+          "severity": "warning",
+          "message": "Unused index statecontracts.statecontracts.t_contracts.i_contracts_type: size=93 MB",
+          "details": {}
+        },
+        {
+          "id": "db.statement_dominance",
+          "category": "io",
+          "severity": "warning",
+          "message": "statecontracts: dominates statement time 98.6% (total_exec_time=56520.08)",
+          "details": {
+            "dominance_pct": 98.649729,
+            "kind": "db_dominance"
+          }
+        },
+        {
+          "id": "disk.tablespace_growth",
+          "category": "disk",
+          "severity": "warning",
+          "message": "Tablespace statecontracts: size_delta=135 GB (size=135 GB, threshold 500MB)",
+          "details": {
+            "size_delta_mb": 138240.0,
+            "tablespacename": "statecontracts"
+          }
+        }
+      ],
+      "summary": {
+        "total": 75,
+        "critical": 3,
+        "warning": 72
+      }
+    },
+    {
+      "type": "run_comparison",
+      "contract": {
+        "schema": "run_comparison_v1",
+        "schema_version": "1.0"
+      },
+      "run_a": {
+        "run_id": "run_a",
+        "path": "/Users/svetlanachernysheva/Documents/pg_profile_checks/resources/pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html",
+        "filename": "pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html",
+        "server": "tsldd-pprb01138.delta.sbrf.ru",
+        "report_start": "2026-08-11 16:30:02+03",
+        "report_end": "2026-08-12 09:00:02+03",
+        "interval_hours": 16.5
+      },
+      "run_b": {
+        "run_id": "run_b",
+        "path": "/Users/svetlanachernysheva/Documents/pg_profile_checks/resources/pgprofile_srv=10_3_81_94_from=2026_08_12_16_00_to=2026_08_13_08.html",
+        "filename": "pgprofile_srv=10_3_81_94_from=2026_08_12_16_00_to=2026_08_13_08.html",
+        "server": "tsldd-pprb01138.delta.sbrf.ru",
+        "report_start": "2026-08-12 16:00:02+03",
+        "report_end": "2026-08-13 08:30:02+03",
+        "interval_hours": 16.5
+      },
+      "run_identity": {
+        "mode": "pair",
+        "runs": [
+          {
+            "role": "before",
+            "run_id": "run_a",
+            "server": "tsldd-pprb01138.delta.sbrf.ru",
+            "report_start": "2026-08-11 16:30:02+03",
+            "report_end": "2026-08-12 09:00:02+03",
+            "interval_hours": 16.5
+          },
+          {
+            "role": "after",
+            "run_id": "run_b",
+            "server": "tsldd-pprb01138.delta.sbrf.ru",
+            "report_start": "2026-08-12 16:00:02+03",
+            "report_end": "2026-08-13 08:30:02+03",
+            "interval_hours": 16.5
+          }
+        ]
+      },
+      "workload_match": {
+        "workload_match_score": 1.0,
+        "level": "high",
+        "components": {
+          "interval_similarity": 1.0,
+          "server_similarity": 1.0
+        },
+        "notes": "Higher score means better run comparability for influence interpretation."
+      },
+      "confidence_meta": {
+        "mode": "pair",
+        "changed_params_count": 0,
+        "changed_params_threshold": 10,
+        "workload_match_score": 1.0,
+        "isolated_change": false,
+        "confidence": "medium",
+        "evidence_type": "probable",
+        "proven_criteria": {
+          "requires_isolated_change": true,
+          "requires_changed_params_count": 1,
+          "requires_workload_match_score_at_least": 0.85
+        },
+        "notes": "Confidence baseline for pair comparison without isolated causality proof."
+      },
+      "influence_rows": [
+        {
+          "parameter": "commit_timestamp_buffers",
+          "old": "976",
+          "new": "1024",
+          "delta_pct": null,
+          "affected_metric": "",
+          "direction": "flat",
+          "metric_direction": "flat",
+          "impact": "neutral",
+          "confidence": "low",
+          "evidence_type": "probable",
+          "evidence_count": 0,
+          "workload_match_score": 1.0,
+          "notes": "Confidence baseline for pair comparison without isolated causality proof. No known link between this parameter and the compared metrics.",
+          "confidence_reasons": [
+            "unattributed; confidence downgraded to low"
+          ]
+        },
+        {
+          "parameter": "pg_conf_load_time",
+          "old": "2026-08-10 12:11:58.339478+03",
+          "new": "2026-08-12 13:51:51.80184+03",
+          "delta_pct": null,
+          "affected_metric": "",
+          "direction": "flat",
+          "metric_direction": "flat",
+          "impact": "neutral",
+          "confidence": "low",
+          "evidence_type": "probable",
+          "evidence_count": 0,
+          "workload_match_score": 1.0,
+          "notes": "Confidence baseline for pair comparison without isolated causality proof. No known link between this parameter and the compared metrics.",
+          "confidence_reasons": [
+            "unattributed; confidence downgraded to low"
+          ]
+        },
+        {
+          "parameter": "pg_postmaster_start_time",
+          "old": "2026-08-10 12:10:53.521971+03",
+          "new": "2026-08-12 13:50:49.898345+03",
+          "delta_pct": null,
+          "affected_metric": "",
+          "direction": "flat",
+          "metric_direction": "flat",
+          "impact": "neutral",
+          "confidence": "low",
+          "evidence_type": "probable",
+          "evidence_count": 0,
+          "workload_match_score": 1.0,
+          "notes": "Confidence baseline for pair comparison without isolated causality proof. No known link between this parameter and the compared metrics.",
+          "confidence_reasons": [
+            "unattributed; confidence downgraded to low"
+          ]
+        },
+        {
+          "parameter": "shared_buffers",
+          "old": "504320",
+          "new": "537600",
+          "delta_pct": 26.883687283625278,
+          "affected_metric": "cache.postgres.blks_read",
+          "direction": "up",
+          "metric_direction": "up",
+          "impact": "degraded",
+          "confidence": "medium",
+          "evidence_type": "probable",
+          "evidence_count": 1,
+          "workload_match_score": 1.0,
+          "notes": "Confidence baseline for pair comparison without isolated causality proof. Hint matched 3 metrics; evidence_count is 1 if attributed.",
+          "confidence_reasons": [
+            "Confidence baseline for pair comparison without isolated causality proof."
+          ]
+        },
+        {
+          "parameter": "shared_memory_size",
+          "old": "4452",
+          "new": "4724",
+          "delta_pct": null,
+          "affected_metric": "",
+          "direction": "flat",
+          "metric_direction": "flat",
+          "impact": "neutral",
+          "confidence": "low",
+          "evidence_type": "probable",
+          "evidence_count": 0,
+          "workload_match_score": 1.0,
+          "notes": "Confidence baseline for pair comparison without isolated causality proof. No known link between this parameter and the compared metrics.",
+          "confidence_reasons": [
+            "unattributed; confidence downgraded to low"
+          ]
+        },
+        {
+          "parameter": "shared_memory_size_in_huge_pages",
+          "old": "2226",
+          "new": "2362",
+          "delta_pct": null,
+          "affected_metric": "",
+          "direction": "flat",
+          "metric_direction": "flat",
+          "impact": "neutral",
+          "confidence": "low",
+          "evidence_type": "probable",
+          "evidence_count": 0,
+          "workload_match_score": 1.0,
+          "notes": "Confidence baseline for pair comparison without isolated causality proof. No known link between this parameter and the compared metrics.",
+          "confidence_reasons": [
+            "unattributed; confidence downgraded to low"
+          ]
+        },
+        {
+          "parameter": "subtransaction_buffers",
+          "old": "976",
+          "new": "1024",
+          "delta_pct": null,
+          "affected_metric": "",
+          "direction": "flat",
+          "metric_direction": "flat",
+          "impact": "neutral",
+          "confidence": "low",
+          "evidence_type": "probable",
+          "evidence_count": 0,
+          "workload_match_score": 1.0,
+          "notes": "Confidence baseline for pair comparison without isolated causality proof. No known link between this parameter and the compared metrics.",
+          "confidence_reasons": [
+            "unattributed; confidence downgraded to low"
+          ]
+        },
+        {
+          "parameter": "transaction_buffers",
+          "old": "976",
+          "new": "1024",
+          "delta_pct": null,
+          "affected_metric": "",
+          "direction": "flat",
+          "metric_direction": "flat",
+          "impact": "neutral",
+          "confidence": "low",
+          "evidence_type": "probable",
+          "evidence_count": 0,
+          "workload_match_score": 1.0,
+          "notes": "Confidence baseline for pair comparison without isolated causality proof. No known link between this parameter and the compared metrics.",
+          "confidence_reasons": [
+            "unattributed; confidence downgraded to low"
+          ]
+        }
+      ],
+      "interval_diff_hours": 0.0,
+      "interval_mismatch": false,
+      "findings": [
+        {
+          "id": "run_compare.cluster.buffers_checkpoint",
+          "category": "cluster",
+          "severity": "warning",
+          "message": "buffers_checkpoint",
+          "details": {
+            "value_a": 11698150.0,
+            "value_b": 12509051.0,
+            "per_hour_a": 708978.7878787878,
+            "per_hour_b": 758124.303030303,
+            "delta": 810901.0,
+            "delta_pct": 6.931873843300009,
+            "unit": "count",
+            "extra": ""
+          }
+        },
+        {
+          "id": "run_compare.cluster.checkpoint_sync_time",
+          "category": "cluster",
+          "severity": "warning",
+          "message": "checkpoint_sync_time",
+          "details": {
+            "value_a": 3.52,
+            "value_b": 4.0,
+            "per_hour_a": 0.21333333333333335,
+            "per_hour_b": 0.24242424242424243,
+            "delta": 0.48,
+            "delta_pct": 13.636363636363637,
+            "unit": "sec",
+            "extra": ""
+          }
+        },
+        {
+          "id": "run_compare.cluster.checkpoints_req",
+          "category": "cluster",
+          "severity": "warning",
+          "message": "checkpoints_req",
+          "details": {
+            "value_a": 39.0,
+            "value_b": 30.0,
+            "per_hour_a": 2.3636363636363638,
+            "per_hour_b": 1.8181818181818181,
+            "delta": -9.0,
+            "delta_pct": -23.076923076923077,
+            "unit": "count",
+            "extra": ""
+          }
+        },
+        {
+          "id": "run_compare.cluster.checkpoints_timed",
+          "category": "cluster",
+          "severity": "warning",
+          "message": "checkpoints_timed",
+          "details": {
+            "value_a": 7.0,
+            "value_b": 14.0,
+            "per_hour_a": 0.42424242424242425,
+            "per_hour_b": 0.8484848484848485,
+            "delta": 7.0,
+            "delta_pct": 100.0,
+            "unit": "count",
+            "extra": ""
+          }
+        },
+        {
+          "id": "run_compare.cluster.maxwritten_clean",
+          "category": "cluster",
+          "severity": "warning",
+          "message": "maxwritten_clean",
+          "details": {
+            "value_a": 80728.0,
+            "value_b": 63113.0,
+            "per_hour_a": 4892.606060606061,
+            "per_hour_b": 3825.030303030303,
+            "delta": -17615.0,
+            "delta_pct": -21.820186304627885,
+            "unit": "count",
+            "extra": ""
+          }
+        },
+        {
+          "id": "run_compare.dml.Total.COMMIT",
+          "category": "dml",
+          "severity": "warning",
+          "message": "Total.COMMIT",
+          "details": {
+            "value_a": 9458236.0,
+            "value_b": 9944368.0,
+            "per_hour_a": 573226.4242424242,
+            "per_hour_b": 602688.9696969697,
+            "delta": 486132.0,
+            "delta_pct": 5.139774478031633,
+            "unit": "count",
+            "extra": ""
+          }
+        },
+        {
+          "id": "run_compare.dml.Total.FETCH",
+          "category": "dml",
+          "severity": "warning",
+          "message": "Total.FETCH",
+          "details": {
+            "value_a": 157636191.0,
+            "value_b": 148999459.0,
+            "per_hour_a": 9553708.545454545,
+            "per_hour_b": 9030270.242424242,
+            "delta": -8636732.0,
+            "delta_pct": -5.478901732661125,
+            "unit": "count",
+            "extra": ""
+          }
+        },
+        {
+          "id": "run_compare.dml.postgres.COMMIT",
+          "category": "dml",
+          "severity": "warning",
+          "message": "postgres.COMMIT",
+          "details": {
+            "value_a": 340165.0,
+            "value_b": 238729.0,
+            "per_hour_a": 20616.060606060608,
+            "per_hour_b": 14468.424242424242,
+            "delta": -101436.0,
+            "delta_pct": -29.819646348095777,
+            "unit": "count",
+            "extra": ""
+          }
+        },
+        {
+          "id": "run_compare.dml.postgres.FETCH",
+          "category": "dml",
+          "severity": "warning",
+          "message": "postgres.FETCH",
+          "details": {
+            "value_a": 151800568.0,
+            "value_b": 141087987.0,
+            "per_hour_a": 9200034.424242424,
+            "per_hour_b": 8550787.090909092,
+            "delta": -10712581.0,
+            "delta_pct": -7.057009826208292,
+            "unit": "count",
+            "extra": ""
+          }
+        },
+        {
+          "id": "run_compare.dml.statecontracts.COMMIT",
+          "category": "dml",
+          "severity": "warning",
+          "message": "statecontracts.COMMIT",
+          "details": {
+            "value_a": 9118071.0,
+            "value_b": 9705639.0,
+            "per_hour_a": 552610.3636363636,
+            "per_hour_b": 588220.5454545454,
+            "delta": 587568.0,
+            "delta_pct": 6.443994568588027,
+            "unit": "count",
+            "extra": ""
+          }
+        },
+        {
+          "id": "run_compare.dml.statecontracts.FETCH",
+          "category": "dml",
+          "severity": "warning",
+          "message": "statecontracts.FETCH",
+          "details": {
+            "value_a": 5835623.0,
+            "value_b": 7911472.0,
+            "per_hour_a": 353674.1212121212,
+            "per_hour_b": 479483.1515151515,
+            "delta": 2075849.0,
+            "delta_pct": 35.57202033099122,
+            "unit": "count",
+            "extra": ""
+          }
+        },
+        {
+          "id": "run_compare.tables.postgres.pg_catalog.pg_db_role_setting.seq_scan",
+          "category": "tables",
+          "severity": "warning",
+          "message": "postgres.pg_catalog.pg_db_role_setting.seq_scan",
+          "details": {
+            "value_a": 3003316.0,
+            "value_b": 1818750.0,
+            "per_hour_a": 182019.15151515152,
+            "per_hour_b": 110227.27272727272,
+            "delta": -1184566.0,
+            "delta_pct": -39.44193684580644,
+            "unit": "count",
+            "extra": ""
+          }
+        },
+        {
+          "id": "run_compare.tables.statecontracts.pg_catalog.pg_db_role_setting.seq_scan",
+          "category": "tables",
+          "severity": "warning",
+          "message": "statecontracts.pg_catalog.pg_db_role_setting.seq_scan",
+          "details": {
+            "value_a": 3003316.0,
+            "value_b": 1818750.0,
+            "per_hour_a": 182019.15151515152,
+            "per_hour_b": 110227.27272727272,
+            "delta": -1184566.0,
+            "delta_pct": -39.44193684580644,
+            "unit": "count",
+            "extra": ""
+          }
+        },
+        {
+          "id": "run_compare.tables.postgres.pg_catalog.pg_index.idx_scan",
+          "category": "tables",
+          "severity": "warning",
+          "message": "postgres.pg_catalog.pg_index.idx_scan",
+          "details": {
+            "value_a": 580259.0,
+            "value_b": 368089.0,
+            "per_hour_a": 35167.21212121212,
+            "per_hour_b": 22308.424242424244,
+            "delta": -212170.0,
+            "delta_pct": -36.56470645005075,
+            "unit": "count",
+            "extra": ""
+          }
+        },
+        {
+          "id": "run_compare.tables.statecontracts.pg_catalog.pg_database.seq_scan",
+          "category": "tables",
+          "severity": "warning",
+          "message": "statecontracts.pg_catalog.pg_database.seq_scan",
+          "details": {
+            "value_a": 241500.0,
+            "value_b": 42587.0,
+            "per_hour_a": 14636.363636363636,
+            "per_hour_b": 2581.030303030303,
+            "delta": -198913.0,
+            "delta_pct": -82.36563146997929,
+            "unit": "count",
+            "extra": ""
+          }
+        },
+        {
+          "id": "run_compare.tables.postgres.pg_catalog.pg_database.seq_scan",
+          "category": "tables",
+          "severity": "warning",
+          "message": "postgres.pg_catalog.pg_database.seq_scan",
+          "details": {
+            "value_a": 241500.0,
+            "value_b": 64458.0,
+            "per_hour_a": 14636.363636363636,
+            "per_hour_b": 3906.5454545454545,
+            "delta": -177042.0,
+            "delta_pct": -73.30931677018634,
+            "unit": "count",
+            "extra": ""
+          }
+        },
+        {
+          "id": "run_compare.tables.statecontracts.pg_catalog.pg_database.idx_scan",
+          "category": "tables",
+          "severity": "warning",
+          "message": "statecontracts.pg_catalog.pg_database.idx_scan",
+          "details": {
+            "value_a": 189878.0,
+            "value_b": 34032.0,
+            "per_hour_a": 11507.757575757576,
+            "per_hour_b": 2062.5454545454545,
+            "delta": -155846.0,
+            "delta_pct": -82.07691254384395,
+            "unit": "count",
+            "extra": ""
+          }
+        },
+        {
+          "id": "run_compare.tables.postgres.pg_catalog.pg_database.idx_scan",
+          "category": "tables",
+          "severity": "warning",
+          "message": "postgres.pg_catalog.pg_database.idx_scan",
+          "details": {
+            "value_a": 189878.0,
+            "value_b": 54076.0,
+            "per_hour_a": 11507.757575757576,
+            "per_hour_b": 3277.3333333333335,
+            "delta": -135802.0,
+            "delta_pct": -71.52066063472334,
+            "unit": "count",
+            "extra": ""
+          }
+        },
+        {
+          "id": "run_compare.tables.statecontracts.pg_catalog.pg_attribute.idx_scan",
+          "category": "tables",
+          "severity": "warning",
+          "message": "statecontracts.pg_catalog.pg_attribute.idx_scan",
+          "details": {
+            "value_a": 568977.0,
+            "value_b": 689493.0,
+            "per_hour_a": 34483.454545454544,
+            "per_hour_b": 41787.454545454544,
+            "delta": 120516.0,
+            "delta_pct": 21.181172525427215,
+            "unit": "count",
+            "extra": ""
+          }
+        },
+        {
+          "id": "run_compare.tables.statecontracts.pg_catalog.pg_class.idx_scan",
+          "category": "tables",
+          "severity": "warning",
+          "message": "statecontracts.pg_catalog.pg_class.idx_scan",
+          "details": {
+            "value_a": 506027.0,
+            "value_b": 588193.0,
+            "per_hour_a": 30668.303030303032,
+            "per_hour_b": 35648.06060606061,
+            "delta": 82166.0,
+            "delta_pct": 16.23747349449733,
+            "unit": "count",
+            "extra": ""
+          }
+        },
+        {
+          "id": "run_compare.tables.statecontracts.pg_catalog.pg_statistic.idx_scan",
+          "category": "tables",
+          "severity": "warning",
+          "message": "statecontracts.pg_catalog.pg_statistic.idx_scan",
+          "details": {
+            "value_a": 1102749.0,
+            "value_b": 1171842.0,
+            "per_hour_a": 66833.27272727272,
+            "per_hour_b": 71020.72727272728,
+            "delta": 69093.0,
+            "delta_pct": 6.265523704850333,
+            "unit": "count",
+            "extra": ""
+          }
+        },
+        {
+          "id": "run_compare.tables.postgres.pgse_profile.last_stat_tables_srv4.idx_scan",
+          "category": "tables",
+          "severity": "warning",
+          "message": "postgres.pgse_profile.last_stat_tables_srv4.idx_scan",
+          "details": {
+            "value_a": 239736.0,
+            "value_b": 221681.0,
+            "per_hour_a": 14529.454545454546,
+            "per_hour_b": 13435.212121212122,
+            "delta": -18055.0,
+            "delta_pct": -7.531200987753195,
+            "unit": "count",
+            "extra": ""
+          }
+        },
+        {
+          "id": "run_compare.tables.postgres.pg_catalog.pg_class.seq_scan",
+          "category": "tables",
+          "severity": "warning",
+          "message": "postgres.pg_catalog.pg_class.seq_scan",
+          "details": {
+            "value_a": 32395.0,
+            "value_b": 27364.0,
+            "per_hour_a": 1963.3333333333333,
+            "per_hour_b": 1658.4242424242425,
+            "delta": -5031.0,
+            "delta_pct": -15.530174409631115,
+            "unit": "count",
+            "extra": ""
+          }
+        },
+        {
+          "id": "run_compare.tables.postgres.pg_catalog.pg_index.seq_scan",
+          "category": "tables",
+          "severity": "warning",
+          "message": "postgres.pg_catalog.pg_index.seq_scan",
+          "details": {
+            "value_a": 7365.0,
+            "value_b": 4832.0,
+            "per_hour_a": 446.3636363636364,
+            "per_hour_b": 292.8484848484849,
+            "delta": -2533.0,
+            "delta_pct": -34.392396469789546,
+            "unit": "count",
+            "extra": ""
+          }
+        },
+        {
+          "id": "run_compare.tables.postgres.pgse_profile.sample_stat_tablespaces.idx_scan",
+          "category": "tables",
+          "severity": "warning",
+          "message": "postgres.pgse_profile.sample_stat_tablespaces.idx_scan",
+          "details": {
+            "value_a": 12678.0,
+            "value_b": 14005.0,
+            "per_hour_a": 768.3636363636364,
+            "per_hour_b": 848.7878787878788,
+            "delta": 1327.0,
+            "delta_pct": 10.466950623126676,
+            "unit": "count",
+            "extra": ""
+          }
+        },
+        {
+          "id": "run_compare.tables.statecontracts.statecontracts.t_value.seq_scan",
+          "category": "tables",
+          "severity": "warning",
+          "message": "statecontracts.statecontracts.t_value.seq_scan",
+          "details": {
+            "value_a": 1186.0,
+            "value_b": 68.0,
+            "per_hour_a": 71.87878787878788,
+            "per_hour_b": 4.121212121212121,
+            "delta": -1118.0,
+            "delta_pct": -94.2664418212479,
+            "unit": "count",
+            "extra": ""
+          }
+        },
+        {
+          "id": "run_compare.queries.statecontracts_as_admin",
+          "category": "queries",
+          "severity": "warning",
+          "message": "statecontracts/as_admin",
+          "details": {
+            "value_a": 2888.04,
+            "value_b": 3038.26,
+            "per_hour_a": 175.03272727272727,
+            "per_hour_b": 184.13696969696971,
+            "delta": 150.22000000000025,
+            "delta_pct": 5.201451503441789,
+            "unit": "sec",
+            "extra": "A: calls=12.00M, total_time=2888.0s, mean_exec_time=0.2ms, max_exec_time=57.8ms, wal_bytes=49.34G, shared_blks_read=10.90K\nB: calls=12.00M, total_time=3038.3s, mean_exec_time=0.2ms, max_exec_time=69.3ms, wal_bytes=49.34G, shared_blks_read=11.55K\n  insert into statecontracts.t_contracts (chgcnt,claimed,contractid,customerinn,customername,enddat..."
+          }
+        },
+        {
+          "id": "run_compare.queries.postgres_\"sa-d00000011757\"",
+          "category": "queries",
+          "severity": "warning",
+          "message": "postgres/\"sa-d00000011757\"",
+          "details": {
+            "value_a": 270.75,
+            "value_b": 156.69,
+            "per_hour_a": 16.40909090909091,
+            "per_hour_b": 9.496363636363636,
+            "delta": -114.06,
+            "delta_pct": -42.12742382271468,
+            "unit": "sec",
+            "extra": "A: calls=118.62K, total_time=270.8s, mean_exec_time=2.3ms, max_exec_time=51.4ms\nB: calls=68.72K, total_time=156.7s, mean_exec_time=2.3ms, max_exec_time=37.0ms\n  WITH locks AS ( SELECT pid, locktype, mode, relation, page, tuple, virtualxid, transactionid, cla..."
+          }
+        },
+        {
+          "id": "run_compare.queries.postgres_\"sa-d00000011757\"",
+          "category": "queries",
+          "severity": "warning",
+          "message": "postgres/\"sa-d00000011757\"",
+          "details": {
+            "value_a": 76.74,
+            "value_b": 43.54,
+            "per_hour_a": 4.65090909090909,
+            "per_hour_b": 2.6387878787878787,
+            "delta": -33.199999999999996,
+            "delta_pct": -43.262965858743804,
+            "unit": "sec",
+            "extra": "A: calls=5.94K, total_time=76.7s, mean_exec_time=12.9ms, max_exec_time=106.9ms\nB: calls=3.44K, total_time=43.5s, mean_exec_time=12.6ms, max_exec_time=89.2ms\n  SELECT spcname, pg_tablespace_size(spcname) AS size FROM pg_tablespace ORDER BY size DESC LIMIT 25"
+          }
+        },
+        {
+          "id": "run_compare.queries.postgres_\"sa-d00000011757\"",
+          "category": "queries",
+          "severity": "warning",
+          "message": "postgres/\"sa-d00000011757\"",
+          "details": {
+            "value_a": 24.06,
+            "value_b": null,
+            "per_hour_a": 1.458181818181818,
+            "per_hour_b": null,
+            "delta": -24.06,
+            "delta_pct": -100.0,
+            "unit": "sec",
+            "extra": "A: calls=5.94K, total_time=24.1s, mean_exec_time=4.0ms, max_exec_time=16.5ms\nB: \n  SELECT (SELECT setting::BIGINT FROM pg_settings WHERE name = 'autovacuum_freeze_max_age') autovac..."
+          }
+        },
+        {
+          "id": "run_compare.queries.postgres_\"sa-d00000011757\"",
+          "category": "queries",
+          "severity": "warning",
+          "message": "postgres/\"sa-d00000011757\"",
+          "details": {
+            "value_a": 34.8,
+            "value_b": 20.55,
+            "per_hour_a": 2.109090909090909,
+            "per_hour_b": 1.2454545454545456,
+            "delta": -14.249999999999996,
+            "delta_pct": -40.948275862068954,
+            "unit": "sec",
+            "extra": "A: calls=5.94K, total_time=34.8s, mean_exec_time=5.9ms, max_exec_time=88.8ms\nB: calls=3.44K, total_time=20.6s, mean_exec_time=6.0ms, max_exec_time=60.3ms\n  SELECT t2.rolname, t3.datname, SUM(t1.rows) as rows FROM pg_stat_statements t1 JOIN pg_roles t2 O..."
+          }
+        },
+        {
+          "id": "run_compare.queries.postgres_\"sa-d00000011757\"",
+          "category": "queries",
+          "severity": "warning",
+          "message": "postgres/\"sa-d00000011757\"",
+          "details": {
+            "value_a": 33.47,
+            "value_b": 19.59,
+            "per_hour_a": 2.0284848484848483,
+            "per_hour_b": 1.1872727272727273,
+            "delta": -13.879999999999999,
+            "delta_pct": -41.469973110247984,
+            "unit": "sec",
+            "extra": "A: calls=5.94K, total_time=33.5s, mean_exec_time=5.6ms, max_exec_time=66.8ms\nB: calls=3.44K, total_time=19.6s, mean_exec_time=5.7ms, max_exec_time=71.3ms\n  SELECT t2.rolname, t3.datname, sum((total_plan_time + total_exec_time) / 1000)::bigint as total_t..."
+          }
+        },
+        {
+          "id": "run_compare.queries.postgres_\"sa-d00000011757\"",
+          "category": "queries",
+          "severity": "warning",
+          "message": "postgres/\"sa-d00000011757\"",
+          "details": {
+            "value_a": 28.81,
+            "value_b": 16.34,
+            "per_hour_a": 1.746060606060606,
+            "per_hour_b": 0.9903030303030302,
+            "delta": -12.469999999999999,
+            "delta_pct": -43.28358208955224,
+            "unit": "sec",
+            "extra": "A: calls=5.94K, total_time=28.8s, mean_exec_time=4.8ms, max_exec_time=49.3ms\nB: calls=3.44K, total_time=16.3s, mean_exec_time=4.7ms, max_exec_time=63.4ms\n  SELECT t2.rolname, t3.datname, (sum(t1.shared_blks_dirtied + t1.local_blks_dirtied)) * current_se..."
+          }
+        },
+        {
+          "id": "run_compare.queries.statecontracts_as_admin",
+          "category": "queries",
+          "severity": "warning",
+          "message": "statecontracts/as_admin",
+          "details": {
+            "value_a": null,
+            "value_b": 6.5,
+            "per_hour_a": null,
+            "per_hour_b": 0.3939393939393939,
+            "delta": 6.5,
+            "delta_pct": null,
+            "unit": "sec",
+            "extra": "A: \nB: calls=147.07K, total_time=6.5s, mean_exec_time=0.0ms, max_exec_time=8.3ms, shared_blks_read=24\n  select $5, t0.OBJECT_ID c2, t0.LEVEL_ENTITYID c3 from statecontracts.T_VALUE t0 where ((t0.INN = ..."
+          }
+        },
+        {
+          "id": "run_compare.queries.postgres_\"sa-d00000011757\"",
+          "category": "queries",
+          "severity": "warning",
+          "message": "postgres/\"sa-d00000011757\"",
+          "details": {
+            "value_a": 10.15,
+            "value_b": 5.44,
+            "per_hour_a": 0.6151515151515152,
+            "per_hour_b": 0.3296969696969697,
+            "delta": -4.71,
+            "delta_pct": -46.40394088669951,
+            "unit": "sec",
+            "extra": "A: calls=5.94K, total_time=10.2s, mean_exec_time=1.7ms, max_exec_time=28.2ms\nB: calls=3.44K, total_time=5.4s, mean_exec_time=1.6ms, max_exec_time=29.7ms\n  SELECT relname, COALESCE(ROUND(100*heap_blks_hit/NULLIF((heap_blks_hit + heap_blks_read),0),2),0)..."
+          }
+        },
+        {
+          "id": "run_compare.queries.statecontracts_as_admin",
+          "category": "queries",
+          "severity": "warning",
+          "message": "statecontracts/as_admin",
+          "details": {
+            "value_a": null,
+            "value_b": 2.99,
+            "per_hour_a": null,
+            "per_hour_b": 0.1812121212121212,
+            "delta": 2.99,
+            "delta_pct": null,
+            "unit": "sec",
+            "extra": "A: \nB: calls=60.99K, total_time=3.0s, mean_exec_time=0.1ms, max_exec_time=8.8ms, shared_blks_read=4\n  select $5, t0.OBJECT_ID c2, t0.VALUE_ c3, t0.METRICTYPE_ENTITYID c4 from statecontracts.T_VALUE t..."
+          }
+        },
+        {
+          "id": "run_compare.queries.statecontracts_as_admin",
+          "category": "queries",
+          "severity": "warning",
+          "message": "statecontracts/as_admin",
+          "details": {
+            "value_a": null,
+            "value_b": 2.73,
+            "per_hour_a": null,
+            "per_hour_b": 0.16545454545454547,
+            "delta": 2.73,
+            "delta_pct": null,
+            "unit": "sec",
+            "extra": "A: \nB: calls=60.68K, total_time=2.7s, mean_exec_time=0.0ms, max_exec_time=7.7ms, shared_blks_read=8\n  select $5, t0.OBJECT_ID c2, t0.DATE_ c3, t0.LEVEL_ENTITYID c4 from statecontracts.T_VALUE t0 wher..."
+          }
+        },
+        {
+          "id": "run_compare.queries.postgres_\"sa-d00000011757\"",
+          "category": "queries",
+          "severity": "warning",
+          "message": "postgres/\"sa-d00000011757\"",
+          "details": {
+            "value_a": 4.98,
+            "value_b": 2.75,
+            "per_hour_a": 0.3018181818181818,
+            "per_hour_b": 0.16666666666666666,
+            "delta": -2.2300000000000004,
+            "delta_pct": -44.77911646586346,
+            "unit": "sec",
+            "extra": "A: calls=5.94K, total_time=5.0s, mean_exec_time=0.8ms, max_exec_time=8.8ms, wal_bytes=1.61K\nB: calls=3.44K, total_time=2.8s, mean_exec_time=0.8ms, max_exec_time=5.9ms, wal_bytes=39.45K\n  SELECT schemaname, relname, vacuum_count, autovacuum_count FROM pg_stat_user_tables ORDER BY vacu..."
+          }
+        },
+        {
+          "id": "run_compare.queries.statecontracts_as_admin",
+          "category": "queries",
+          "severity": "warning",
+          "message": "statecontracts/as_admin",
+          "details": {
+            "value_a": 27.36,
+            "value_b": 25.3,
+            "per_hour_a": 1.6581818181818182,
+            "per_hour_b": 1.5333333333333334,
+            "delta": -2.0599999999999987,
+            "delta_pct": -7.529239766081868,
+            "unit": "sec",
+            "extra": "A: calls=7.74M, total_time=27.4s, mean_exec_time=0.0ms, max_exec_time=18.9ms\nB: calls=8.03M, total_time=25.3s, mean_exec_time=0.0ms, max_exec_time=16.5ms\n  COMMIT"
+          }
+        },
+        {
+          "id": "run_compare.queries.statecontracts_as_admin",
+          "category": "queries",
+          "severity": "warning",
+          "message": "statecontracts/as_admin",
+          "details": {
+            "value_a": null,
+            "value_b": 1.52,
+            "per_hour_a": null,
+            "per_hour_b": 0.09212121212121212,
+            "delta": 1.52,
+            "delta_pct": null,
+            "unit": "sec",
+            "extra": "A: \nB: calls=1.01K, total_time=1.5s, mean_exec_time=1.5ms, max_exec_time=11.8ms, shared_blks_read=2.32K\n  with ct0(c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10) as (select t0.OBJECT_ID c0, t0.STARTDATE c1..."
+          }
+        },
+        {
+          "id": "run_compare.queries.statecontracts_as_admin",
+          "category": "queries",
+          "severity": "warning",
+          "message": "statecontracts/as_admin",
+          "details": {
+            "value_a": 26.53,
+            "value_b": 25.02,
+            "per_hour_a": 1.607878787878788,
+            "per_hour_b": 1.5163636363636364,
+            "delta": -1.5100000000000016,
+            "delta_pct": -5.691669807764801,
+            "unit": "sec",
+            "extra": "A: calls=1, total_time=26.5s, mean_exec_time=26526.6ms, max_exec_time=26526.6ms, wal_bytes=642.13M, shared_blks_read=1.13M\nB: calls=1, total_time=25.0s, mean_exec_time=25020.3ms, max_exec_time=25020.3ms, shared_blks_read=1.12M\n  select $3, t0.OBJECT_ID c2 from statecontracts.T_PARTICIPANT t0 where t0.RQUID &lt;> $1 limit $2"
+          }
+        },
+        {
+          "id": "run_compare.sessions.Total.idle_in_transaction_time",
+          "category": "sessions",
+          "severity": "warning",
+          "message": "Total.idle_in_transaction_time",
+          "details": {
+            "value_a": 1372184.73,
+            "value_b": 1473020.06,
+            "per_hour_a": 83162.7109090909,
+            "per_hour_b": 89273.94303030304,
+            "delta": 100835.33000000007,
+            "delta_pct": 7.348524422072535,
+            "unit": "sec",
+            "extra": ""
+          }
+        },
+        {
+          "id": "run_compare.sessions.postgres.active_time",
+          "category": "sessions",
+          "severity": "warning",
+          "message": "postgres.active_time",
+          "details": {
+            "value_a": 816.2,
+            "value_b": 578.79,
+            "per_hour_a": 49.46666666666667,
+            "per_hour_b": 35.07818181818182,
+            "delta": -237.41000000000008,
+            "delta_pct": -29.08723352119579,
+            "unit": "sec",
+            "extra": ""
+          }
+        },
+        {
+          "id": "run_compare.sessions.postgres.session_time",
+          "category": "sessions",
+          "severity": "warning",
+          "message": "postgres.session_time",
+          "details": {
+            "value_a": 544151.43,
+            "value_b": 443777.36,
+            "per_hour_a": 32978.87454545455,
+            "per_hour_b": 26895.597575757576,
+            "delta": -100374.07000000007,
+            "delta_pct": -18.445981112279732,
+            "unit": "sec",
+            "extra": ""
+          }
+        },
+        {
+          "id": "run_compare.sessions.statecontracts.idle_in_transaction_time",
+          "category": "sessions",
+          "severity": "warning",
+          "message": "statecontracts.idle_in_transaction_time",
+          "details": {
+            "value_a": 1372155.52,
+            "value_b": 1472990.88,
+            "per_hour_a": 83160.94060606061,
+            "per_hour_b": 89272.17454545455,
+            "delta": 100835.35999999987,
+            "delta_pct": 7.348683041409174,
+            "unit": "sec",
+            "extra": ""
+          }
+        },
+        {
+          "id": "run_compare.cache.Total.blk_write_time",
+          "category": "cache",
+          "severity": "warning",
+          "message": "Total.blk_write_time",
+          "details": {
+            "value_a": 39.04,
+            "value_b": 28.83,
+            "per_hour_a": 2.366060606060606,
+            "per_hour_b": 1.747272727272727,
+            "delta": -10.21,
+            "delta_pct": -26.152663934426233,
+            "unit": "sec",
+            "extra": ""
+          }
+        },
+        {
+          "id": "run_compare.cache.postgres.blks_read",
+          "category": "cache",
+          "severity": "warning",
+          "message": "postgres.blks_read",
+          "details": {
+            "value_a": 96765.0,
+            "value_b": 122779.0,
+            "per_hour_a": 5864.545454545455,
+            "per_hour_b": 7441.151515151515,
+            "delta": 26014.0,
+            "delta_pct": 26.883687283625278,
+            "unit": "count",
+            "extra": ""
+          }
+        },
+        {
+          "id": "run_compare.cache.postgres.blk_read_time",
+          "category": "cache",
+          "severity": "warning",
+          "message": "postgres.blk_read_time",
+          "details": {
+            "value_a": 23.99,
+            "value_b": 28.77,
+            "per_hour_a": 1.4539393939393939,
+            "per_hour_b": 1.7436363636363637,
+            "delta": 4.780000000000001,
+            "delta_pct": 19.924968736973746,
+            "unit": "sec",
+            "extra": ""
+          }
+        },
+        {
+          "id": "run_compare.cache.postgres.blk_write_time",
+          "category": "cache",
+          "severity": "warning",
+          "message": "postgres.blk_write_time",
+          "details": {
+            "value_a": 0.01,
+            "value_b": 0.17,
+            "per_hour_a": 0.0006060606060606061,
+            "per_hour_b": 0.010303030303030303,
+            "delta": 0.16,
+            "delta_pct": 1600.0,
+            "unit": "sec",
+            "extra": ""
+          }
+        },
+        {
+          "id": "run_compare.cache.statecontracts.blk_read_time",
+          "category": "cache",
+          "severity": "warning",
+          "message": "statecontracts.blk_read_time",
+          "details": {
+            "value_a": 260.47,
+            "value_b": 244.72,
+            "per_hour_a": 15.786060606060607,
+            "per_hour_b": 14.831515151515152,
+            "delta": -15.750000000000028,
+            "delta_pct": -6.046761623219575,
+            "unit": "sec",
+            "extra": ""
+          }
+        },
+        {
+          "id": "run_compare.cache.statecontracts.blk_write_time",
+          "category": "cache",
+          "severity": "warning",
+          "message": "statecontracts.blk_write_time",
+          "details": {
+            "value_a": 39.03,
+            "value_b": 28.66,
+            "per_hour_a": 2.3654545454545457,
+            "per_hour_b": 1.736969696969697,
+            "delta": -10.370000000000001,
+            "delta_pct": -26.56930566231104,
+            "unit": "sec",
+            "extra": ""
+          }
+        }
+      ],
+      "summary": {
+        "total_compared": 94,
+        "significant_count": 51,
+        "min_change_pct": 5.0
+      },
+      "functional_summary": {
+        "total_metrics_analyzed": 51,
+        "improved_count": 7,
+        "degraded_count": 7,
+        "neutral_count": 37,
+        "top_improved": [
+          {
+            "metric": "sessions.postgres.active_time",
+            "direction": "down",
+            "impact": "improved",
+            "delta": -237.41000000000008,
+            "delta_pct": -29.08723352119579
+          },
+          {
+            "metric": "cache.statecontracts.blk_write_time",
+            "direction": "down",
+            "impact": "improved",
+            "delta": -10.370000000000001,
+            "delta_pct": -26.56930566231104
+          },
+          {
+            "metric": "cache.Total.blk_write_time",
+            "direction": "down",
+            "impact": "improved",
+            "delta": -10.21,
+            "delta_pct": -26.152663934426233
+          },
+          {
+            "metric": "cluster.checkpoints_req",
+            "direction": "down",
+            "impact": "improved",
+            "delta": -9.0,
+            "delta_pct": -23.076923076923077
+          },
+          {
+            "metric": "cluster.maxwritten_clean",
+            "direction": "down",
+            "impact": "improved",
+            "delta": -17615.0,
+            "delta_pct": -21.820186304627885
+          },
+          {
+            "metric": "sessions.postgres.session_time",
+            "direction": "down",
+            "impact": "improved",
+            "delta": -100374.07000000007,
+            "delta_pct": -18.445981112279732
+          },
+          {
+            "metric": "cache.statecontracts.blk_read_time",
+            "direction": "down",
+            "impact": "improved",
+            "delta": -15.750000000000028,
+            "delta_pct": -6.046761623219575
+          }
+        ],
+        "top_degraded": [
+          {
+            "metric": "cache.postgres.blk_write_time",
+            "direction": "up",
+            "impact": "degraded",
+            "delta": 0.16,
+            "delta_pct": 1600.0
+          },
+          {
+            "metric": "cluster.checkpoints_timed",
+            "direction": "up",
+            "impact": "degraded",
+            "delta": 7.0,
+            "delta_pct": 100.0
+          },
+          {
+            "metric": "cache.postgres.blks_read",
+            "direction": "up",
+            "impact": "degraded",
+            "delta": 26014.0,
+            "delta_pct": 26.883687283625278
+          },
+          {
+            "metric": "cache.postgres.blk_read_time",
+            "direction": "up",
+            "impact": "degraded",
+            "delta": 4.780000000000001,
+            "delta_pct": 19.924968736973746
+          },
+          {
+            "metric": "cluster.checkpoint_sync_time",
+            "direction": "up",
+            "impact": "degraded",
+            "delta": 0.48,
+            "delta_pct": 13.636363636363637
+          },
+          {
+            "metric": "sessions.statecontracts.idle_in_transaction_time",
+            "direction": "up",
+            "impact": "degraded",
+            "delta": 100835.35999999987,
+            "delta_pct": 7.348683041409174
+          },
+          {
+            "metric": "sessions.Total.idle_in_transaction_time",
+            "direction": "up",
+            "impact": "degraded",
+            "delta": 100835.33000000007,
+            "delta_pct": 7.348524422072535
+          }
+        ]
+      }
+    },
+    {
+      "type": "settings_diff",
+      "contract": {
+        "schema": "settings_diff_v1",
+        "schema_version": "1.0"
+      },
+      "run_a": {
+        "run_id": "NT",
+        "path": "/Users/svetlanachernysheva/Documents/pg_profile_checks/resources/pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html",
+        "filename": "pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html",
+        "meta": {
+          "path": "/Users/svetlanachernysheva/Documents/pg_profile_checks/resources/pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html",
+          "filename": "pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html",
+          "server": "10.3.81.94",
+          "from": "2026 08 11 16 30",
+          "to": "2026 08 12 09",
+          "version": "PostgreSQL 15.5 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 8.5.0 20210514 (Platform V SberLinux 8.5.0-28), 64-bit"
+        }
+      },
+      "run_b": {
+        "run_id": "PROD",
+        "path": "/Users/svetlanachernysheva/Documents/pg_profile_checks/resources/pgprofile_srv=10_3_81_94_from=2026_08_12_16_00_to=2026_08_13_08.html",
+        "filename": "pgprofile_srv=10_3_81_94_from=2026_08_12_16_00_to=2026_08_13_08.html",
+        "meta": {
+          "path": "/Users/svetlanachernysheva/Documents/pg_profile_checks/resources/pgprofile_srv=10_3_81_94_from=2026_08_12_16_00_to=2026_08_13_08.html",
+          "filename": "pgprofile_srv=10_3_81_94_from=2026_08_12_16_00_to=2026_08_13_08.html",
+          "server": "10.3.81.94",
+          "from": "2026 08 12 16 00",
+          "to": "2026 08 13 08",
+          "version": "PostgreSQL 15.5 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 8.5.0 20210514 (Platform V SberLinux 8.5.0-28), 64-bit"
+        }
+      },
+      "run_identity": {
+        "mode": "pair",
+        "runs": [
+          {
+            "role": "before",
+            "run_id": "NT",
+            "server": "10.3.81.94",
+            "report_start": "2026 08 11 16 30",
+            "report_end": "2026 08 12 09",
+            "interval_hours": null
+          },
+          {
+            "role": "after",
+            "run_id": "PROD",
+            "server": "10.3.81.94",
+            "report_start": "2026 08 12 16 00",
+            "report_end": "2026 08 13 08",
+            "interval_hours": null
+          }
+        ]
+      },
+      "workload_match": {
+        "workload_match_score": 1.0,
+        "level": "high",
+        "components": {
+          "interval_similarity": null,
+          "server_similarity": 1.0
+        },
+        "notes": "Higher score means better run comparability for influence interpretation."
+      },
+      "confidence_meta": {
+        "mode": "pair",
+        "changed_params_count": 8,
+        "changed_params_threshold": 10,
+        "workload_match_score": 1.0,
+        "isolated_change": false,
+        "confidence": "medium",
+        "evidence_type": "probable",
+        "proven_criteria": {
+          "requires_isolated_change": true,
+          "requires_changed_params_count": 1,
+          "requires_workload_match_score_at_least": 0.85
+        },
+        "notes": "Confidence baseline for pair comparison without isolated causality proof."
+      },
+      "settings_changes": [
+        {
+          "parameter": "commit_timestamp_buffers",
+          "status": "DIFFER",
+          "old": "976",
+          "new": "1024"
+        },
+        {
+          "parameter": "pg_conf_load_time",
+          "status": "DIFFER",
+          "old": "2026-08-10 12:11:58.339478+03",
+          "new": "2026-08-12 13:51:51.80184+03"
+        },
+        {
+          "parameter": "pg_postmaster_start_time",
+          "status": "DIFFER",
+          "old": "2026-08-10 12:10:53.521971+03",
+          "new": "2026-08-12 13:50:49.898345+03"
+        },
+        {
+          "parameter": "shared_buffers",
+          "status": "DIFFER",
+          "old": "504320",
+          "new": "537600"
+        },
+        {
+          "parameter": "shared_memory_size",
+          "status": "DIFFER",
+          "old": "4452",
+          "new": "4724"
+        },
+        {
+          "parameter": "shared_memory_size_in_huge_pages",
+          "status": "DIFFER",
+          "old": "2226",
+          "new": "2362"
+        },
+        {
+          "parameter": "subtransaction_buffers",
+          "status": "DIFFER",
+          "old": "976",
+          "new": "1024"
+        },
+        {
+          "parameter": "transaction_buffers",
+          "status": "DIFFER",
+          "old": "976",
+          "new": "1024"
+        }
+      ],
+      "influence_rows": [
+        {
+          "parameter": "commit_timestamp_buffers",
+          "old": "976",
+          "new": "1024",
+          "delta_pct": null,
+          "affected_metric": "",
+          "direction": "flat",
+          "metric_direction": "flat",
+          "impact": "neutral",
+          "confidence": "low",
+          "evidence_type": "probable",
+          "evidence_count": 0,
+          "workload_match_score": 1.0,
+          "notes": "Confidence baseline for pair comparison without isolated causality proof. No known link between this parameter and the compared metrics.",
+          "confidence_reasons": [
+            "unattributed; confidence downgraded to low"
+          ]
+        },
+        {
+          "parameter": "pg_conf_load_time",
+          "old": "2026-08-10 12:11:58.339478+03",
+          "new": "2026-08-12 13:51:51.80184+03",
+          "delta_pct": null,
+          "affected_metric": "",
+          "direction": "flat",
+          "metric_direction": "flat",
+          "impact": "neutral",
+          "confidence": "low",
+          "evidence_type": "probable",
+          "evidence_count": 0,
+          "workload_match_score": 1.0,
+          "notes": "Confidence baseline for pair comparison without isolated causality proof. No known link between this parameter and the compared metrics.",
+          "confidence_reasons": [
+            "unattributed; confidence downgraded to low"
+          ]
+        },
+        {
+          "parameter": "pg_postmaster_start_time",
+          "old": "2026-08-10 12:10:53.521971+03",
+          "new": "2026-08-12 13:50:49.898345+03",
+          "delta_pct": null,
+          "affected_metric": "",
+          "direction": "flat",
+          "metric_direction": "flat",
+          "impact": "neutral",
+          "confidence": "low",
+          "evidence_type": "probable",
+          "evidence_count": 0,
+          "workload_match_score": 1.0,
+          "notes": "Confidence baseline for pair comparison without isolated causality proof. No known link between this parameter and the compared metrics.",
+          "confidence_reasons": [
+            "unattributed; confidence downgraded to low"
+          ]
+        },
+        {
+          "parameter": "shared_buffers",
+          "old": "504320",
+          "new": "537600",
+          "delta_pct": 26.883687283625278,
+          "affected_metric": "cache.postgres.blks_read",
+          "direction": "up",
+          "metric_direction": "up",
+          "impact": "degraded",
+          "confidence": "medium",
+          "evidence_type": "probable",
+          "evidence_count": 1,
+          "workload_match_score": 1.0,
+          "notes": "Confidence baseline for pair comparison without isolated causality proof. Hint matched 3 metrics; evidence_count is 1 if attributed.",
+          "confidence_reasons": [
+            "Confidence baseline for pair comparison without isolated causality proof."
+          ]
+        },
+        {
+          "parameter": "shared_memory_size",
+          "old": "4452",
+          "new": "4724",
+          "delta_pct": null,
+          "affected_metric": "",
+          "direction": "flat",
+          "metric_direction": "flat",
+          "impact": "neutral",
+          "confidence": "low",
+          "evidence_type": "probable",
+          "evidence_count": 0,
+          "workload_match_score": 1.0,
+          "notes": "Confidence baseline for pair comparison without isolated causality proof. No known link between this parameter and the compared metrics.",
+          "confidence_reasons": [
+            "unattributed; confidence downgraded to low"
+          ]
+        },
+        {
+          "parameter": "shared_memory_size_in_huge_pages",
+          "old": "2226",
+          "new": "2362",
+          "delta_pct": null,
+          "affected_metric": "",
+          "direction": "flat",
+          "metric_direction": "flat",
+          "impact": "neutral",
+          "confidence": "low",
+          "evidence_type": "probable",
+          "evidence_count": 0,
+          "workload_match_score": 1.0,
+          "notes": "Confidence baseline for pair comparison without isolated causality proof. No known link between this parameter and the compared metrics.",
+          "confidence_reasons": [
+            "unattributed; confidence downgraded to low"
+          ]
+        },
+        {
+          "parameter": "subtransaction_buffers",
+          "old": "976",
+          "new": "1024",
+          "delta_pct": null,
+          "affected_metric": "",
+          "direction": "flat",
+          "metric_direction": "flat",
+          "impact": "neutral",
+          "confidence": "low",
+          "evidence_type": "probable",
+          "evidence_count": 0,
+          "workload_match_score": 1.0,
+          "notes": "Confidence baseline for pair comparison without isolated causality proof. No known link between this parameter and the compared metrics.",
+          "confidence_reasons": [
+            "unattributed; confidence downgraded to low"
+          ]
+        },
+        {
+          "parameter": "transaction_buffers",
+          "old": "976",
+          "new": "1024",
+          "delta_pct": null,
+          "affected_metric": "",
+          "direction": "flat",
+          "metric_direction": "flat",
+          "impact": "neutral",
+          "confidence": "low",
+          "evidence_type": "probable",
+          "evidence_count": 0,
+          "workload_match_score": 1.0,
+          "notes": "Confidence baseline for pair comparison without isolated causality proof. No known link between this parameter and the compared metrics.",
+          "confidence_reasons": [
+            "unattributed; confidence downgraded to low"
+          ]
+        }
+      ],
+      "findings": [
+        {
+          "id": "settings.differ.commit_timestamp_buffers",
+          "category": "settings",
+          "severity": "warning",
+          "message": "commit_timestamp_buffers",
+          "details": {
+            "status": "DIFFER",
+            "value_a": "976",
+            "value_b": "1024",
+            "issue_level": "critical"
+          }
+        },
+        {
+          "id": "settings.differ.shared_buffers",
+          "category": "settings",
+          "severity": "warning",
+          "message": "shared_buffers",
+          "details": {
+            "status": "DIFFER",
+            "value_a": "504320",
+            "value_b": "537600",
+            "issue_level": "critical"
+          }
+        },
+        {
+          "id": "settings.differ.shared_memory_size",
+          "category": "settings",
+          "severity": "warning",
+          "message": "shared_memory_size",
+          "details": {
+            "status": "DIFFER",
+            "value_a": "4452",
+            "value_b": "4724",
+            "issue_level": "critical"
+          }
+        },
+        {
+          "id": "settings.differ.shared_memory_size_in_huge_pages",
+          "category": "settings",
+          "severity": "warning",
+          "message": "shared_memory_size_in_huge_pages",
+          "details": {
+            "status": "DIFFER",
+            "value_a": "2226",
+            "value_b": "2362",
+            "issue_level": "critical"
+          }
+        },
+        {
+          "id": "settings.differ.subtransaction_buffers",
+          "category": "settings",
+          "severity": "warning",
+          "message": "subtransaction_buffers",
+          "details": {
+            "status": "DIFFER",
+            "value_a": "976",
+            "value_b": "1024",
+            "issue_level": "critical"
+          }
+        },
+        {
+          "id": "settings.differ.transaction_buffers",
+          "category": "settings",
+          "severity": "warning",
+          "message": "transaction_buffers",
+          "details": {
+            "status": "DIFFER",
+            "value_a": "976",
+            "value_b": "1024",
+            "issue_level": "critical"
+          }
+        },
+        {
+          "id": "settings.differ.pg_conf_load_time",
+          "category": "settings",
+          "severity": "info",
+          "message": "pg_conf_load_time",
+          "details": {
+            "status": "DIFFER",
+            "value_a": "2026-08-10 12:11:58.339478+03",
+            "value_b": "2026-08-12 13:51:51.80184+03",
+            "issue_level": "informational"
+          }
+        },
+        {
+          "id": "settings.differ.pg_postmaster_start_time",
+          "category": "settings",
+          "severity": "info",
+          "message": "pg_postmaster_start_time",
+          "details": {
+            "status": "DIFFER",
+            "value_a": "2026-08-10 12:10:53.521971+03",
+            "value_b": "2026-08-12 13:50:49.898345+03",
+            "issue_level": "informational"
+          }
+        }
+      ],
+      "summary": {
+        "differ": 8,
+        "only_a": 0,
+        "only_b": 0,
+        "total_issues": 8,
+        "critical_count": 6,
+        "informational_count": 2,
+        "settings_valid": false
+      }
+    }
+  ],
+  "findings": [
+    {
+      "id": "checkpoints.high_requested_ratio",
+      "category": "checkpoints",
+      "severity": "critical",
+      "message": "Requested checkpoints: 39/46 (84.8%), threshold 30%",
+      "details": {
+        "requested": 39,
+        "timed": 7,
+        "ratio": 0.847826
+      }
+    },
+    {
+      "id": "checkpoints.high_requested_count",
+      "category": "checkpoints",
+      "severity": "warning",
+      "message": "Requested checkpoints: 39 (threshold 10)",
+      "details": {
+        "requested": 39
+      }
+    },
+    {
+      "id": "checkpoints.high_write_time_per_hour",
+      "category": "checkpoints",
+      "severity": "warning",
+      "message": "Checkpoint write time: 2357.5s/hour (threshold 60s/hour)",
+      "details": {
+        "write_per_hour": 2357.475758
+      }
+    },
+    {
+      "id": "checkpoints.high_write_time",
+      "category": "checkpoints",
+      "severity": "warning",
+      "message": "Checkpoint write time: 38898.3s over 16.5h interval (threshold 300s)",
+      "details": {
+        "write_time": 38898.35
+      }
+    },
+    {
+      "id": "checkpoints.maxwritten_clean",
+      "category": "checkpoints",
+      "severity": "warning",
+      "message": "Bgwriter interrupts (maxwritten_clean): 80728 (threshold 100)",
+      "details": {
+        "maxwritten_clean": 80728
+      }
+    },
+    {
+      "id": "queries.slow_execution",
+      "category": "queries",
+      "severity": "warning",
+      "message": "statecontracts/as_admin: max=35536.1ms, calls=1\n  select $3, t0.OBJECT_ID c2 from statecontracts.T_CONTRACTS t0 where t0.RQUID &lt;> $1 limit $2",
+      "details": {
+        "hexqueryid": "7e098fea4f36a9d",
+        "mean_exec_time": 35536.11,
+        "max_exec_time": 35536.11,
+        "total_time": 35.54,
+        "calls": 1,
+        "query_text": "select $3, t0.OBJECT_ID c2 from statecontracts.T_CONTRACTS t0 where t0.RQUID &lt;> $1 limit $2"
+      }
+    },
+    {
+      "id": "queries.slow_execution",
+      "category": "queries",
+      "severity": "warning",
+      "message": "statecontracts/as_admin: max=26526.6ms, calls=1\n  select $3, t0.OBJECT_ID c2 from statecontracts.T_PARTICIPANT t0 where t0.RQUID &lt;> $1 limit $2",
+      "details": {
+        "hexqueryid": "1bd9e392e5d44395",
+        "mean_exec_time": 26526.58,
+        "max_exec_time": 26526.58,
+        "total_time": 26.53,
+        "calls": 1,
+        "query_text": "select $3, t0.OBJECT_ID c2 from statecontracts.T_PARTICIPANT t0 where t0.RQUID &lt;> $1 limit $2"
+      }
+    },
+    {
+      "id": "queries.slow_execution",
+      "category": "queries",
+      "severity": "warning",
+      "message": "postgres/postgres: mean=6674.5ms, max=12758.8ms, total=220.3s, calls=33\n  SELECT pgse_profile.take_sample()",
+      "details": {
+        "hexqueryid": "b59c46b67088420d",
+        "mean_exec_time": 6674.5,
+        "max_exec_time": 12758.78,
+        "total_time": 220.26,
+        "calls": 33,
+        "query_text": "SELECT pgse_profile.take_sample()"
+      }
+    },
+    {
+      "id": "queries.slow_execution",
+      "category": "queries",
+      "severity": "warning",
+      "message": "postgres/\"sa-d00000011757\": total=76.7s, calls=5939\n  SELECT spcname, pg_tablespace_size(spcname) AS size FROM pg_tablespace ORDER BY size DESC LIMIT 25",
+      "details": {
+        "hexqueryid": "566f5112e6ebf965",
+        "mean_exec_time": 12.92,
+        "max_exec_time": 106.86,
+        "total_time": 76.74,
+        "calls": 5939,
+        "query_text": "SELECT spcname, pg_tablespace_size(spcname) AS size FROM pg_tablespace ORDER BY size DESC LIMIT 25"
+      }
+    },
+    {
+      "id": "queries.slow_execution",
+      "category": "queries",
+      "severity": "warning",
+      "message": "statecontracts/as_admin: total=5698.0s, calls=23999073\n  insert into statecontracts.t_participant (aggregateroot_id,chgcnt,inn,sys_isdeleted,sys_lastchangedate,name,offflag,s...",
+      "details": {
+        "hexqueryid": "37b83dead5b5b9e9",
+        "mean_exec_time": 0.24,
+        "max_exec_time": 80.53,
+        "total_time": 5698.0,
+        "calls": 23999073,
+        "query_text": "insert into statecontracts.t_participant (aggregateroot_id,chgcnt,inn,sys_isdeleted,sys_lastchangedate,name,offflag,sys_ownerid,parentcontract_id,sys_partitionid,sys_recmodelversion,role,rquid,type,object_id) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$15,$14)"
+      }
+    },
+    {
+      "id": "queries.slow_execution",
+      "category": "queries",
+      "severity": "warning",
+      "message": "statecontracts/as_admin: total=723.4s, calls=23999073\n  select p1_0.object_id from statecontracts.t_participant p1_0 where p1_0.inn is not null and p1_0.inn=$1 and p1_0.pare...",
+      "details": {
+        "hexqueryid": "d1cf715414ffc2ac",
+        "mean_exec_time": 0.03,
+        "max_exec_time": 61.43,
+        "total_time": 723.35,
+        "calls": 23999073,
+        "query_text": "select p1_0.object_id from statecontracts.t_participant p1_0 where p1_0.inn is not null and p1_0.inn=$1 and p1_0.parentcontract_id is not null and p1_0.parentcontract_id=$2"
+      }
+    },
+    {
+      "id": "queries.slow_execution",
+      "category": "queries",
+      "severity": "warning",
+      "message": "statecontracts/as_admin: total=20024.2s, calls=144991055\n  insert into statecontracts.t_value (chgcnt,date_,inn,sys_isdeleted,kpp,sys_lastchangedate,level_entityid,metrictype_e...",
+      "details": {
+        "hexqueryid": "d5e326dff67d955a",
+        "mean_exec_time": 0.14,
+        "max_exec_time": 59.58,
+        "total_time": 20024.23,
+        "calls": 144991055,
+        "query_text": "insert into statecontracts.t_value (chgcnt,date_,inn,sys_isdeleted,kpp,sys_lastchangedate,level_entityid,metrictype_entityid,offflag,sys_ownerid,sys_partitionid,sys_recmodelversion,rquid,sourcedatetime,value_,type,object_id) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,'Value',$16)"
+      }
+    },
+    {
+      "id": "queries.slow_execution",
+      "category": "queries",
+      "severity": "warning",
+      "message": "statecontracts/as_admin: total=2888.0s, calls=11999535\n  insert into statecontracts.t_contracts (chgcnt,claimed,contractid,customerinn,customername,enddate,fined,sys_isdelete...",
+      "details": {
+        "hexqueryid": "3f7ffea106f6e78e",
+        "mean_exec_time": 0.24,
+        "max_exec_time": 57.83,
+        "total_time": 2888.04,
+        "calls": 11999535,
+        "query_text": "insert into statecontracts.t_contracts (chgcnt,claimed,contractid,customerinn,customername,enddate,fined,sys_isdeleted,sys_lastchangedate,number_,offflag,sys_ownerid,sys_partitionid,purchasetype,sys_recmodelversion,rquid,sourcedatetime,startdate,startyear,status,subject,sum_,supplierinn,suppliername,terminationdate,terminationkind,terminationreason,type,object_id) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$29,$28)"
+      }
+    },
+    {
+      "id": "queries.slow_execution",
+      "category": "queries",
+      "severity": "warning",
+      "message": "statecontracts/as_admin: total=1373.1s, calls=11999539\n  INSERT INTO statecontracts.T_REPL_AGGLOCK_CONTRACTS (rootid, siversion, guid, version, sys_lastchangedate) VALUES ($1...",
+      "details": {
+        "hexqueryid": "5925970c215e2e8a",
+        "mean_exec_time": 0.11,
+        "max_exec_time": 51.97,
+        "total_time": 1373.14,
+        "calls": 11999539,
+        "query_text": "INSERT INTO statecontracts.T_REPL_AGGLOCK_CONTRACTS (rootid, siversion, guid, version, sys_lastchangedate) VALUES ($1, $2, $3, $4, LOCALTIMESTAMP) ON CONFLICT (rootid) DO NOTHING RETURNING \"sys_lastchangedate\""
+      }
+    },
+    {
+      "id": "queries.slow_execution",
+      "category": "queries",
+      "severity": "warning",
+      "message": "statecontracts/as_admin: total=15378.4s, calls=144989282\n  INSERT INTO statecontracts.T_REPL_AGGLOCK_VALUE (rootid, siversion, guid, version, sys_lastchangedate) VALUES ($1, $2...",
+      "details": {
+        "hexqueryid": "31df6528995548cf",
+        "mean_exec_time": 0.11,
+        "max_exec_time": 51.52,
+        "total_time": 15378.41,
+        "calls": 144989282,
+        "query_text": "INSERT INTO statecontracts.T_REPL_AGGLOCK_VALUE (rootid, siversion, guid, version, sys_lastchangedate) VALUES ($1, $2, $3, $4, LOCALTIMESTAMP) ON CONFLICT (rootid) DO NOTHING RETURNING \"sys_lastchangedate\""
+      }
+    },
+    {
+      "id": "autovacuum.table_high_dead_pct",
+      "category": "autovacuum",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.sample_stat_tables: dead_pct=16.5%, n_dead=112895, last_autovacuum=never",
+      "details": {
+        "dead_pct": 16.53657
+      }
+    },
+    {
+      "id": "autovacuum.table_high_dead_pct",
+      "category": "autovacuum",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.sample_stat_tables_total: dead_pct=16.4%, n_dead=5688, last_autovacuum=never",
+      "details": {
+        "dead_pct": 16.438356
+      }
+    },
+    {
+      "id": "autovacuum.table_high_dead_pct",
+      "category": "autovacuum",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.sample_kcache: dead_pct=16.0%, n_dead=40596, last_autovacuum=never",
+      "details": {
+        "dead_pct": 15.99061
+      }
+    },
+    {
+      "id": "autovacuum.table_high_dead_pct",
+      "category": "autovacuum",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.sample_stat_indexes: dead_pct=15.8%, n_dead=44728, last_autovacuum=never",
+      "details": {
+        "dead_pct": 15.773567
+      }
+    },
+    {
+      "id": "autovacuum.table_high_dead_pct",
+      "category": "autovacuum",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.sample_statements: dead_pct=15.7%, n_dead=43183, last_autovacuum=never",
+      "details": {
+        "dead_pct": 15.742982
+      }
+    },
+    {
+      "id": "wal.buffers_full",
+      "category": "wal",
+      "severity": "warning",
+      "message": "wal_buffers_full: 664448 (threshold 1000)",
+      "details": {}
+    },
+    {
+      "id": "wal.backend_writes_high",
+      "category": "wal",
+      "severity": "warning",
+      "message": "Backend buffers written (21842039) exceed checkpoint buffers written (11698150)",
+      "details": {
+        "buffers_backend": 21842039,
+        "buffers_checkpoint": 11698150
+      }
+    },
+    {
+      "id": "cache.high_read_time",
+      "category": "cache",
+      "severity": "warning",
+      "message": "statecontracts: blk_read_time=260.5s (threshold 60s)",
+      "details": {}
+    },
+    {
+      "id": "cache.low_table_hit_ratio",
+      "category": "cache",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.sample_statements: table hit_pct=94.92% (threshold 95.0%)",
+      "details": {}
+    },
+    {
+      "id": "cache.low_table_hit_ratio",
+      "category": "cache",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.sample_kcache: table hit_pct=92.32% (threshold 95.0%)",
+      "details": {}
+    },
+    {
+      "id": "cache.low_table_hit_ratio",
+      "category": "cache",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.sample_stat_indexes: table hit_pct=93.56% (threshold 95.0%)",
+      "details": {}
+    },
+    {
+      "id": "cache.low_table_hit_ratio",
+      "category": "cache",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.last_stat_indexes_srv2: table hit_pct=52.66% (threshold 95.0%)",
+      "details": {}
+    },
+    {
+      "id": "cache.low_table_hit_ratio",
+      "category": "cache",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.last_stat_indexes_srv3: table hit_pct=52.68% (threshold 95.0%)",
+      "details": {}
+    },
+    {
+      "id": "sessions.high_idle_in_transaction",
+      "category": "sessions",
+      "severity": "critical",
+      "message": "statecontracts: idle_in_transaction_time=1372155.5s (threshold 3600s), idle_in_transaction_session_timeout=0",
+      "details": {
+        "idle_time": 1372155.52
+      }
+    },
+    {
+      "id": "sessions.connection_pressure",
+      "category": "sessions",
+      "severity": "warning",
+      "message": "postgres: connection pressure sessions=3241 (589% of max_connections=550)",
+      "details": {
+        "sessions": 3241,
+        "max_connections": 550,
+        "util_pct": 589.272727
+      }
+    },
+    {
+      "id": "sessions.connection_pressure",
+      "category": "sessions",
+      "severity": "warning",
+      "message": "statecontracts: connection pressure sessions=6475 (1177% of max_connections=550)",
+      "details": {
+        "sessions": 6475,
+        "max_connections": 550,
+        "util_pct": 1177.272727
+      }
+    },
+    {
+      "id": "sessions.idle_timeout_disabled",
+      "category": "sessions",
+      "severity": "critical",
+      "message": "idle_in_transaction_session_timeout=0 while idle in transaction time is high",
+      "details": {}
+    },
+    {
+      "id": "memory.statement_timeout_zero",
+      "category": "memory",
+      "severity": "warning",
+      "message": "statement_timeout=0 (queries may run indefinitely)",
+      "details": {}
+    },
+    {
+      "id": "memory.lock_timeout_zero",
+      "category": "memory",
+      "severity": "warning",
+      "message": "lock_timeout=0 (no protection against lock waits)",
+      "details": {}
+    },
+    {
+      "id": "io.wal_heavy_query",
+      "category": "io",
+      "severity": "warning",
+      "message": "statecontracts/as_admin: wal=105.9GB, shared_blks_dirtied=5802883\n  insert into statecontracts.t_value (chgcnt,date_,inn,sys_isdeleted,kpp,sys_lastchangedate,level_entityid,metrictype_e...",
+      "details": {
+        "hexqueryid": "d5e326dff67d955a",
+        "wal_bytes": 113755959127.0,
+        "io_time": 0.0,
+        "query_text": "insert into statecontracts.t_value (chgcnt,date_,inn,sys_isdeleted,kpp,sys_lastchangedate,level_entityid,metrictype_entityid,offflag,sys_ownerid,sys_partitionid,sys_recmodelversion,rquid,sourcedatetime,value_,type,object_id) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,'Value',$16)"
+      }
+    },
+    {
+      "id": "io.wal_heavy_query",
+      "category": "io",
+      "severity": "warning",
+      "message": "statecontracts/as_admin: wal=46.0GB, shared_blks_dirtied=5763415\n  insert into statecontracts.t_contracts (chgcnt,claimed,contractid,customerinn,customername,enddate,fined,sys_isdelete...",
+      "details": {
+        "hexqueryid": "3f7ffea106f6e78e",
+        "wal_bytes": 49338477696.0,
+        "io_time": 0.0,
+        "query_text": "insert into statecontracts.t_contracts (chgcnt,claimed,contractid,customerinn,customername,enddate,fined,sys_isdeleted,sys_lastchangedate,number_,offflag,sys_ownerid,sys_partitionid,purchasetype,sys_recmodelversion,rquid,sourcedatetime,startdate,startyear,status,subject,sum_,supplierinn,suppliername,terminationdate,terminationkind,terminationreason,type,object_id) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$29,$28)"
+      }
+    },
+    {
+      "id": "io.wal_heavy_query",
+      "category": "io",
+      "severity": "warning",
+      "message": "statecontracts/as_admin: wal=44.2GB, shared_blks_dirtied=3634005\n  INSERT INTO statecontracts.T_REPL_AGGLOCK_VALUE (rootid, siversion, guid, version, sys_lastchangedate) VALUES ($1, $2...",
+      "details": {
+        "hexqueryid": "31df6528995548cf",
+        "wal_bytes": 47410778021.0,
+        "io_time": 0.0,
+        "query_text": "INSERT INTO statecontracts.T_REPL_AGGLOCK_VALUE (rootid, siversion, guid, version, sys_lastchangedate) VALUES ($1, $2, $3, $4, LOCALTIMESTAMP) ON CONFLICT (rootid) DO NOTHING RETURNING \"sys_lastchangedate\""
+      }
+    },
+    {
+      "id": "io.wal_heavy_query",
+      "category": "io",
+      "severity": "warning",
+      "message": "statecontracts/as_admin: wal=29.2GB, shared_blks_dirtied=2348496\n  insert into statecontracts.t_participant (aggregateroot_id,chgcnt,inn,sys_isdeleted,sys_lastchangedate,name,offflag,s...",
+      "details": {
+        "hexqueryid": "37b83dead5b5b9e9",
+        "wal_bytes": 31309310652.0,
+        "io_time": 0.0,
+        "query_text": "insert into statecontracts.t_participant (aggregateroot_id,chgcnt,inn,sys_isdeleted,sys_lastchangedate,name,offflag,sys_ownerid,parentcontract_id,sys_partitionid,sys_recmodelversion,role,rquid,type,object_id) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$15,$14)"
+      }
+    },
+    {
+      "id": "io.high_heap_reads",
+      "category": "io",
+      "severity": "warning",
+      "message": "statecontracts.statecontracts.t_contracts: heap_blks_read=4806511",
+      "details": {
+        "heap_blks_read": 4806511
+      }
+    },
+    {
+      "id": "io.high_heap_reads",
+      "category": "io",
+      "severity": "warning",
+      "message": "statecontracts.pg_toast.pg_toast_76725: heap_blks_read=4699490",
+      "details": {
+        "heap_blks_read": 4699490
+      }
+    },
+    {
+      "id": "io.high_heap_reads",
+      "category": "io",
+      "severity": "warning",
+      "message": "statecontracts.statecontracts.t_value: heap_blks_read=4339914",
+      "details": {
+        "heap_blks_read": 4339914
+      }
+    },
+    {
+      "id": "io.high_heap_reads",
+      "category": "io",
+      "severity": "warning",
+      "message": "statecontracts.statecontracts.t_repl_agglock_value: heap_blks_read=4068522",
+      "details": {
+        "heap_blks_read": 4068522
+      }
+    },
+    {
+      "id": "io.high_heap_reads",
+      "category": "io",
+      "severity": "warning",
+      "message": "statecontracts.statecontracts.t_participant: heap_blks_read=3304492",
+      "details": {
+        "heap_blks_read": 3304492
+      }
+    },
+    {
+      "id": "io.high_seq_scan",
+      "category": "io",
+      "severity": "warning",
+      "message": "postgres.pg_catalog.pg_db_role_setting: seq_scan=3003316, idx_scan=121956, ratio=24.6",
+      "details": {
+        "seq_scan": 3003316
+      }
+    },
+    {
+      "id": "io.high_seq_scan",
+      "category": "io",
+      "severity": "warning",
+      "message": "statecontracts.pg_catalog.pg_db_role_setting: seq_scan=3003316, idx_scan=121956, ratio=24.6",
+      "details": {
+        "seq_scan": 3003316
+      }
+    },
+    {
+      "id": "io.high_heap_reads",
+      "category": "io",
+      "severity": "warning",
+      "message": "statecontracts.statecontracts.t_repl_agglock_contracts: heap_blks_read=787920",
+      "details": {
+        "heap_blks_read": 787920
+      }
+    },
+    {
+      "id": "io.high_seq_scan",
+      "category": "io",
+      "severity": "warning",
+      "message": "statecontracts.statecontracts.t_loadertask: seq_scan=117637, idx_scan=168, ratio=700.2",
+      "details": {
+        "seq_scan": 117637
+      }
+    },
+    {
+      "id": "io.high_seq_scan",
+      "category": "io",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.last_stat_database_srv4: seq_scan=28416, idx_scan=0, ratio=28416.0",
+      "details": {
+        "seq_scan": 28416
+      }
+    },
+    {
+      "id": "io.table_growth",
+      "category": "io",
+      "severity": "warning",
+      "message": "statecontracts.statecontracts.t_value: table growth=21 GB (≥100MB)",
+      "details": {
+        "growth_mb": 21504.0,
+        "kind": "table_growth"
+      }
+    },
+    {
+      "id": "io.table_growth",
+      "category": "io",
+      "severity": "warning",
+      "message": "statecontracts.statecontracts.t_repl_agglock_value: table growth=19 GB (≥100MB)",
+      "details": {
+        "growth_mb": 19456.0,
+        "kind": "table_growth"
+      }
+    },
+    {
+      "id": "io.table_growth",
+      "category": "io",
+      "severity": "warning",
+      "message": "statecontracts.statecontracts.t_contracts: table growth=14 GB (≥100MB)",
+      "details": {
+        "growth_mb": 14336.0,
+        "kind": "table_growth"
+      }
+    },
+    {
+      "id": "io.table_growth",
+      "category": "io",
+      "severity": "warning",
+      "message": "statecontracts.statecontracts.t_participant: table growth=9505 MB (≥100MB)",
+      "details": {
+        "growth_mb": 9505.0,
+        "kind": "table_growth"
+      }
+    },
+    {
+      "id": "io.table_growth",
+      "category": "io",
+      "severity": "warning",
+      "message": "statecontracts.statecontracts.t_repl_agglock_contracts: table growth=1617 MB (≥100MB)",
+      "details": {
+        "growth_mb": 1617.0,
+        "kind": "table_growth"
+      }
+    },
+    {
+      "id": "io.vacuum_ops_pressure",
+      "category": "io",
+      "severity": "warning",
+      "message": "statecontracts.statecontracts.t_dspc_sys_config: vacuum_ops=151, analyze_ops=150",
+      "details": {
+        "vacuum_ops": 151,
+        "analyze_ops": 150,
+        "kind": "vacuum_ops"
+      }
+    },
+    {
+      "id": "io.vacuum_ops_pressure",
+      "category": "io",
+      "severity": "warning",
+      "message": "statecontracts.pg_catalog.pg_statistic: vacuum_ops=56, analyze_ops=0",
+      "details": {
+        "vacuum_ops": 56,
+        "analyze_ops": 0,
+        "kind": "vacuum_ops"
+      }
+    },
+    {
+      "id": "io.vacuum_ops_pressure",
+      "category": "io",
+      "severity": "warning",
+      "message": "statecontracts.statecontracts.t_repl_agglock_commonparam: vacuum_ops=49, analyze_ops=76",
+      "details": {
+        "vacuum_ops": 49,
+        "analyze_ops": 76,
+        "kind": "vacuum_ops"
+      }
+    },
+    {
+      "id": "io.vacuum_ops_pressure",
+      "category": "io",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.last_stat_tables_srv4: vacuum_ops=36, analyze_ops=66",
+      "details": {
+        "vacuum_ops": 36,
+        "analyze_ops": 66,
+        "kind": "vacuum_ops"
+      }
+    },
+    {
+      "id": "io.vacuum_ops_pressure",
+      "category": "io",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.last_stat_kcache_srv5: vacuum_ops=36, analyze_ops=66",
+      "details": {
+        "vacuum_ops": 36,
+        "analyze_ops": 66,
+        "kind": "vacuum_ops"
+      }
+    },
+    {
+      "id": "io.vacuum_ops_pressure",
+      "category": "io",
+      "severity": "warning",
+      "message": "statecontracts.statecontracts.t_value: vacuum_ops=35, analyze_ops=64",
+      "details": {
+        "vacuum_ops": 35,
+        "analyze_ops": 64,
+        "kind": "vacuum_ops"
+      }
+    },
+    {
+      "id": "io.vacuum_ops_pressure",
+      "category": "io",
+      "severity": "warning",
+      "message": "statecontracts.statecontracts.t_repl_agglock_value: vacuum_ops=35, analyze_ops=64",
+      "details": {
+        "vacuum_ops": 35,
+        "analyze_ops": 64,
+        "kind": "vacuum_ops"
+      }
+    },
+    {
+      "id": "io.vacuum_ops_pressure",
+      "category": "io",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.last_stat_indexes_srv4: vacuum_ops=35, analyze_ops=66",
+      "details": {
+        "vacuum_ops": 35,
+        "analyze_ops": 66,
+        "kind": "vacuum_ops"
+      }
+    },
+    {
+      "id": "io.vacuum_ops_pressure",
+      "category": "io",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.last_stat_indexes_srv5: vacuum_ops=35, analyze_ops=66",
+      "details": {
+        "vacuum_ops": 35,
+        "analyze_ops": 66,
+        "kind": "vacuum_ops"
+      }
+    },
+    {
+      "id": "io.vacuum_ops_pressure",
+      "category": "io",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.last_stat_tables_srv5: vacuum_ops=35, analyze_ops=66",
+      "details": {
+        "vacuum_ops": 35,
+        "analyze_ops": 66,
+        "kind": "vacuum_ops"
+      }
+    },
+    {
+      "id": "io.unused_index",
+      "category": "io",
+      "severity": "warning",
+      "message": "Unused index statecontracts.statecontracts.t_value.i_value_metrictype: size=1537 MB",
+      "details": {}
+    },
+    {
+      "id": "io.unused_index",
+      "category": "io",
+      "severity": "warning",
+      "message": "Unused index statecontracts.statecontracts.t_value.i_value_level: size=1506 MB",
+      "details": {}
+    },
+    {
+      "id": "io.unused_index",
+      "category": "io",
+      "severity": "warning",
+      "message": "Unused index statecontracts.statecontracts.t_value.i_value_rquid: size=1414 MB",
+      "details": {}
+    },
+    {
+      "id": "io.unused_index",
+      "category": "io",
+      "severity": "warning",
+      "message": "Unused index statecontracts.statecontracts.t_value.i_value_sourcedatetime: size=1325 MB",
+      "details": {}
+    },
+    {
+      "id": "io.unused_index",
+      "category": "io",
+      "severity": "warning",
+      "message": "Unused index statecontracts.statecontracts.t_value.i_value_type: size=1325 MB",
+      "details": {}
+    },
+    {
+      "id": "io.unused_index",
+      "category": "io",
+      "severity": "warning",
+      "message": "Unused index statecontracts.statecontracts.t_participant.i_participant_aggregateroot_id: size=1050 MB",
+      "details": {}
+    },
+    {
+      "id": "io.unused_index",
+      "category": "io",
+      "severity": "warning",
+      "message": "Unused index statecontracts.statecontracts.t_participant.t_participant_parentcontract_id_idx: size=1050 MB",
+      "details": {}
+    },
+    {
+      "id": "io.unused_index",
+      "category": "io",
+      "severity": "warning",
+      "message": "Unused index statecontracts.statecontracts.t_participant.i_participant_rquid: size=254 MB",
+      "details": {}
+    },
+    {
+      "id": "io.unused_index",
+      "category": "io",
+      "severity": "warning",
+      "message": "Unused index statecontracts.statecontracts.t_participant.i_participant_type: size=243 MB",
+      "details": {}
+    },
+    {
+      "id": "io.unused_index",
+      "category": "io",
+      "severity": "warning",
+      "message": "Unused index statecontracts.statecontracts.t_contracts.i_contracts_type: size=93 MB",
+      "details": {}
+    },
+    {
+      "id": "db.statement_dominance",
+      "category": "io",
+      "severity": "warning",
+      "message": "statecontracts: dominates statement time 98.6% (total_exec_time=56520.08)",
+      "details": {
+        "dominance_pct": 98.649729,
+        "kind": "db_dominance"
+      }
+    },
+    {
+      "id": "disk.tablespace_growth",
+      "category": "disk",
+      "severity": "warning",
+      "message": "Tablespace statecontracts: size_delta=135 GB (size=135 GB, threshold 500MB)",
+      "details": {
+        "size_delta_mb": 138240.0,
+        "tablespacename": "statecontracts"
+      }
+    },
+    {
+      "id": "run_compare.cluster.buffers_checkpoint",
+      "category": "cluster",
+      "severity": "warning",
+      "message": "buffers_checkpoint",
+      "details": {
+        "value_a": 11698150.0,
+        "value_b": 12509051.0,
+        "per_hour_a": 708978.7878787878,
+        "per_hour_b": 758124.303030303,
+        "delta": 810901.0,
+        "delta_pct": 6.931873843300009,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.cluster.checkpoint_sync_time",
+      "category": "cluster",
+      "severity": "warning",
+      "message": "checkpoint_sync_time",
+      "details": {
+        "value_a": 3.52,
+        "value_b": 4.0,
+        "per_hour_a": 0.21333333333333335,
+        "per_hour_b": 0.24242424242424243,
+        "delta": 0.48,
+        "delta_pct": 13.636363636363637,
+        "unit": "sec",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.cluster.checkpoints_req",
+      "category": "cluster",
+      "severity": "warning",
+      "message": "checkpoints_req",
+      "details": {
+        "value_a": 39.0,
+        "value_b": 30.0,
+        "per_hour_a": 2.3636363636363638,
+        "per_hour_b": 1.8181818181818181,
+        "delta": -9.0,
+        "delta_pct": -23.076923076923077,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.cluster.checkpoints_timed",
+      "category": "cluster",
+      "severity": "warning",
+      "message": "checkpoints_timed",
+      "details": {
+        "value_a": 7.0,
+        "value_b": 14.0,
+        "per_hour_a": 0.42424242424242425,
+        "per_hour_b": 0.8484848484848485,
+        "delta": 7.0,
+        "delta_pct": 100.0,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.cluster.maxwritten_clean",
+      "category": "cluster",
+      "severity": "warning",
+      "message": "maxwritten_clean",
+      "details": {
+        "value_a": 80728.0,
+        "value_b": 63113.0,
+        "per_hour_a": 4892.606060606061,
+        "per_hour_b": 3825.030303030303,
+        "delta": -17615.0,
+        "delta_pct": -21.820186304627885,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.dml.Total.COMMIT",
+      "category": "dml",
+      "severity": "warning",
+      "message": "Total.COMMIT",
+      "details": {
+        "value_a": 9458236.0,
+        "value_b": 9944368.0,
+        "per_hour_a": 573226.4242424242,
+        "per_hour_b": 602688.9696969697,
+        "delta": 486132.0,
+        "delta_pct": 5.139774478031633,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.dml.Total.FETCH",
+      "category": "dml",
+      "severity": "warning",
+      "message": "Total.FETCH",
+      "details": {
+        "value_a": 157636191.0,
+        "value_b": 148999459.0,
+        "per_hour_a": 9553708.545454545,
+        "per_hour_b": 9030270.242424242,
+        "delta": -8636732.0,
+        "delta_pct": -5.478901732661125,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.dml.postgres.COMMIT",
+      "category": "dml",
+      "severity": "warning",
+      "message": "postgres.COMMIT",
+      "details": {
+        "value_a": 340165.0,
+        "value_b": 238729.0,
+        "per_hour_a": 20616.060606060608,
+        "per_hour_b": 14468.424242424242,
+        "delta": -101436.0,
+        "delta_pct": -29.819646348095777,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.dml.postgres.FETCH",
+      "category": "dml",
+      "severity": "warning",
+      "message": "postgres.FETCH",
+      "details": {
+        "value_a": 151800568.0,
+        "value_b": 141087987.0,
+        "per_hour_a": 9200034.424242424,
+        "per_hour_b": 8550787.090909092,
+        "delta": -10712581.0,
+        "delta_pct": -7.057009826208292,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.dml.statecontracts.COMMIT",
+      "category": "dml",
+      "severity": "warning",
+      "message": "statecontracts.COMMIT",
+      "details": {
+        "value_a": 9118071.0,
+        "value_b": 9705639.0,
+        "per_hour_a": 552610.3636363636,
+        "per_hour_b": 588220.5454545454,
+        "delta": 587568.0,
+        "delta_pct": 6.443994568588027,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.dml.statecontracts.FETCH",
+      "category": "dml",
+      "severity": "warning",
+      "message": "statecontracts.FETCH",
+      "details": {
+        "value_a": 5835623.0,
+        "value_b": 7911472.0,
+        "per_hour_a": 353674.1212121212,
+        "per_hour_b": 479483.1515151515,
+        "delta": 2075849.0,
+        "delta_pct": 35.57202033099122,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.tables.postgres.pg_catalog.pg_db_role_setting.seq_scan",
+      "category": "tables",
+      "severity": "warning",
+      "message": "postgres.pg_catalog.pg_db_role_setting.seq_scan",
+      "details": {
+        "value_a": 3003316.0,
+        "value_b": 1818750.0,
+        "per_hour_a": 182019.15151515152,
+        "per_hour_b": 110227.27272727272,
+        "delta": -1184566.0,
+        "delta_pct": -39.44193684580644,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.tables.statecontracts.pg_catalog.pg_db_role_setting.seq_scan",
+      "category": "tables",
+      "severity": "warning",
+      "message": "statecontracts.pg_catalog.pg_db_role_setting.seq_scan",
+      "details": {
+        "value_a": 3003316.0,
+        "value_b": 1818750.0,
+        "per_hour_a": 182019.15151515152,
+        "per_hour_b": 110227.27272727272,
+        "delta": -1184566.0,
+        "delta_pct": -39.44193684580644,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.tables.postgres.pg_catalog.pg_index.idx_scan",
+      "category": "tables",
+      "severity": "warning",
+      "message": "postgres.pg_catalog.pg_index.idx_scan",
+      "details": {
+        "value_a": 580259.0,
+        "value_b": 368089.0,
+        "per_hour_a": 35167.21212121212,
+        "per_hour_b": 22308.424242424244,
+        "delta": -212170.0,
+        "delta_pct": -36.56470645005075,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.tables.statecontracts.pg_catalog.pg_database.seq_scan",
+      "category": "tables",
+      "severity": "warning",
+      "message": "statecontracts.pg_catalog.pg_database.seq_scan",
+      "details": {
+        "value_a": 241500.0,
+        "value_b": 42587.0,
+        "per_hour_a": 14636.363636363636,
+        "per_hour_b": 2581.030303030303,
+        "delta": -198913.0,
+        "delta_pct": -82.36563146997929,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.tables.postgres.pg_catalog.pg_database.seq_scan",
+      "category": "tables",
+      "severity": "warning",
+      "message": "postgres.pg_catalog.pg_database.seq_scan",
+      "details": {
+        "value_a": 241500.0,
+        "value_b": 64458.0,
+        "per_hour_a": 14636.363636363636,
+        "per_hour_b": 3906.5454545454545,
+        "delta": -177042.0,
+        "delta_pct": -73.30931677018634,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.tables.statecontracts.pg_catalog.pg_database.idx_scan",
+      "category": "tables",
+      "severity": "warning",
+      "message": "statecontracts.pg_catalog.pg_database.idx_scan",
+      "details": {
+        "value_a": 189878.0,
+        "value_b": 34032.0,
+        "per_hour_a": 11507.757575757576,
+        "per_hour_b": 2062.5454545454545,
+        "delta": -155846.0,
+        "delta_pct": -82.07691254384395,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.tables.postgres.pg_catalog.pg_database.idx_scan",
+      "category": "tables",
+      "severity": "warning",
+      "message": "postgres.pg_catalog.pg_database.idx_scan",
+      "details": {
+        "value_a": 189878.0,
+        "value_b": 54076.0,
+        "per_hour_a": 11507.757575757576,
+        "per_hour_b": 3277.3333333333335,
+        "delta": -135802.0,
+        "delta_pct": -71.52066063472334,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.tables.statecontracts.pg_catalog.pg_attribute.idx_scan",
+      "category": "tables",
+      "severity": "warning",
+      "message": "statecontracts.pg_catalog.pg_attribute.idx_scan",
+      "details": {
+        "value_a": 568977.0,
+        "value_b": 689493.0,
+        "per_hour_a": 34483.454545454544,
+        "per_hour_b": 41787.454545454544,
+        "delta": 120516.0,
+        "delta_pct": 21.181172525427215,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.tables.statecontracts.pg_catalog.pg_class.idx_scan",
+      "category": "tables",
+      "severity": "warning",
+      "message": "statecontracts.pg_catalog.pg_class.idx_scan",
+      "details": {
+        "value_a": 506027.0,
+        "value_b": 588193.0,
+        "per_hour_a": 30668.303030303032,
+        "per_hour_b": 35648.06060606061,
+        "delta": 82166.0,
+        "delta_pct": 16.23747349449733,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.tables.statecontracts.pg_catalog.pg_statistic.idx_scan",
+      "category": "tables",
+      "severity": "warning",
+      "message": "statecontracts.pg_catalog.pg_statistic.idx_scan",
+      "details": {
+        "value_a": 1102749.0,
+        "value_b": 1171842.0,
+        "per_hour_a": 66833.27272727272,
+        "per_hour_b": 71020.72727272728,
+        "delta": 69093.0,
+        "delta_pct": 6.265523704850333,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.tables.postgres.pgse_profile.last_stat_tables_srv4.idx_scan",
+      "category": "tables",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.last_stat_tables_srv4.idx_scan",
+      "details": {
+        "value_a": 239736.0,
+        "value_b": 221681.0,
+        "per_hour_a": 14529.454545454546,
+        "per_hour_b": 13435.212121212122,
+        "delta": -18055.0,
+        "delta_pct": -7.531200987753195,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.tables.postgres.pg_catalog.pg_class.seq_scan",
+      "category": "tables",
+      "severity": "warning",
+      "message": "postgres.pg_catalog.pg_class.seq_scan",
+      "details": {
+        "value_a": 32395.0,
+        "value_b": 27364.0,
+        "per_hour_a": 1963.3333333333333,
+        "per_hour_b": 1658.4242424242425,
+        "delta": -5031.0,
+        "delta_pct": -15.530174409631115,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.tables.postgres.pg_catalog.pg_index.seq_scan",
+      "category": "tables",
+      "severity": "warning",
+      "message": "postgres.pg_catalog.pg_index.seq_scan",
+      "details": {
+        "value_a": 7365.0,
+        "value_b": 4832.0,
+        "per_hour_a": 446.3636363636364,
+        "per_hour_b": 292.8484848484849,
+        "delta": -2533.0,
+        "delta_pct": -34.392396469789546,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.tables.postgres.pgse_profile.sample_stat_tablespaces.idx_scan",
+      "category": "tables",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.sample_stat_tablespaces.idx_scan",
+      "details": {
+        "value_a": 12678.0,
+        "value_b": 14005.0,
+        "per_hour_a": 768.3636363636364,
+        "per_hour_b": 848.7878787878788,
+        "delta": 1327.0,
+        "delta_pct": 10.466950623126676,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.tables.statecontracts.statecontracts.t_value.seq_scan",
+      "category": "tables",
+      "severity": "warning",
+      "message": "statecontracts.statecontracts.t_value.seq_scan",
+      "details": {
+        "value_a": 1186.0,
+        "value_b": 68.0,
+        "per_hour_a": 71.87878787878788,
+        "per_hour_b": 4.121212121212121,
+        "delta": -1118.0,
+        "delta_pct": -94.2664418212479,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.queries.statecontracts_as_admin",
+      "category": "queries",
+      "severity": "warning",
+      "message": "statecontracts/as_admin",
+      "details": {
+        "value_a": 2888.04,
+        "value_b": 3038.26,
+        "per_hour_a": 175.03272727272727,
+        "per_hour_b": 184.13696969696971,
+        "delta": 150.22000000000025,
+        "delta_pct": 5.201451503441789,
+        "unit": "sec",
+        "extra": "A: calls=12.00M, total_time=2888.0s, mean_exec_time=0.2ms, max_exec_time=57.8ms, wal_bytes=49.34G, shared_blks_read=10.90K\nB: calls=12.00M, total_time=3038.3s, mean_exec_time=0.2ms, max_exec_time=69.3ms, wal_bytes=49.34G, shared_blks_read=11.55K\n  insert into statecontracts.t_contracts (chgcnt,claimed,contractid,customerinn,customername,enddat..."
+      }
+    },
+    {
+      "id": "run_compare.queries.postgres_\"sa-d00000011757\"",
+      "category": "queries",
+      "severity": "warning",
+      "message": "postgres/\"sa-d00000011757\"",
+      "details": {
+        "value_a": 270.75,
+        "value_b": 156.69,
+        "per_hour_a": 16.40909090909091,
+        "per_hour_b": 9.496363636363636,
+        "delta": -114.06,
+        "delta_pct": -42.12742382271468,
+        "unit": "sec",
+        "extra": "A: calls=118.62K, total_time=270.8s, mean_exec_time=2.3ms, max_exec_time=51.4ms\nB: calls=68.72K, total_time=156.7s, mean_exec_time=2.3ms, max_exec_time=37.0ms\n  WITH locks AS ( SELECT pid, locktype, mode, relation, page, tuple, virtualxid, transactionid, cla..."
+      }
+    },
+    {
+      "id": "run_compare.queries.postgres_\"sa-d00000011757\"",
+      "category": "queries",
+      "severity": "warning",
+      "message": "postgres/\"sa-d00000011757\"",
+      "details": {
+        "value_a": 76.74,
+        "value_b": 43.54,
+        "per_hour_a": 4.65090909090909,
+        "per_hour_b": 2.6387878787878787,
+        "delta": -33.199999999999996,
+        "delta_pct": -43.262965858743804,
+        "unit": "sec",
+        "extra": "A: calls=5.94K, total_time=76.7s, mean_exec_time=12.9ms, max_exec_time=106.9ms\nB: calls=3.44K, total_time=43.5s, mean_exec_time=12.6ms, max_exec_time=89.2ms\n  SELECT spcname, pg_tablespace_size(spcname) AS size FROM pg_tablespace ORDER BY size DESC LIMIT 25"
+      }
+    },
+    {
+      "id": "run_compare.queries.postgres_\"sa-d00000011757\"",
+      "category": "queries",
+      "severity": "warning",
+      "message": "postgres/\"sa-d00000011757\"",
+      "details": {
+        "value_a": 24.06,
+        "value_b": null,
+        "per_hour_a": 1.458181818181818,
+        "per_hour_b": null,
+        "delta": -24.06,
+        "delta_pct": -100.0,
+        "unit": "sec",
+        "extra": "A: calls=5.94K, total_time=24.1s, mean_exec_time=4.0ms, max_exec_time=16.5ms\nB: \n  SELECT (SELECT setting::BIGINT FROM pg_settings WHERE name = 'autovacuum_freeze_max_age') autovac..."
+      }
+    },
+    {
+      "id": "run_compare.queries.postgres_\"sa-d00000011757\"",
+      "category": "queries",
+      "severity": "warning",
+      "message": "postgres/\"sa-d00000011757\"",
+      "details": {
+        "value_a": 34.8,
+        "value_b": 20.55,
+        "per_hour_a": 2.109090909090909,
+        "per_hour_b": 1.2454545454545456,
+        "delta": -14.249999999999996,
+        "delta_pct": -40.948275862068954,
+        "unit": "sec",
+        "extra": "A: calls=5.94K, total_time=34.8s, mean_exec_time=5.9ms, max_exec_time=88.8ms\nB: calls=3.44K, total_time=20.6s, mean_exec_time=6.0ms, max_exec_time=60.3ms\n  SELECT t2.rolname, t3.datname, SUM(t1.rows) as rows FROM pg_stat_statements t1 JOIN pg_roles t2 O..."
+      }
+    },
+    {
+      "id": "run_compare.queries.postgres_\"sa-d00000011757\"",
+      "category": "queries",
+      "severity": "warning",
+      "message": "postgres/\"sa-d00000011757\"",
+      "details": {
+        "value_a": 33.47,
+        "value_b": 19.59,
+        "per_hour_a": 2.0284848484848483,
+        "per_hour_b": 1.1872727272727273,
+        "delta": -13.879999999999999,
+        "delta_pct": -41.469973110247984,
+        "unit": "sec",
+        "extra": "A: calls=5.94K, total_time=33.5s, mean_exec_time=5.6ms, max_exec_time=66.8ms\nB: calls=3.44K, total_time=19.6s, mean_exec_time=5.7ms, max_exec_time=71.3ms\n  SELECT t2.rolname, t3.datname, sum((total_plan_time + total_exec_time) / 1000)::bigint as total_t..."
+      }
+    },
+    {
+      "id": "run_compare.queries.postgres_\"sa-d00000011757\"",
+      "category": "queries",
+      "severity": "warning",
+      "message": "postgres/\"sa-d00000011757\"",
+      "details": {
+        "value_a": 28.81,
+        "value_b": 16.34,
+        "per_hour_a": 1.746060606060606,
+        "per_hour_b": 0.9903030303030302,
+        "delta": -12.469999999999999,
+        "delta_pct": -43.28358208955224,
+        "unit": "sec",
+        "extra": "A: calls=5.94K, total_time=28.8s, mean_exec_time=4.8ms, max_exec_time=49.3ms\nB: calls=3.44K, total_time=16.3s, mean_exec_time=4.7ms, max_exec_time=63.4ms\n  SELECT t2.rolname, t3.datname, (sum(t1.shared_blks_dirtied + t1.local_blks_dirtied)) * current_se..."
+      }
+    },
+    {
+      "id": "run_compare.queries.statecontracts_as_admin",
+      "category": "queries",
+      "severity": "warning",
+      "message": "statecontracts/as_admin",
+      "details": {
+        "value_a": null,
+        "value_b": 6.5,
+        "per_hour_a": null,
+        "per_hour_b": 0.3939393939393939,
+        "delta": 6.5,
+        "delta_pct": null,
+        "unit": "sec",
+        "extra": "A: \nB: calls=147.07K, total_time=6.5s, mean_exec_time=0.0ms, max_exec_time=8.3ms, shared_blks_read=24\n  select $5, t0.OBJECT_ID c2, t0.LEVEL_ENTITYID c3 from statecontracts.T_VALUE t0 where ((t0.INN = ..."
+      }
+    },
+    {
+      "id": "run_compare.queries.postgres_\"sa-d00000011757\"",
+      "category": "queries",
+      "severity": "warning",
+      "message": "postgres/\"sa-d00000011757\"",
+      "details": {
+        "value_a": 10.15,
+        "value_b": 5.44,
+        "per_hour_a": 0.6151515151515152,
+        "per_hour_b": 0.3296969696969697,
+        "delta": -4.71,
+        "delta_pct": -46.40394088669951,
+        "unit": "sec",
+        "extra": "A: calls=5.94K, total_time=10.2s, mean_exec_time=1.7ms, max_exec_time=28.2ms\nB: calls=3.44K, total_time=5.4s, mean_exec_time=1.6ms, max_exec_time=29.7ms\n  SELECT relname, COALESCE(ROUND(100*heap_blks_hit/NULLIF((heap_blks_hit + heap_blks_read),0),2),0)..."
+      }
+    },
+    {
+      "id": "run_compare.queries.statecontracts_as_admin",
+      "category": "queries",
+      "severity": "warning",
+      "message": "statecontracts/as_admin",
+      "details": {
+        "value_a": null,
+        "value_b": 2.99,
+        "per_hour_a": null,
+        "per_hour_b": 0.1812121212121212,
+        "delta": 2.99,
+        "delta_pct": null,
+        "unit": "sec",
+        "extra": "A: \nB: calls=60.99K, total_time=3.0s, mean_exec_time=0.1ms, max_exec_time=8.8ms, shared_blks_read=4\n  select $5, t0.OBJECT_ID c2, t0.VALUE_ c3, t0.METRICTYPE_ENTITYID c4 from statecontracts.T_VALUE t..."
+      }
+    },
+    {
+      "id": "run_compare.queries.statecontracts_as_admin",
+      "category": "queries",
+      "severity": "warning",
+      "message": "statecontracts/as_admin",
+      "details": {
+        "value_a": null,
+        "value_b": 2.73,
+        "per_hour_a": null,
+        "per_hour_b": 0.16545454545454547,
+        "delta": 2.73,
+        "delta_pct": null,
+        "unit": "sec",
+        "extra": "A: \nB: calls=60.68K, total_time=2.7s, mean_exec_time=0.0ms, max_exec_time=7.7ms, shared_blks_read=8\n  select $5, t0.OBJECT_ID c2, t0.DATE_ c3, t0.LEVEL_ENTITYID c4 from statecontracts.T_VALUE t0 wher..."
+      }
+    },
+    {
+      "id": "run_compare.queries.postgres_\"sa-d00000011757\"",
+      "category": "queries",
+      "severity": "warning",
+      "message": "postgres/\"sa-d00000011757\"",
+      "details": {
+        "value_a": 4.98,
+        "value_b": 2.75,
+        "per_hour_a": 0.3018181818181818,
+        "per_hour_b": 0.16666666666666666,
+        "delta": -2.2300000000000004,
+        "delta_pct": -44.77911646586346,
+        "unit": "sec",
+        "extra": "A: calls=5.94K, total_time=5.0s, mean_exec_time=0.8ms, max_exec_time=8.8ms, wal_bytes=1.61K\nB: calls=3.44K, total_time=2.8s, mean_exec_time=0.8ms, max_exec_time=5.9ms, wal_bytes=39.45K\n  SELECT schemaname, relname, vacuum_count, autovacuum_count FROM pg_stat_user_tables ORDER BY vacu..."
+      }
+    },
+    {
+      "id": "run_compare.queries.statecontracts_as_admin",
+      "category": "queries",
+      "severity": "warning",
+      "message": "statecontracts/as_admin",
+      "details": {
+        "value_a": 27.36,
+        "value_b": 25.3,
+        "per_hour_a": 1.6581818181818182,
+        "per_hour_b": 1.5333333333333334,
+        "delta": -2.0599999999999987,
+        "delta_pct": -7.529239766081868,
+        "unit": "sec",
+        "extra": "A: calls=7.74M, total_time=27.4s, mean_exec_time=0.0ms, max_exec_time=18.9ms\nB: calls=8.03M, total_time=25.3s, mean_exec_time=0.0ms, max_exec_time=16.5ms\n  COMMIT"
+      }
+    },
+    {
+      "id": "run_compare.queries.statecontracts_as_admin",
+      "category": "queries",
+      "severity": "warning",
+      "message": "statecontracts/as_admin",
+      "details": {
+        "value_a": null,
+        "value_b": 1.52,
+        "per_hour_a": null,
+        "per_hour_b": 0.09212121212121212,
+        "delta": 1.52,
+        "delta_pct": null,
+        "unit": "sec",
+        "extra": "A: \nB: calls=1.01K, total_time=1.5s, mean_exec_time=1.5ms, max_exec_time=11.8ms, shared_blks_read=2.32K\n  with ct0(c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10) as (select t0.OBJECT_ID c0, t0.STARTDATE c1..."
+      }
+    },
+    {
+      "id": "run_compare.queries.statecontracts_as_admin",
+      "category": "queries",
+      "severity": "warning",
+      "message": "statecontracts/as_admin",
+      "details": {
+        "value_a": 26.53,
+        "value_b": 25.02,
+        "per_hour_a": 1.607878787878788,
+        "per_hour_b": 1.5163636363636364,
+        "delta": -1.5100000000000016,
+        "delta_pct": -5.691669807764801,
+        "unit": "sec",
+        "extra": "A: calls=1, total_time=26.5s, mean_exec_time=26526.6ms, max_exec_time=26526.6ms, wal_bytes=642.13M, shared_blks_read=1.13M\nB: calls=1, total_time=25.0s, mean_exec_time=25020.3ms, max_exec_time=25020.3ms, shared_blks_read=1.12M\n  select $3, t0.OBJECT_ID c2 from statecontracts.T_PARTICIPANT t0 where t0.RQUID &lt;> $1 limit $2"
+      }
+    },
+    {
+      "id": "run_compare.sessions.Total.idle_in_transaction_time",
+      "category": "sessions",
+      "severity": "warning",
+      "message": "Total.idle_in_transaction_time",
+      "details": {
+        "value_a": 1372184.73,
+        "value_b": 1473020.06,
+        "per_hour_a": 83162.7109090909,
+        "per_hour_b": 89273.94303030304,
+        "delta": 100835.33000000007,
+        "delta_pct": 7.348524422072535,
+        "unit": "sec",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.sessions.postgres.active_time",
+      "category": "sessions",
+      "severity": "warning",
+      "message": "postgres.active_time",
+      "details": {
+        "value_a": 816.2,
+        "value_b": 578.79,
+        "per_hour_a": 49.46666666666667,
+        "per_hour_b": 35.07818181818182,
+        "delta": -237.41000000000008,
+        "delta_pct": -29.08723352119579,
+        "unit": "sec",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.sessions.postgres.session_time",
+      "category": "sessions",
+      "severity": "warning",
+      "message": "postgres.session_time",
+      "details": {
+        "value_a": 544151.43,
+        "value_b": 443777.36,
+        "per_hour_a": 32978.87454545455,
+        "per_hour_b": 26895.597575757576,
+        "delta": -100374.07000000007,
+        "delta_pct": -18.445981112279732,
+        "unit": "sec",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.sessions.statecontracts.idle_in_transaction_time",
+      "category": "sessions",
+      "severity": "warning",
+      "message": "statecontracts.idle_in_transaction_time",
+      "details": {
+        "value_a": 1372155.52,
+        "value_b": 1472990.88,
+        "per_hour_a": 83160.94060606061,
+        "per_hour_b": 89272.17454545455,
+        "delta": 100835.35999999987,
+        "delta_pct": 7.348683041409174,
+        "unit": "sec",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.cache.Total.blk_write_time",
+      "category": "cache",
+      "severity": "warning",
+      "message": "Total.blk_write_time",
+      "details": {
+        "value_a": 39.04,
+        "value_b": 28.83,
+        "per_hour_a": 2.366060606060606,
+        "per_hour_b": 1.747272727272727,
+        "delta": -10.21,
+        "delta_pct": -26.152663934426233,
+        "unit": "sec",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.cache.postgres.blks_read",
+      "category": "cache",
+      "severity": "warning",
+      "message": "postgres.blks_read",
+      "details": {
+        "value_a": 96765.0,
+        "value_b": 122779.0,
+        "per_hour_a": 5864.545454545455,
+        "per_hour_b": 7441.151515151515,
+        "delta": 26014.0,
+        "delta_pct": 26.883687283625278,
+        "unit": "count",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.cache.postgres.blk_read_time",
+      "category": "cache",
+      "severity": "warning",
+      "message": "postgres.blk_read_time",
+      "details": {
+        "value_a": 23.99,
+        "value_b": 28.77,
+        "per_hour_a": 1.4539393939393939,
+        "per_hour_b": 1.7436363636363637,
+        "delta": 4.780000000000001,
+        "delta_pct": 19.924968736973746,
+        "unit": "sec",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.cache.postgres.blk_write_time",
+      "category": "cache",
+      "severity": "warning",
+      "message": "postgres.blk_write_time",
+      "details": {
+        "value_a": 0.01,
+        "value_b": 0.17,
+        "per_hour_a": 0.0006060606060606061,
+        "per_hour_b": 0.010303030303030303,
+        "delta": 0.16,
+        "delta_pct": 1600.0,
+        "unit": "sec",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.cache.statecontracts.blk_read_time",
+      "category": "cache",
+      "severity": "warning",
+      "message": "statecontracts.blk_read_time",
+      "details": {
+        "value_a": 260.47,
+        "value_b": 244.72,
+        "per_hour_a": 15.786060606060607,
+        "per_hour_b": 14.831515151515152,
+        "delta": -15.750000000000028,
+        "delta_pct": -6.046761623219575,
+        "unit": "sec",
+        "extra": ""
+      }
+    },
+    {
+      "id": "run_compare.cache.statecontracts.blk_write_time",
+      "category": "cache",
+      "severity": "warning",
+      "message": "statecontracts.blk_write_time",
+      "details": {
+        "value_a": 39.03,
+        "value_b": 28.66,
+        "per_hour_a": 2.3654545454545457,
+        "per_hour_b": 1.736969696969697,
+        "delta": -10.370000000000001,
+        "delta_pct": -26.56930566231104,
+        "unit": "sec",
+        "extra": ""
+      }
+    },
+    {
+      "id": "settings.differ.commit_timestamp_buffers",
+      "category": "settings",
+      "severity": "warning",
+      "message": "commit_timestamp_buffers",
+      "details": {
+        "status": "DIFFER",
+        "value_a": "976",
+        "value_b": "1024",
+        "issue_level": "critical"
+      }
+    },
+    {
+      "id": "settings.differ.shared_buffers",
+      "category": "settings",
+      "severity": "warning",
+      "message": "shared_buffers",
+      "details": {
+        "status": "DIFFER",
+        "value_a": "504320",
+        "value_b": "537600",
+        "issue_level": "critical"
+      }
+    },
+    {
+      "id": "settings.differ.shared_memory_size",
+      "category": "settings",
+      "severity": "warning",
+      "message": "shared_memory_size",
+      "details": {
+        "status": "DIFFER",
+        "value_a": "4452",
+        "value_b": "4724",
+        "issue_level": "critical"
+      }
+    },
+    {
+      "id": "settings.differ.shared_memory_size_in_huge_pages",
+      "category": "settings",
+      "severity": "warning",
+      "message": "shared_memory_size_in_huge_pages",
+      "details": {
+        "status": "DIFFER",
+        "value_a": "2226",
+        "value_b": "2362",
+        "issue_level": "critical"
+      }
+    },
+    {
+      "id": "settings.differ.subtransaction_buffers",
+      "category": "settings",
+      "severity": "warning",
+      "message": "subtransaction_buffers",
+      "details": {
+        "status": "DIFFER",
+        "value_a": "976",
+        "value_b": "1024",
+        "issue_level": "critical"
+      }
+    },
+    {
+      "id": "settings.differ.transaction_buffers",
+      "category": "settings",
+      "severity": "warning",
+      "message": "transaction_buffers",
+      "details": {
+        "status": "DIFFER",
+        "value_a": "976",
+        "value_b": "1024",
+        "issue_level": "critical"
+      }
+    },
+    {
+      "id": "settings.differ.pg_conf_load_time",
+      "category": "settings",
+      "severity": "info",
+      "message": "pg_conf_load_time",
+      "details": {
+        "status": "DIFFER",
+        "value_a": "2026-08-10 12:11:58.339478+03",
+        "value_b": "2026-08-12 13:51:51.80184+03",
+        "issue_level": "informational"
+      }
+    },
+    {
+      "id": "settings.differ.pg_postmaster_start_time",
+      "category": "settings",
+      "severity": "info",
+      "message": "pg_postmaster_start_time",
+      "details": {
+        "status": "DIFFER",
+        "value_a": "2026-08-10 12:10:53.521971+03",
+        "value_b": "2026-08-12 13:50:49.898345+03",
+        "issue_level": "informational"
+      }
+    }
+  ],
+  "summary": {
+    "total_findings": 134,
+    "analysis_count": 3
+  }
+}

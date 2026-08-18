@@ -1,0 +1,90 @@
+{
+  "findings": [
+    {
+      "code": "heap.metric_missing",
+      "severity": "info",
+      "message": "Heap utilization is not provided. Recommendations may be less precise.",
+      "evidence": {
+        "source": "context_metric"
+      },
+      "threshold": "provide heap_used_mib or heap_used_percent",
+      "details": {
+        "source": "ui.metric_input"
+      }
+    },
+    {
+      "code": "oldgen.metric_missing",
+      "severity": "info",
+      "message": "OldGen utilization is not provided. OldGen recommendations may be less precise.",
+      "evidence": {
+        "source": "context_metric"
+      },
+      "threshold": "provide old_gen_used_percent or old_gen_used_mib",
+      "details": {
+        "source": "ui.metric_input"
+      }
+    },
+    {
+      "code": "platform.memory_growth_below_sla",
+      "severity": "info",
+      "message": "Память растёт, но до SLA 80% больше 30 сут — не критично.",
+      "evidence": {},
+      "threshold": "",
+      "details": {
+        "source": "diagnostic_tree"
+      }
+    }
+  ],
+  "recommendations": [
+    {
+      "title": "No critical JVM changes required",
+      "rationale": "Current metrics do not indicate GC or heap pressure above thresholds.",
+      "suggested_java_tool_options": [],
+      "confidence": "low",
+      "evidence_score": 65,
+      "risk_score": 10,
+      "expected_gain": "keep baseline stable",
+      "verification_window": "next scheduled load profile",
+      "rollback_plan": [
+        "No rollback required."
+      ],
+      "rule_ids": [],
+      "blocking_conditions": [],
+      "requires_platform_escalation": false,
+      "notes": []
+    }
+  ],
+  "memory_plan": null,
+  "lifecycle_status": "tuning_attempted",
+  "tuning_target_snapshot": {
+    "title": "Ресурсы и JVM настройки контейнера (актуально для настройки)",
+    "pod_name": "counteragent-demo",
+    "container_name": "application",
+    "resources": {
+      "requests": {
+        "cpu_millicores": 2000,
+        "memory_mib": 4096,
+        "ephemeral_storage_mib": null
+      },
+      "limits": {
+        "cpu_millicores": 4000,
+        "memory_mib": 8192,
+        "ephemeral_storage_mib": null
+      }
+    },
+    "java_tool_options": [
+      "-XX:+UseContainerSupport",
+      "-XX:+UseG1GC",
+      "-XX:MaxRAMPercentage=70.0",
+      "-XX:InitialRAMPercentage=45.0",
+      "-XX:MaxGCPauseMillis=250",
+      "-XX:+ExitOnOutOfMemoryError"
+    ]
+  },
+  "tree": {
+    "copyable_allowed": false,
+    "pause_copyable_allowed": false,
+    "ha_exceeded": false,
+    "block_reasons": []
+  }
+}

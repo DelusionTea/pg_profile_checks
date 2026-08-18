@@ -1,0 +1,42 @@
+{
+  "type": "nt_runs_analysis",
+  "reports": [
+    { "label": "r1" },
+    { "label": "r2" },
+    { "label": "r3" }
+  ],
+  "pair_analyses": [
+    {
+      "run_a": "r1",
+      "run_b": "r2",
+      "guc_impacts": [
+        {
+          "guc": "work_mem",
+          "value_from": "16MB",
+          "value_to": "32MB",
+          "direction": "increased",
+          "correlated_metrics": [
+            { "metric": "temp_blks_written", "delta_pct": -12.0, "improved": true },
+            { "metric": "mean_exec_time", "delta_pct": 8.0, "improved": false }
+          ]
+        }
+      ]
+    },
+    {
+      "run_a": "r2",
+      "run_b": "r3",
+      "guc_impacts": [
+        {
+          "guc": "work_mem",
+          "value_from": "32MB",
+          "value_to": "64MB",
+          "direction": "increased",
+          "correlated_metrics": [
+            { "metric": "temp_blks_written", "delta_pct": 14.0, "improved": false },
+            { "metric": "mean_exec_time", "delta_pct": -6.0, "improved": true }
+          ]
+        }
+      ]
+    }
+  ]
+}

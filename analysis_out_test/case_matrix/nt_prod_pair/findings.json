@@ -1,0 +1,1492 @@
+{
+  "type": "combined_analysis",
+  "analyses": [
+    {
+      "type": "health_check",
+      "report_meta": {
+        "path": "resources/pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html",
+        "filename": "pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html",
+        "server": "tsldd-pprb01138.delta.sbrf.ru",
+        "report_start": "2026-08-11 16:30:02+03",
+        "report_end": "2026-08-12 09:00:02+03",
+        "interval_hours": 16.5,
+        "pgprofile_version": "4.7"
+      },
+      "findings": [
+        {
+          "id": "checkpoints.high_requested_ratio",
+          "category": "checkpoints",
+          "severity": "critical",
+          "message": "Requested checkpoints: 39/46 (84.8%), threshold 30%",
+          "details": {
+            "requested": 39,
+            "timed": 7,
+            "ratio": 0.847826
+          }
+        },
+        {
+          "id": "checkpoints.high_requested_count",
+          "category": "checkpoints",
+          "severity": "warning",
+          "message": "Requested checkpoints: 39 (threshold 10)",
+          "details": {
+            "requested": 39
+          }
+        },
+        {
+          "id": "checkpoints.high_write_time_per_hour",
+          "category": "checkpoints",
+          "severity": "warning",
+          "message": "Checkpoint write time: 2357.5s/hour (threshold 60s/hour)",
+          "details": {
+            "write_per_hour": 2357.475758
+          }
+        },
+        {
+          "id": "checkpoints.high_write_time",
+          "category": "checkpoints",
+          "severity": "warning",
+          "message": "Checkpoint write time: 38898.3s over 16.5h interval (threshold 300s)",
+          "details": {
+            "write_time": 38898.35
+          }
+        },
+        {
+          "id": "checkpoints.maxwritten_clean",
+          "category": "checkpoints",
+          "severity": "warning",
+          "message": "Bgwriter interrupts (maxwritten_clean): 80728 (threshold 100)",
+          "details": {
+            "maxwritten_clean": 80728
+          }
+        },
+        {
+          "id": "queries.slow_execution",
+          "category": "queries",
+          "severity": "warning",
+          "message": "statecontracts/as_admin: max=35536.1ms, calls=1\n  select $3, t0.OBJECT_ID c2 from statecontracts.T_CONTRACTS t0 where t0.RQUID &lt;> $1 limit $2",
+          "details": {
+            "hexqueryid": "7e098fea4f36a9d",
+            "mean_exec_time": 35536.11,
+            "max_exec_time": 35536.11,
+            "total_time": 35.54,
+            "calls": 1,
+            "query_text": "select $3, t0.OBJECT_ID c2 from statecontracts.T_CONTRACTS t0 where t0.RQUID &lt;> $1 limit $2"
+          }
+        },
+        {
+          "id": "queries.slow_execution",
+          "category": "queries",
+          "severity": "warning",
+          "message": "statecontracts/as_admin: max=26526.6ms, calls=1\n  select $3, t0.OBJECT_ID c2 from statecontracts.T_PARTICIPANT t0 where t0.RQUID &lt;> $1 limit $2",
+          "details": {
+            "hexqueryid": "1bd9e392e5d44395",
+            "mean_exec_time": 26526.58,
+            "max_exec_time": 26526.58,
+            "total_time": 26.53,
+            "calls": 1,
+            "query_text": "select $3, t0.OBJECT_ID c2 from statecontracts.T_PARTICIPANT t0 where t0.RQUID &lt;> $1 limit $2"
+          }
+        },
+        {
+          "id": "queries.slow_execution",
+          "category": "queries",
+          "severity": "warning",
+          "message": "postgres/postgres: mean=6674.5ms, max=12758.8ms, total=220.3s, calls=33\n  SELECT pgse_profile.take_sample()",
+          "details": {
+            "hexqueryid": "b59c46b67088420d",
+            "mean_exec_time": 6674.5,
+            "max_exec_time": 12758.78,
+            "total_time": 220.26,
+            "calls": 33,
+            "query_text": "SELECT pgse_profile.take_sample()"
+          }
+        },
+        {
+          "id": "queries.slow_execution",
+          "category": "queries",
+          "severity": "warning",
+          "message": "postgres/\"sa-d00000011757\": total=76.7s, calls=5939\n  SELECT spcname, pg_tablespace_size(spcname) AS size FROM pg_tablespace ORDER BY size DESC LIMIT 25",
+          "details": {
+            "hexqueryid": "566f5112e6ebf965",
+            "mean_exec_time": 12.92,
+            "max_exec_time": 106.86,
+            "total_time": 76.74,
+            "calls": 5939,
+            "query_text": "SELECT spcname, pg_tablespace_size(spcname) AS size FROM pg_tablespace ORDER BY size DESC LIMIT 25"
+          }
+        },
+        {
+          "id": "queries.slow_execution",
+          "category": "queries",
+          "severity": "warning",
+          "message": "statecontracts/as_admin: total=5698.0s, calls=23999073\n  insert into statecontracts.t_participant (aggregateroot_id,chgcnt,inn,sys_isdeleted,sys_lastchangedate,name,offflag,s...",
+          "details": {
+            "hexqueryid": "37b83dead5b5b9e9",
+            "mean_exec_time": 0.24,
+            "max_exec_time": 80.53,
+            "total_time": 5698.0,
+            "calls": 23999073,
+            "query_text": "insert into statecontracts.t_participant (aggregateroot_id,chgcnt,inn,sys_isdeleted,sys_lastchangedate,name,offflag,sys_ownerid,parentcontract_id,sys_partitionid,sys_recmodelversion,role,rquid,type,object_id) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$15,$14)"
+          }
+        },
+        {
+          "id": "queries.slow_execution",
+          "category": "queries",
+          "severity": "warning",
+          "message": "statecontracts/as_admin: total=723.4s, calls=23999073\n  select p1_0.object_id from statecontracts.t_participant p1_0 where p1_0.inn is not null and p1_0.inn=$1 and p1_0.pare...",
+          "details": {
+            "hexqueryid": "d1cf715414ffc2ac",
+            "mean_exec_time": 0.03,
+            "max_exec_time": 61.43,
+            "total_time": 723.35,
+            "calls": 23999073,
+            "query_text": "select p1_0.object_id from statecontracts.t_participant p1_0 where p1_0.inn is not null and p1_0.inn=$1 and p1_0.parentcontract_id is not null and p1_0.parentcontract_id=$2"
+          }
+        },
+        {
+          "id": "queries.slow_execution",
+          "category": "queries",
+          "severity": "warning",
+          "message": "statecontracts/as_admin: total=20024.2s, calls=144991055\n  insert into statecontracts.t_value (chgcnt,date_,inn,sys_isdeleted,kpp,sys_lastchangedate,level_entityid,metrictype_e...",
+          "details": {
+            "hexqueryid": "d5e326dff67d955a",
+            "mean_exec_time": 0.14,
+            "max_exec_time": 59.58,
+            "total_time": 20024.23,
+            "calls": 144991055,
+            "query_text": "insert into statecontracts.t_value (chgcnt,date_,inn,sys_isdeleted,kpp,sys_lastchangedate,level_entityid,metrictype_entityid,offflag,sys_ownerid,sys_partitionid,sys_recmodelversion,rquid,sourcedatetime,value_,type,object_id) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,'Value',$16)"
+          }
+        },
+        {
+          "id": "queries.slow_execution",
+          "category": "queries",
+          "severity": "warning",
+          "message": "statecontracts/as_admin: total=2888.0s, calls=11999535\n  insert into statecontracts.t_contracts (chgcnt,claimed,contractid,customerinn,customername,enddate,fined,sys_isdelete...",
+          "details": {
+            "hexqueryid": "3f7ffea106f6e78e",
+            "mean_exec_time": 0.24,
+            "max_exec_time": 57.83,
+            "total_time": 2888.04,
+            "calls": 11999535,
+            "query_text": "insert into statecontracts.t_contracts (chgcnt,claimed,contractid,customerinn,customername,enddate,fined,sys_isdeleted,sys_lastchangedate,number_,offflag,sys_ownerid,sys_partitionid,purchasetype,sys_recmodelversion,rquid,sourcedatetime,startdate,startyear,status,subject,sum_,supplierinn,suppliername,terminationdate,terminationkind,terminationreason,type,object_id) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$29,$28)"
+          }
+        },
+        {
+          "id": "queries.slow_execution",
+          "category": "queries",
+          "severity": "warning",
+          "message": "statecontracts/as_admin: total=1373.1s, calls=11999539\n  INSERT INTO statecontracts.T_REPL_AGGLOCK_CONTRACTS (rootid, siversion, guid, version, sys_lastchangedate) VALUES ($1...",
+          "details": {
+            "hexqueryid": "5925970c215e2e8a",
+            "mean_exec_time": 0.11,
+            "max_exec_time": 51.97,
+            "total_time": 1373.14,
+            "calls": 11999539,
+            "query_text": "INSERT INTO statecontracts.T_REPL_AGGLOCK_CONTRACTS (rootid, siversion, guid, version, sys_lastchangedate) VALUES ($1, $2, $3, $4, LOCALTIMESTAMP) ON CONFLICT (rootid) DO NOTHING RETURNING \"sys_lastchangedate\""
+          }
+        },
+        {
+          "id": "queries.slow_execution",
+          "category": "queries",
+          "severity": "warning",
+          "message": "statecontracts/as_admin: total=15378.4s, calls=144989282\n  INSERT INTO statecontracts.T_REPL_AGGLOCK_VALUE (rootid, siversion, guid, version, sys_lastchangedate) VALUES ($1, $2...",
+          "details": {
+            "hexqueryid": "31df6528995548cf",
+            "mean_exec_time": 0.11,
+            "max_exec_time": 51.52,
+            "total_time": 15378.41,
+            "calls": 144989282,
+            "query_text": "INSERT INTO statecontracts.T_REPL_AGGLOCK_VALUE (rootid, siversion, guid, version, sys_lastchangedate) VALUES ($1, $2, $3, $4, LOCALTIMESTAMP) ON CONFLICT (rootid) DO NOTHING RETURNING \"sys_lastchangedate\""
+          }
+        },
+        {
+          "id": "autovacuum.table_high_dead_pct",
+          "category": "autovacuum",
+          "severity": "warning",
+          "message": "postgres.pgse_profile.sample_stat_tables: dead_pct=16.5%, n_dead=112895, last_autovacuum=never",
+          "details": {
+            "dead_pct": 16.53657
+          }
+        },
+        {
+          "id": "autovacuum.table_high_dead_pct",
+          "category": "autovacuum",
+          "severity": "warning",
+          "message": "postgres.pgse_profile.sample_stat_tables_total: dead_pct=16.4%, n_dead=5688, last_autovacuum=never",
+          "details": {
+            "dead_pct": 16.438356
+          }
+        },
+        {
+          "id": "autovacuum.table_high_dead_pct",
+          "category": "autovacuum",
+          "severity": "warning",
+          "message": "postgres.pgse_profile.sample_kcache: dead_pct=16.0%, n_dead=40596, last_autovacuum=never",
+          "details": {
+            "dead_pct": 15.99061
+          }
+        },
+        {
+          "id": "autovacuum.table_high_dead_pct",
+          "category": "autovacuum",
+          "severity": "warning",
+          "message": "postgres.pgse_profile.sample_stat_indexes: dead_pct=15.8%, n_dead=44728, last_autovacuum=never",
+          "details": {
+            "dead_pct": 15.773567
+          }
+        },
+        {
+          "id": "autovacuum.table_high_dead_pct",
+          "category": "autovacuum",
+          "severity": "warning",
+          "message": "postgres.pgse_profile.sample_statements: dead_pct=15.7%, n_dead=43183, last_autovacuum=never",
+          "details": {
+            "dead_pct": 15.742982
+          }
+        },
+        {
+          "id": "wal.buffers_full",
+          "category": "wal",
+          "severity": "warning",
+          "message": "wal_buffers_full: 664448 (threshold 1000)",
+          "details": {}
+        },
+        {
+          "id": "wal.backend_writes_high",
+          "category": "wal",
+          "severity": "warning",
+          "message": "Backend buffers written (21842039) exceed checkpoint buffers written (11698150)",
+          "details": {
+            "buffers_backend": 21842039,
+            "buffers_checkpoint": 11698150
+          }
+        },
+        {
+          "id": "cache.high_read_time",
+          "category": "cache",
+          "severity": "warning",
+          "message": "statecontracts: blk_read_time=260.5s (threshold 60s)",
+          "details": {}
+        },
+        {
+          "id": "cache.low_table_hit_ratio",
+          "category": "cache",
+          "severity": "warning",
+          "message": "postgres.pgse_profile.sample_statements: table hit_pct=94.92% (threshold 95.0%)",
+          "details": {}
+        },
+        {
+          "id": "cache.low_table_hit_ratio",
+          "category": "cache",
+          "severity": "warning",
+          "message": "postgres.pgse_profile.sample_kcache: table hit_pct=92.32% (threshold 95.0%)",
+          "details": {}
+        },
+        {
+          "id": "cache.low_table_hit_ratio",
+          "category": "cache",
+          "severity": "warning",
+          "message": "postgres.pgse_profile.sample_stat_indexes: table hit_pct=93.56% (threshold 95.0%)",
+          "details": {}
+        },
+        {
+          "id": "cache.low_table_hit_ratio",
+          "category": "cache",
+          "severity": "warning",
+          "message": "postgres.pgse_profile.last_stat_indexes_srv2: table hit_pct=52.66% (threshold 95.0%)",
+          "details": {}
+        },
+        {
+          "id": "cache.low_table_hit_ratio",
+          "category": "cache",
+          "severity": "warning",
+          "message": "postgres.pgse_profile.last_stat_indexes_srv3: table hit_pct=52.68% (threshold 95.0%)",
+          "details": {}
+        },
+        {
+          "id": "sessions.high_idle_in_transaction",
+          "category": "sessions",
+          "severity": "critical",
+          "message": "statecontracts: idle_in_transaction_time=1372155.5s (threshold 3600s), idle_in_transaction_session_timeout=0",
+          "details": {
+            "idle_time": 1372155.52
+          }
+        },
+        {
+          "id": "sessions.connection_pressure",
+          "category": "sessions",
+          "severity": "warning",
+          "message": "postgres: connection pressure sessions=3241 (589% of max_connections=550)",
+          "details": {
+            "sessions": 3241,
+            "max_connections": 550,
+            "util_pct": 589.272727
+          }
+        },
+        {
+          "id": "sessions.connection_pressure",
+          "category": "sessions",
+          "severity": "warning",
+          "message": "statecontracts: connection pressure sessions=6475 (1177% of max_connections=550)",
+          "details": {
+            "sessions": 6475,
+            "max_connections": 550,
+            "util_pct": 1177.272727
+          }
+        },
+        {
+          "id": "sessions.idle_timeout_disabled",
+          "category": "sessions",
+          "severity": "critical",
+          "message": "idle_in_transaction_session_timeout=0 while idle in transaction time is high",
+          "details": {}
+        },
+        {
+          "id": "memory.statement_timeout_zero",
+          "category": "memory",
+          "severity": "warning",
+          "message": "statement_timeout=0 (queries may run indefinitely)",
+          "details": {}
+        },
+        {
+          "id": "memory.lock_timeout_zero",
+          "category": "memory",
+          "severity": "warning",
+          "message": "lock_timeout=0 (no protection against lock waits)",
+          "details": {}
+        },
+        {
+          "id": "io.wal_heavy_query",
+          "category": "io",
+          "severity": "warning",
+          "message": "statecontracts/as_admin: wal=105.9GB, shared_blks_dirtied=5802883\n  insert into statecontracts.t_value (chgcnt,date_,inn,sys_isdeleted,kpp,sys_lastchangedate,level_entityid,metrictype_e...",
+          "details": {
+            "hexqueryid": "d5e326dff67d955a",
+            "wal_bytes": 113755959127.0,
+            "io_time": 0.0,
+            "query_text": "insert into statecontracts.t_value (chgcnt,date_,inn,sys_isdeleted,kpp,sys_lastchangedate,level_entityid,metrictype_entityid,offflag,sys_ownerid,sys_partitionid,sys_recmodelversion,rquid,sourcedatetime,value_,type,object_id) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,'Value',$16)"
+          }
+        },
+        {
+          "id": "io.wal_heavy_query",
+          "category": "io",
+          "severity": "warning",
+          "message": "statecontracts/as_admin: wal=46.0GB, shared_blks_dirtied=5763415\n  insert into statecontracts.t_contracts (chgcnt,claimed,contractid,customerinn,customername,enddate,fined,sys_isdelete...",
+          "details": {
+            "hexqueryid": "3f7ffea106f6e78e",
+            "wal_bytes": 49338477696.0,
+            "io_time": 0.0,
+            "query_text": "insert into statecontracts.t_contracts (chgcnt,claimed,contractid,customerinn,customername,enddate,fined,sys_isdeleted,sys_lastchangedate,number_,offflag,sys_ownerid,sys_partitionid,purchasetype,sys_recmodelversion,rquid,sourcedatetime,startdate,startyear,status,subject,sum_,supplierinn,suppliername,terminationdate,terminationkind,terminationreason,type,object_id) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$29,$28)"
+          }
+        },
+        {
+          "id": "io.wal_heavy_query",
+          "category": "io",
+          "severity": "warning",
+          "message": "statecontracts/as_admin: wal=44.2GB, shared_blks_dirtied=3634005\n  INSERT INTO statecontracts.T_REPL_AGGLOCK_VALUE (rootid, siversion, guid, version, sys_lastchangedate) VALUES ($1, $2...",
+          "details": {
+            "hexqueryid": "31df6528995548cf",
+            "wal_bytes": 47410778021.0,
+            "io_time": 0.0,
+            "query_text": "INSERT INTO statecontracts.T_REPL_AGGLOCK_VALUE (rootid, siversion, guid, version, sys_lastchangedate) VALUES ($1, $2, $3, $4, LOCALTIMESTAMP) ON CONFLICT (rootid) DO NOTHING RETURNING \"sys_lastchangedate\""
+          }
+        },
+        {
+          "id": "io.wal_heavy_query",
+          "category": "io",
+          "severity": "warning",
+          "message": "statecontracts/as_admin: wal=29.2GB, shared_blks_dirtied=2348496\n  insert into statecontracts.t_participant (aggregateroot_id,chgcnt,inn,sys_isdeleted,sys_lastchangedate,name,offflag,s...",
+          "details": {
+            "hexqueryid": "37b83dead5b5b9e9",
+            "wal_bytes": 31309310652.0,
+            "io_time": 0.0,
+            "query_text": "insert into statecontracts.t_participant (aggregateroot_id,chgcnt,inn,sys_isdeleted,sys_lastchangedate,name,offflag,sys_ownerid,parentcontract_id,sys_partitionid,sys_recmodelversion,role,rquid,type,object_id) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$15,$14)"
+          }
+        },
+        {
+          "id": "io.high_heap_reads",
+          "category": "io",
+          "severity": "warning",
+          "message": "statecontracts.statecontracts.t_contracts: heap_blks_read=4806511",
+          "details": {
+            "heap_blks_read": 4806511
+          }
+        },
+        {
+          "id": "io.high_heap_reads",
+          "category": "io",
+          "severity": "warning",
+          "message": "statecontracts.pg_toast.pg_toast_76725: heap_blks_read=4699490",
+          "details": {
+            "heap_blks_read": 4699490
+          }
+        },
+        {
+          "id": "io.high_heap_reads",
+          "category": "io",
+          "severity": "warning",
+          "message": "statecontracts.statecontracts.t_value: heap_blks_read=4339914",
+          "details": {
+            "heap_blks_read": 4339914
+          }
+        },
+        {
+          "id": "io.high_heap_reads",
+          "category": "io",
+          "severity": "warning",
+          "message": "statecontracts.statecontracts.t_repl_agglock_value: heap_blks_read=4068522",
+          "details": {
+            "heap_blks_read": 4068522
+          }
+        },
+        {
+          "id": "io.high_heap_reads",
+          "category": "io",
+          "severity": "warning",
+          "message": "statecontracts.statecontracts.t_participant: heap_blks_read=3304492",
+          "details": {
+            "heap_blks_read": 3304492
+          }
+        },
+        {
+          "id": "io.high_seq_scan",
+          "category": "io",
+          "severity": "warning",
+          "message": "postgres.pg_catalog.pg_db_role_setting: seq_scan=3003316, idx_scan=121956, ratio=24.6",
+          "details": {
+            "seq_scan": 3003316
+          }
+        },
+        {
+          "id": "io.high_seq_scan",
+          "category": "io",
+          "severity": "warning",
+          "message": "statecontracts.pg_catalog.pg_db_role_setting: seq_scan=3003316, idx_scan=121956, ratio=24.6",
+          "details": {
+            "seq_scan": 3003316
+          }
+        },
+        {
+          "id": "io.high_heap_reads",
+          "category": "io",
+          "severity": "warning",
+          "message": "statecontracts.statecontracts.t_repl_agglock_contracts: heap_blks_read=787920",
+          "details": {
+            "heap_blks_read": 787920
+          }
+        },
+        {
+          "id": "io.high_seq_scan",
+          "category": "io",
+          "severity": "warning",
+          "message": "statecontracts.statecontracts.t_loadertask: seq_scan=117637, idx_scan=168, ratio=700.2",
+          "details": {
+            "seq_scan": 117637
+          }
+        },
+        {
+          "id": "io.high_seq_scan",
+          "category": "io",
+          "severity": "warning",
+          "message": "postgres.pgse_profile.last_stat_database_srv4: seq_scan=28416, idx_scan=0, ratio=28416.0",
+          "details": {
+            "seq_scan": 28416
+          }
+        },
+        {
+          "id": "io.table_growth",
+          "category": "io",
+          "severity": "warning",
+          "message": "statecontracts.statecontracts.t_value: table growth=21 GB (≥100MB)",
+          "details": {
+            "growth_mb": 21504.0,
+            "kind": "table_growth"
+          }
+        },
+        {
+          "id": "io.table_growth",
+          "category": "io",
+          "severity": "warning",
+          "message": "statecontracts.statecontracts.t_repl_agglock_value: table growth=19 GB (≥100MB)",
+          "details": {
+            "growth_mb": 19456.0,
+            "kind": "table_growth"
+          }
+        },
+        {
+          "id": "io.table_growth",
+          "category": "io",
+          "severity": "warning",
+          "message": "statecontracts.statecontracts.t_contracts: table growth=14 GB (≥100MB)",
+          "details": {
+            "growth_mb": 14336.0,
+            "kind": "table_growth"
+          }
+        },
+        {
+          "id": "io.table_growth",
+          "category": "io",
+          "severity": "warning",
+          "message": "statecontracts.statecontracts.t_participant: table growth=9505 MB (≥100MB)",
+          "details": {
+            "growth_mb": 9505.0,
+            "kind": "table_growth"
+          }
+        },
+        {
+          "id": "io.table_growth",
+          "category": "io",
+          "severity": "warning",
+          "message": "statecontracts.statecontracts.t_repl_agglock_contracts: table growth=1617 MB (≥100MB)",
+          "details": {
+            "growth_mb": 1617.0,
+            "kind": "table_growth"
+          }
+        },
+        {
+          "id": "io.vacuum_ops_pressure",
+          "category": "io",
+          "severity": "warning",
+          "message": "statecontracts.statecontracts.t_dspc_sys_config: vacuum_ops=151, analyze_ops=150",
+          "details": {
+            "vacuum_ops": 151,
+            "analyze_ops": 150,
+            "kind": "vacuum_ops"
+          }
+        },
+        {
+          "id": "io.vacuum_ops_pressure",
+          "category": "io",
+          "severity": "warning",
+          "message": "statecontracts.pg_catalog.pg_statistic: vacuum_ops=56, analyze_ops=0",
+          "details": {
+            "vacuum_ops": 56,
+            "analyze_ops": 0,
+            "kind": "vacuum_ops"
+          }
+        },
+        {
+          "id": "io.vacuum_ops_pressure",
+          "category": "io",
+          "severity": "warning",
+          "message": "statecontracts.statecontracts.t_repl_agglock_commonparam: vacuum_ops=49, analyze_ops=76",
+          "details": {
+            "vacuum_ops": 49,
+            "analyze_ops": 76,
+            "kind": "vacuum_ops"
+          }
+        },
+        {
+          "id": "io.vacuum_ops_pressure",
+          "category": "io",
+          "severity": "warning",
+          "message": "postgres.pgse_profile.last_stat_tables_srv4: vacuum_ops=36, analyze_ops=66",
+          "details": {
+            "vacuum_ops": 36,
+            "analyze_ops": 66,
+            "kind": "vacuum_ops"
+          }
+        },
+        {
+          "id": "io.vacuum_ops_pressure",
+          "category": "io",
+          "severity": "warning",
+          "message": "postgres.pgse_profile.last_stat_kcache_srv5: vacuum_ops=36, analyze_ops=66",
+          "details": {
+            "vacuum_ops": 36,
+            "analyze_ops": 66,
+            "kind": "vacuum_ops"
+          }
+        },
+        {
+          "id": "io.vacuum_ops_pressure",
+          "category": "io",
+          "severity": "warning",
+          "message": "statecontracts.statecontracts.t_value: vacuum_ops=35, analyze_ops=64",
+          "details": {
+            "vacuum_ops": 35,
+            "analyze_ops": 64,
+            "kind": "vacuum_ops"
+          }
+        },
+        {
+          "id": "io.vacuum_ops_pressure",
+          "category": "io",
+          "severity": "warning",
+          "message": "statecontracts.statecontracts.t_repl_agglock_value: vacuum_ops=35, analyze_ops=64",
+          "details": {
+            "vacuum_ops": 35,
+            "analyze_ops": 64,
+            "kind": "vacuum_ops"
+          }
+        },
+        {
+          "id": "io.vacuum_ops_pressure",
+          "category": "io",
+          "severity": "warning",
+          "message": "postgres.pgse_profile.last_stat_indexes_srv4: vacuum_ops=35, analyze_ops=66",
+          "details": {
+            "vacuum_ops": 35,
+            "analyze_ops": 66,
+            "kind": "vacuum_ops"
+          }
+        },
+        {
+          "id": "io.vacuum_ops_pressure",
+          "category": "io",
+          "severity": "warning",
+          "message": "postgres.pgse_profile.last_stat_indexes_srv5: vacuum_ops=35, analyze_ops=66",
+          "details": {
+            "vacuum_ops": 35,
+            "analyze_ops": 66,
+            "kind": "vacuum_ops"
+          }
+        },
+        {
+          "id": "io.vacuum_ops_pressure",
+          "category": "io",
+          "severity": "warning",
+          "message": "postgres.pgse_profile.last_stat_tables_srv5: vacuum_ops=35, analyze_ops=66",
+          "details": {
+            "vacuum_ops": 35,
+            "analyze_ops": 66,
+            "kind": "vacuum_ops"
+          }
+        },
+        {
+          "id": "io.unused_index",
+          "category": "io",
+          "severity": "warning",
+          "message": "Unused index statecontracts.statecontracts.t_value.i_value_metrictype: size=1537 MB",
+          "details": {}
+        },
+        {
+          "id": "io.unused_index",
+          "category": "io",
+          "severity": "warning",
+          "message": "Unused index statecontracts.statecontracts.t_value.i_value_level: size=1506 MB",
+          "details": {}
+        },
+        {
+          "id": "io.unused_index",
+          "category": "io",
+          "severity": "warning",
+          "message": "Unused index statecontracts.statecontracts.t_value.i_value_rquid: size=1414 MB",
+          "details": {}
+        },
+        {
+          "id": "io.unused_index",
+          "category": "io",
+          "severity": "warning",
+          "message": "Unused index statecontracts.statecontracts.t_value.i_value_sourcedatetime: size=1325 MB",
+          "details": {}
+        },
+        {
+          "id": "io.unused_index",
+          "category": "io",
+          "severity": "warning",
+          "message": "Unused index statecontracts.statecontracts.t_value.i_value_type: size=1325 MB",
+          "details": {}
+        },
+        {
+          "id": "io.unused_index",
+          "category": "io",
+          "severity": "warning",
+          "message": "Unused index statecontracts.statecontracts.t_participant.i_participant_aggregateroot_id: size=1050 MB",
+          "details": {}
+        },
+        {
+          "id": "io.unused_index",
+          "category": "io",
+          "severity": "warning",
+          "message": "Unused index statecontracts.statecontracts.t_participant.t_participant_parentcontract_id_idx: size=1050 MB",
+          "details": {}
+        },
+        {
+          "id": "io.unused_index",
+          "category": "io",
+          "severity": "warning",
+          "message": "Unused index statecontracts.statecontracts.t_participant.i_participant_rquid: size=254 MB",
+          "details": {}
+        },
+        {
+          "id": "io.unused_index",
+          "category": "io",
+          "severity": "warning",
+          "message": "Unused index statecontracts.statecontracts.t_participant.i_participant_type: size=243 MB",
+          "details": {}
+        },
+        {
+          "id": "io.unused_index",
+          "category": "io",
+          "severity": "warning",
+          "message": "Unused index statecontracts.statecontracts.t_contracts.i_contracts_type: size=93 MB",
+          "details": {}
+        },
+        {
+          "id": "db.statement_dominance",
+          "category": "io",
+          "severity": "warning",
+          "message": "statecontracts: dominates statement time 98.6% (total_exec_time=56520.08)",
+          "details": {
+            "dominance_pct": 98.649729,
+            "kind": "db_dominance"
+          }
+        },
+        {
+          "id": "disk.tablespace_growth",
+          "category": "disk",
+          "severity": "warning",
+          "message": "Tablespace statecontracts: size_delta=135 GB (size=135 GB, threshold 500MB)",
+          "details": {
+            "size_delta_mb": 138240.0,
+            "tablespacename": "statecontracts"
+          }
+        }
+      ],
+      "summary": {
+        "total": 75,
+        "critical": 3,
+        "warning": 72
+      }
+    }
+  ],
+  "findings": [
+    {
+      "id": "checkpoints.high_requested_ratio",
+      "category": "checkpoints",
+      "severity": "critical",
+      "message": "Requested checkpoints: 39/46 (84.8%), threshold 30%",
+      "details": {
+        "requested": 39,
+        "timed": 7,
+        "ratio": 0.847826
+      }
+    },
+    {
+      "id": "checkpoints.high_requested_count",
+      "category": "checkpoints",
+      "severity": "warning",
+      "message": "Requested checkpoints: 39 (threshold 10)",
+      "details": {
+        "requested": 39
+      }
+    },
+    {
+      "id": "checkpoints.high_write_time_per_hour",
+      "category": "checkpoints",
+      "severity": "warning",
+      "message": "Checkpoint write time: 2357.5s/hour (threshold 60s/hour)",
+      "details": {
+        "write_per_hour": 2357.475758
+      }
+    },
+    {
+      "id": "checkpoints.high_write_time",
+      "category": "checkpoints",
+      "severity": "warning",
+      "message": "Checkpoint write time: 38898.3s over 16.5h interval (threshold 300s)",
+      "details": {
+        "write_time": 38898.35
+      }
+    },
+    {
+      "id": "checkpoints.maxwritten_clean",
+      "category": "checkpoints",
+      "severity": "warning",
+      "message": "Bgwriter interrupts (maxwritten_clean): 80728 (threshold 100)",
+      "details": {
+        "maxwritten_clean": 80728
+      }
+    },
+    {
+      "id": "queries.slow_execution",
+      "category": "queries",
+      "severity": "warning",
+      "message": "statecontracts/as_admin: max=35536.1ms, calls=1\n  select $3, t0.OBJECT_ID c2 from statecontracts.T_CONTRACTS t0 where t0.RQUID &lt;> $1 limit $2",
+      "details": {
+        "hexqueryid": "7e098fea4f36a9d",
+        "mean_exec_time": 35536.11,
+        "max_exec_time": 35536.11,
+        "total_time": 35.54,
+        "calls": 1,
+        "query_text": "select $3, t0.OBJECT_ID c2 from statecontracts.T_CONTRACTS t0 where t0.RQUID &lt;> $1 limit $2"
+      }
+    },
+    {
+      "id": "queries.slow_execution",
+      "category": "queries",
+      "severity": "warning",
+      "message": "statecontracts/as_admin: max=26526.6ms, calls=1\n  select $3, t0.OBJECT_ID c2 from statecontracts.T_PARTICIPANT t0 where t0.RQUID &lt;> $1 limit $2",
+      "details": {
+        "hexqueryid": "1bd9e392e5d44395",
+        "mean_exec_time": 26526.58,
+        "max_exec_time": 26526.58,
+        "total_time": 26.53,
+        "calls": 1,
+        "query_text": "select $3, t0.OBJECT_ID c2 from statecontracts.T_PARTICIPANT t0 where t0.RQUID &lt;> $1 limit $2"
+      }
+    },
+    {
+      "id": "queries.slow_execution",
+      "category": "queries",
+      "severity": "warning",
+      "message": "postgres/postgres: mean=6674.5ms, max=12758.8ms, total=220.3s, calls=33\n  SELECT pgse_profile.take_sample()",
+      "details": {
+        "hexqueryid": "b59c46b67088420d",
+        "mean_exec_time": 6674.5,
+        "max_exec_time": 12758.78,
+        "total_time": 220.26,
+        "calls": 33,
+        "query_text": "SELECT pgse_profile.take_sample()"
+      }
+    },
+    {
+      "id": "queries.slow_execution",
+      "category": "queries",
+      "severity": "warning",
+      "message": "postgres/\"sa-d00000011757\": total=76.7s, calls=5939\n  SELECT spcname, pg_tablespace_size(spcname) AS size FROM pg_tablespace ORDER BY size DESC LIMIT 25",
+      "details": {
+        "hexqueryid": "566f5112e6ebf965",
+        "mean_exec_time": 12.92,
+        "max_exec_time": 106.86,
+        "total_time": 76.74,
+        "calls": 5939,
+        "query_text": "SELECT spcname, pg_tablespace_size(spcname) AS size FROM pg_tablespace ORDER BY size DESC LIMIT 25"
+      }
+    },
+    {
+      "id": "queries.slow_execution",
+      "category": "queries",
+      "severity": "warning",
+      "message": "statecontracts/as_admin: total=5698.0s, calls=23999073\n  insert into statecontracts.t_participant (aggregateroot_id,chgcnt,inn,sys_isdeleted,sys_lastchangedate,name,offflag,s...",
+      "details": {
+        "hexqueryid": "37b83dead5b5b9e9",
+        "mean_exec_time": 0.24,
+        "max_exec_time": 80.53,
+        "total_time": 5698.0,
+        "calls": 23999073,
+        "query_text": "insert into statecontracts.t_participant (aggregateroot_id,chgcnt,inn,sys_isdeleted,sys_lastchangedate,name,offflag,sys_ownerid,parentcontract_id,sys_partitionid,sys_recmodelversion,role,rquid,type,object_id) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$15,$14)"
+      }
+    },
+    {
+      "id": "queries.slow_execution",
+      "category": "queries",
+      "severity": "warning",
+      "message": "statecontracts/as_admin: total=723.4s, calls=23999073\n  select p1_0.object_id from statecontracts.t_participant p1_0 where p1_0.inn is not null and p1_0.inn=$1 and p1_0.pare...",
+      "details": {
+        "hexqueryid": "d1cf715414ffc2ac",
+        "mean_exec_time": 0.03,
+        "max_exec_time": 61.43,
+        "total_time": 723.35,
+        "calls": 23999073,
+        "query_text": "select p1_0.object_id from statecontracts.t_participant p1_0 where p1_0.inn is not null and p1_0.inn=$1 and p1_0.parentcontract_id is not null and p1_0.parentcontract_id=$2"
+      }
+    },
+    {
+      "id": "queries.slow_execution",
+      "category": "queries",
+      "severity": "warning",
+      "message": "statecontracts/as_admin: total=20024.2s, calls=144991055\n  insert into statecontracts.t_value (chgcnt,date_,inn,sys_isdeleted,kpp,sys_lastchangedate,level_entityid,metrictype_e...",
+      "details": {
+        "hexqueryid": "d5e326dff67d955a",
+        "mean_exec_time": 0.14,
+        "max_exec_time": 59.58,
+        "total_time": 20024.23,
+        "calls": 144991055,
+        "query_text": "insert into statecontracts.t_value (chgcnt,date_,inn,sys_isdeleted,kpp,sys_lastchangedate,level_entityid,metrictype_entityid,offflag,sys_ownerid,sys_partitionid,sys_recmodelversion,rquid,sourcedatetime,value_,type,object_id) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,'Value',$16)"
+      }
+    },
+    {
+      "id": "queries.slow_execution",
+      "category": "queries",
+      "severity": "warning",
+      "message": "statecontracts/as_admin: total=2888.0s, calls=11999535\n  insert into statecontracts.t_contracts (chgcnt,claimed,contractid,customerinn,customername,enddate,fined,sys_isdelete...",
+      "details": {
+        "hexqueryid": "3f7ffea106f6e78e",
+        "mean_exec_time": 0.24,
+        "max_exec_time": 57.83,
+        "total_time": 2888.04,
+        "calls": 11999535,
+        "query_text": "insert into statecontracts.t_contracts (chgcnt,claimed,contractid,customerinn,customername,enddate,fined,sys_isdeleted,sys_lastchangedate,number_,offflag,sys_ownerid,sys_partitionid,purchasetype,sys_recmodelversion,rquid,sourcedatetime,startdate,startyear,status,subject,sum_,supplierinn,suppliername,terminationdate,terminationkind,terminationreason,type,object_id) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$29,$28)"
+      }
+    },
+    {
+      "id": "queries.slow_execution",
+      "category": "queries",
+      "severity": "warning",
+      "message": "statecontracts/as_admin: total=1373.1s, calls=11999539\n  INSERT INTO statecontracts.T_REPL_AGGLOCK_CONTRACTS (rootid, siversion, guid, version, sys_lastchangedate) VALUES ($1...",
+      "details": {
+        "hexqueryid": "5925970c215e2e8a",
+        "mean_exec_time": 0.11,
+        "max_exec_time": 51.97,
+        "total_time": 1373.14,
+        "calls": 11999539,
+        "query_text": "INSERT INTO statecontracts.T_REPL_AGGLOCK_CONTRACTS (rootid, siversion, guid, version, sys_lastchangedate) VALUES ($1, $2, $3, $4, LOCALTIMESTAMP) ON CONFLICT (rootid) DO NOTHING RETURNING \"sys_lastchangedate\""
+      }
+    },
+    {
+      "id": "queries.slow_execution",
+      "category": "queries",
+      "severity": "warning",
+      "message": "statecontracts/as_admin: total=15378.4s, calls=144989282\n  INSERT INTO statecontracts.T_REPL_AGGLOCK_VALUE (rootid, siversion, guid, version, sys_lastchangedate) VALUES ($1, $2...",
+      "details": {
+        "hexqueryid": "31df6528995548cf",
+        "mean_exec_time": 0.11,
+        "max_exec_time": 51.52,
+        "total_time": 15378.41,
+        "calls": 144989282,
+        "query_text": "INSERT INTO statecontracts.T_REPL_AGGLOCK_VALUE (rootid, siversion, guid, version, sys_lastchangedate) VALUES ($1, $2, $3, $4, LOCALTIMESTAMP) ON CONFLICT (rootid) DO NOTHING RETURNING \"sys_lastchangedate\""
+      }
+    },
+    {
+      "id": "autovacuum.table_high_dead_pct",
+      "category": "autovacuum",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.sample_stat_tables: dead_pct=16.5%, n_dead=112895, last_autovacuum=never",
+      "details": {
+        "dead_pct": 16.53657
+      }
+    },
+    {
+      "id": "autovacuum.table_high_dead_pct",
+      "category": "autovacuum",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.sample_stat_tables_total: dead_pct=16.4%, n_dead=5688, last_autovacuum=never",
+      "details": {
+        "dead_pct": 16.438356
+      }
+    },
+    {
+      "id": "autovacuum.table_high_dead_pct",
+      "category": "autovacuum",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.sample_kcache: dead_pct=16.0%, n_dead=40596, last_autovacuum=never",
+      "details": {
+        "dead_pct": 15.99061
+      }
+    },
+    {
+      "id": "autovacuum.table_high_dead_pct",
+      "category": "autovacuum",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.sample_stat_indexes: dead_pct=15.8%, n_dead=44728, last_autovacuum=never",
+      "details": {
+        "dead_pct": 15.773567
+      }
+    },
+    {
+      "id": "autovacuum.table_high_dead_pct",
+      "category": "autovacuum",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.sample_statements: dead_pct=15.7%, n_dead=43183, last_autovacuum=never",
+      "details": {
+        "dead_pct": 15.742982
+      }
+    },
+    {
+      "id": "wal.buffers_full",
+      "category": "wal",
+      "severity": "warning",
+      "message": "wal_buffers_full: 664448 (threshold 1000)",
+      "details": {}
+    },
+    {
+      "id": "wal.backend_writes_high",
+      "category": "wal",
+      "severity": "warning",
+      "message": "Backend buffers written (21842039) exceed checkpoint buffers written (11698150)",
+      "details": {
+        "buffers_backend": 21842039,
+        "buffers_checkpoint": 11698150
+      }
+    },
+    {
+      "id": "cache.high_read_time",
+      "category": "cache",
+      "severity": "warning",
+      "message": "statecontracts: blk_read_time=260.5s (threshold 60s)",
+      "details": {}
+    },
+    {
+      "id": "cache.low_table_hit_ratio",
+      "category": "cache",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.sample_statements: table hit_pct=94.92% (threshold 95.0%)",
+      "details": {}
+    },
+    {
+      "id": "cache.low_table_hit_ratio",
+      "category": "cache",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.sample_kcache: table hit_pct=92.32% (threshold 95.0%)",
+      "details": {}
+    },
+    {
+      "id": "cache.low_table_hit_ratio",
+      "category": "cache",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.sample_stat_indexes: table hit_pct=93.56% (threshold 95.0%)",
+      "details": {}
+    },
+    {
+      "id": "cache.low_table_hit_ratio",
+      "category": "cache",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.last_stat_indexes_srv2: table hit_pct=52.66% (threshold 95.0%)",
+      "details": {}
+    },
+    {
+      "id": "cache.low_table_hit_ratio",
+      "category": "cache",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.last_stat_indexes_srv3: table hit_pct=52.68% (threshold 95.0%)",
+      "details": {}
+    },
+    {
+      "id": "sessions.high_idle_in_transaction",
+      "category": "sessions",
+      "severity": "critical",
+      "message": "statecontracts: idle_in_transaction_time=1372155.5s (threshold 3600s), idle_in_transaction_session_timeout=0",
+      "details": {
+        "idle_time": 1372155.52
+      }
+    },
+    {
+      "id": "sessions.connection_pressure",
+      "category": "sessions",
+      "severity": "warning",
+      "message": "postgres: connection pressure sessions=3241 (589% of max_connections=550)",
+      "details": {
+        "sessions": 3241,
+        "max_connections": 550,
+        "util_pct": 589.272727
+      }
+    },
+    {
+      "id": "sessions.connection_pressure",
+      "category": "sessions",
+      "severity": "warning",
+      "message": "statecontracts: connection pressure sessions=6475 (1177% of max_connections=550)",
+      "details": {
+        "sessions": 6475,
+        "max_connections": 550,
+        "util_pct": 1177.272727
+      }
+    },
+    {
+      "id": "sessions.idle_timeout_disabled",
+      "category": "sessions",
+      "severity": "critical",
+      "message": "idle_in_transaction_session_timeout=0 while idle in transaction time is high",
+      "details": {}
+    },
+    {
+      "id": "memory.statement_timeout_zero",
+      "category": "memory",
+      "severity": "warning",
+      "message": "statement_timeout=0 (queries may run indefinitely)",
+      "details": {}
+    },
+    {
+      "id": "memory.lock_timeout_zero",
+      "category": "memory",
+      "severity": "warning",
+      "message": "lock_timeout=0 (no protection against lock waits)",
+      "details": {}
+    },
+    {
+      "id": "io.wal_heavy_query",
+      "category": "io",
+      "severity": "warning",
+      "message": "statecontracts/as_admin: wal=105.9GB, shared_blks_dirtied=5802883\n  insert into statecontracts.t_value (chgcnt,date_,inn,sys_isdeleted,kpp,sys_lastchangedate,level_entityid,metrictype_e...",
+      "details": {
+        "hexqueryid": "d5e326dff67d955a",
+        "wal_bytes": 113755959127.0,
+        "io_time": 0.0,
+        "query_text": "insert into statecontracts.t_value (chgcnt,date_,inn,sys_isdeleted,kpp,sys_lastchangedate,level_entityid,metrictype_entityid,offflag,sys_ownerid,sys_partitionid,sys_recmodelversion,rquid,sourcedatetime,value_,type,object_id) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,'Value',$16)"
+      }
+    },
+    {
+      "id": "io.wal_heavy_query",
+      "category": "io",
+      "severity": "warning",
+      "message": "statecontracts/as_admin: wal=46.0GB, shared_blks_dirtied=5763415\n  insert into statecontracts.t_contracts (chgcnt,claimed,contractid,customerinn,customername,enddate,fined,sys_isdelete...",
+      "details": {
+        "hexqueryid": "3f7ffea106f6e78e",
+        "wal_bytes": 49338477696.0,
+        "io_time": 0.0,
+        "query_text": "insert into statecontracts.t_contracts (chgcnt,claimed,contractid,customerinn,customername,enddate,fined,sys_isdeleted,sys_lastchangedate,number_,offflag,sys_ownerid,sys_partitionid,purchasetype,sys_recmodelversion,rquid,sourcedatetime,startdate,startyear,status,subject,sum_,supplierinn,suppliername,terminationdate,terminationkind,terminationreason,type,object_id) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$29,$28)"
+      }
+    },
+    {
+      "id": "io.wal_heavy_query",
+      "category": "io",
+      "severity": "warning",
+      "message": "statecontracts/as_admin: wal=44.2GB, shared_blks_dirtied=3634005\n  INSERT INTO statecontracts.T_REPL_AGGLOCK_VALUE (rootid, siversion, guid, version, sys_lastchangedate) VALUES ($1, $2...",
+      "details": {
+        "hexqueryid": "31df6528995548cf",
+        "wal_bytes": 47410778021.0,
+        "io_time": 0.0,
+        "query_text": "INSERT INTO statecontracts.T_REPL_AGGLOCK_VALUE (rootid, siversion, guid, version, sys_lastchangedate) VALUES ($1, $2, $3, $4, LOCALTIMESTAMP) ON CONFLICT (rootid) DO NOTHING RETURNING \"sys_lastchangedate\""
+      }
+    },
+    {
+      "id": "io.wal_heavy_query",
+      "category": "io",
+      "severity": "warning",
+      "message": "statecontracts/as_admin: wal=29.2GB, shared_blks_dirtied=2348496\n  insert into statecontracts.t_participant (aggregateroot_id,chgcnt,inn,sys_isdeleted,sys_lastchangedate,name,offflag,s...",
+      "details": {
+        "hexqueryid": "37b83dead5b5b9e9",
+        "wal_bytes": 31309310652.0,
+        "io_time": 0.0,
+        "query_text": "insert into statecontracts.t_participant (aggregateroot_id,chgcnt,inn,sys_isdeleted,sys_lastchangedate,name,offflag,sys_ownerid,parentcontract_id,sys_partitionid,sys_recmodelversion,role,rquid,type,object_id) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$15,$14)"
+      }
+    },
+    {
+      "id": "io.high_heap_reads",
+      "category": "io",
+      "severity": "warning",
+      "message": "statecontracts.statecontracts.t_contracts: heap_blks_read=4806511",
+      "details": {
+        "heap_blks_read": 4806511
+      }
+    },
+    {
+      "id": "io.high_heap_reads",
+      "category": "io",
+      "severity": "warning",
+      "message": "statecontracts.pg_toast.pg_toast_76725: heap_blks_read=4699490",
+      "details": {
+        "heap_blks_read": 4699490
+      }
+    },
+    {
+      "id": "io.high_heap_reads",
+      "category": "io",
+      "severity": "warning",
+      "message": "statecontracts.statecontracts.t_value: heap_blks_read=4339914",
+      "details": {
+        "heap_blks_read": 4339914
+      }
+    },
+    {
+      "id": "io.high_heap_reads",
+      "category": "io",
+      "severity": "warning",
+      "message": "statecontracts.statecontracts.t_repl_agglock_value: heap_blks_read=4068522",
+      "details": {
+        "heap_blks_read": 4068522
+      }
+    },
+    {
+      "id": "io.high_heap_reads",
+      "category": "io",
+      "severity": "warning",
+      "message": "statecontracts.statecontracts.t_participant: heap_blks_read=3304492",
+      "details": {
+        "heap_blks_read": 3304492
+      }
+    },
+    {
+      "id": "io.high_seq_scan",
+      "category": "io",
+      "severity": "warning",
+      "message": "postgres.pg_catalog.pg_db_role_setting: seq_scan=3003316, idx_scan=121956, ratio=24.6",
+      "details": {
+        "seq_scan": 3003316
+      }
+    },
+    {
+      "id": "io.high_seq_scan",
+      "category": "io",
+      "severity": "warning",
+      "message": "statecontracts.pg_catalog.pg_db_role_setting: seq_scan=3003316, idx_scan=121956, ratio=24.6",
+      "details": {
+        "seq_scan": 3003316
+      }
+    },
+    {
+      "id": "io.high_heap_reads",
+      "category": "io",
+      "severity": "warning",
+      "message": "statecontracts.statecontracts.t_repl_agglock_contracts: heap_blks_read=787920",
+      "details": {
+        "heap_blks_read": 787920
+      }
+    },
+    {
+      "id": "io.high_seq_scan",
+      "category": "io",
+      "severity": "warning",
+      "message": "statecontracts.statecontracts.t_loadertask: seq_scan=117637, idx_scan=168, ratio=700.2",
+      "details": {
+        "seq_scan": 117637
+      }
+    },
+    {
+      "id": "io.high_seq_scan",
+      "category": "io",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.last_stat_database_srv4: seq_scan=28416, idx_scan=0, ratio=28416.0",
+      "details": {
+        "seq_scan": 28416
+      }
+    },
+    {
+      "id": "io.table_growth",
+      "category": "io",
+      "severity": "warning",
+      "message": "statecontracts.statecontracts.t_value: table growth=21 GB (≥100MB)",
+      "details": {
+        "growth_mb": 21504.0,
+        "kind": "table_growth"
+      }
+    },
+    {
+      "id": "io.table_growth",
+      "category": "io",
+      "severity": "warning",
+      "message": "statecontracts.statecontracts.t_repl_agglock_value: table growth=19 GB (≥100MB)",
+      "details": {
+        "growth_mb": 19456.0,
+        "kind": "table_growth"
+      }
+    },
+    {
+      "id": "io.table_growth",
+      "category": "io",
+      "severity": "warning",
+      "message": "statecontracts.statecontracts.t_contracts: table growth=14 GB (≥100MB)",
+      "details": {
+        "growth_mb": 14336.0,
+        "kind": "table_growth"
+      }
+    },
+    {
+      "id": "io.table_growth",
+      "category": "io",
+      "severity": "warning",
+      "message": "statecontracts.statecontracts.t_participant: table growth=9505 MB (≥100MB)",
+      "details": {
+        "growth_mb": 9505.0,
+        "kind": "table_growth"
+      }
+    },
+    {
+      "id": "io.table_growth",
+      "category": "io",
+      "severity": "warning",
+      "message": "statecontracts.statecontracts.t_repl_agglock_contracts: table growth=1617 MB (≥100MB)",
+      "details": {
+        "growth_mb": 1617.0,
+        "kind": "table_growth"
+      }
+    },
+    {
+      "id": "io.vacuum_ops_pressure",
+      "category": "io",
+      "severity": "warning",
+      "message": "statecontracts.statecontracts.t_dspc_sys_config: vacuum_ops=151, analyze_ops=150",
+      "details": {
+        "vacuum_ops": 151,
+        "analyze_ops": 150,
+        "kind": "vacuum_ops"
+      }
+    },
+    {
+      "id": "io.vacuum_ops_pressure",
+      "category": "io",
+      "severity": "warning",
+      "message": "statecontracts.pg_catalog.pg_statistic: vacuum_ops=56, analyze_ops=0",
+      "details": {
+        "vacuum_ops": 56,
+        "analyze_ops": 0,
+        "kind": "vacuum_ops"
+      }
+    },
+    {
+      "id": "io.vacuum_ops_pressure",
+      "category": "io",
+      "severity": "warning",
+      "message": "statecontracts.statecontracts.t_repl_agglock_commonparam: vacuum_ops=49, analyze_ops=76",
+      "details": {
+        "vacuum_ops": 49,
+        "analyze_ops": 76,
+        "kind": "vacuum_ops"
+      }
+    },
+    {
+      "id": "io.vacuum_ops_pressure",
+      "category": "io",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.last_stat_tables_srv4: vacuum_ops=36, analyze_ops=66",
+      "details": {
+        "vacuum_ops": 36,
+        "analyze_ops": 66,
+        "kind": "vacuum_ops"
+      }
+    },
+    {
+      "id": "io.vacuum_ops_pressure",
+      "category": "io",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.last_stat_kcache_srv5: vacuum_ops=36, analyze_ops=66",
+      "details": {
+        "vacuum_ops": 36,
+        "analyze_ops": 66,
+        "kind": "vacuum_ops"
+      }
+    },
+    {
+      "id": "io.vacuum_ops_pressure",
+      "category": "io",
+      "severity": "warning",
+      "message": "statecontracts.statecontracts.t_value: vacuum_ops=35, analyze_ops=64",
+      "details": {
+        "vacuum_ops": 35,
+        "analyze_ops": 64,
+        "kind": "vacuum_ops"
+      }
+    },
+    {
+      "id": "io.vacuum_ops_pressure",
+      "category": "io",
+      "severity": "warning",
+      "message": "statecontracts.statecontracts.t_repl_agglock_value: vacuum_ops=35, analyze_ops=64",
+      "details": {
+        "vacuum_ops": 35,
+        "analyze_ops": 64,
+        "kind": "vacuum_ops"
+      }
+    },
+    {
+      "id": "io.vacuum_ops_pressure",
+      "category": "io",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.last_stat_indexes_srv4: vacuum_ops=35, analyze_ops=66",
+      "details": {
+        "vacuum_ops": 35,
+        "analyze_ops": 66,
+        "kind": "vacuum_ops"
+      }
+    },
+    {
+      "id": "io.vacuum_ops_pressure",
+      "category": "io",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.last_stat_indexes_srv5: vacuum_ops=35, analyze_ops=66",
+      "details": {
+        "vacuum_ops": 35,
+        "analyze_ops": 66,
+        "kind": "vacuum_ops"
+      }
+    },
+    {
+      "id": "io.vacuum_ops_pressure",
+      "category": "io",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.last_stat_tables_srv5: vacuum_ops=35, analyze_ops=66",
+      "details": {
+        "vacuum_ops": 35,
+        "analyze_ops": 66,
+        "kind": "vacuum_ops"
+      }
+    },
+    {
+      "id": "io.unused_index",
+      "category": "io",
+      "severity": "warning",
+      "message": "Unused index statecontracts.statecontracts.t_value.i_value_metrictype: size=1537 MB",
+      "details": {}
+    },
+    {
+      "id": "io.unused_index",
+      "category": "io",
+      "severity": "warning",
+      "message": "Unused index statecontracts.statecontracts.t_value.i_value_level: size=1506 MB",
+      "details": {}
+    },
+    {
+      "id": "io.unused_index",
+      "category": "io",
+      "severity": "warning",
+      "message": "Unused index statecontracts.statecontracts.t_value.i_value_rquid: size=1414 MB",
+      "details": {}
+    },
+    {
+      "id": "io.unused_index",
+      "category": "io",
+      "severity": "warning",
+      "message": "Unused index statecontracts.statecontracts.t_value.i_value_sourcedatetime: size=1325 MB",
+      "details": {}
+    },
+    {
+      "id": "io.unused_index",
+      "category": "io",
+      "severity": "warning",
+      "message": "Unused index statecontracts.statecontracts.t_value.i_value_type: size=1325 MB",
+      "details": {}
+    },
+    {
+      "id": "io.unused_index",
+      "category": "io",
+      "severity": "warning",
+      "message": "Unused index statecontracts.statecontracts.t_participant.i_participant_aggregateroot_id: size=1050 MB",
+      "details": {}
+    },
+    {
+      "id": "io.unused_index",
+      "category": "io",
+      "severity": "warning",
+      "message": "Unused index statecontracts.statecontracts.t_participant.t_participant_parentcontract_id_idx: size=1050 MB",
+      "details": {}
+    },
+    {
+      "id": "io.unused_index",
+      "category": "io",
+      "severity": "warning",
+      "message": "Unused index statecontracts.statecontracts.t_participant.i_participant_rquid: size=254 MB",
+      "details": {}
+    },
+    {
+      "id": "io.unused_index",
+      "category": "io",
+      "severity": "warning",
+      "message": "Unused index statecontracts.statecontracts.t_participant.i_participant_type: size=243 MB",
+      "details": {}
+    },
+    {
+      "id": "io.unused_index",
+      "category": "io",
+      "severity": "warning",
+      "message": "Unused index statecontracts.statecontracts.t_contracts.i_contracts_type: size=93 MB",
+      "details": {}
+    },
+    {
+      "id": "db.statement_dominance",
+      "category": "io",
+      "severity": "warning",
+      "message": "statecontracts: dominates statement time 98.6% (total_exec_time=56520.08)",
+      "details": {
+        "dominance_pct": 98.649729,
+        "kind": "db_dominance"
+      }
+    },
+    {
+      "id": "disk.tablespace_growth",
+      "category": "disk",
+      "severity": "warning",
+      "message": "Tablespace statecontracts: size_delta=135 GB (size=135 GB, threshold 500MB)",
+      "details": {
+        "size_delta_mb": 138240.0,
+        "tablespacename": "statecontracts"
+      }
+    }
+  ],
+  "summary": {
+    "total_findings": 75,
+    "analysis_count": 1
+  }
+}

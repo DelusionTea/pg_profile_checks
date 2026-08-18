@@ -7,8 +7,11 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from pgprofile_contracts import validate_contract_payload
+
 
 def write_json_output(data: dict[str, Any], *, output: Path | None) -> None:
+    validate_contract_payload(data)
     text = json.dumps(data, ensure_ascii=False, indent=2)
     if output:
         output.parent.mkdir(parents=True, exist_ok=True)

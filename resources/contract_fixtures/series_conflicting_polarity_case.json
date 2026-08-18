@@ -1,0 +1,26 @@
+{
+  "type": "nt_runs_analysis",
+  "reports": [
+    { "label": "r1" },
+    { "label": "r2" }
+  ],
+  "pair_analyses": [
+    {
+      "run_a": "r1",
+      "run_b": "r2",
+      "guc_impacts": [
+        {
+          "guc": "checkpoint_completion_target",
+          "value_from": "0.5",
+          "value_to": "0.7",
+          "direction": "increased",
+          "correlated_metrics": [
+            { "metric": "checkpoint_write_time", "delta_pct": 54.4, "improved": false },
+            { "metric": "wal_buffers_full", "delta_pct": -10.0, "improved": true },
+            { "metric": "checkpoints_req", "delta_pct": -12.0, "improved": true }
+          ]
+        }
+      ]
+    }
+  ]
+}

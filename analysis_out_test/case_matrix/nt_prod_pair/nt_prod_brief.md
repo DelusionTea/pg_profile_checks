@@ -1,0 +1,164 @@
+# NT vs PROD Validation Brief
+
+settings_guc_valid: false
+settings_critical_count: 6
+settings_informational_count: 2
+volume_ops_diffs: 60 (informational — WAL/DML volume, expected with different load)
+performance_warnings: 36 (threshold >= 5%)
+
+- NT: pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html
+  server: tsldd-pprb01138.delta.sbrf.ru
+  interval: 2026-08-11 16:30:02+03 .. 2026-08-12 09:00:02+03 (16.5 h)
+- PROD: pgprofile_srv=10_3_81_94_from=2026_08_12_16_00_to=2026_08_13_08.html
+  server: tsldd-pprb01138.delta.sbrf.ru
+  interval: 2026-08-12 16:00:02+03 .. 2026-08-13 08:30:02+03 (16.5 h)
+
+## Critical GUC differences
+- DIFFER `commit_timestamp_buffers`: NT='976' PROD='1024'
+- DIFFER `shared_buffers`: NT='504320' PROD='537600'
+- DIFFER `shared_memory_size`: NT='4452' PROD='4724'
+- DIFFER `shared_memory_size_in_huge_pages`: NT='2226' PROD='2362'
+- DIFFER `subtransaction_buffers`: NT='976' PROD='1024'
+- DIFFER `transaction_buffers`: NT='976' PROD='1024'
+
+## Informational settings (runtime metadata — not blocking)
+- DIFFER `pg_conf_load_time`: NT='2026-08-10 12:11:58.339478+03' PROD='2026-08-12 13:51:51.80184+03'
+- DIFFER `pg_postmaster_start_time`: NT='2026-08-10 12:10:53.521971+03' PROD='2026-08-12 13:50:49.898345+03'
+
+## Volume / operations (informational)
+- `Total.COMMIT`: NT=9.46M (573.23K/h) PROD=9.94M (602.69K/h) delta=+486.13K (+5.1%)
+- `Total.FETCH`: NT=157.64M (9.55M/h) PROD=149.00M (9.03M/h) delta=-8.64M (-5.5%)
+- `postgres.COMMIT`: NT=340.17K (20.62K/h) PROD=238.73K (14.47K/h) delta=-101.44K (-29.8%)
+- `postgres.FETCH`: NT=151.80M (9.20M/h) PROD=141.09M (8.55M/h) delta=-10.71M (-7.1%)
+- `statecontracts.COMMIT`: NT=9.12M (552.61K/h) PROD=9.71M (588.22K/h) delta=+587.57K (+6.4%)
+- `statecontracts.FETCH`: NT=5.84M (353.67K/h) PROD=7.91M (479.48K/h) delta=+2.08M (+35.6%)
+- `buffers_checkpoint`: NT=11.70M (708.98K/h) PROD=12.51M (758.12K/h) delta=+810.90K (+6.9%)
+- `checkpoints_req`: NT=39 (2.36/h) PROD=30 (1.82/h) delta=-9 (-23.1%)
+- `checkpoints_timed`: NT=7 (0.42/h) PROD=14 (0.85/h) delta=+7 (+100.0%)
+- `postgres.pg_catalog.pg_db_role_setting.seq_scan`: NT=3.00M (182.02K/h) PROD=1.82M (110.23K/h) delta=-1.18M (-39.4%)
+- `statecontracts.pg_catalog.pg_db_role_setting.seq_scan`: NT=3.00M (182.02K/h) PROD=1.82M (110.23K/h) delta=-1.18M (-39.4%)
+- `postgres.pg_catalog.pg_index.idx_scan`: NT=580.26K (35.17K/h) PROD=368.09K (22.31K/h) delta=-212.17K (-36.6%)
+- `statecontracts.pg_catalog.pg_database.seq_scan`: NT=241.50K (14.64K/h) PROD=42.59K (2.58K/h) delta=-198.91K (-82.4%)
+- `postgres.pg_catalog.pg_database.seq_scan`: NT=241.50K (14.64K/h) PROD=64.46K (3.91K/h) delta=-177.04K (-73.3%)
+- `statecontracts.pg_catalog.pg_database.idx_scan`: NT=189.88K (11.51K/h) PROD=34.03K (2.06K/h) delta=-155.85K (-82.1%)
+- `postgres.pg_catalog.pg_database.idx_scan`: NT=189.88K (11.51K/h) PROD=54.08K (3.28K/h) delta=-135.80K (-71.5%)
+- `statecontracts.pg_catalog.pg_attribute.idx_scan`: NT=568.98K (34.48K/h) PROD=689.49K (41.79K/h) delta=+120.52K (+21.2%)
+- `statecontracts.pg_catalog.pg_class.idx_scan`: NT=506.03K (30.67K/h) PROD=588.19K (35.65K/h) delta=+82.17K (+16.2%)
+- `statecontracts.pg_catalog.pg_statistic.idx_scan`: NT=1.10M (66.83K/h) PROD=1.17M (71.02K/h) delta=+69.09K (+6.3%)
+- `postgres.pgse_profile.last_stat_tables_srv4.idx_scan`: NT=239.74K (14.53K/h) PROD=221.68K (13.44K/h) delta=-18.05K (-7.5%)
+- `postgres.pg_catalog.pg_class.seq_scan`: NT=32.40K (1.96K/h) PROD=27.36K (1.66K/h) delta=-5.03K (-15.5%)
+- `postgres.pg_catalog.pg_index.seq_scan`: NT=7.37K (446.36/h) PROD=4.83K (292.85/h) delta=-2.53K (-34.4%)
+- `postgres.pgse_profile.sample_stat_tablespaces.idx_scan`: NT=12.68K (768.36/h) PROD=14.01K (848.79/h) delta=+1.33K (+10.5%)
+- `statecontracts.statecontracts.t_value.seq_scan`: NT=1.19K (71.88/h) PROD=68 (4.12/h) delta=-1.12K (-94.3%)
+
+## Performance warnings
+- `checkpoint_sync_time`: NT=3.5s (0.2s/h) PROD=4.0s (0.2s/h) delta=+0.5s (+13.6%)
+- `maxwritten_clean`: NT=80.73K (4.89K/h) PROD=63.11K (3.83K/h) delta=-17.61K (-21.8%)
+- `Total.idle_in_transaction_time`: NT=1372184.7s (83162.7s/h) PROD=1473020.1s (89273.9s/h) delta=+100835.3s (+7.3%)
+- `postgres.active_time`: NT=816.2s (49.5s/h) PROD=578.8s (35.1s/h) delta=-237.4s (-29.1%)
+- `postgres.session_time`: NT=544151.4s (32978.9s/h) PROD=443777.4s (26895.6s/h) delta=-100374.1s (-18.4%)
+- `statecontracts.idle_in_transaction_time`: NT=1372155.5s (83160.9s/h) PROD=1472990.9s (89272.2s/h) delta=+100835.4s (+7.3%)
+- `Total.blk_write_time`: NT=39.0s (2.4s/h) PROD=28.8s (1.7s/h) delta=-10.2s (-26.2%)
+- `postgres.blks_read`: NT=96.77K (5.86K/h) PROD=122.78K (7.44K/h) delta=+26.01K (+26.9%)
+- `postgres.blk_read_time`: NT=24.0s (1.5s/h) PROD=28.8s (1.7s/h) delta=+4.8s (+19.9%)
+- `postgres.blk_write_time`: NT=0.0s (0.0s/h) PROD=0.2s (0.0s/h) delta=+0.2s (+1600.0%)
+- `statecontracts.blk_read_time`: NT=260.5s (15.8s/h) PROD=244.7s (14.8s/h) delta=-15.8s (-6.0%)
+- `statecontracts.blk_write_time`: NT=39.0s (2.4s/h) PROD=28.7s (1.7s/h) delta=-10.4s (-26.6%)
+
+## SQL volume (informational)
+### statecontracts/as_admin
+SQL: select $3, t0.OBJECT_ID c2 from statecontracts.T_PARTICIPANT t0 where t0.RQUID &lt;> $1 limit $2
+- total_time: NT=26.5s (1.6s/h) PROD=25.0s (1.5s/h) delta=-1.5s (-5.7%)
+- wal_bytes: NT=642.13M (38.92M/h) PROD=- delta=-642.13M (-100.0%)
+
+### statecontracts/as_admin
+SQL: select $3, t0.OBJECT_ID c2 from statecontracts.T_CONTRACTS t0 where t0.RQUID &lt;> $1 limit $2
+- wal_bytes: NT=194.02M (11.76M/h) PROD=680.75M (41.26M/h) delta=+486.74M (+250.9%)
+
+### postgres/postgres
+SQL: SELECT pgse_profile.take_sample()
+- wal_bytes: NT=373.53M (22.64M/h) PROD=446.20M (27.04M/h) delta=+72.67M (+19.5%)
+
+### statecontracts/as_admin
+SQL: select $5, t0.OBJECT_ID c2, t0.LEVEL_ENTITYID c3 from statecontracts.T_VALUE t0 where ((t0.INN = ...
+- calls: NT=- PROD=147.07K (8.91K/h) delta=+147.07K
+- total_time: NT=- PROD=6.5s (0.4s/h) delta=+6.5s
+- shared_blks_read: NT=- PROD=24 (1.45/h) delta=+24
+
+### postgres/postgres
+SQL: select json_agg(row_to_json(tt)) from ( with wal_gen as ( WITH s AS (select setting as wal_keep_s...
+- calls: NT=- PROD=1 (0.06/h) delta=+1
+- total_time: NT=- PROD=0.0s (0.0s/h) delta=+0.0s
+- wal_bytes: NT=- PROD=127.75K (7.74K/h) delta=+127.75K
+- shared_blks_read: NT=- PROD=34 (2.06/h) delta=+34
+
+### statecontracts/as_admin
+SQL: TRUNCATE TABLE statecontracts.t_contracts CONTINUE IDENTITY RESTRICT
+- calls: NT=- PROD=1 (0.06/h) delta=+1
+- total_time: NT=- PROD=0.0s (0.0s/h) delta=+0.0s
+- wal_bytes: NT=- PROD=77.03K (4.67K/h) delta=+77.03K
+- shared_blks_read: NT=- PROD=33 (2/h) delta=+33
+
+### statecontracts/as_admin
+SQL: select $5, t0.OBJECT_ID c2, t0.VALUE_ c3, t0.METRICTYPE_ENTITYID c4 from statecontracts.T_VALUE t...
+- calls: NT=- PROD=60.99K (3.70K/h) delta=+60.99K
+- total_time: NT=- PROD=3.0s (0.2s/h) delta=+3.0s
+- shared_blks_read: NT=- PROD=4 (0.24/h) delta=+4
+
+### statecontracts/as_admin
+SQL: select $5, t0.OBJECT_ID c2, t0.DATE_ c3, t0.LEVEL_ENTITYID c4 from statecontracts.T_VALUE t0 wher...
+- calls: NT=- PROD=60.68K (3.68K/h) delta=+60.68K
+- total_time: NT=- PROD=2.7s (0.2s/h) delta=+2.7s
+- shared_blks_read: NT=- PROD=8 (0.48/h) delta=+8
+
+### postgres/"sa-d00000011757"
+SQL: WITH locks AS ( SELECT pid, locktype, mode, relation, page, tuple, virtualxid, transactionid, cla...
+- calls: NT=118.62K (7.19K/h) PROD=68.72K (4.16K/h) delta=-49.91K (-42.1%)
+- total_time: NT=270.8s (16.4s/h) PROD=156.7s (9.5s/h) delta=-114.1s (-42.1%)
+
+### postgres/"sa-d00000011757"
+SQL: SELECT schemaname, relname, vacuum_count, autovacuum_count FROM pg_stat_user_tables ORDER BY vacu...
+- calls: NT=5.94K (359.94/h) PROD=3.44K (208.73/h) delta=-2.50K (-42.0%)
+- total_time: NT=5.0s (0.3s/h) PROD=2.8s (0.2s/h) delta=-2.2s (-44.8%)
+- wal_bytes: NT=1.61K (97.45/h) PROD=39.45K (2.39K/h) delta=+37.84K (+2353.5%)
+
+## SQL performance warnings
+### statecontracts/as_admin
+- mean_exec_time: NT=26526.6ms PROD=25020.3ms delta=-1506.3ms (-5.7%)
+- max_exec_time: NT=26526.6ms PROD=25020.3ms delta=-1506.3ms (-5.7%)
+
+### postgres/postgres
+- max_exec_time: NT=12758.8ms PROD=11140.5ms delta=-1618.3ms (-12.7%)
+
+### statecontracts/as_admin
+- mean_exec_time: NT=- PROD=0.0ms delta=+0.0ms
+- max_exec_time: NT=- PROD=8.3ms delta=+8.3ms
+
+### postgres/postgres
+- mean_exec_time: NT=- PROD=21.6ms delta=+21.6ms
+- max_exec_time: NT=- PROD=21.6ms delta=+21.6ms
+
+### statecontracts/as_admin
+- mean_exec_time: NT=- PROD=15.0ms delta=+15.0ms
+- max_exec_time: NT=- PROD=15.0ms delta=+15.0ms
+
+### statecontracts/as_admin
+- mean_exec_time: NT=- PROD=0.1ms delta=+0.1ms
+- max_exec_time: NT=- PROD=8.8ms delta=+8.8ms
+
+### statecontracts/as_admin
+- mean_exec_time: NT=- PROD=0.0ms delta=+0.0ms
+- max_exec_time: NT=- PROD=7.7ms delta=+7.7ms
+
+### postgres/"sa-d00000011757"
+- max_exec_time: NT=51.4ms PROD=37.0ms delta=-14.4ms (-28.1%)
+
+### postgres/"sa-d00000011757"
+- max_exec_time: NT=8.8ms PROD=5.9ms delta=-2.9ms (-33.2%)
+
+### statecontracts/as_admin
+- mean_exec_time: NT=0.0ms PROD=- delta=-0.0ms (-100.0%)
+- max_exec_time: NT=0.8ms PROD=- delta=-0.8ms (-100.0%)
+
+## Verdict
+INVALID — align GUC Defined settings before trusting metrics.

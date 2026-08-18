@@ -1,0 +1,2273 @@
+{
+  "type": "influence_table_series",
+  "mode": "series",
+  "row_count": 4,
+  "run_identity": {
+    "mode": "series",
+    "reports": [
+      {
+        "label": "nt1",
+        "path": "/Users/svetlanachernysheva/Documents/pg_profile_checks/resources/pgprofile_srv=10_3_81_94_from=2026_07_31_09_00_to=2026_08_01_00.html",
+        "filename": "pgprofile_srv=10_3_81_94_from=2026_07_31_09_00_to=2026_08_01_00.html",
+        "meta": {
+          "path": "/Users/svetlanachernysheva/Documents/pg_profile_checks/resources/pgprofile_srv=10_3_81_94_from=2026_07_31_09_00_to=2026_08_01_00.html",
+          "filename": "pgprofile_srv=10_3_81_94_from=2026_07_31_09_00_to=2026_08_01_00.html",
+          "server": "10.3.81.94",
+          "from": "2026 07 31 09 00",
+          "to": "2026 08 01 00",
+          "version": "PostgreSQL 15.5 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 8.5.0 20210514 (Platform V SberLinux 8.5.0-28), 64-bit"
+        }
+      },
+      {
+        "label": "nt2",
+        "path": "/Users/svetlanachernysheva/Documents/pg_profile_checks/resources/pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html",
+        "filename": "pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html",
+        "meta": {
+          "path": "/Users/svetlanachernysheva/Documents/pg_profile_checks/resources/pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html",
+          "filename": "pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html",
+          "server": "10.3.81.94",
+          "from": "2026 08 11 16 30",
+          "to": "2026 08 12 09",
+          "version": "PostgreSQL 15.5 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 8.5.0 20210514 (Platform V SberLinux 8.5.0-28), 64-bit"
+        }
+      },
+      {
+        "label": "nt3",
+        "path": "/Users/svetlanachernysheva/Documents/pg_profile_checks/resources/pgprofile_srv=10_3_81_94_from=2026_08_12_16_00_to=2026_08_13_08.html",
+        "filename": "pgprofile_srv=10_3_81_94_from=2026_08_12_16_00_to=2026_08_13_08.html",
+        "meta": {
+          "path": "/Users/svetlanachernysheva/Documents/pg_profile_checks/resources/pgprofile_srv=10_3_81_94_from=2026_08_12_16_00_to=2026_08_13_08.html",
+          "filename": "pgprofile_srv=10_3_81_94_from=2026_08_12_16_00_to=2026_08_13_08.html",
+          "server": "10.3.81.94",
+          "from": "2026 08 12 16 00",
+          "to": "2026 08 13 08",
+          "version": "PostgreSQL 15.5 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 8.5.0 20210514 (Platform V SberLinux 8.5.0-28), 64-bit"
+        }
+      }
+    ]
+  },
+  "workload_match": {
+    "workload_match_score": 0.9364,
+    "level": "high",
+    "pair_scores": [
+      0.9364,
+      1.0
+    ],
+    "notes": "Минимальный балл по парам прогонов (худшая сопоставимость)."
+  },
+  "confidence_meta": {
+    "mode": "series",
+    "confidence": "medium",
+    "evidence_type": "probable",
+    "notes": "Confidence is aggregated from repeated pair evidence.",
+    "statistical": {
+      "stability_threshold": 0.7,
+      "noise_iqr_ratio_threshold": 1.0,
+      "min_pairs_for_proven": 3
+    }
+  },
+  "functional_summary": {
+    "total_pairs": 2,
+    "improved_pairs": 1,
+    "degraded_pairs": 1,
+    "neutral_pairs": 0,
+    "series_mode": "median+iqr"
+  },
+  "settings_table": {
+    "run_labels": [
+      "nt1",
+      "nt2",
+      "nt3"
+    ],
+    "rows": [
+      {
+        "parameter": "checkpoint_completion_target",
+        "values": {
+          "nt1": "0.5",
+          "nt2": "0.7",
+          "nt3": "0.7"
+        }
+      },
+      {
+        "parameter": "commit_timestamp_buffers",
+        "values": {
+          "nt1": "976",
+          "nt2": "976",
+          "nt3": "1024"
+        }
+      },
+      {
+        "parameter": "huge_pages",
+        "values": {
+          "nt1": "—",
+          "nt2": "on",
+          "nt3": "on"
+        }
+      },
+      {
+        "parameter": "max_wal_size",
+        "values": {
+          "nt1": "8192",
+          "nt2": "12288",
+          "nt3": "12288"
+        }
+      },
+      {
+        "parameter": "pg_conf_load_time",
+        "values": {
+          "nt1": "2026-07-29 18:13:55.220776+03",
+          "nt2": "2026-08-10 12:11:58.339478+03",
+          "nt3": "2026-08-12 13:51:51.80184+03"
+        }
+      },
+      {
+        "parameter": "pg_postmaster_start_time",
+        "values": {
+          "nt1": "2026-06-10 15:13:32.405098+03",
+          "nt2": "2026-08-10 12:10:53.521971+03",
+          "nt3": "2026-08-12 13:50:49.898345+03"
+        }
+      },
+      {
+        "parameter": "shared_buffers",
+        "values": {
+          "nt1": "504320",
+          "nt2": "504320",
+          "nt3": "537600"
+        }
+      },
+      {
+        "parameter": "shared_memory_size",
+        "values": {
+          "nt1": "4452",
+          "nt2": "4452",
+          "nt3": "4724"
+        }
+      },
+      {
+        "parameter": "shared_memory_size_in_huge_pages",
+        "values": {
+          "nt1": "2226",
+          "nt2": "2226",
+          "nt3": "2362"
+        }
+      },
+      {
+        "parameter": "subtransaction_buffers",
+        "values": {
+          "nt1": "976",
+          "nt2": "976",
+          "nt3": "1024"
+        }
+      },
+      {
+        "parameter": "transaction_buffers",
+        "values": {
+          "nt1": "976",
+          "nt2": "976",
+          "nt3": "1024"
+        }
+      }
+    ],
+    "equal_rows": [
+      {
+        "parameter": "archive_command",
+        "values": {
+          "nt1": "/opt/pangolin-backup-tools/bin/pg_probackup archive-push -B /pgarclogs/05 --instance pprb_test-5fr75l --wal-file-path=%p --wal-file-name=%f --compress --overwrite -j 4 --batch-size=100",
+          "nt2": "/opt/pangolin-backup-tools/bin/pg_probackup archive-push -B /pgarclogs/05 --instance pprb_test-5fr75l --wal-file-path=%p --wal-file-name=%f --compress --overwrite -j 4 --batch-size=100",
+          "nt3": "/opt/pangolin-backup-tools/bin/pg_probackup archive-push -B /pgarclogs/05 --instance pprb_test-5fr75l --wal-file-path=%p --wal-file-name=%f --compress --overwrite -j 4 --batch-size=100"
+        }
+      },
+      {
+        "parameter": "archive_timeout",
+        "values": {
+          "nt1": "180",
+          "nt2": "180",
+          "nt3": "180"
+        }
+      },
+      {
+        "parameter": "authentication_max_workers",
+        "values": {
+          "nt1": "8",
+          "nt2": "8",
+          "nt3": "8"
+        }
+      },
+      {
+        "parameter": "authentication_port",
+        "values": {
+          "nt1": "5544",
+          "nt2": "5544",
+          "nt3": "5544"
+        }
+      },
+      {
+        "parameter": "autovacuum_naptime",
+        "values": {
+          "nt1": "10",
+          "nt2": "10",
+          "nt3": "10"
+        }
+      },
+      {
+        "parameter": "autovacuum_vacuum_cost_delay",
+        "values": {
+          "nt1": "10",
+          "nt2": "10",
+          "nt3": "10"
+        }
+      },
+      {
+        "parameter": "autovacuum_vacuum_cost_limit",
+        "values": {
+          "nt1": "1000",
+          "nt2": "1000",
+          "nt3": "1000"
+        }
+      },
+      {
+        "parameter": "autovacuum_work_mem",
+        "values": {
+          "nt1": "163840",
+          "nt2": "163840",
+          "nt3": "163840"
+        }
+      },
+      {
+        "parameter": "checkpoint_timeout",
+        "values": {
+          "nt1": "1680",
+          "nt2": "1680",
+          "nt3": "1680"
+        }
+      },
+      {
+        "parameter": "client_encoding",
+        "values": {
+          "nt1": "UTF8",
+          "nt2": "UTF8",
+          "nt3": "UTF8"
+        }
+      },
+      {
+        "parameter": "cluster_name",
+        "values": {
+          "nt1": "pprb_test-5fr75l",
+          "nt2": "pprb_test-5fr75l",
+          "nt3": "pprb_test-5fr75l"
+        }
+      },
+      {
+        "parameter": "data_checksums",
+        "values": {
+          "nt1": "on",
+          "nt2": "on",
+          "nt3": "on"
+        }
+      },
+      {
+        "parameter": "debug_pretty_print",
+        "values": {
+          "nt1": "off",
+          "nt2": "off",
+          "nt3": "off"
+        }
+      },
+      {
+        "parameter": "default_text_search_config",
+        "values": {
+          "nt1": "pg_catalog.english",
+          "nt2": "pg_catalog.english",
+          "nt3": "pg_catalog.english"
+        }
+      },
+      {
+        "parameter": "disk_check_timeout",
+        "values": {
+          "nt1": "5",
+          "nt2": "5",
+          "nt3": "5"
+        }
+      },
+      {
+        "parameter": "disk_operation_timeout",
+        "values": {
+          "nt1": "3",
+          "nt2": "3",
+          "nt3": "3"
+        }
+      },
+      {
+        "parameter": "disk_retry_count",
+        "values": {
+          "nt1": "21",
+          "nt2": "21",
+          "nt3": "21"
+        }
+      },
+      {
+        "parameter": "effective_cache_size",
+        "values": {
+          "nt1": "1512960",
+          "nt2": "1512960",
+          "nt3": "1512960"
+        }
+      },
+      {
+        "parameter": "effective_io_concurrency",
+        "values": {
+          "nt1": "300",
+          "nt2": "300",
+          "nt3": "300"
+        }
+      },
+      {
+        "parameter": "enable_filesystem_checker",
+        "values": {
+          "nt1": "on",
+          "nt2": "on",
+          "nt3": "on"
+        }
+      },
+      {
+        "parameter": "enable_vault_params_cache",
+        "values": {
+          "nt1": "off",
+          "nt2": "off",
+          "nt3": "off"
+        }
+      },
+      {
+        "parameter": "enabled_extra_auth_methods",
+        "values": {
+          "nt1": "cert,md5,reject,scram-sha-256,ldap,2f-scram-sha-256,2f-ldap,gss",
+          "nt2": "cert,md5,reject,scram-sha-256,ldap,2f-scram-sha-256,2f-ldap,gss",
+          "nt3": "cert,md5,reject,scram-sha-256,ldap,2f-scram-sha-256,2f-ldap,gss"
+        }
+      },
+      {
+        "parameter": "enabled_sec_admin_extra_auth_methods",
+        "values": {
+          "nt1": "cert",
+          "nt2": "cert",
+          "nt3": "cert"
+        }
+      },
+      {
+        "parameter": "force_failover_timeout",
+        "values": {
+          "nt1": "95",
+          "nt2": "95",
+          "nt3": "95"
+        }
+      },
+      {
+        "parameter": "hot_standby_feedback",
+        "values": {
+          "nt1": "on",
+          "nt2": "on",
+          "nt3": "on"
+        }
+      },
+      {
+        "parameter": "lc_collate",
+        "values": {
+          "nt1": "en_US.UTF-8",
+          "nt2": "en_US.UTF-8",
+          "nt3": "en_US.UTF-8"
+        }
+      },
+      {
+        "parameter": "lc_ctype",
+        "values": {
+          "nt1": "en_US.UTF-8",
+          "nt2": "en_US.UTF-8",
+          "nt3": "en_US.UTF-8"
+        }
+      },
+      {
+        "parameter": "lc_messages",
+        "values": {
+          "nt1": "en_US.utf8",
+          "nt2": "en_US.utf8",
+          "nt3": "en_US.utf8"
+        }
+      },
+      {
+        "parameter": "lc_monetary",
+        "values": {
+          "nt1": "en_US.utf8",
+          "nt2": "en_US.utf8",
+          "nt3": "en_US.utf8"
+        }
+      },
+      {
+        "parameter": "lc_numeric",
+        "values": {
+          "nt1": "en_US.utf8",
+          "nt2": "en_US.utf8",
+          "nt3": "en_US.utf8"
+        }
+      },
+      {
+        "parameter": "lc_time",
+        "values": {
+          "nt1": "en_US.utf8",
+          "nt2": "en_US.utf8",
+          "nt3": "en_US.utf8"
+        }
+      },
+      {
+        "parameter": "listen_addresses",
+        "values": {
+          "nt1": "0.0.0.0",
+          "nt2": "0.0.0.0",
+          "nt3": "0.0.0.0"
+        }
+      },
+      {
+        "parameter": "log_autovacuum_min_duration",
+        "values": {
+          "nt1": "60000",
+          "nt2": "60000",
+          "nt3": "60000"
+        }
+      },
+      {
+        "parameter": "log_connections",
+        "values": {
+          "nt1": "on",
+          "nt2": "on",
+          "nt3": "on"
+        }
+      },
+      {
+        "parameter": "log_disconnections",
+        "values": {
+          "nt1": "on",
+          "nt2": "on",
+          "nt3": "on"
+        }
+      },
+      {
+        "parameter": "log_file_mode",
+        "values": {
+          "nt1": "420",
+          "nt2": "420",
+          "nt3": "420"
+        }
+      },
+      {
+        "parameter": "log_line_prefix",
+        "values": {
+          "nt1": "%t [%p]: [%l-1] app=%a,user=%u,db=%d,client=%h,type=%b",
+          "nt2": "%t [%p]: [%l-1] app=%a,user=%u,db=%d,client=%h,type=%b",
+          "nt3": "%t [%p]: [%l-1] app=%a,user=%u,db=%d,client=%h,type=%b"
+        }
+      },
+      {
+        "parameter": "log_lock_waits",
+        "values": {
+          "nt1": "on",
+          "nt2": "on",
+          "nt3": "on"
+        }
+      },
+      {
+        "parameter": "log_min_duration_statement",
+        "values": {
+          "nt1": "5000",
+          "nt2": "5000",
+          "nt3": "5000"
+        }
+      },
+      {
+        "parameter": "log_min_error_statement",
+        "values": {
+          "nt1": "warning",
+          "nt2": "warning",
+          "nt3": "warning"
+        }
+      },
+      {
+        "parameter": "log_replication_commands",
+        "values": {
+          "nt1": "on",
+          "nt2": "on",
+          "nt3": "on"
+        }
+      },
+      {
+        "parameter": "log_rotation_size",
+        "values": {
+          "nt1": "102400",
+          "nt2": "102400",
+          "nt3": "102400"
+        }
+      },
+      {
+        "parameter": "log_temp_files",
+        "values": {
+          "nt1": "0",
+          "nt2": "0",
+          "nt3": "0"
+        }
+      },
+      {
+        "parameter": "log_timezone",
+        "values": {
+          "nt1": "Europe/Moscow",
+          "nt2": "Europe/Moscow",
+          "nt3": "Europe/Moscow"
+        }
+      },
+      {
+        "parameter": "log_truncate_on_rotation",
+        "values": {
+          "nt1": "on",
+          "nt2": "on",
+          "nt3": "on"
+        }
+      },
+      {
+        "parameter": "logging_collector",
+        "values": {
+          "nt1": "on",
+          "nt2": "on",
+          "nt3": "on"
+        }
+      },
+      {
+        "parameter": "maintenance_work_mem",
+        "values": {
+          "nt1": "1613824",
+          "nt2": "1613824",
+          "nt3": "1613824"
+        }
+      },
+      {
+        "parameter": "max_connections",
+        "values": {
+          "nt1": "550",
+          "nt2": "550",
+          "nt3": "550"
+        }
+      },
+      {
+        "parameter": "max_parallel_workers",
+        "values": {
+          "nt1": "4",
+          "nt2": "4",
+          "nt3": "4"
+        }
+      },
+      {
+        "parameter": "max_parallel_workers_per_gather",
+        "values": {
+          "nt1": "8",
+          "nt2": "8",
+          "nt3": "8"
+        }
+      },
+      {
+        "parameter": "max_prepared_transactions",
+        "values": {
+          "nt1": "12",
+          "nt2": "12",
+          "nt3": "12"
+        }
+      },
+      {
+        "parameter": "max_stack_depth",
+        "values": {
+          "nt1": "2048",
+          "nt2": "2048",
+          "nt3": "2048"
+        }
+      },
+      {
+        "parameter": "max_worker_processes",
+        "values": {
+          "nt1": "32",
+          "nt2": "32",
+          "nt3": "32"
+        }
+      },
+      {
+        "parameter": "min_wal_size",
+        "values": {
+          "nt1": "2048",
+          "nt2": "2048",
+          "nt3": "2048"
+        }
+      },
+      {
+        "parameter": "password_policies_enable",
+        "values": {
+          "nt1": "on",
+          "nt2": "on",
+          "nt3": "on"
+        }
+      },
+      {
+        "parameter": "password_policy.allow_hashed_password",
+        "values": {
+          "nt1": "on",
+          "nt2": "on",
+          "nt3": "on"
+        }
+      },
+      {
+        "parameter": "password_policy.alpha_numeric",
+        "values": {
+          "nt1": "3",
+          "nt2": "3",
+          "nt3": "3"
+        }
+      },
+      {
+        "parameter": "password_policy.deduplicate_ssl_no_ssl_fail_auth_attepmts",
+        "values": {
+          "nt1": "on",
+          "nt2": "on",
+          "nt3": "on"
+        }
+      },
+      {
+        "parameter": "password_policy.grace_login_limit",
+        "values": {
+          "nt1": "0",
+          "nt2": "0",
+          "nt3": "0"
+        }
+      },
+      {
+        "parameter": "password_policy.grace_login_time_limit",
+        "values": {
+          "nt1": "3 days",
+          "nt2": "3 days",
+          "nt3": "3 days"
+        }
+      },
+      {
+        "parameter": "password_policy.illegal_values",
+        "values": {
+          "nt1": "on",
+          "nt2": "on",
+          "nt3": "on"
+        }
+      },
+      {
+        "parameter": "password_policy.in_history",
+        "values": {
+          "nt1": "4",
+          "nt2": "4",
+          "nt3": "4"
+        }
+      },
+      {
+        "parameter": "password_policy.lockout",
+        "values": {
+          "nt1": "off",
+          "nt2": "off",
+          "nt3": "off"
+        }
+      },
+      {
+        "parameter": "password_policy.max_age",
+        "values": {
+          "nt1": "0",
+          "nt2": "0",
+          "nt3": "0"
+        }
+      },
+      {
+        "parameter": "password_policy.max_failure",
+        "values": {
+          "nt1": "6",
+          "nt2": "6",
+          "nt3": "6"
+        }
+      },
+      {
+        "parameter": "password_policy.min_length",
+        "values": {
+          "nt1": "25",
+          "nt2": "25",
+          "nt3": "25"
+        }
+      },
+      {
+        "parameter": "password_policy.min_special_chars",
+        "values": {
+          "nt1": "1",
+          "nt2": "1",
+          "nt3": "1"
+        }
+      },
+      {
+        "parameter": "password_policy.min_uppercase",
+        "values": {
+          "nt1": "1",
+          "nt2": "1",
+          "nt3": "1"
+        }
+      },
+      {
+        "parameter": "password_policy.reuse_time",
+        "values": {
+          "nt1": "365 days",
+          "nt2": "365 days",
+          "nt3": "365 days"
+        }
+      },
+      {
+        "parameter": "password_policy.use_password_strength_estimator",
+        "values": {
+          "nt1": "on",
+          "nt2": "on",
+          "nt3": "on"
+        }
+      },
+      {
+        "parameter": "performance_insights.enable",
+        "values": {
+          "nt1": "on",
+          "nt2": "on",
+          "nt3": "on"
+        }
+      },
+      {
+        "parameter": "performance_insights.masking",
+        "values": {
+          "nt1": "on",
+          "nt2": "on",
+          "nt3": "on"
+        }
+      },
+      {
+        "parameter": "performance_insights.num_samples_in_ram",
+        "values": {
+          "nt1": "12",
+          "nt2": "12",
+          "nt3": "12"
+        }
+      },
+      {
+        "parameter": "performance_insights.sampling_period",
+        "values": {
+          "nt1": "5000",
+          "nt2": "5000",
+          "nt3": "5000"
+        }
+      },
+      {
+        "parameter": "pg_hint_plan.message_level",
+        "values": {
+          "nt1": "debug",
+          "nt2": "debug",
+          "nt3": "debug"
+        }
+      },
+      {
+        "parameter": "pg_hint_plan.parse_messages",
+        "values": {
+          "nt1": "warning",
+          "nt2": "warning",
+          "nt3": "warning"
+        }
+      },
+      {
+        "parameter": "pg_ident_conf",
+        "values": {
+          "nt1": "# PostgreSQL User Name Maps\n# =========================\n#\n# Refer to the PostgreSQL documentation, chapter \"Client\n# Authentication\" for a complete description.  A short synopsis\n# follows.\n#\n# This file controls PostgreSQL user name mapping.  It maps external\n# user names to their corresponding PostgreSQL user names.  Records\n# are of the form:\n#\n# MAPNAME  SYSTEM-USERNAME  PG-USERNAME\n#\n# (The uppercase quantities must be replaced by actual values.)\n#\n# MAPNAME is the (otherwise freely chosen) map name that was used in\n# pg_hba.conf.  SYSTEM-USERNAME is the detected user name of the\n# client.  PG-USERNAME is the requested PostgreSQL user name.  The\n# existence of a record specifies that SYSTEM-USERNAME may connect as\n# PG-USERNAME.\n#\n# If SYSTEM-USERNAME starts with a slash (/), it will be treated as a\n# regular expression.  Optionally this can contain a capture (a\n# parenthesized subexpression).  The substring matching the capture\n# will be substituted for \\1 (backslash-one) if present in\n# PG-USERNAME.\n#\n# Multiple maps may be specified in this file and used by pg_hba.conf.\n#\n# No map names are defined in the default configuration.  If all\n# system user names and PostgreSQL user names are the same, you don't\n# need anything in this file.\n#\n# This file is read on server startup and when the postmaster receives\n# a SIGHUP signal.  If you edit the file on a running system, you have\n# to SIGHUP the postmaster for the changes to take effect.  You can\n# use \"pg_ctl reload\" to do that.\n\n# Put your actual configuration here\n# ----------------------------------\n\n# MAPNAME       SYSTEM-USERNAME         PG-USERNAME",
+          "nt2": "# PostgreSQL User Name Maps\n# =========================\n#\n# Refer to the PostgreSQL documentation, chapter \"Client\n# Authentication\" for a complete description.  A short synopsis\n# follows.\n#\n# This file controls PostgreSQL user name mapping.  It maps external\n# user names to their corresponding PostgreSQL user names.  Records\n# are of the form:\n#\n# MAPNAME  SYSTEM-USERNAME  PG-USERNAME\n#\n# (The uppercase quantities must be replaced by actual values.)\n#\n# MAPNAME is the (otherwise freely chosen) map name that was used in\n# pg_hba.conf.  SYSTEM-USERNAME is the detected user name of the\n# client.  PG-USERNAME is the requested PostgreSQL user name.  The\n# existence of a record specifies that SYSTEM-USERNAME may connect as\n# PG-USERNAME.\n#\n# If SYSTEM-USERNAME starts with a slash (/), it will be treated as a\n# regular expression.  Optionally this can contain a capture (a\n# parenthesized subexpression).  The substring matching the capture\n# will be substituted for \\1 (backslash-one) if present in\n# PG-USERNAME.\n#\n# Multiple maps may be specified in this file and used by pg_hba.conf.\n#\n# No map names are defined in the default configuration.  If all\n# system user names and PostgreSQL user names are the same, you don't\n# need anything in this file.\n#\n# This file is read on server startup and when the postmaster receives\n# a SIGHUP signal.  If you edit the file on a running system, you have\n# to SIGHUP the postmaster for the changes to take effect.  You can\n# use \"pg_ctl reload\" to do that.\n\n# Put your actual configuration here\n# ----------------------------------\n\n# MAPNAME       SYSTEM-USERNAME         PG-USERNAME",
+          "nt3": "# PostgreSQL User Name Maps\n# =========================\n#\n# Refer to the PostgreSQL documentation, chapter \"Client\n# Authentication\" for a complete description.  A short synopsis\n# follows.\n#\n# This file controls PostgreSQL user name mapping.  It maps external\n# user names to their corresponding PostgreSQL user names.  Records\n# are of the form:\n#\n# MAPNAME  SYSTEM-USERNAME  PG-USERNAME\n#\n# (The uppercase quantities must be replaced by actual values.)\n#\n# MAPNAME is the (otherwise freely chosen) map name that was used in\n# pg_hba.conf.  SYSTEM-USERNAME is the detected user name of the\n# client.  PG-USERNAME is the requested PostgreSQL user name.  The\n# existence of a record specifies that SYSTEM-USERNAME may connect as\n# PG-USERNAME.\n#\n# If SYSTEM-USERNAME starts with a slash (/), it will be treated as a\n# regular expression.  Optionally this can contain a capture (a\n# parenthesized subexpression).  The substring matching the capture\n# will be substituted for \\1 (backslash-one) if present in\n# PG-USERNAME.\n#\n# Multiple maps may be specified in this file and used by pg_hba.conf.\n#\n# No map names are defined in the default configuration.  If all\n# system user names and PostgreSQL user names are the same, you don't\n# need anything in this file.\n#\n# This file is read on server startup and when the postmaster receives\n# a SIGHUP signal.  If you edit the file on a running system, you have\n# to SIGHUP the postmaster for the changes to take effect.  You can\n# use \"pg_ctl reload\" to do that.\n\n# Put your actual configuration here\n# ----------------------------------\n\n# MAPNAME       SYSTEM-USERNAME         PG-USERNAME"
+        }
+      },
+      {
+        "parameter": "pg_stat_kcache.linux_hz",
+        "values": {
+          "nt1": "1000000",
+          "nt2": "1000000",
+          "nt3": "1000000"
+        }
+      },
+      {
+        "parameter": "pgaudit.log",
+        "values": {
+          "nt1": "ddl, role, connection, protection, pg_background",
+          "nt2": "ddl, role, connection, protection, pg_background",
+          "nt3": "ddl, role, connection, protection, pg_background"
+        }
+      },
+      {
+        "parameter": "plan_cache_mode",
+        "values": {
+          "nt1": "force_custom_plan",
+          "nt2": "force_custom_plan",
+          "nt3": "force_custom_plan"
+        }
+      },
+      {
+        "parameter": "port",
+        "values": {
+          "nt1": "5433",
+          "nt2": "5433",
+          "nt3": "5433"
+        }
+      },
+      {
+        "parameter": "primary_slot_name",
+        "values": {
+          "nt1": "tsldd_pprb01138_delta_sbrf_ru",
+          "nt2": "tsldd_pprb01138_delta_sbrf_ru",
+          "nt3": "tsldd_pprb01138_delta_sbrf_ru"
+        }
+      },
+      {
+        "parameter": "psql_encrypt_password",
+        "values": {
+          "nt1": "on",
+          "nt2": "on",
+          "nt3": "on"
+        }
+      },
+      {
+        "parameter": "random_page_cost",
+        "values": {
+          "nt1": "2",
+          "nt2": "2",
+          "nt3": "2"
+        }
+      },
+      {
+        "parameter": "search_path",
+        "values": {
+          "nt1": "ext",
+          "nt2": "ext",
+          "nt3": "ext"
+        }
+      },
+      {
+        "parameter": "sec_admin_default_auth",
+        "values": {
+          "nt1": "",
+          "nt2": "",
+          "nt3": ""
+        }
+      },
+      {
+        "parameter": "server_encoding",
+        "values": {
+          "nt1": "UTF8",
+          "nt2": "UTF8",
+          "nt3": "UTF8"
+        }
+      },
+      {
+        "parameter": "server_se_version",
+        "values": {
+          "nt1": "Platform V Pangolin DB 6.6.1",
+          "nt2": "Platform V Pangolin DB 6.6.1",
+          "nt3": "Platform V Pangolin DB 6.6.1"
+        }
+      },
+      {
+        "parameter": "server_se_version_num",
+        "values": {
+          "nt1": "600060001",
+          "nt2": "600060001",
+          "nt3": "600060001"
+        }
+      },
+      {
+        "parameter": "ssl",
+        "values": {
+          "nt1": "on",
+          "nt2": "on",
+          "nt3": "on"
+        }
+      },
+      {
+        "parameter": "ssl_ca_file",
+        "values": {
+          "nt1": "/home/postgres/ssl/root.crt",
+          "nt2": "/home/postgres/ssl/root.crt",
+          "nt3": "/home/postgres/ssl/root.crt"
+        }
+      },
+      {
+        "parameter": "ssl_ca_path",
+        "values": {
+          "nt1": "/home/postgres/ssl/generate",
+          "nt2": "/home/postgres/ssl/generate",
+          "nt3": "/home/postgres/ssl/generate"
+        }
+      },
+      {
+        "parameter": "ssl_cert_file",
+        "values": {
+          "nt1": "/home/postgres/ssl/server.crt",
+          "nt2": "/home/postgres/ssl/server.crt",
+          "nt3": "/home/postgres/ssl/server.crt"
+        }
+      },
+      {
+        "parameter": "ssl_key_file",
+        "values": {
+          "nt1": "/home/postgres/ssl/server.key",
+          "nt2": "/home/postgres/ssl/server.key",
+          "nt3": "/home/postgres/ssl/server.key"
+        }
+      },
+      {
+        "parameter": "superuser_reserved_connections",
+        "values": {
+          "nt1": "10",
+          "nt2": "10",
+          "nt3": "10"
+        }
+      },
+      {
+        "parameter": "synchronous_standby_names",
+        "values": {
+          "nt1": "\"tsldd-pprb01136.delta.sbrf.ru\"",
+          "nt2": "\"tsldd-pprb01136.delta.sbrf.ru\"",
+          "nt3": "\"tsldd-pprb01136.delta.sbrf.ru\""
+        }
+      },
+      {
+        "parameter": "syslog_facility",
+        "values": {
+          "nt1": "local3",
+          "nt2": "local3",
+          "nt3": "local3"
+        }
+      },
+      {
+        "parameter": "syslog_ident",
+        "values": {
+          "nt1": "postgresql_se",
+          "nt2": "postgresql_se",
+          "nt3": "postgresql_se"
+        }
+      },
+      {
+        "parameter": "syslog_split_messages",
+        "values": {
+          "nt1": "off",
+          "nt2": "off",
+          "nt3": "off"
+        }
+      },
+      {
+        "parameter": "tcp_keepalives_idle",
+        "values": {
+          "nt1": "600",
+          "nt2": "600",
+          "nt3": "600"
+        }
+      },
+      {
+        "parameter": "timezone",
+        "values": {
+          "nt1": "Europe/Moscow",
+          "nt2": "Europe/Moscow",
+          "nt3": "Europe/Moscow"
+        }
+      },
+      {
+        "parameter": "timezone_abbreviations",
+        "values": {
+          "nt1": "Default",
+          "nt2": "Default",
+          "nt3": "Default"
+        }
+      },
+      {
+        "parameter": "track_io_timing",
+        "values": {
+          "nt1": "on",
+          "nt2": "on",
+          "nt3": "on"
+        }
+      },
+      {
+        "parameter": "vacuum_cost_page_dirty",
+        "values": {
+          "nt1": "10",
+          "nt2": "10",
+          "nt3": "10"
+        }
+      },
+      {
+        "parameter": "vacuum_cost_page_hit",
+        "values": {
+          "nt1": "0",
+          "nt2": "0",
+          "nt3": "0"
+        }
+      },
+      {
+        "parameter": "vacuum_cost_page_miss",
+        "values": {
+          "nt1": "1",
+          "nt2": "1",
+          "nt3": "1"
+        }
+      },
+      {
+        "parameter": "version",
+        "values": {
+          "nt1": "PostgreSQL 15.5 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 8.5.0 20210514 (Platform V SberLinux 8.5.0-28), 64-bit",
+          "nt2": "PostgreSQL 15.5 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 8.5.0 20210514 (Platform V SberLinux 8.5.0-28), 64-bit",
+          "nt3": "PostgreSQL 15.5 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 8.5.0 20210514 (Platform V SberLinux 8.5.0-28), 64-bit"
+        }
+      },
+      {
+        "parameter": "wal_buffers",
+        "values": {
+          "nt1": "2048",
+          "nt2": "2048",
+          "nt3": "2048"
+        }
+      },
+      {
+        "parameter": "wal_keep_size",
+        "values": {
+          "nt1": "8192",
+          "nt2": "8192",
+          "nt3": "8192"
+        }
+      },
+      {
+        "parameter": "wal_log_hints",
+        "values": {
+          "nt1": "on",
+          "nt2": "on",
+          "nt3": "on"
+        }
+      },
+      {
+        "parameter": "wal_receiver_status_interval",
+        "values": {
+          "nt1": "1",
+          "nt2": "1",
+          "nt3": "1"
+        }
+      },
+      {
+        "parameter": "wal_sync_method",
+        "values": {
+          "nt1": "fsync",
+          "nt2": "fsync",
+          "nt3": "fsync"
+        }
+      },
+      {
+        "parameter": "work_mem",
+        "values": {
+          "nt1": "16384",
+          "nt2": "16384",
+          "nt3": "16384"
+        }
+      }
+    ]
+  },
+  "metrics_table": {
+    "run_labels": [
+      "nt1",
+      "nt2",
+      "nt3"
+    ],
+    "pair_labels": [
+      "nt1->nt2",
+      "nt2->nt3"
+    ],
+    "rows": [
+      {
+        "metric": "cache.Total.blk_read_time",
+        "values": {
+          "nt1": 266.54,
+          "nt2": 284.46,
+          "nt3": null
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 17.91999999999996,
+            "delta_pct": 6.723193516920522
+          },
+          "nt2->nt3": null
+        },
+        "trend": "становится хуже"
+      },
+      {
+        "metric": "cache.Total.blk_write_time",
+        "values": {
+          "nt1": 28.44,
+          "nt2": 39.04,
+          "nt3": 28.83
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 10.599999999999998,
+            "delta_pct": 37.27144866385372
+          },
+          "nt2->nt3": {
+            "delta": -10.21,
+            "delta_pct": -26.152663934426233
+          }
+        },
+        "trend": "нестабильный результат"
+      },
+      {
+        "metric": "cache.postgres.blk_read_time",
+        "values": {
+          "nt1": 18.27,
+          "nt2": 23.99,
+          "nt3": 28.77
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 5.719999999999999,
+            "delta_pct": 31.308155446086474
+          },
+          "nt2->nt3": {
+            "delta": 4.780000000000001,
+            "delta_pct": 19.924968736973746
+          }
+        },
+        "trend": "становится хуже"
+      },
+      {
+        "metric": "cache.postgres.blk_write_time",
+        "values": {
+          "nt1": 0.03,
+          "nt2": 0.01,
+          "nt3": 0.17
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": -0.019999999999999997,
+            "delta_pct": -66.66666666666666
+          },
+          "nt2->nt3": {
+            "delta": 0.16,
+            "delta_pct": 1600.0
+          }
+        },
+        "trend": "нестабильный результат"
+      },
+      {
+        "metric": "cache.postgres.blks_read",
+        "values": {
+          "nt1": null,
+          "nt2": 96765.0,
+          "nt3": 122779.0
+        },
+        "deltas": {
+          "nt1->nt2": null,
+          "nt2->nt3": {
+            "delta": 26014.0,
+            "delta_pct": 26.883687283625278
+          }
+        },
+        "trend": "становится хуже"
+      },
+      {
+        "metric": "cache.statecontracts.blk_read_time",
+        "values": {
+          "nt1": null,
+          "nt2": 260.47,
+          "nt3": 244.72
+        },
+        "deltas": {
+          "nt1->nt2": null,
+          "nt2->nt3": {
+            "delta": -15.750000000000028,
+            "delta_pct": -6.046761623219575
+          }
+        },
+        "trend": "становится лучше"
+      },
+      {
+        "metric": "cache.statecontracts.blk_write_time",
+        "values": {
+          "nt1": 28.42,
+          "nt2": 39.03,
+          "nt3": 28.66
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 10.61,
+            "delta_pct": 37.33286418015482
+          },
+          "nt2->nt3": {
+            "delta": -10.370000000000001,
+            "delta_pct": -26.56930566231104
+          }
+        },
+        "trend": "нестабильный результат"
+      },
+      {
+        "metric": "cluster.buffers_checkpoint",
+        "values": {
+          "nt1": 16793607.0,
+          "nt2": 11698150.0,
+          "nt3": 12509051.0
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": -5095457.0,
+            "delta_pct": -30.341647270893024
+          },
+          "nt2->nt3": {
+            "delta": 810901.0,
+            "delta_pct": 6.931873843300009
+          }
+        },
+        "trend": "разнонаправленно, влияние не оценивается"
+      },
+      {
+        "metric": "cluster.checkpoint_sync_time",
+        "values": {
+          "nt1": 4.82,
+          "nt2": 3.52,
+          "nt3": 4.0
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": -1.3000000000000003,
+            "delta_pct": -26.970954356846477
+          },
+          "nt2->nt3": {
+            "delta": 0.48,
+            "delta_pct": 13.636363636363637
+          }
+        },
+        "trend": "нестабильный результат"
+      },
+      {
+        "metric": "cluster.checkpoint_write_time",
+        "values": {
+          "nt1": 25186.98,
+          "nt2": 38898.35,
+          "nt3": null
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 13711.369999999999,
+            "delta_pct": 54.43832488055337
+          },
+          "nt2->nt3": null
+        },
+        "trend": "становится хуже"
+      },
+      {
+        "metric": "cluster.checkpoints_req",
+        "values": {
+          "nt1": 56.0,
+          "nt2": 39.0,
+          "nt3": 30.0
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": -17.0,
+            "delta_pct": -30.357142857142858
+          },
+          "nt2->nt3": {
+            "delta": -9.0,
+            "delta_pct": -23.076923076923077
+          }
+        },
+        "trend": "становится лучше"
+      },
+      {
+        "metric": "cluster.checkpoints_timed",
+        "values": {
+          "nt1": 2.0,
+          "nt2": 7.0,
+          "nt3": 14.0
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 5.0,
+            "delta_pct": 250.0
+          },
+          "nt2->nt3": {
+            "delta": 7.0,
+            "delta_pct": 100.0
+          }
+        },
+        "trend": "становится хуже"
+      },
+      {
+        "metric": "cluster.maxwritten_clean",
+        "values": {
+          "nt1": 35836.0,
+          "nt2": 80728.0,
+          "nt3": 63113.0
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 44892.0,
+            "delta_pct": 125.27067753097444
+          },
+          "nt2->nt3": {
+            "delta": -17615.0,
+            "delta_pct": -21.820186304627885
+          }
+        },
+        "trend": "нестабильный результат"
+      },
+      {
+        "metric": "dml.Total.COMMIT",
+        "values": {
+          "nt1": null,
+          "nt2": 9458236.0,
+          "nt3": 9944368.0
+        },
+        "deltas": {
+          "nt1->nt2": null,
+          "nt2->nt3": {
+            "delta": 486132.0,
+            "delta_pct": 5.139774478031633
+          }
+        },
+        "trend": "рост, влияние не оценивается"
+      },
+      {
+        "metric": "dml.Total.DELETE",
+        "values": {
+          "nt1": 113183.0,
+          "nt2": 149889.0,
+          "nt3": null
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 36706.0,
+            "delta_pct": 32.430665382610464
+          },
+          "nt2->nt3": null
+        },
+        "trend": "рост, влияние не оценивается"
+      },
+      {
+        "metric": "dml.Total.FETCH",
+        "values": {
+          "nt1": 136390589.0,
+          "nt2": 157636191.0,
+          "nt3": 148999459.0
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 21245602.0,
+            "delta_pct": 15.577029291955034
+          },
+          "nt2->nt3": {
+            "delta": -8636732.0,
+            "delta_pct": -5.478901732661125
+          }
+        },
+        "trend": "разнонаправленно, влияние не оценивается"
+      },
+      {
+        "metric": "dml.Total.ROLLBACK",
+        "values": {
+          "nt1": 2700.0,
+          "nt2": 2970.0,
+          "nt3": null
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 270.0,
+            "delta_pct": 10.0
+          },
+          "nt2->nt3": null
+        },
+        "trend": "становится хуже"
+      },
+      {
+        "metric": "dml.postgres.COMMIT",
+        "values": {
+          "nt1": 309093.0,
+          "nt2": 340165.0,
+          "nt3": 238729.0
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 31072.0,
+            "delta_pct": 10.052637879214346
+          },
+          "nt2->nt3": {
+            "delta": -101436.0,
+            "delta_pct": -29.819646348095777
+          }
+        },
+        "trend": "разнонаправленно, влияние не оценивается"
+      },
+      {
+        "metric": "dml.postgres.DELETE",
+        "values": {
+          "nt1": 108513.0,
+          "nt2": 145237.0,
+          "nt3": null
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 36724.0,
+            "delta_pct": 33.84294969266355
+          },
+          "nt2->nt3": null
+        },
+        "trend": "рост, влияние не оценивается"
+      },
+      {
+        "metric": "dml.postgres.FETCH",
+        "values": {
+          "nt1": 130237462.0,
+          "nt2": 151800568.0,
+          "nt3": 141087987.0
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 21563106.0,
+            "delta_pct": 16.556761525343607
+          },
+          "nt2->nt3": {
+            "delta": -10712581.0,
+            "delta_pct": -7.057009826208292
+          }
+        },
+        "trend": "разнонаправленно, влияние не оценивается"
+      },
+      {
+        "metric": "dml.postgres.INSERT",
+        "values": {
+          "nt1": 132520.0,
+          "nt2": 144674.0,
+          "nt3": null
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 12154.0,
+            "delta_pct": 9.171445819498944
+          },
+          "nt2->nt3": null
+        },
+        "trend": "рост, влияние не оценивается"
+      },
+      {
+        "metric": "dml.postgres.ROLLBACK",
+        "values": {
+          "nt1": 900.0,
+          "nt2": 990.0,
+          "nt3": null
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 90.0,
+            "delta_pct": 10.0
+          },
+          "nt2->nt3": null
+        },
+        "trend": "становится хуже"
+      },
+      {
+        "metric": "dml.postgres.UPDATE",
+        "values": {
+          "nt1": 47570.0,
+          "nt2": 52153.0,
+          "nt3": null
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 4583.0,
+            "delta_pct": 9.634223249947446
+          },
+          "nt2->nt3": null
+        },
+        "trend": "рост, влияние не оценивается"
+      },
+      {
+        "metric": "dml.statecontracts.COMMIT",
+        "values": {
+          "nt1": null,
+          "nt2": 9118071.0,
+          "nt3": 9705639.0
+        },
+        "deltas": {
+          "nt1->nt2": null,
+          "nt2->nt3": {
+            "delta": 587568.0,
+            "delta_pct": 6.443994568588027
+          }
+        },
+        "trend": "рост, влияние не оценивается"
+      },
+      {
+        "metric": "dml.statecontracts.FETCH",
+        "values": {
+          "nt1": 6153127.0,
+          "nt2": 5835623.0,
+          "nt3": 7911472.0
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": -317504.0,
+            "delta_pct": -5.160043015526902
+          },
+          "nt2->nt3": {
+            "delta": 2075849.0,
+            "delta_pct": 35.57202033099122
+          }
+        },
+        "trend": "разнонаправленно, влияние не оценивается"
+      },
+      {
+        "metric": "dml.statecontracts.ROLLBACK",
+        "values": {
+          "nt1": 1800.0,
+          "nt2": 1980.0,
+          "nt3": null
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 180.0,
+            "delta_pct": 10.0
+          },
+          "nt2->nt3": null
+        },
+        "trend": "становится хуже"
+      },
+      {
+        "metric": "queries.postgres/\"sa-d00000011757\"",
+        "values": {
+          "nt1": 218.2,
+          "nt2": 33.47,
+          "nt3": 2.75
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 10.239999999999998,
+            "delta_pct": 44.08092983211364
+          },
+          "nt2->nt3": {
+            "delta": -2.2300000000000004,
+            "delta_pct": -44.77911646586346
+          }
+        },
+        "trend": "разнонаправленно, влияние не оценивается"
+      },
+      {
+        "metric": "queries.postgres/postgres",
+        "values": {
+          "nt1": 158.4,
+          "nt2": 220.26,
+          "nt3": null
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 61.859999999999985,
+            "delta_pct": 39.05303030303029
+          },
+          "nt2->nt3": null
+        },
+        "trend": "рост, влияние не оценивается"
+      },
+      {
+        "metric": "queries.statecontracts/as_admin",
+        "values": {
+          "nt1": 12702.91,
+          "nt2": 456.84,
+          "nt3": 25.02
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 82.06,
+            "delta_pct": 21.895512033726455
+          },
+          "nt2->nt3": {
+            "delta": -1.5100000000000016,
+            "delta_pct": -5.691669807764801
+          }
+        },
+        "trend": "разнонаправленно, влияние не оценивается"
+      },
+      {
+        "metric": "sessions.Total.active_time",
+        "values": {
+          "nt1": 89634.27,
+          "nt2": 110380.67,
+          "nt3": null
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 20746.399999999994,
+            "delta_pct": 23.14561160591813
+          },
+          "nt2->nt3": null
+        },
+        "trend": "становится хуже"
+      },
+      {
+        "metric": "sessions.Total.idle_in_transaction_time",
+        "values": {
+          "nt1": null,
+          "nt2": 1372184.73,
+          "nt3": 1473020.06
+        },
+        "deltas": {
+          "nt1->nt2": null,
+          "nt2->nt3": {
+            "delta": 100835.33000000007,
+            "delta_pct": 7.348524422072535
+          }
+        },
+        "trend": "становится хуже"
+      },
+      {
+        "metric": "sessions.Total.session_time",
+        "values": {
+          "nt1": 7842134.66,
+          "nt2": 8249492.7,
+          "nt3": null
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 407358.04000000004,
+            "delta_pct": 5.194479024669031
+          },
+          "nt2->nt3": null
+        },
+        "trend": "становится хуже"
+      },
+      {
+        "metric": "sessions.Total.sessions",
+        "values": {
+          "nt1": 9005.0,
+          "nt2": 9716.0,
+          "nt3": null
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 711.0,
+            "delta_pct": 7.895613548028873
+          },
+          "nt2->nt3": null
+        },
+        "trend": "рост, влияние не оценивается"
+      },
+      {
+        "metric": "sessions.postgres.active_time",
+        "values": {
+          "nt1": 616.47,
+          "nt2": 816.2,
+          "nt3": 578.79
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 199.73000000000002,
+            "delta_pct": 32.39898129673788
+          },
+          "nt2->nt3": {
+            "delta": -237.41000000000008,
+            "delta_pct": -29.08723352119579
+          }
+        },
+        "trend": "нестабильный результат"
+      },
+      {
+        "metric": "sessions.postgres.idle_in_transaction_time",
+        "values": {
+          "nt1": 24.68,
+          "nt2": 29.2,
+          "nt3": null
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 4.52,
+            "delta_pct": 18.31442463533225
+          },
+          "nt2->nt3": null
+        },
+        "trend": "становится хуже"
+      },
+      {
+        "metric": "sessions.postgres.session_time",
+        "values": {
+          "nt1": 493945.4,
+          "nt2": 544151.43,
+          "nt3": 443777.36
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 50206.03000000003,
+            "delta_pct": 10.164287388849056
+          },
+          "nt2->nt3": {
+            "delta": -100374.07000000007,
+            "delta_pct": -18.445981112279732
+          }
+        },
+        "trend": "нестабильный результат"
+      },
+      {
+        "metric": "sessions.postgres.sessions",
+        "values": {
+          "nt1": 2924.0,
+          "nt2": 3241.0,
+          "nt3": null
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 317.0,
+            "delta_pct": 10.841313269493844
+          },
+          "nt2->nt3": null
+        },
+        "trend": "рост, влияние не оценивается"
+      },
+      {
+        "metric": "sessions.statecontracts.active_time",
+        "values": {
+          "nt1": 89017.81,
+          "nt2": 109564.47,
+          "nt3": null
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 20546.660000000003,
+            "delta_pct": 23.081515934844955
+          },
+          "nt2->nt3": null
+        },
+        "trend": "становится хуже"
+      },
+      {
+        "metric": "sessions.statecontracts.idle_in_transaction_time",
+        "values": {
+          "nt1": null,
+          "nt2": 1372155.52,
+          "nt3": 1472990.88
+        },
+        "deltas": {
+          "nt1->nt2": null,
+          "nt2->nt3": {
+            "delta": 100835.35999999987,
+            "delta_pct": 7.348683041409174
+          }
+        },
+        "trend": "становится хуже"
+      },
+      {
+        "metric": "sessions.statecontracts.sessions",
+        "values": {
+          "nt1": 6081.0,
+          "nt2": 6475.0,
+          "nt3": null
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 394.0,
+            "delta_pct": 6.479197500411116
+          },
+          "nt2->nt3": null
+        },
+        "trend": "рост, влияние не оценивается"
+      },
+      {
+        "metric": "tables.postgres.pg_catalog.pg_attribute.idx_scan",
+        "values": {
+          "nt1": 203621.0,
+          "nt2": 225514.0,
+          "nt3": null
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 21893.0,
+            "delta_pct": 10.751837973489964
+          },
+          "nt2->nt3": null
+        },
+        "trend": "рост, влияние не оценивается"
+      },
+      {
+        "metric": "tables.postgres.pg_catalog.pg_class.seq_scan",
+        "values": {
+          "nt1": null,
+          "nt2": 32395.0,
+          "nt3": 27364.0
+        },
+        "deltas": {
+          "nt1->nt2": null,
+          "nt2->nt3": {
+            "delta": -5031.0,
+            "delta_pct": -15.530174409631115
+          }
+        },
+        "trend": "снижение, влияние не оценивается"
+      },
+      {
+        "metric": "tables.postgres.pg_catalog.pg_database.idx_scan",
+        "values": {
+          "nt1": 202750.0,
+          "nt2": 189878.0,
+          "nt3": 54076.0
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": -12872.0,
+            "delta_pct": -6.348705302096177
+          },
+          "nt2->nt3": {
+            "delta": -135802.0,
+            "delta_pct": -71.52066063472334
+          }
+        },
+        "trend": "снижение, влияние не оценивается"
+      },
+      {
+        "metric": "tables.postgres.pg_catalog.pg_database.seq_scan",
+        "values": {
+          "nt1": null,
+          "nt2": 241500.0,
+          "nt3": 64458.0
+        },
+        "deltas": {
+          "nt1->nt2": null,
+          "nt2->nt3": {
+            "delta": -177042.0,
+            "delta_pct": -73.30931677018634
+          }
+        },
+        "trend": "снижение, влияние не оценивается"
+      },
+      {
+        "metric": "tables.postgres.pg_catalog.pg_db_role_setting.idx_scan",
+        "values": {
+          "nt1": 133148.0,
+          "nt2": 121956.0,
+          "nt3": null
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": -11192.0,
+            "delta_pct": -8.405683900621865
+          },
+          "nt2->nt3": null
+        },
+        "trend": "снижение, влияние не оценивается"
+      },
+      {
+        "metric": "tables.postgres.pg_catalog.pg_db_role_setting.seq_scan",
+        "values": {
+          "nt1": 2859668.0,
+          "nt2": 3003316.0,
+          "nt3": 1818750.0
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 143648.0,
+            "delta_pct": 5.0232404600813805
+          },
+          "nt2->nt3": {
+            "delta": -1184566.0,
+            "delta_pct": -39.44193684580644
+          }
+        },
+        "trend": "разнонаправленно, влияние не оценивается"
+      },
+      {
+        "metric": "tables.postgres.pg_catalog.pg_index.idx_scan",
+        "values": {
+          "nt1": 526897.0,
+          "nt2": 580259.0,
+          "nt3": 368089.0
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 53362.0,
+            "delta_pct": 10.127596095631594
+          },
+          "nt2->nt3": {
+            "delta": -212170.0,
+            "delta_pct": -36.56470645005075
+          }
+        },
+        "trend": "разнонаправленно, влияние не оценивается"
+      },
+      {
+        "metric": "tables.postgres.pg_catalog.pg_index.seq_scan",
+        "values": {
+          "nt1": null,
+          "nt2": 7365.0,
+          "nt3": 4832.0
+        },
+        "deltas": {
+          "nt1->nt2": null,
+          "nt2->nt3": {
+            "delta": -2533.0,
+            "delta_pct": -34.392396469789546
+          }
+        },
+        "trend": "снижение, влияние не оценивается"
+      },
+      {
+        "metric": "tables.postgres.pgse_profile.last_stat_tables_srv4.idx_scan",
+        "values": {
+          "nt1": 205364.0,
+          "nt2": 239736.0,
+          "nt3": 221681.0
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 34372.0,
+            "delta_pct": 16.737110691260398
+          },
+          "nt2->nt3": {
+            "delta": -18055.0,
+            "delta_pct": -7.531200987753195
+          }
+        },
+        "trend": "разнонаправленно, влияние не оценивается"
+      },
+      {
+        "metric": "tables.postgres.pgse_profile.last_stat_tables_srv5.idx_scan",
+        "values": {
+          "nt1": 429596.0,
+          "nt2": 483202.0,
+          "nt3": null
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 53606.0,
+            "delta_pct": 12.478235365319975
+          },
+          "nt2->nt3": null
+        },
+        "trend": "рост, влияние не оценивается"
+      },
+      {
+        "metric": "tables.postgres.pgse_profile.sample_stat_tables.idx_scan",
+        "values": {
+          "nt1": 3755.0,
+          "nt2": 27175.0,
+          "nt3": null
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 23420.0,
+            "delta_pct": 623.7017310252996
+          },
+          "nt2->nt3": null
+        },
+        "trend": "рост, влияние не оценивается"
+      },
+      {
+        "metric": "tables.postgres.pgse_profile.sample_stat_tables.n_tup_del",
+        "values": {
+          "nt1": null,
+          "nt2": 11474.0,
+          "nt3": null
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 11474.0,
+            "delta_pct": null
+          },
+          "nt2->nt3": null
+        },
+        "trend": "изменения незначительны"
+      },
+      {
+        "metric": "tables.postgres.pgse_profile.sample_stat_tablespaces.idx_scan",
+        "values": {
+          "nt1": null,
+          "nt2": 12678.0,
+          "nt3": 14005.0
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 12678.0,
+            "delta_pct": null
+          },
+          "nt2->nt3": {
+            "delta": 1327.0,
+            "delta_pct": 10.466950623126676
+          }
+        },
+        "trend": "рост, влияние не оценивается"
+      },
+      {
+        "metric": "tables.postgres.pgse_profile.stmt_list.idx_scan",
+        "values": {
+          "nt1": 12354.0,
+          "nt2": null,
+          "nt3": null
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": -12354.0,
+            "delta_pct": -100.0
+          },
+          "nt2->nt3": null
+        },
+        "trend": "снижение, влияние не оценивается"
+      },
+      {
+        "metric": "tables.statecontracts.pg_catalog.pg_attribute.idx_scan",
+        "values": {
+          "nt1": 602329.0,
+          "nt2": 568977.0,
+          "nt3": 689493.0
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": -33352.0,
+            "delta_pct": -5.537173206005356
+          },
+          "nt2->nt3": {
+            "delta": 120516.0,
+            "delta_pct": 21.181172525427215
+          }
+        },
+        "trend": "разнонаправленно, влияние не оценивается"
+      },
+      {
+        "metric": "tables.statecontracts.pg_catalog.pg_class.idx_scan",
+        "values": {
+          "nt1": null,
+          "nt2": 506027.0,
+          "nt3": 588193.0
+        },
+        "deltas": {
+          "nt1->nt2": null,
+          "nt2->nt3": {
+            "delta": 82166.0,
+            "delta_pct": 16.23747349449733
+          }
+        },
+        "trend": "рост, влияние не оценивается"
+      },
+      {
+        "metric": "tables.statecontracts.pg_catalog.pg_database.idx_scan",
+        "values": {
+          "nt1": 202750.0,
+          "nt2": 189878.0,
+          "nt3": 34032.0
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": -12872.0,
+            "delta_pct": -6.348705302096177
+          },
+          "nt2->nt3": {
+            "delta": -155846.0,
+            "delta_pct": -82.07691254384395
+          }
+        },
+        "trend": "снижение, влияние не оценивается"
+      },
+      {
+        "metric": "tables.statecontracts.pg_catalog.pg_database.seq_scan",
+        "values": {
+          "nt1": null,
+          "nt2": 241500.0,
+          "nt3": 42587.0
+        },
+        "deltas": {
+          "nt1->nt2": null,
+          "nt2->nt3": {
+            "delta": -198913.0,
+            "delta_pct": -82.36563146997929
+          }
+        },
+        "trend": "снижение, влияние не оценивается"
+      },
+      {
+        "metric": "tables.statecontracts.pg_catalog.pg_db_role_setting.seq_scan",
+        "values": {
+          "nt1": 2859668.0,
+          "nt2": 3003316.0,
+          "nt3": 1818750.0
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 143648.0,
+            "delta_pct": 5.0232404600813805
+          },
+          "nt2->nt3": {
+            "delta": -1184566.0,
+            "delta_pct": -39.44193684580644
+          }
+        },
+        "trend": "разнонаправленно, влияние не оценивается"
+      },
+      {
+        "metric": "tables.statecontracts.pg_catalog.pg_statistic.idx_scan",
+        "values": {
+          "nt1": null,
+          "nt2": 1102749.0,
+          "nt3": 1171842.0
+        },
+        "deltas": {
+          "nt1->nt2": null,
+          "nt2->nt3": {
+            "delta": 69093.0,
+            "delta_pct": 6.265523704850333
+          }
+        },
+        "trend": "рост, влияние не оценивается"
+      },
+      {
+        "metric": "tables.statecontracts.statecontracts.t_dspc_sys_versions.seq_scan",
+        "values": {
+          "nt1": 28784.0,
+          "nt2": null,
+          "nt3": null
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": -28784.0,
+            "delta_pct": -100.0
+          },
+          "nt2->nt3": null
+        },
+        "trend": "снижение, влияние не оценивается"
+      },
+      {
+        "metric": "tables.statecontracts.statecontracts.t_value.seq_scan",
+        "values": {
+          "nt1": null,
+          "nt2": 1186.0,
+          "nt3": 68.0
+        },
+        "deltas": {
+          "nt1->nt2": null,
+          "nt2->nt3": {
+            "delta": -1118.0,
+            "delta_pct": -94.2664418212479
+          }
+        },
+        "trend": "снижение, влияние не оценивается"
+      },
+      {
+        "metric": "wal.wal_buffers_full",
+        "values": {
+          "nt1": 932205.0,
+          "nt2": 664448.0,
+          "nt3": null
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": -267757.0,
+            "delta_pct": -28.72297402395396
+          },
+          "nt2->nt3": null
+        },
+        "trend": "становится лучше"
+      }
+    ]
+  },
+  "rows": [
+    {
+      "parameter": "checkpoint_completion_target",
+      "old": "0.5",
+      "new": "0.7",
+      "delta_pct": 54.44,
+      "affected_metric": "checkpoint_write_time",
+      "direction": "increased",
+      "impact": "degraded",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 1,
+      "workload_match_score": null,
+      "notes": "pairs=1; stability=1.000; effects=nt1->nt2:degraded; other correlated metrics voted against the dominant metric",
+      "metric_direction": "up",
+      "stability_score": 1.0,
+      "delta_iqr_pct": 0.0,
+      "pair_effects": [
+        "nt1->nt2:degraded"
+      ],
+      "noise_ratio": 0.0,
+      "confidence_reasons": [
+        "only one pair; statistical proof is not available"
+      ]
+    },
+    {
+      "parameter": "max_wal_size",
+      "old": "8192 (64.0 MB)",
+      "new": "12288 (96.0 MB)",
+      "delta_pct": -30.36,
+      "affected_metric": "checkpoints_req",
+      "direction": "increased",
+      "impact": "improved",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 1,
+      "workload_match_score": null,
+      "notes": "pairs=1; stability=1.000; effects=nt1->nt2:improved",
+      "metric_direction": "down",
+      "stability_score": 1.0,
+      "delta_iqr_pct": 0.0,
+      "pair_effects": [
+        "nt1->nt2:improved"
+      ],
+      "noise_ratio": 0.0,
+      "confidence_reasons": [
+        "only one pair; statistical proof is not available"
+      ]
+    },
+    {
+      "parameter": "shared_buffers",
+      "old": "504320 (3940.0 MB)",
+      "new": "537600 (4200.0 MB)",
+      "delta_pct": 26.88,
+      "affected_metric": "blks_read",
+      "direction": "increased",
+      "impact": "degraded",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 1,
+      "workload_match_score": null,
+      "notes": "pairs=1; stability=1.000; effects=nt2->nt3:degraded",
+      "metric_direction": "up",
+      "stability_score": 1.0,
+      "delta_iqr_pct": 0.0,
+      "pair_effects": [
+        "nt2->nt3:degraded"
+      ],
+      "noise_ratio": 0.0,
+      "confidence_reasons": [
+        "only one pair; statistical proof is not available"
+      ]
+    },
+    {
+      "parameter": "huge_pages",
+      "old": "—",
+      "new": "on",
+      "delta_pct": 6.72,
+      "affected_metric": "blk_read_time",
+      "direction": "changed",
+      "impact": "degraded",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 1,
+      "workload_match_score": null,
+      "notes": "pairs=1; stability=1.000; effects=nt1->nt2:degraded",
+      "metric_direction": "up",
+      "stability_score": 1.0,
+      "delta_iqr_pct": 0.0,
+      "pair_effects": [
+        "nt1->nt2:degraded"
+      ],
+      "noise_ratio": 0.0,
+      "confidence_reasons": [
+        "only one pair; statistical proof is not available"
+      ]
+    }
+  ]
+}

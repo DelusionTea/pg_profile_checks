@@ -1,5 +1,15 @@
 from __future__ import annotations
 
+from jvmcheck.diagnostic_tree import (
+    MemoryHeapResize,
+    _display_flag_value,
+    _flag_value_map,
+    _fmt_mib,
+    _split_flag_pair,
+    flag_purpose,
+    is_g1_flag_key,
+    load_flag_purposes,
+)
 from jvmcheck.models import AnalysisResult, ContainerResources, MultiRunAnalysis, RuntimeContext, RuntimeMetrics
 
 
@@ -10,6 +20,8 @@ def format_analysis_for_confluence(
     runtime_context: RuntimeContext,
     system_name: str | None = None,
     trend: MultiRunAnalysis | None = None,
+    resize: MemoryHeapResize | None = None,
+    copyable: bool = True,
 ) -> str:
     lines: list[str] = []
 
@@ -19,24 +31,24 @@ def format_analysis_for_confluence(
     if container.pod_name:
         lines.append(f"*Target pod:* {container.pod_name}")
     lines.append(f"*Target container:* {container.name}")
-    lines.append(f"*Lifecycle status:* {analysis.lifecycle_status}")
+    if analysis.lifecycle_status and analysis.lifecycle_status != "tuning_attempted":
+        lines.append(f"*Lifecycle status:* {analysis.lifecycle_status}")
     lines.append("")
 
     lines.append("h3. Ресурсы и JVM настройки контейнера (актуально для настройки)")
-    lines.append("|| Parameter || Value ||")
-    lines.append(f"| CPU request (m) | {_display(container.requests.cpu_millicores)} |")
-    lines.append(f"| CPU limit (m) | {_display(container.limits.cpu_millicores)} |")
-    lines.append(f"| Memory request (MiB) | {_display(container.requests.memory_mib)} |")
-    lines.append(f"| Memory limit (MiB) | {_display(container.limits.memory_mib)} |")
-    lines.append(
-        f"| Ephemeral storage request (MiB) | {_display(container.requests.ephemeral_storage_mib)} |"
+    rows = _resource_jvm_rows(
+        container,
+        analysis,
+        resize=resize,
+        copyable=copyable,
+        runtime_metrics=runtime_metrics,
     )
-    lines.append(
-        f"| Ephemeral storage limit (MiB) | {_display(container.limits.ephemeral_storage_mib)} |"
-    )
-    lines.append(
-        f"| Current JVM options | {_display_jvm_options(container.java_tool_options)} |"
-    )
+    if rows:
+        lines.append("|| Параметр || Было || Стало || Что делает ||")
+        for name, was, to, purpose in rows:
+            lines.append(f"| {name} | {was} | {to} | {purpose} |")
+    else:
+        lines.append("* Нет изменений ресурсов или JVM-флагов — смотрите рекомендации ниже.")
     lines.append("")
 
     lines.append("h3. Runtime Context")
@@ -68,7 +80,7 @@ def format_analysis_for_confluence(
         lines.append("* No recommendations.")
     else:
         for index, recommendation in enumerate(analysis.recommendations, start=1):
-            lines.append(f"h4. Recommendation {index}: {recommendation.title}")
+            lines.append(f"h4. Рекомендация {index}: {recommendation.title}")
             lines.append(f"*Rationale:* {recommendation.rationale}")
             lines.append(f"*Confidence:* {recommendation.confidence}")
             lines.append(f"*Evidence score:* {recommendation.evidence_score}/100")
@@ -77,9 +89,16 @@ def format_analysis_for_confluence(
             lines.append(f"*Verification window:* {recommendation.verification_window}")
             lines.append(f"*Platform escalation required:* {'Yes' if recommendation.requires_platform_escalation else 'No'}")
             if recommendation.suggested_java_tool_options:
-                lines.append("*Suggested options:*")
-                for option in recommendation.suggested_java_tool_options:
-                    lines.append(f"** {{code}}{option}{{code}}")
+                flag_rows = _suggested_flag_rows(
+                    recommendation.suggested_java_tool_options,
+                    container.java_tool_options,
+                    copyable=copyable,
+                )
+                if flag_rows:
+                    lines.append("*Suggested options:*")
+                    lines.append("|| Флаг || Было || Стало || Что делает ||")
+                    for option, was, to, purpose in flag_rows:
+                        lines.append(f"| {option} | {was} | {to} | {purpose} |")
             if recommendation.rollback_plan:
                 lines.append("*Rollback plan:*")
                 for step in recommendation.rollback_plan:
@@ -156,10 +175,179 @@ def _display(value: object) -> str:
     return str(value)
 
 
-def _display_jvm_options(options: list[str]) -> str:
-    if not options:
-        return "N/A"
-    return "{{code}}" + " ".join(options) + "{{code}}"
+def _cell(value: object) -> str:
+    if value is None:
+        return "не задан"
+    return str(value)
+
+
+def _resource_jvm_rows(
+    container: ContainerResources,
+    analysis: AnalysisResult,
+    resize: MemoryHeapResize | None,
+    copyable: bool,
+    runtime_metrics: RuntimeMetrics | None = None,
+) -> list[tuple[str, str, str, str]]:
+    req_was, req_to, lim_was, lim_to = _recommended_memory_targets(
+        container, analysis, resize, runtime_metrics
+    )
+    rows: list[tuple[str, str, str, str]] = []
+    if _changed(req_was, req_to):
+        rows.append(
+            (
+                "Memory request (MiB)",
+                _cell(req_was),
+                _cell(req_to),
+                "Гарантированная память контейнера. Поднимите к фактическому working set, ниже limit.",
+            )
+        )
+    if _changed(lim_was, lim_to):
+        rows.append(
+            (
+                "Memory limit (MiB)",
+                _cell(lim_was),
+                _cell(lim_to),
+                "Потолок RSS. Выше — OOMKilled.",
+            )
+        )
+    current = _flag_value_map(container.java_tool_options)
+    proposed: dict[str, str] = {}
+    if copyable:
+        for rec in analysis.recommendations:
+            for flag in rec.suggested_java_tool_options or []:
+                key, value = _split_flag_pair(flag)
+                if not key:
+                    continue
+                proposed[key] = _display_flag_value(value) if value is not None else "включить"
+    if resize and resize.resized:
+        if (
+            resize.max_ram_pct_to is not None
+            and (
+                resize.max_ram_pct_was is None
+                or resize.max_ram_pct_to != resize.max_ram_pct_was
+            )
+        ):
+            proposed["-XX:MaxRAMPercentage"] = f"{resize.max_ram_pct_to:g}"
+        if resize.heap_mode == "xmx" and resize.xmx_to_mib is not None:
+            proposed["-Xmx"] = f"{resize.xmx_to_mib}m"
+    purposes = load_flag_purposes()
+    seen: list[str] = []
+    for key in list(current.keys()) + [key for key in proposed if key not in current]:
+        if key in seen:
+            continue
+        seen.append(key)
+        was = _display_flag_value(current[key]) if key in current else "не задан"
+        to = proposed.get(key, was)
+        if not _changed(was, to):
+            continue
+        rows.append((key, was, to, flag_purpose(key, purposes)))
+    if (
+        resize
+        and resize.heap_mode in {"percent", "both"}
+        and resize.xmx_was_mib is not None
+        and _changed(resize.xmx_was_mib, resize.xmx_to_mib)
+    ):
+        rows.append(
+            (
+                "-Xmx (расчётный)",
+                _fmt_mib(resize.xmx_was_mib),
+                _fmt_mib(resize.xmx_to_mib),
+                flag_purpose("-Xmx", purposes),
+            )
+        )
+    return rows
+
+
+def _recommended_memory_targets(
+    container: ContainerResources,
+    analysis: AnalysisResult,
+    resize: MemoryHeapResize | None,
+    runtime_metrics: RuntimeMetrics | None,
+) -> tuple[int | None, int | None, int | None, int | None]:
+    req_was = container.requests.memory_mib
+    lim_was = container.limits.memory_mib
+    req_to = req_was
+    lim_to = lim_was
+    if resize and resize.resized:
+        req_to = resize.request_to
+        lim_to = resize.limit_to
+    if analysis.memory_plan and analysis.memory_plan.requested_delta_mib and lim_was:
+        planned = lim_was + int(analysis.memory_plan.requested_delta_mib)
+        if lim_to is None or planned > lim_to:
+            lim_to = planned
+    working = _working_set_mib(analysis, runtime_metrics)
+    cap = lim_to if lim_to is not None else lim_was
+    if _has_rule(analysis, "memory.request_pressure") and working is not None and req_was is not None:
+        if working > req_was and (cap is None or working < cap):
+            target = working if cap is None else min(working, cap)
+            if req_to is None or target > req_to:
+                req_to = target
+    if _has_rule(analysis, "container.missing_memory_limit") and not lim_was:
+        baseline = working if working is not None else req_to or req_was
+        if baseline:
+            lim_to = max(int(baseline * 1.25), 256)
+            if req_was is None and working is not None:
+                req_to = working
+    if _has_rule(analysis, "container.request_limit_skew"):
+        req_now = req_to if req_to is not None else req_was
+        lim_now = lim_to if lim_to is not None else lim_was
+        if req_now and lim_now and req_now / lim_now >= 0.95:
+            lim_to = max(lim_now, int(req_now / 0.85))
+    return req_was, req_to, lim_was, lim_to
+
+
+def _working_set_mib(
+    analysis: AnalysisResult,
+    runtime_metrics: RuntimeMetrics | None,
+) -> int | None:
+    if runtime_metrics and runtime_metrics.container_memory_working_set_mib is not None:
+        return int(runtime_metrics.container_memory_working_set_mib)
+    for finding in analysis.findings:
+        if finding.code != "memory.request_pressure":
+            continue
+        raw = (finding.details or {}).get("container_memory_working_set_mib")
+        if raw in (None, ""):
+            continue
+        try:
+            return int(float(str(raw)))
+        except (TypeError, ValueError):
+            return None
+    return None
+
+
+def _has_rule(analysis: AnalysisResult, code: str) -> bool:
+    if any(finding.code == code for finding in analysis.findings):
+        return True
+    return any(code in (rec.rule_ids or []) for rec in analysis.recommendations)
+
+
+def _changed(was: object, to: object) -> bool:
+    return _cell(was) != _cell(to)
+
+
+def _suggested_flag_rows(
+    options: list[str],
+    current_options: list[str] | None,
+    *,
+    copyable: bool,
+) -> list[tuple[str, str, str, str]]:
+    current_flags = _flag_value_map(current_options)
+    purposes = load_flag_purposes()
+    rows: list[tuple[str, str, str, str]] = []
+    for option in options:
+        key, new_val = _split_flag_pair(option)
+        was = (
+            _display_flag_value(current_flags[key])
+            if key in current_flags
+            else "не задан"
+        )
+        to = _display_flag_value(new_val) if new_val is not None else "включить"
+        if not copyable and is_g1_flag_key(key):
+            to = was
+        if not _changed(was, to):
+            continue
+        rows.append((option, was, to, flag_purpose(key, purposes)))
+    return rows
 
 
 def _build_validation_steps(analysis: AnalysisResult, runtime_metrics: RuntimeMetrics) -> list[str]:

@@ -198,7 +198,7 @@ def _compare_scalar_map(
     map_a: dict[str, float | None],
     map_b: dict[str, float | None],
     *,
-    unit: str,
+    unit: str | Callable[[str], str],
     normalize: bool,
     hours_a: float,
     hours_b: float,
@@ -211,13 +211,31 @@ def _compare_scalar_map(
                 key,
                 map_a.get(key),
                 map_b.get(key),
-                unit=unit,
+                unit=unit(key) if callable(unit) else unit,
                 normalize=normalize,
                 hours_a=hours_a,
                 hours_b=hours_b,
             )
         )
     return diffs
+
+
+# pg_profile already converts checkpoint/WAL timings to seconds ("Checkpoint write time (s)")
+# and reports wal_size/wal_bytes in bytes (wal_size_pretty = "301 GB").
+def _cluster_unit(metric: str) -> str:
+    if metric in {"checkpoint_write_time", "checkpoint_sync_time"}:
+        return "sec"
+    if metric == "wal_size":
+        return "bytes"
+    return "count"
+
+
+def _wal_unit(metric: str) -> str:
+    if metric == "wal_bytes":
+        return "bytes"
+    if metric in {"wal_write_time", "wal_sync_time"}:
+        return "sec"
+    return "count"
 
 
 def compare_cluster(run_a: RunSnapshot, run_b: RunSnapshot) -> list[MetricDiff]:
@@ -227,7 +245,7 @@ def compare_cluster(run_a: RunSnapshot, run_b: RunSnapshot) -> list[MetricDiff]:
         "cluster",
         map_a,
         map_b,
-        unit="count",
+        unit=_cluster_unit,
         normalize=True,
         hours_a=run_a.ctx.interval_hours,
         hours_b=run_b.ctx.interval_hours,
@@ -241,7 +259,7 @@ def compare_wal(run_a: RunSnapshot, run_b: RunSnapshot) -> list[MetricDiff]:
         "wal",
         map_a,
         map_b,
-        unit="count",
+        unit=_wal_unit,
         normalize=True,
         hours_a=run_a.ctx.interval_hours,
         hours_b=run_b.ctx.interval_hours,

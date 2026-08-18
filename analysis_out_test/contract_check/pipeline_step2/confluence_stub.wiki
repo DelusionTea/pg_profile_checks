@@ -1,0 +1,211 @@
+h1. pg_profile: tvldd-pprb06733.delta.sbrf.ru (2026-03-14)
+
+{warning:title=Краткий вердикт}
+Чеклист: FAIL *8* · SUSPECT *0* · PASS *2*.
+Находок: *58* (высокий приоритет: *19*).
+Сначала чеклист и действия, затем детали findings / EXPLAIN в Expand.
+{warning}
+
+h2. Чеклист проверок
+
+||Проверка||Статус||
+|[Checkpoints|#sec_checkpoints]|{status:colour=Red|title=FAIL|subtle=false}|
+|[Slow queries|#sec_queries]|{status:colour=Red|title=FAIL|subtle=false}|
+|[Autovacuum|#sec_autovacuum]|{status:colour=Red|title=FAIL|subtle=false}|
+|[WAL|#sec_wal]|{status:colour=Red|title=FAIL|subtle=false}|
+|[Cache and disk reads|#sec_cache]|{status:colour=Red|title=FAIL|subtle=false}|
+|[Sessions and transactions|#sec_sessions]|{status:colour=Red|title=FAIL|subtle=false}|
+|[Memory settings|#sec_memory]|{status:colour=Red|title=FAIL|subtle=false}|
+|[I/O patterns|#sec_io]|{status:colour=Red|title=FAIL|subtle=false}|
+|[Tablespaces / disk|#sec_disk]|{status:colour=Green|title=PASS|subtle=false}|
+|[Locks|#sec_locks]|{status:colour=Green|title=PASS|subtle=false}|
+
+{toc:maxLevel=2}
+
+h2. Что сделать сейчас
+
+# Увеличить max_wal_size (часто 1–4 GB+ для OLTP под нагрузкой)
+# Проверить wal_buffers_full и общий объём WAL за интервал
+# Сопоставить с checkpoint_timeout — не уменьшать timeout вместо max_wal_size
+# Установить idle_in_transaction_session_timeout
+# Исправить application connection pooling / missing COMMIT
+# Найти источник зависших транзакций в pg_stat_activity
+# Установить idle_in_transaction_session_timeout (например 60s–300s)
+# Проверить max_wal_size и рост WAL
+
+h2. Сводка findings
+
+{anchor:sec_checkpoints}
+h3. Checkpoints
+
+||Severity||ID||Сообщение||Отчёт(ы)||
+|{status:colour=Red|title=CRITICAL|subtle=false}|checkpoints.high_requested_ratio|Requested checkpoints: 45/64 (70.3%), threshold 30%|_test_modified.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|checkpoints.high_requested_count|Requested checkpoints: 45 (threshold 10)|_test_modified.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|checkpoints.high_write_time|Checkpoint write time: 13576.6s over 15.0h interval (threshold 300s)|_test_modified.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|checkpoints.high_write_time_per_hour|Checkpoint write time: 905.1s/hour (threshold 60s/hour)|_test_modified.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|checkpoints.maxwritten_clean|Bgwriter interrupts (maxwritten_clean): 1821 (threshold 100)|_test_modified.html|
+
+{anchor:sec_queries}
+h3. Slow queries
+
+||Severity||ID||Сообщение||Отчёт(ы)||
+|{status:colour=Yellow|title=WARNING|subtle=false}|queries.slow_execution|postgres/postgres: mean=6461.9ms, max=18142.9ms, total=193.9s, calls=30   SELECT pgse_profile.take_sample()|_test_modified.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|queries.slow_execution|taxes/as_admin: total=18341.2s, calls=86988667   insert into taxes.t_value (chgcnt,inn,sys_isdeleted,kpp,sys_lastchangedate,level_entityid,metrictype_entityid,o|_test_modified.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|queries.slow_execution|taxes/as_admin: total=10238.5s, calls=86987557   INSERT INTO taxes.T_REPL_AGGLOCK_VALUE (rootid, siversion, guid, version, sys_lastchangedate) VALUES ($1, $2, $|_test_modified.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|queries.slow_execution|taxes/as_admin: total=3074.6s, calls=86988671   select v1_0.object_id from taxes.t_value v1_0 where v1_0.inn is not null and v1_0.inn=$1 and v1_0.kpp is not nul|_test_modified.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|queries.slow_execution|taxes/as_admin: total=3415.0s, calls=86987567   SELECT txtype, changeeventmask, aggtype, ownerid, migrationstatus, silock, siversion, guid, version FROM taxes.T|_test_modified.html|
+
+{anchor:sec_autovacuum}
+h3. Autovacuum
+
+||Severity||ID||Сообщение||Отчёт(ы)||
+|{status:colour=Yellow|title=WARNING|subtle=false}|autovacuum.naptime_high|autovacuum_naptime=99s exceeds threshold 60s (autovacuum runs too rarely)|_test_modified.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|autovacuum.table_high_dead_pct|taxes.taxes.t_repl_agglock_auditevent: dead_pct=16.2%, n_dead=633, last_autovacuum=never|_test_modified.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|autovacuum.table_high_mods_pct|taxes.taxes.t_repl_agglock_auditevent: mods_pct=167.6%, last_autoanalyze=never|_test_modified.html|
+
+{anchor:sec_wal}
+h3. WAL
+
+||Severity||ID||Сообщение||Отчёт(ы)||
+|{status:colour=Yellow|title=WARNING|subtle=false}|wal.buffers_full|wal_buffers_full: 40937 (threshold 1000)|_test_modified.html|
+
+{anchor:sec_cache}
+h3. Cache and disk reads
+
+||Severity||ID||Сообщение||Отчёт(ы)||
+|{status:colour=Yellow|title=WARNING|subtle=false}|cache.high_read_time|taxes: blk_read_time=214.5s (threshold 60s)|_test_modified.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|cache.low_table_hit_ratio|postgres.pgse_profile.sample_statements: table hit_pct=91.84% (threshold 95.0%)|_test_modified.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|cache.low_table_hit_ratio|postgres.pgse_profile.sample_kcache: table hit_pct=89.36% (threshold 95.0%)|_test_modified.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|cache.low_table_hit_ratio|postgres.pgse_profile.sample_stat_indexes: table hit_pct=94.27% (threshold 95.0%)|_test_modified.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|cache.low_table_hit_ratio|postgres.pgse_profile.sample_settings: table hit_pct=93.11% (threshold 95.0%)|_test_modified.html|
+
+{anchor:sec_sessions}
+h3. Sessions and transactions
+
+||Severity||ID||Сообщение||Отчёт(ы)||
+|{status:colour=Red|title=CRITICAL|subtle=false}|sessions.high_idle_in_transaction|taxes: idle_in_transaction_time=1112045.7s (threshold 3600s), idle_in_transaction_session_timeout=0|_test_modified.html|
+|{status:colour=Red|title=CRITICAL|subtle=false}|sessions.idle_timeout_disabled|idle_in_transaction_session_timeout=0 while idle in transaction time is high|_test_modified.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|sessions.connection_pressure|postgres: connection pressure sessions=2884 (412% of max_connections=700)|_test_modified.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|sessions.connection_pressure|taxes: connection pressure sessions=6912 (987% of max_connections=700)|_test_modified.html|
+
+{anchor:sec_memory}
+h3. Memory settings
+
+||Severity||ID||Сообщение||Отчёт(ы)||
+|{status:colour=Yellow|title=WARNING|subtle=false}|memory.huge_pages_recommended|huge_pages=try with shared_buffers=5955MB (≥2048MB): prefer huge_pages=on; shared_memory_size_in_huge_pages=3286|_test_modified.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|memory.lock_timeout_zero|lock_timeout=0 (no protection against lock waits)|_test_modified.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|memory.statement_timeout_zero|statement_timeout=0 (queries may run indefinitely)|_test_modified.html|
+
+{anchor:sec_io}
+h3. I/O patterns
+
+||Severity||ID||Сообщение||Отчёт(ы)||
+|{status:colour=Yellow|title=WARNING|subtle=false}|db.statement_dominance|taxes: dominates statement time 99.4% (total_exec_time=35128.85)|_test_modified.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.high_heap_reads|taxes.taxes.t_value: heap_blks_read=2560817|_test_modified.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.high_heap_reads|taxes.taxes.t_repl_agglock_value: heap_blks_read=2033941|_test_modified.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.high_seq_scan|taxes.taxes.t_dspc_sys_versions: seq_scan=44384, idx_scan=0, ratio=44384.0|_test_modified.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.high_seq_scan|postgres.pgse_profile.last_stat_database_srv2: seq_scan=25144, idx_scan=0, ratio=25144.0|_test_modified.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.high_seq_scan|taxes.taxes.t_dspc_sys_config: seq_scan=22192, idx_scan=0, ratio=22192.0|_test_modified.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.high_seq_scan|postgres.pg_catalog.pg_am: seq_scan=9238, idx_scan=0, ratio=9238.0|_test_modified.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.high_seq_scan|taxes.taxes.t_repl_agglock_commonparam: seq_scan=7188, idx_scan=0, ratio=7188.0|_test_modified.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.hot_index_reads|Hot index reads taxes.taxes.t_value.i_value_inn_1: idx_blks_read=947341, hit_pct=99.86%|_test_modified.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.hot_index_reads|Hot index reads taxes.taxes.t_value.pk_t_value: idx_blks_read=673818, hit_pct=99.78%|_test_modified.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.hot_index_reads|Hot index reads taxes.taxes.t_repl_agglock_value.pk_t_repl_agglockid_value: idx_blks_read=671657, hit_pct=99.93%|_test_modified.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.hot_index_reads|Hot index reads taxes.taxes.t_value.i_value_level: idx_blks_read=119777, hit_pct=99.96%|_test_modified.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.hot_index_reads|Hot index reads taxes.taxes.t_value.i_value_metrictype: idx_blks_read=119599, hit_pct=99.97%|_test_modified.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.hot_index_reads|Hot index reads taxes.taxes.t_value.i_value_rquid: idx_blks_read=111715, hit_pct=99.96%|_test_modified.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.hot_index_reads|Hot index reads taxes.taxes.t_value.i_value_type: idx_blks_read=102201, hit_pct=99.96%|_test_modified.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.unused_index|Unused index taxes.taxes.t_value.i_value_type: size=798 MB|_test_modified.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.unused_index|Unused index taxes.taxes.t_value.i_value_level: size=934 MB|_test_modified.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.unused_index|Unused index taxes.taxes.t_value.i_value_rquid: size=872 MB|_test_modified.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.vacuum_ops_pressure|taxes.taxes.t_dspc_sys_config: vacuum_ops=215, analyze_ops=214|_test_modified.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.vacuum_ops_pressure|taxes.taxes.t_repl_agglock_commonparam: vacuum_ops=71, analyze_ops=71|_test_modified.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.vacuum_ops_pressure|postgres.pg_catalog.pg_statistic: vacuum_ops=56, analyze_ops=0|_test_modified.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.vacuum_ops_pressure|taxes.taxes.t_value: vacuum_ops=33, analyze_ops=60|_test_modified.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.vacuum_ops_pressure|taxes.taxes.t_repl_agglock_value: vacuum_ops=33, analyze_ops=61|_test_modified.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.vacuum_ops_pressure|postgres.pgse_profile.last_stat_tables_srv2: vacuum_ops=31, analyze_ops=60|_test_modified.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.vacuum_ops_pressure|postgres.pgse_profile.last_stat_indexes_srv3: vacuum_ops=30, analyze_ops=60|_test_modified.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.vacuum_ops_pressure|postgres.pgse_profile.last_stat_indexes_srv2: vacuum_ops=30, analyze_ops=60|_test_modified.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.vacuum_ops_pressure|postgres.pgse_profile.last_stat_tables_srv3: vacuum_ops=30, analyze_ops=60|_test_modified.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.vacuum_ops_pressure|postgres.pgse_profile.last_stat_statements_srv2: vacuum_ops=30, analyze_ops=60|_test_modified.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.wal_heavy_query|taxes/as_admin: wal=66.6GB, shared_blks_dirtied=4099983   insert into taxes.t_value (chgcnt,inn,sys_isdeleted,kpp,sys_lastchangedate,level_entityid,metrictype_e|_test_modified.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.wal_heavy_query|taxes/as_admin: wal=26.5GB, shared_blks_dirtied=2172215   INSERT INTO taxes.T_REPL_AGGLOCK_VALUE (rootid, siversion, guid, version, sys_lastchangedate) VALUES (|_test_modified.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|settings.differ.autovacuum_naptime|autovacuum_naptime|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|settings.only_nt.archive_timeout|archive_timeout|—|
+
+{anchor:sec_disk}
+h3. Tablespaces / disk
+
+_Нет findings — PASS._
+
+{anchor:sec_locks}
+h3. Locks
+
+_Нет findings — PASS._
+
+{expand:Справочно: параметры анализа}
+||Параметр||Значение||
+|Дата формирования|2026-08-13 12:27|
+|Инструмент|pg_profile_checks / analyze_pgprofile.py|
+|Сервер|tvldd-pprb06733.delta.sbrf.ru|
+|Интервал|2026-03-13 12:30:02+03 — 2026-03-14 03:30:02+03|
+|Длительность|15.0 ч|
+|Файл отчёта|_test_modified.html|
+|Прогон A|before|
+|Прогон B|after|
+|Длительность A|15.0 ч|
+|Длительность B|15.0 ч|
+|Среда A|NT|
+|Среда B|PROD|
+|Всего находок|58|
+|Высокий приоритет|19|
+
+{expand}
+
+h2. EXPLAIN (ANALYZE, BUFFERS) — скопировать в psql
+
+{info}Ниже готовые команды для вставки в psql/клиент. На prod осторожно: ANALYZE выполняет запрос. При необходимости замените литералы/параметры на актуальные значения.{info}
+
+{expand:SQL · hex=ded394e847c2649a}
+{code:language=sql|title=queries.slow_execution · hex=ded394e847c2649a}
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT pgse_profile.take_sample();
+{code}
+
+{expand}
+
+{expand:SQL · hex=1fe47c7c75cdb884}
+{code:language=sql|title=queries.slow_execution · hex=1fe47c7c75cdb884}
+EXPLAIN (ANALYZE, BUFFERS)
+insert into taxes.t_value (chgcnt,inn,sys_isdeleted,kpp,sys_lastchangedate,level_entityid,metrictype_entityid,offflag,sys_ownerid,sys_partitionid,sys_recmodelversion,rquid,sourcedatetime,value_,valuestring,zeroreporting,type,object_id) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,'Value',$17);
+{code}
+
+{expand}
+
+{expand:SQL · hex=3bf7b841a0782b39}
+{code:language=sql|title=queries.slow_execution · hex=3bf7b841a0782b39}
+EXPLAIN (ANALYZE, BUFFERS)
+INSERT INTO taxes.T_REPL_AGGLOCK_VALUE (rootid, siversion, guid, version, sys_lastchangedate) VALUES ($1, $2, $3, $4, LOCALTIMESTAMP) ON CONFLICT (rootid) DO NOTHING RETURNING "sys_lastchangedate";
+{code}
+
+{expand}
+
+{expand:SQL · hex=21de29606ada408b}
+{code:language=sql|title=queries.slow_execution · hex=21de29606ada408b}
+EXPLAIN (ANALYZE, BUFFERS)
+select v1_0.object_id from taxes.t_value v1_0 where v1_0.inn is not null and v1_0.inn=$1 and v1_0.kpp is not null and v1_0.kpp=$2 and v1_0.metrictype_entityid is not null and v1_0.metrictype_entityid=$3;
+{code}
+
+{expand}
+
+{expand:SQL · hex=e0e25b94f626b270}
+{code:language=sql|title=queries.slow_execution · hex=e0e25b94f626b270}
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT txtype, changeeventmask, aggtype, ownerid, migrationstatus, silock, siversion, guid, version FROM taxes.T_REPL_AGGLOCK_VALUE WHERE rootid = $1 FOR UPDATE;
+{code}
+
+{expand}
+
+----
+
+_Ниже — вывод ИИ (Confluence Wiki Markup). Вставьте ответ gigacli или используйте merge_confluence.py._

@@ -13,7 +13,7 @@
       "new_gen_used_mib": null,
       "new_gen_capacity_mib": null,
       "new_gen_used_percent": null,
-      "updated_at": "2026-07-24T09:23:50Z"
+      "updated_at": "2026-07-24T09:36:47Z"
     },
     "app::istioProxy": {
       "gc_pause_p95_ms": 250,

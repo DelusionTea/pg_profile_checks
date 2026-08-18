@@ -1,0 +1,222 @@
+h1. pg_profile: tsldd-pprb01138.delta.sbrf.ru (2026-08-12)
+
+{warning:title=Краткий вердикт}
+Чеклист: FAIL *9* · SUSPECT *0* · PASS *1*.
+Находок: *75* (высокий приоритет: *29*).
+Сначала чеклист и действия, затем детали findings / EXPLAIN в Expand.
+{warning}
+
+h2. Чеклист проверок
+
+||Проверка||Статус||
+|[Checkpoints|#sec_checkpoints]|{status:colour=Red|title=FAIL|subtle=false}|
+|[Slow queries|#sec_queries]|{status:colour=Red|title=FAIL|subtle=false}|
+|[Autovacuum|#sec_autovacuum]|{status:colour=Red|title=FAIL|subtle=false}|
+|[WAL|#sec_wal]|{status:colour=Red|title=FAIL|subtle=false}|
+|[Cache and disk reads|#sec_cache]|{status:colour=Red|title=FAIL|subtle=false}|
+|[Sessions and transactions|#sec_sessions]|{status:colour=Red|title=FAIL|subtle=false}|
+|[Memory settings|#sec_memory]|{status:colour=Red|title=FAIL|subtle=false}|
+|[I/O patterns|#sec_io]|{status:colour=Red|title=FAIL|subtle=false}|
+|[Tablespaces / disk|#sec_disk]|{status:colour=Red|title=FAIL|subtle=false}|
+|[Locks|#sec_locks]|{status:colour=Green|title=PASS|subtle=false}|
+
+{toc:maxLevel=2}
+
+h2. Что сделать сейчас
+
+# Увеличить max_wal_size (часто 1–4 GB+ для OLTP под нагрузкой)
+# Проверить wal_buffers_full и общий объём WAL за интервал
+# Сопоставить с checkpoint_timeout — не уменьшать timeout вместо max_wal_size
+# Установить idle_in_transaction_session_timeout
+# Исправить application connection pooling / missing COMMIT
+# Найти источник зависших транзакций в pg_stat_activity
+# Установить idle_in_transaction_session_timeout (например 60s–300s)
+# Проверить max_wal_size и рост WAL
+
+h2. Сводка findings
+
+{anchor:sec_checkpoints}
+h3. Checkpoints
+
+||Severity||ID||Сообщение||Отчёт(ы)||
+|{status:colour=Red|title=CRITICAL|subtle=false}|checkpoints.high_requested_ratio|Requested checkpoints: 39/46 (84.8%), threshold 30%|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|checkpoints.high_requested_count|Requested checkpoints: 39 (threshold 10)|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|checkpoints.high_write_time|Checkpoint write time: 38898.3s over 16.5h interval (threshold 300s)|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|checkpoints.high_write_time_per_hour|Checkpoint write time: 2357.5s/hour (threshold 60s/hour)|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|checkpoints.maxwritten_clean|Bgwriter interrupts (maxwritten_clean): 80728 (threshold 100)|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+
+{anchor:sec_queries}
+h3. Slow queries
+
+||Severity||ID||Сообщение||Отчёт(ы)||
+|{status:colour=Yellow|title=WARNING|subtle=false}|queries.slow_execution|statecontracts/as_admin: max=35536.1ms, calls=1   select $3, t0.OBJECT_ID c2 from statecontracts.T_CONTRACTS t0 where t0.RQUID &lt;> $1 limit $2|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|queries.slow_execution|statecontracts/as_admin: max=26526.6ms, calls=1   select $3, t0.OBJECT_ID c2 from statecontracts.T_PARTICIPANT t0 where t0.RQUID &lt;> $1 limit $2|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|queries.slow_execution|postgres/postgres: mean=6674.5ms, max=12758.8ms, total=220.3s, calls=33   SELECT pgse_profile.take_sample()|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|queries.slow_execution|postgres/"sa-d00000011757": total=76.7s, calls=5939   SELECT spcname, pg_tablespace_size(spcname) AS size FROM pg_tablespace ORDER BY size DESC LIMIT 25|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|queries.slow_execution|statecontracts/as_admin: total=5698.0s, calls=23999073   insert into statecontracts.t_participant (aggregateroot_id,chgcnt,inn,sys_isdeleted,sys_lastchangedate,|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|queries.slow_execution|statecontracts/as_admin: total=723.4s, calls=23999073   select p1_0.object_id from statecontracts.t_participant p1_0 where p1_0.inn is not null and p1_0.inn=$1 |pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|queries.slow_execution|statecontracts/as_admin: total=20024.2s, calls=144991055   insert into statecontracts.t_value (chgcnt,date_,inn,sys_isdeleted,kpp,sys_lastchangedate,level_entit|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|queries.slow_execution|statecontracts/as_admin: total=2888.0s, calls=11999535   insert into statecontracts.t_contracts (chgcnt,claimed,contractid,customerinn,customername,enddate,fine|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|queries.slow_execution|statecontracts/as_admin: total=1373.1s, calls=11999539   INSERT INTO statecontracts.T_REPL_AGGLOCK_CONTRACTS (rootid, siversion, guid, version, sys_lastchangeda|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|queries.slow_execution|statecontracts/as_admin: total=15378.4s, calls=144989282   INSERT INTO statecontracts.T_REPL_AGGLOCK_VALUE (rootid, siversion, guid, version, sys_lastchangedate|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+
+{anchor:sec_autovacuum}
+h3. Autovacuum
+
+||Severity||ID||Сообщение||Отчёт(ы)||
+|{status:colour=Yellow|title=WARNING|subtle=false}|autovacuum.table_high_dead_pct|postgres.pgse_profile.sample_stat_tables: dead_pct=16.5%, n_dead=112895, last_autovacuum=never|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|autovacuum.table_high_dead_pct|postgres.pgse_profile.sample_stat_tables_total: dead_pct=16.4%, n_dead=5688, last_autovacuum=never|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|autovacuum.table_high_dead_pct|postgres.pgse_profile.sample_kcache: dead_pct=16.0%, n_dead=40596, last_autovacuum=never|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|autovacuum.table_high_dead_pct|postgres.pgse_profile.sample_stat_indexes: dead_pct=15.8%, n_dead=44728, last_autovacuum=never|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|autovacuum.table_high_dead_pct|postgres.pgse_profile.sample_statements: dead_pct=15.7%, n_dead=43183, last_autovacuum=never|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+
+{anchor:sec_wal}
+h3. WAL
+
+||Severity||ID||Сообщение||Отчёт(ы)||
+|{status:colour=Yellow|title=WARNING|subtle=false}|wal.backend_writes_high|Backend buffers written (21842039) exceed checkpoint buffers written (11698150)|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|wal.buffers_full|wal_buffers_full: 664448 (threshold 1000)|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+
+{anchor:sec_cache}
+h3. Cache and disk reads
+
+||Severity||ID||Сообщение||Отчёт(ы)||
+|{status:colour=Yellow|title=WARNING|subtle=false}|cache.high_read_time|statecontracts: blk_read_time=260.5s (threshold 60s)|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|cache.low_table_hit_ratio|postgres.pgse_profile.sample_statements: table hit_pct=94.92% (threshold 95.0%)|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|cache.low_table_hit_ratio|postgres.pgse_profile.sample_kcache: table hit_pct=92.32% (threshold 95.0%)|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|cache.low_table_hit_ratio|postgres.pgse_profile.sample_stat_indexes: table hit_pct=93.56% (threshold 95.0%)|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|cache.low_table_hit_ratio|postgres.pgse_profile.last_stat_indexes_srv2: table hit_pct=52.66% (threshold 95.0%)|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|cache.low_table_hit_ratio|postgres.pgse_profile.last_stat_indexes_srv3: table hit_pct=52.68% (threshold 95.0%)|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+
+{anchor:sec_sessions}
+h3. Sessions and transactions
+
+||Severity||ID||Сообщение||Отчёт(ы)||
+|{status:colour=Red|title=CRITICAL|subtle=false}|sessions.high_idle_in_transaction|statecontracts: idle_in_transaction_time=1372155.5s (threshold 3600s), idle_in_transaction_session_timeout=0|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Red|title=CRITICAL|subtle=false}|sessions.idle_timeout_disabled|idle_in_transaction_session_timeout=0 while idle in transaction time is high|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|sessions.connection_pressure|postgres: connection pressure sessions=3241 (589% of max_connections=550)|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|sessions.connection_pressure|statecontracts: connection pressure sessions=6475 (1177% of max_connections=550)|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+
+{anchor:sec_memory}
+h3. Memory settings
+
+||Severity||ID||Сообщение||Отчёт(ы)||
+|{status:colour=Yellow|title=WARNING|subtle=false}|memory.lock_timeout_zero|lock_timeout=0 (no protection against lock waits)|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|memory.statement_timeout_zero|statement_timeout=0 (queries may run indefinitely)|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+
+{anchor:sec_io}
+h3. I/O patterns
+
+||Severity||ID||Сообщение||Отчёт(ы)||
+|{status:colour=Yellow|title=WARNING|subtle=false}|db.statement_dominance|statecontracts: dominates statement time 98.6% (total_exec_time=56520.08)|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.high_heap_reads|statecontracts.statecontracts.t_contracts: heap_blks_read=4806511|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.high_heap_reads|statecontracts.pg_toast.pg_toast_76725: heap_blks_read=4699490|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.high_heap_reads|statecontracts.statecontracts.t_value: heap_blks_read=4339914|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.high_heap_reads|statecontracts.statecontracts.t_repl_agglock_value: heap_blks_read=4068522|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.high_heap_reads|statecontracts.statecontracts.t_participant: heap_blks_read=3304492|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.high_heap_reads|statecontracts.statecontracts.t_repl_agglock_contracts: heap_blks_read=787920|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.high_seq_scan|postgres.pg_catalog.pg_db_role_setting: seq_scan=3003316, idx_scan=121956, ratio=24.6|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.high_seq_scan|statecontracts.pg_catalog.pg_db_role_setting: seq_scan=3003316, idx_scan=121956, ratio=24.6|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.high_seq_scan|statecontracts.statecontracts.t_loadertask: seq_scan=117637, idx_scan=168, ratio=700.2|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.high_seq_scan|postgres.pgse_profile.last_stat_database_srv4: seq_scan=28416, idx_scan=0, ratio=28416.0|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.table_growth|statecontracts.statecontracts.t_value: table growth=21 GB (≥100MB)|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.table_growth|statecontracts.statecontracts.t_repl_agglock_value: table growth=19 GB (≥100MB)|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.table_growth|statecontracts.statecontracts.t_contracts: table growth=14 GB (≥100MB)|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.table_growth|statecontracts.statecontracts.t_participant: table growth=9505 MB (≥100MB)|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.table_growth|statecontracts.statecontracts.t_repl_agglock_contracts: table growth=1617 MB (≥100MB)|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.unused_index|Unused index statecontracts.statecontracts.t_value.i_value_metrictype: size=1537 MB|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.unused_index|Unused index statecontracts.statecontracts.t_value.i_value_level: size=1506 MB|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.unused_index|Unused index statecontracts.statecontracts.t_value.i_value_rquid: size=1414 MB|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.unused_index|Unused index statecontracts.statecontracts.t_value.i_value_sourcedatetime: size=1325 MB|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.unused_index|Unused index statecontracts.statecontracts.t_value.i_value_type: size=1325 MB|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.unused_index|Unused index statecontracts.statecontracts.t_participant.i_participant_aggregateroot_id: size=1050 MB|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.unused_index|Unused index statecontracts.statecontracts.t_participant.t_participant_parentcontract_id_idx: size=1050 MB|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.unused_index|Unused index statecontracts.statecontracts.t_participant.i_participant_rquid: size=254 MB|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.unused_index|Unused index statecontracts.statecontracts.t_participant.i_participant_type: size=243 MB|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.unused_index|Unused index statecontracts.statecontracts.t_contracts.i_contracts_type: size=93 MB|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.vacuum_ops_pressure|statecontracts.statecontracts.t_dspc_sys_config: vacuum_ops=151, analyze_ops=150|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.vacuum_ops_pressure|statecontracts.pg_catalog.pg_statistic: vacuum_ops=56, analyze_ops=0|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.vacuum_ops_pressure|statecontracts.statecontracts.t_repl_agglock_commonparam: vacuum_ops=49, analyze_ops=76|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.vacuum_ops_pressure|postgres.pgse_profile.last_stat_tables_srv4: vacuum_ops=36, analyze_ops=66|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.vacuum_ops_pressure|postgres.pgse_profile.last_stat_kcache_srv5: vacuum_ops=36, analyze_ops=66|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.vacuum_ops_pressure|statecontracts.statecontracts.t_value: vacuum_ops=35, analyze_ops=64|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.vacuum_ops_pressure|statecontracts.statecontracts.t_repl_agglock_value: vacuum_ops=35, analyze_ops=64|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.vacuum_ops_pressure|postgres.pgse_profile.last_stat_indexes_srv4: vacuum_ops=35, analyze_ops=66|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.vacuum_ops_pressure|postgres.pgse_profile.last_stat_indexes_srv5: vacuum_ops=35, analyze_ops=66|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.vacuum_ops_pressure|postgres.pgse_profile.last_stat_tables_srv5: vacuum_ops=35, analyze_ops=66|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.wal_heavy_query|statecontracts/as_admin: wal=105.9GB, shared_blks_dirtied=5802883   insert into statecontracts.t_value (chgcnt,date_,inn,sys_isdeleted,kpp,sys_lastchangedate,le|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.wal_heavy_query|statecontracts/as_admin: wal=46.0GB, shared_blks_dirtied=5763415   insert into statecontracts.t_contracts (chgcnt,claimed,contractid,customerinn,customername,en|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.wal_heavy_query|statecontracts/as_admin: wal=44.2GB, shared_blks_dirtied=3634005   INSERT INTO statecontracts.T_REPL_AGGLOCK_VALUE (rootid, siversion, guid, version, sys_lastch|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.wal_heavy_query|statecontracts/as_admin: wal=29.2GB, shared_blks_dirtied=2348496   insert into statecontracts.t_participant (aggregateroot_id,chgcnt,inn,sys_isdeleted,sys_lastc|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+
+{anchor:sec_disk}
+h3. Tablespaces / disk
+
+||Severity||ID||Сообщение||Отчёт(ы)||
+|{status:colour=Yellow|title=WARNING|subtle=false}|disk.tablespace_growth|Tablespace statecontracts: size_delta=135 GB (size=135 GB, threshold 500MB)|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+
+{anchor:sec_locks}
+h3. Locks
+
+_Нет findings — PASS._
+
+{expand:Справочно: параметры анализа}
+||Параметр||Значение||
+|Дата формирования|2026-08-13 17:53|
+|Инструмент|pg_profile_checks / analyze_pgprofile.py|
+|Сервер|tsldd-pprb01138.delta.sbrf.ru|
+|Интервал|2026-08-11 16:30:02+03 — 2026-08-12 09:00:02+03|
+|Длительность|16.5 ч|
+|Файл отчёта|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|Всего находок|75|
+|Высокий приоритет|29|
+
+{expand}
+
+h2. EXPLAIN (ANALYZE, BUFFERS) — скопировать в psql
+
+{info}Ниже готовые команды для вставки в psql/клиент. На prod осторожно: ANALYZE выполняет запрос. При необходимости замените литералы/параметры на актуальные значения.{info}
+
+{expand:SQL · hex=7e098fea4f36a9d}
+{code:language=sql|title=queries.slow_execution · hex=7e098fea4f36a9d}
+EXPLAIN (ANALYZE, BUFFERS)
+select $3, t0.OBJECT_ID c2 from statecontracts.T_CONTRACTS t0 where t0.RQUID &lt;> $1 limit $2;
+{code}
+
+{expand}
+
+{expand:SQL · hex=1bd9e392e5d44395}
+{code:language=sql|title=queries.slow_execution · hex=1bd9e392e5d44395}
+EXPLAIN (ANALYZE, BUFFERS)
+select $3, t0.OBJECT_ID c2 from statecontracts.T_PARTICIPANT t0 where t0.RQUID &lt;> $1 limit $2;
+{code}
+
+{expand}
+
+{expand:SQL · hex=b59c46b67088420d}
+{code:language=sql|title=queries.slow_execution · hex=b59c46b67088420d}
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT pgse_profile.take_sample();
+{code}
+
+{expand}
+
+{expand:SQL · hex=566f5112e6ebf965}
+{code:language=sql|title=queries.slow_execution · hex=566f5112e6ebf965}
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT spcname, pg_tablespace_size(spcname) AS size FROM pg_tablespace ORDER BY size DESC LIMIT 25;
+{code}
+
+{expand}
+
+{expand:SQL · hex=37b83dead5b5b9e9}
+{code:language=sql|title=queries.slow_execution · hex=37b83dead5b5b9e9}
+EXPLAIN (ANALYZE, BUFFERS)
+insert into statecontracts.t_participant (aggregateroot_id,chgcnt,inn,sys_isdeleted,sys_lastchangedate,name,offflag,sys_ownerid,parentcontract_id,sys_partitionid,sys_recmodelversion,role,rquid,type,object_id) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$15,$14);
+{code}
+
+{expand}
+
+----
+
+_Ниже — вывод ИИ (Confluence Wiki Markup). Вставьте ответ gigacli или используйте merge_confluence.py._

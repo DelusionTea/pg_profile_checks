@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="/css/gatling-base.css">
   <link rel="stylesheet" href="/css/pgprofile.css">
 </head>
-<body>
+<body class="qwen-unavailable">
 <div class="page">
   <header class="header header-main">
     <div class="mascot-wrap">
@@ -76,11 +76,12 @@
       </p>
 
       <div id="jvm-fields" hidden>
+        <div id="jvm-wizard-steps" class="status-bar" style="margin-bottom: 0.9rem;"></div>
         <div class="field-grid">
           <div class="field">
             <label for="jvm-system-name">АС</label>
             <select id="jvm-system-name"></select>
-            <p class="field-help">В списке есть реальные и demo АС.</p>
+            <p class="field-help">В списке есть реальные и demo АС. Нет нужной — «добавить новую систему».</p>
           </div>
           <div class="field">
             <label for="jvm-pod-name">Pod</label>
@@ -92,66 +93,224 @@
             <select id="jvm-container-name"></select>
           </div>
         </div>
-        <p class="section-title" style="margin-top: 1rem;">Проблемы</p>
-        <p class="dropzone-hint" style="margin: -0.35rem 0 0.75rem;">Отметьте проблему, если хотите точечный план решения. Можно не отмечать, но заполнить метрики для контекстного анализа.</p>
-        <div id="jvm-problem-list" class="symptom-list">
-          <p class="empty-row" style="padding: 0.5rem 0;">загрузка списка проблем…</p>
+        <div id="jvm-new-system-panel" hidden>
+          <div class="field-grid">
+            <div class="field">
+              <label for="jvm-new-system-name">Имя новой АС</label>
+              <input id="jvm-new-system-name" type="text" placeholder="CounterAgent" autocomplete="off">
+              <p class="field-help">Так будет называться папка в jvmcheck_runtime/resources/.</p>
+            </div>
+          </div>
+          <p class="field-help">Нужен <code>resources.yaml</code>, желательно ещё <code>jvm-config.txt</code>. В имени ресурсного файла — resource или values; в JVM-конфиге — jvm или java.</p>
+          <div id="jvm-new-dropzone" class="dropzone" tabindex="0" style="margin-top:0.5rem;">
+            <p class="dropzone-title">Перетащите resources / jvm-config</p>
+            <p class="dropzone-hint">или нажмите, чтобы выбрать файлы</p>
+            <input id="jvm-new-file-input" class="hidden-file" type="file" accept=".yaml,.yml,.txt" multiple>
+          </div>
+          <div id="jvm-new-files-list" class="field-help"></div>
+          <div class="actions-row" style="margin-top: 0.75rem;">
+            <button id="jvm-create-system-btn" type="button" class="btn-secondary" disabled>Подгрузить файлы</button>
+          </div>
         </div>
-        <p class="section-title" style="margin-top: 1rem;">Значения проблем и контекста</p>
-        <p class="dropzone-hint" style="margin: -0.35rem 0 0.35rem;">Обязательные поля: `GC p95`, `Heap used (MiB)`, `Memory usage (%)`. Эти значения используются в анализе и попадают в первый блок Confluence.</p>
-        <div class="actions-row" style="margin: 0 0 0.75rem;">
-          <button id="jvm-fill-last-values-btn" type="button" class="btn-secondary" disabled>Подставить последние значения</button>
-          <span id="jvm-history-hint" class="auto-refresh-hint">история для выбранной АС/контейнера не найдена</span>
-        </div>
+        <p class="section-title" style="margin-top: 1rem;">Дерево отсечения</p>
+        <p class="dropzone-hint" style="margin: -0.35rem 0 0.75rem;">Плеч всегда два (два Kubernetes-кластера). «Не знаю» допустимо — анализ всё равно запустится, копируемую строку флагов не дадим.</p>
         <div class="field-grid">
           <div class="field">
+            <label for="jvm-pods-per-shoulder">Подов этой АС на одном плече</label>
+            <input id="jvm-pods-per-shoulder" type="number" min="1" placeholder="2">
+          </div>
+          <div class="field">
+            <label for="jvm-restart-kind">Почему рестартовал контейнер</label>
+            <select id="jvm-restart-kind">
+              <option value="none">Не рестартовал</option>
+              <option value="oomkilled">OOMKilled</option>
+              <option value="evicted">Evicted</option>
+              <option value="java_oome">Java OutOfMemoryError</option>
+              <option value="unknown">Не знаю</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="jvm-heap-growing">Память в тесте растёт (рестарта ещё нет)?</label>
+            <select id="jvm-heap-growing">
+              <option value="no">Нет</option>
+              <option value="yes">Да</option>
+              <option value="unknown">Не знаю</option>
+            </select>
+          </div>
+        </div>
+        <div id="jvm-tree-memory-closed" hidden>
+          <div class="field">
+            <label for="jvm-memory-cause-closed">Причину OOM или OOME уже закрыли?</label>
+            <select id="jvm-memory-cause-closed">
+              <option value="unknown">Не знаю</option>
+              <option value="no">Нет</option>
+              <option value="yes">Да</option>
+            </select>
+          </div>
+        </div>
+        <div id="jvm-tree-heap-metrics" hidden>
+          <p class="field-help">Нужны процент роста и часы <strong>после выхода на стабильную динамику</strong>, не со старта пода. Прогрев и заполнение кэша в этот расчёт не входят. Heap это или нет — посчитаем по графику и по цифрам до/после GC. SLA по памяти: 80% usage. Если до 80% больше 30 дней — рост не критичен.</p>
+          <div class="field-grid">
+            <div class="field" data-metric-field="heap_used_mib">
+              <label for="jvm-heap-used">Heap used сейчас, MiB</label>
+              <input id="jvm-heap-used" type="number" step="1" placeholder="3072">
+              <p class="field-help metric-error" id="err-jvm-heap-used"></p>
+            </div>
+            <div class="field">
+              <label for="jvm-oldgen-mode">OldGen used — как вводим</label>
+              <select id="jvm-oldgen-mode">
+                <option value="percent">в процентах</option>
+                <option value="mib">целым числом, MiB</option>
+              </select>
+            </div>
+            <div class="field" id="jvm-oldgen-percent-wrap" data-metric-field="old_gen_used_percent">
+              <label for="jvm-oldgen-used-percent">OldGen used сейчас, %</label>
+              <input id="jvm-oldgen-used-percent" type="number" placeholder="80">
+              <p class="field-help metric-error" id="err-jvm-oldgen-used-percent"></p>
+            </div>
+            <div class="field" id="jvm-oldgen-mib-wrap" hidden data-metric-field="old_gen_used_mib">
+              <label for="jvm-oldgen-used-mib">OldGen used сейчас, MiB</label>
+              <input id="jvm-oldgen-used-mib" type="number" step="1" placeholder="2048">
+            </div>
+            <div class="field" id="jvm-oldgen-capacity-wrap" hidden>
+              <label for="jvm-oldgen-capacity">OldGen capacity, MiB (если есть)</label>
+              <input id="jvm-oldgen-capacity" type="number" step="1" placeholder="2560">
+            </div>
+            <div class="field" data-metric-field="container_memory_usage_percent">
+              <label for="jvm-memory-usage-percent">Memory usage контейнера сейчас, %</label>
+              <input id="jvm-memory-usage-percent" type="number" placeholder="15">
+              <p class="field-help">Нужен для SLA: порог 80%. Если до 80% больше 30 дней — рост не критичен, limit не поднимаем.</p>
+              <p class="field-help metric-error" id="err-jvm-memory-usage-percent"></p>
+            </div>
+            <div class="field">
+              <label for="jvm-growth-of">Какой график рос</label>
+              <select id="jvm-growth-of">
+                <option value="container_rss">Memory usage / RSS контейнера</option>
+                <option value="oldgen">OldGen</option>
+                <option value="heap">Heap used</option>
+                <option value="unknown">Не знаю</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="jvm-heap-growth-percent">На сколько процентов вырос</label>
+              <input id="jvm-heap-growth-percent" type="number" placeholder="15">
+            </div>
+            <div class="field">
+              <label for="jvm-heap-growth-hours">За сколько часов</label>
+              <input id="jvm-heap-growth-hours" type="number" step="0.1" placeholder="2">
+              <p class="field-help">Окно после стабильной динамики, не от старта пода.</p>
+            </div>
+            <div class="field">
+              <label for="jvm-gc-ran">За это время GC успел отработать?</label>
+              <select id="jvm-gc-ran">
+                <option value="unknown">Не знаю</option>
+                <option value="yes">Да</option>
+                <option value="no">Нет</option>
+              </select>
+            </div>
+          </div>
+          <div id="jvm-tree-gc-window" hidden>
+            <p class="field-help">Целые MiB с графика: сразу до сборки и сразу после. Если после сборки heap снизился, но <strong>каждая следующая очистка заканчивается выше</strong> — проблема всё ещё есть (не плато).</p>
+            <div class="field-grid">
+              <div class="field">
+                <label for="jvm-heap-before-gc">Heap used сразу до GC, MiB</label>
+                <input id="jvm-heap-before-gc" type="number" step="1" placeholder="4096">
+              </div>
+              <div class="field">
+                <label for="jvm-heap-after-gc">Heap used сразу после GC, MiB</label>
+                <input id="jvm-heap-after-gc" type="number" step="1" placeholder="1800">
+              </div>
+              <div class="field">
+                <label for="jvm-oldgen-returned">OldGen после GC снизился?</label>
+                <select id="jvm-oldgen-returned">
+                  <option value="unknown">Не знаю</option>
+                  <option value="yes">Да, снизился</option>
+                  <option value="no">Нет, остался высоким</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="jvm-post-gc-floor">Минимум после каждой следующей GC выше?</label>
+                <select id="jvm-post-gc-floor">
+                  <option value="unknown">Не знаю</option>
+                  <option value="no">Нет, пол стабилен</option>
+                  <option value="yes">Да, пила растёт</option>
+                </select>
+                <p class="field-help">Одна очистка не доказывает, что утечки нет. Смотрите ряд минимумов после GC.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="field-grid" style="margin-top: 0.75rem;">
+          <div class="field">
+            <label for="jvm-cpu-throttled">Есть CPU throttle?</label>
+            <select id="jvm-cpu-throttled">
+              <option value="no">Нет</option>
+              <option value="yes">Да</option>
+              <option value="unknown">Не знаю</option>
+            </select>
+          </div>
+        </div>
+        <div id="jvm-tree-cpu-pct" hidden>
+          <p class="field-help">Сумма CPU % of limits этой АС на кластере (не нода, не request). Знаменатель — сумма CPU limits контейнеров этой АС на плече.</p>
+          <div class="field-grid">
+            <div class="field">
+              <label for="jvm-cpu-pct-shoulder-1">CPU % of limits, плечо 1</label>
+              <input id="jvm-cpu-pct-shoulder-1" type="number" placeholder="40">
+            </div>
+            <div class="field">
+              <label for="jvm-cpu-pct-shoulder-2">CPU % of limits, плечо 2</label>
+              <input id="jvm-cpu-pct-shoulder-2" type="number" placeholder="30">
+            </div>
+          </div>
+        </div>
+        <div class="field-grid" style="margin-top: 0.75rem;">
+          <div class="field" data-metric-field="gc_pause_p95_ms">
             <label for="jvm-gc-p95">GC pause p95 (ms)</label>
             <input id="jvm-gc-p95" type="number" placeholder="250">
+            <p class="field-help metric-error" id="err-jvm-gc-p95"></p>
+            <p class="field-help" id="jvm-tree-gc-cutoff">Если p95 не выше 250 мс, про отклик пользователя спрашивать не будем. Можно сразу нажать «Анализировать».</p>
           </div>
+        </div>
+        <div id="jvm-tree-user-latency" hidden>
+          <div class="field-grid">
+            <div class="field">
+              <label for="jvm-user-latency-grew">В том же окне росли времена отклика пользователя?</label>
+              <select id="jvm-user-latency-grew">
+                <option value="unknown">Не знаю</option>
+                <option value="no">Нет</option>
+                <option value="yes">Да</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="jvm-user-latency-p95">p95 ответа пользователя (мс), необязательно</label>
+              <input id="jvm-user-latency-p95" type="number" placeholder="">
+            </div>
+          </div>
+        </div>
+        <div id="jvm-tree-coincide" hidden>
           <div class="field">
-            <label for="jvm-gc-p99">GC pause p99 (ms)</label>
-            <input id="jvm-gc-p99" type="number" placeholder="450">
+            <label for="jvm-pauses-coincide">Паузы совпадали с CPU throttle?</label>
+            <select id="jvm-pauses-coincide">
+              <option value="unknown">Не знаю</option>
+              <option value="no">Нет</option>
+              <option value="yes">Да</option>
+            </select>
           </div>
+        </div>
+        <div id="jvm-tree-gc-cpu-spike" hidden>
           <div class="field">
-            <label for="jvm-gc-ratio">GC time ratio (%)</label>
-            <input id="jvm-gc-ratio" type="number" placeholder="12">
+            <label for="jvm-gc-cpu-spike">Всплеск CPU на очистке GC нарушал SLA?</label>
+            <select id="jvm-gc-cpu-spike">
+              <option value="unknown">Не знаю</option>
+              <option value="no">Нет</option>
+              <option value="yes">Да</option>
+            </select>
+            <p class="field-help">GC может отрабатывать, но снести такой кусок heap, что CPU burst бьёт по отклику. Тогда это не повод поднимать `-Xmx`.</p>
           </div>
-          <div class="field">
-            <label for="jvm-memory-usage-percent">Container memory usage (%)</label>
-            <input id="jvm-memory-usage-percent" type="number" placeholder="82">
-          </div>
-          <div class="field">
-            <label for="jvm-heap-used">Heap used (MiB)</label>
-            <input id="jvm-heap-used" type="number" placeholder="3072">
-          </div>
-          <div class="field">
-            <label for="jvm-heap-used-percent">Heap used (%)</label>
-            <input id="jvm-heap-used-percent" type="number" placeholder="85">
-          </div>
-          <div class="field">
-            <label for="jvm-oldgen-used">OldGen used (MiB)</label>
-            <input id="jvm-oldgen-used" type="number" placeholder="2048">
-          </div>
-          <div class="field">
-            <label for="jvm-oldgen-capacity">OldGen capacity (MiB)</label>
-            <input id="jvm-oldgen-capacity" type="number" placeholder="2560">
-          </div>
-          <div class="field">
-            <label for="jvm-oldgen-used-percent">OldGen used (%)</label>
-            <input id="jvm-oldgen-used-percent" type="number" placeholder="80">
-          </div>
-          <div class="field">
-            <label for="jvm-newgen-used-mib">NewGen used (MiB)</label>
-            <input id="jvm-newgen-used-mib" type="number" placeholder="512">
-          </div>
-          <div class="field">
-            <label for="jvm-newgen-capacity-mib">NewGen capacity (MiB)</label>
-            <input id="jvm-newgen-capacity-mib" type="number" placeholder="1024">
-          </div>
-          <div class="field">
-            <label for="jvm-newgen-used-percent">NewGen used (%)</label>
-            <input id="jvm-newgen-used-percent" type="number" placeholder="50">
-          </div>
+        </div>
+        <div id="jvm-review-panel" class="note-ai" style="margin-top: 0.9rem;">
+          <strong>Сводка перед запуском</strong>
+          <div id="jvm-review-text" style="margin-top: 0.35rem;"></div>
         </div>
       </div>
 
@@ -187,6 +346,10 @@
             <input id="jvm-file-input" class="hidden-file" type="file" accept=".yaml,.yml,.txt" multiple>
           </div>
           <div id="jvm-files-list" class="field-help"></div>
+          <div class="actions-row" style="margin-top: 0.75rem;">
+            <button id="jvm-fill-last-values-btn" type="button" class="btn-secondary" disabled>Подставить прошлый прогон этой АС</button>
+            <span id="jvm-history-hint" class="auto-refresh-hint">не шаг дерева — только если уже гоняли эту АС</span>
+          </div>
         </div>
       </details>
 
@@ -252,26 +415,70 @@
     </div>
     <div class="panel-body">
       <div id="status-bar" class="status-bar"></div>
+      <div id="compare-insights" class="compare-insights" hidden></div>
 
       <div id="check-flow" class="check-flow" hidden>
         <p class="section-title">Чеклист проверки</p>
         <label class="check-item"><input type="checkbox" data-step="verdict"> Сверить краткий вердикт</label>
         <label class="check-item"><input type="checkbox" data-step="findings"> Открыть top findings</label>
         <label class="check-item"><input type="checkbox" data-step="verify"> Пройти verify / действия</label>
-        <label class="check-item"><input type="checkbox" data-step="ai"> (опц.) промпт для ИИ</label>
+        <label class="check-item"><input type="checkbox" data-step="ai"> (опц.) промпт для ИИ или Qwen</label>
         <label class="check-item"><input type="checkbox" data-step="confluence"> Вставить wiki в Confluence</label>
       </div>
 
       <div id="findings-cards" class="findings-cards" hidden></div>
 
+      <div id="llm-panel" class="llm-panel js-qwen-ui" hidden>
+        <p class="section-title">Headless Qwen</p>
+        <p class="note-ai">
+          Один клик собирает промпт из brief и таблицы влияния и отправляет его в выбранный провайдер.
+          По умолчанию <code>dry_run</code> — без сети, чтобы проверить цепочку на этой машине.
+          В модель уходят brief, влияние GUC и findings. Policy <code>none</code> (default) SQL из findings не маскирует;
+          <code>bank_redact</code> включают отдельно на контуре, не в yaml default.
+        </p>
+        <div class="field-grid">
+          <div class="field">
+            <label for="llm-task">Задача</label>
+            <select id="llm-task"></select>
+          </div>
+          <div class="field">
+            <label for="llm-provider">Провайдер</label>
+            <select id="llm-provider"></select>
+            <p id="llm-provider-hint" class="field-help"></p>
+          </div>
+          <div class="field" style="grid-column: 1 / -1;">
+            <label for="llm-extra">Дополнительно (необязательно)</label>
+            <input id="llm-extra" type="text" maxlength="1000" placeholder="например: только GO / NO-GO, не больше 5 строк">
+          </div>
+        </div>
+        <div class="actions-row" style="margin-top: 0.85rem;">
+          <button id="llm-run-btn" type="button" class="btn-primary">Запросить Qwen</button>
+          <span id="llm-spinner" class="inline-spinner" aria-hidden="true"></span>
+          <span id="llm-status" class="status-pill llm-status-idle">статус <strong>idle</strong></span>
+          <span id="llm-policy" class="status-pill">policy <strong>none</strong></span>
+          <span id="llm-quality" class="status-pill" hidden>quality <strong>—</strong></span>
+        </div>
+        <p id="llm-meta" class="field-help"></p>
+        <textarea id="llm-answer" class="result-text result-text-compact" readonly hidden></textarea>
+        <div id="llm-answer-actions" class="actions-row" hidden style="margin-top: 0.6rem;">
+          <button type="button" class="btn-secondary" id="copy-llm-answer">Скопировать ответ</button>
+          <span id="llm-publish-note" class="field-help" hidden>это не для Confluence, quality gate закрыт</span>
+        </div>
+      </div>
+
       <div class="tabs" role="tablist">
         <button type="button" class="tab-btn active" data-tab="wiki">Confluence</button>
         <button type="button" class="tab-btn" data-tab="prompt">Промпт для ИИ</button>
         <button type="button" class="tab-btn" data-tab="brief">Brief</button>
+        <button type="button" class="tab-btn js-qwen-ui" data-tab="quality">Качество</button>
       </div>
 
       <div id="tab-wiki" class="tab-panel active">
-        <p class="note-ai">Wiki Markup для вставки в Confluence (Insert → Wiki Markup). gigacli пока не вызывается из UI.</p>
+        <p class="note-ai">
+          Wiki Markup для Confluence (Insert → Wiki Markup). Таблицы уже из Python, ИИ для них не нужен.
+          <strong>ZIP</strong> — пакет для внешней модели: внутри <code>README_AI.txt</code> (как передать архив, что умеет модель, что проверяется).
+          Qwen в блоке выше — отдельный путь, с автопроверкой качества ответа.
+        </p>
         <div class="actions-row wiki-toolbar">
           <button type="button" class="btn-primary" id="copy-wiki">Скопировать для Confluence</button>
           <button type="button" class="btn-secondary" id="copy-verdict">Вердикт + план</button>
@@ -287,7 +494,11 @@
       </div>
 
       <div id="tab-prompt" class="tab-panel">
-        <p class="note-ai">Скопируйте промпт в gigacli вручную. Ответ можно слить со stub через <code>merge_confluence.py</code>. Полный набор файлов — в ZIP.</p>
+        <p class="note-ai">
+          Скопируйте промпт в gigacli / GigaChat / другой чат. Модель не получает новых функций — только этот текст.
+          Полный набор файлов и инструкция — в ZIP (<code>README_AI.txt</code>).
+          Ответ внешней модели автоматически не проверяется; quality gate работает у кнопки «Запросить Qwen».
+        </p>
         <div class="actions-row" style="margin-bottom: 0.75rem;">
           <button type="button" class="btn-secondary" id="copy-prompt">Скопировать промпт</button>
         </div>
@@ -296,6 +507,17 @@
 
       <div id="tab-brief" class="tab-panel">
         <textarea id="brief-text" class="result-text" readonly></textarea>
+      </div>
+
+      <div id="tab-quality" class="tab-panel js-qwen-ui">
+        <p class="note-ai">
+          Сводный отчёт качества: слои oracle, пересчёт confidence и quality gate для ответа Qwen.
+          Тот же текст, что <code>python run_quality.py --output-dir …</code>.
+        </p>
+        <div class="actions-row" style="margin-bottom: 0.75rem;">
+          <button type="button" class="btn-secondary" id="copy-quality">Скопировать отчёт</button>
+        </div>
+        <textarea id="quality-text" class="result-text" readonly></textarea>
       </div>
     </div>
   </section>

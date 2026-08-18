@@ -1,0 +1,487 @@
+h1. НТ: анализ прогонов и влияние настроек
+
+h2. Краткие выводы
+
+||Параметр||Значение||
+|Решение|{status:colour=Red|title=NO-GO|subtle=false}|
+|Статус гипотезы|{status:colour=Red|title=REJECTED|subtle=false}|
+|Симптомы|Высокая утилизация CPU БД, Высокая генерация WAL|
+|Прогонов НТ|2|
+|Всего отчетов в сравнении|3|
+|Изменено параметров|11|
+|Связанных метрик (по выбранным проблемам)|50|
+|Улучшений / ухудшений (голоса)|4 / 15|
+
+h2. Отличия настроек между прогонами
+
+||Параметр||nt1||nt2||prod1||
+|checkpoint_completion_target|0.5|0.7|0.7|
+|commit_timestamp_buffers|976|976|1024|
+|huge_pages|—|on|on|
+|max_wal_size|8192|12288|12288|
+|pg_conf_load_time|2026-07-29 18:13:55.220776+03|2026-08-10 12:11:58.339478+03|2026-08-12 13:51:51.80184+03|
+|pg_postmaster_start_time|2026-06-10 15:13:32.405098+03|2026-08-10 12:10:53.521971+03|2026-08-12 13:50:49.898345+03|
+|shared_buffers|504320|504320|537600|
+|shared_memory_size|4452|4452|4724|
+|shared_memory_size_in_huge_pages|2226|2226|2362|
+|subtransaction_buffers|976|976|1024|
+|transaction_buffers|976|976|1024|
+
+h3. Связь настроек и метрик по парам
+
+h4. nt1 → nt2
+
+||Параметр||Было||Стало||Направление||Связь||
+|checkpoint_completion_target|0.5|0.7|changed|{status:colour=Yellow|title=PROBABLE|subtle=false}|
+|huge_pages|—|on|changed|{status:colour=Yellow|title=PROBABLE|subtle=false}|
+|max_wal_size|8192 (64.0 MB)|12288 (96.0 MB)|increased|{status:colour=Yellow|title=PROBABLE|subtle=false}|
+
+||Параметр||Метрика||Δ||Интерпретация||
+|checkpoint_completion_target|checkpoint_write_time|+13711 (+54.4%)|неоднозначно|
+|checkpoint_completion_target|checkpoint_sync_time|-1.300 (-27.0%)|неоднозначно|
+|checkpoint_completion_target|checkpoints_req|-17.00 (-30.4%)|неоднозначно|
+|huge_pages|blk_read_time|+17.92 (+6.7%)|неоднозначно|
+|max_wal_size|checkpoints_req|-17.00 (-30.4%)|улучшение|
+|max_wal_size|checkpoint_write_time|+13711 (+54.4%)|ухудшение|
+|max_wal_size|wal_buffers_full|-267757 (-28.7%)|улучшение|
+
+{expand:Одинаковые настройки (без изменений)}
+||Параметр||nt1||nt2||prod1||
+|archive_command|/opt/pangolin-backup-tools/bin/pg_probackup archive-push -B /pgarclogs/05 --instance pprb_test-5fr75l --wal-file-path=%p --wal-file-name=%f --compress --overwrite -j 4 --batch-size=100|/opt/pangolin-backup-tools/bin/pg_probackup archive-push -B /pgarclogs/05 --instance pprb_test-5fr75l --wal-file-path=%p --wal-file-name=%f --compress --overwrite -j 4 --batch-size=100|/opt/pangolin-backup-tools/bin/pg_probackup archive-push -B /pgarclogs/05 --instance pprb_test-5fr75l --wal-file-path=%p --wal-file-name=%f --compress --overwrite -j 4 --batch-size=100|
+|archive_timeout|180|180|180|
+|authentication_max_workers|8|8|8|
+|authentication_port|5544|5544|5544|
+|autovacuum_naptime|10|10|10|
+|autovacuum_vacuum_cost_delay|10|10|10|
+|autovacuum_vacuum_cost_limit|1000|1000|1000|
+|autovacuum_work_mem|163840|163840|163840|
+|checkpoint_timeout|1680|1680|1680|
+|client_encoding|UTF8|UTF8|UTF8|
+|cluster_name|pprb_test-5fr75l|pprb_test-5fr75l|pprb_test-5fr75l|
+|data_checksums|on|on|on|
+|debug_pretty_print|off|off|off|
+|default_text_search_config|pg_catalog.english|pg_catalog.english|pg_catalog.english|
+|disk_check_timeout|5|5|5|
+|disk_operation_timeout|3|3|3|
+|disk_retry_count|21|21|21|
+|effective_cache_size|1512960|1512960|1512960|
+|effective_io_concurrency|300|300|300|
+|enable_filesystem_checker|on|on|on|
+|enable_vault_params_cache|off|off|off|
+|enabled_extra_auth_methods|cert,md5,reject,scram-sha-256,ldap,2f-scram-sha-256,2f-ldap,gss|cert,md5,reject,scram-sha-256,ldap,2f-scram-sha-256,2f-ldap,gss|cert,md5,reject,scram-sha-256,ldap,2f-scram-sha-256,2f-ldap,gss|
+|enabled_sec_admin_extra_auth_methods|cert|cert|cert|
+|force_failover_timeout|95|95|95|
+|hot_standby_feedback|on|on|on|
+|lc_collate|en_US.UTF-8|en_US.UTF-8|en_US.UTF-8|
+|lc_ctype|en_US.UTF-8|en_US.UTF-8|en_US.UTF-8|
+|lc_messages|en_US.utf8|en_US.utf8|en_US.utf8|
+|lc_monetary|en_US.utf8|en_US.utf8|en_US.utf8|
+|lc_numeric|en_US.utf8|en_US.utf8|en_US.utf8|
+|lc_time|en_US.utf8|en_US.utf8|en_US.utf8|
+|listen_addresses|0.0.0.0|0.0.0.0|0.0.0.0|
+|log_autovacuum_min_duration|60000|60000|60000|
+|log_connections|on|on|on|
+|log_disconnections|on|on|on|
+|log_file_mode|420|420|420|
+|log_line_prefix|%t (%p): (%l-1) app=%a,user=%u,db=%d,client=%h,type=%b|%t (%p): (%l-1) app=%a,user=%u,db=%d,client=%h,type=%b|%t (%p): (%l-1) app=%a,user=%u,db=%d,client=%h,type=%b|
+|log_lock_waits|on|on|on|
+|log_min_duration_statement|5000|5000|5000|
+|log_min_error_statement|warning|warning|warning|
+|log_replication_commands|on|on|on|
+|log_rotation_size|102400|102400|102400|
+|log_temp_files|0|0|0|
+|log_timezone|Europe/Moscow|Europe/Moscow|Europe/Moscow|
+|log_truncate_on_rotation|on|on|on|
+|logging_collector|on|on|on|
+|maintenance_work_mem|1613824|1613824|1613824|
+|max_connections|550|550|550|
+|max_parallel_workers|4|4|4|
+|max_parallel_workers_per_gather|8|8|8|
+|max_prepared_transactions|12|12|12|
+|max_stack_depth|2048|2048|2048|
+|max_worker_processes|32|32|32|
+|min_wal_size|2048|2048|2048|
+|password_policies_enable|on|on|on|
+|password_policy.allow_hashed_password|on|on|on|
+|password_policy.alpha_numeric|3|3|3|
+|password_policy.deduplicate_ssl_no_ssl_fail_auth_attepmts|on|on|on|
+|password_policy.grace_login_limit|0|0|0|
+|password_policy.grace_login_time_limit|3 days|3 days|3 days|
+|password_policy.illegal_values|on|on|on|
+|password_policy.in_history|4|4|4|
+|password_policy.lockout|off|off|off|
+|password_policy.max_age|0|0|0|
+|password_policy.max_failure|6|6|6|
+|password_policy.min_length|25|25|25|
+|password_policy.min_special_chars|1|1|1|
+|password_policy.min_uppercase|1|1|1|
+|password_policy.reuse_time|365 days|365 days|365 days|
+|password_policy.use_password_strength_estimator|on|on|on|
+|performance_insights.enable|on|on|on|
+|performance_insights.masking|on|on|on|
+|performance_insights.num_samples_in_ram|12|12|12|
+|performance_insights.sampling_period|5000|5000|5000|
+|pg_hint_plan.message_level|debug|debug|debug|
+|pg_hint_plan.parse_messages|warning|warning|warning|
+|pg_ident_conf|# PostgreSQL User Name Maps # ========================= # # Refer to the PostgreSQL documentation, chapter "Client # Authentication" for a complete description.  A short synopsis # follows. # # This file controls PostgreSQL user name mapping.  It maps external # user names to their corresponding PostgreSQL user names.  Records # are of the form: # # MAPNAME  SYSTEM-USERNAME  PG-USERNAME # # (The uppercase quantities must be replaced by actual values.) # # MAPNAME is the (otherwise freely chosen) map name that was used in # pg_hba.conf.  SYSTEM-USERNAME is the detected user name of the # client.  PG-USERNAME is the requested PostgreSQL user name.  The # existence of a record specifies that SYSTEM-USERNAME may connect as # PG-USERNAME. # # If SYSTEM-USERNAME starts with a slash (/), it will be treated as a # regular expression.  Optionally this can contain a capture (a # parenthesized subexpression).  The substring matching the capture # will be substituted for \1 (backslash-one) if present in # PG-USERNAME. # # Multiple maps may be specified in this file and used by pg_hba.conf. # # No map names are defined in the default configuration.  If all # system user names and PostgreSQL user names are the same, you don't # need anything in this file. # # This file is read on server startup and when the postmaster receives # a SIGHUP signal.  If you edit the file on a running system, you have # to SIGHUP the postmaster for the changes to take effect.  You can # use "pg_ctl reload" to do that.  # Put your actual configuration here # ----------------------------------  # MAPNAME       SYSTEM-USERNAME         PG-USERNAME|# PostgreSQL User Name Maps # ========================= # # Refer to the PostgreSQL documentation, chapter "Client # Authentication" for a complete description.  A short synopsis # follows. # # This file controls PostgreSQL user name mapping.  It maps external # user names to their corresponding PostgreSQL user names.  Records # are of the form: # # MAPNAME  SYSTEM-USERNAME  PG-USERNAME # # (The uppercase quantities must be replaced by actual values.) # # MAPNAME is the (otherwise freely chosen) map name that was used in # pg_hba.conf.  SYSTEM-USERNAME is the detected user name of the # client.  PG-USERNAME is the requested PostgreSQL user name.  The # existence of a record specifies that SYSTEM-USERNAME may connect as # PG-USERNAME. # # If SYSTEM-USERNAME starts with a slash (/), it will be treated as a # regular expression.  Optionally this can contain a capture (a # parenthesized subexpression).  The substring matching the capture # will be substituted for \1 (backslash-one) if present in # PG-USERNAME. # # Multiple maps may be specified in this file and used by pg_hba.conf. # # No map names are defined in the default configuration.  If all # system user names and PostgreSQL user names are the same, you don't # need anything in this file. # # This file is read on server startup and when the postmaster receives # a SIGHUP signal.  If you edit the file on a running system, you have # to SIGHUP the postmaster for the changes to take effect.  You can # use "pg_ctl reload" to do that.  # Put your actual configuration here # ----------------------------------  # MAPNAME       SYSTEM-USERNAME         PG-USERNAME|# PostgreSQL User Name Maps # ========================= # # Refer to the PostgreSQL documentation, chapter "Client # Authentication" for a complete description.  A short synopsis # follows. # # This file controls PostgreSQL user name mapping.  It maps external # user names to their corresponding PostgreSQL user names.  Records # are of the form: # # MAPNAME  SYSTEM-USERNAME  PG-USERNAME # # (The uppercase quantities must be replaced by actual values.) # # MAPNAME is the (otherwise freely chosen) map name that was used in # pg_hba.conf.  SYSTEM-USERNAME is the detected user name of the # client.  PG-USERNAME is the requested PostgreSQL user name.  The # existence of a record specifies that SYSTEM-USERNAME may connect as # PG-USERNAME. # # If SYSTEM-USERNAME starts with a slash (/), it will be treated as a # regular expression.  Optionally this can contain a capture (a # parenthesized subexpression).  The substring matching the capture # will be substituted for \1 (backslash-one) if present in # PG-USERNAME. # # Multiple maps may be specified in this file and used by pg_hba.conf. # # No map names are defined in the default configuration.  If all # system user names and PostgreSQL user names are the same, you don't # need anything in this file. # # This file is read on server startup and when the postmaster receives # a SIGHUP signal.  If you edit the file on a running system, you have # to SIGHUP the postmaster for the changes to take effect.  You can # use "pg_ctl reload" to do that.  # Put your actual configuration here # ----------------------------------  # MAPNAME       SYSTEM-USERNAME         PG-USERNAME|
+|pg_stat_kcache.linux_hz|1000000|1000000|1000000|
+|pgaudit.log|ddl, role, connection, protection, pg_background|ddl, role, connection, protection, pg_background|ddl, role, connection, protection, pg_background|
+|plan_cache_mode|force_custom_plan|force_custom_plan|force_custom_plan|
+|port|5433|5433|5433|
+|primary_slot_name|tsldd_pprb01138_delta_sbrf_ru|tsldd_pprb01138_delta_sbrf_ru|tsldd_pprb01138_delta_sbrf_ru|
+|psql_encrypt_password|on|on|on|
+|random_page_cost|2|2|2|
+|search_path|ext|ext|ext|
+|sec_admin_default_auth|—|—|—|
+|server_encoding|UTF8|UTF8|UTF8|
+|server_se_version|Platform V Pangolin DB 6.6.1|Platform V Pangolin DB 6.6.1|Platform V Pangolin DB 6.6.1|
+|server_se_version_num|600060001|600060001|600060001|
+|ssl|on|on|on|
+|ssl_ca_file|/home/postgres/ssl/root.crt|/home/postgres/ssl/root.crt|/home/postgres/ssl/root.crt|
+|ssl_ca_path|/home/postgres/ssl/generate|/home/postgres/ssl/generate|/home/postgres/ssl/generate|
+|ssl_cert_file|/home/postgres/ssl/server.crt|/home/postgres/ssl/server.crt|/home/postgres/ssl/server.crt|
+|ssl_key_file|/home/postgres/ssl/server.key|/home/postgres/ssl/server.key|/home/postgres/ssl/server.key|
+|superuser_reserved_connections|10|10|10|
+|synchronous_standby_names|"tsldd-pprb01136.delta.sbrf.ru"|"tsldd-pprb01136.delta.sbrf.ru"|"tsldd-pprb01136.delta.sbrf.ru"|
+|syslog_facility|local3|local3|local3|
+|syslog_ident|postgresql_se|postgresql_se|postgresql_se|
+|syslog_split_messages|off|off|off|
+|tcp_keepalives_idle|600|600|600|
+|timezone|Europe/Moscow|Europe/Moscow|Europe/Moscow|
+|timezone_abbreviations|Default|Default|Default|
+|track_io_timing|on|on|on|
+|vacuum_cost_page_dirty|10|10|10|
+|vacuum_cost_page_hit|0|0|0|
+|vacuum_cost_page_miss|1|1|1|
+|version|PostgreSQL 15.5 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 8.5.0 20210514 (Platform V SberLinux 8.5.0-28), 64-bit|PostgreSQL 15.5 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 8.5.0 20210514 (Platform V SberLinux 8.5.0-28), 64-bit|PostgreSQL 15.5 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 8.5.0 20210514 (Platform V SberLinux 8.5.0-28), 64-bit|
+|wal_buffers|2048|2048|2048|
+|wal_keep_size|8192|8192|8192|
+|wal_log_hints|on|on|on|
+|wal_receiver_status_interval|1|1|1|
+|wal_sync_method|fsync|fsync|fsync|
+|work_mem|16384|16384|16384|
+
+{expand}
+
+h2. Изменения метрик между прогонами
+
+h3. Series summary (связанные метрики)
+
+||Метрика||nt1||nt2||Δ nt1→nt2||Тренд||
+|cache.Total.blk_read_time|266.54|284.46|+17.92 (+6.7%)|становится хуже|
+|cache.Total.blk_write_time|28.44|39.04|+10.60 (+37.3%)|становится хуже|
+|cache.postgres.blk_read_time|18.27|23.99|+5.720 (+31.3%)|становится хуже|
+|cache.postgres.blk_write_time|0.030|0.010|-0.020 (-66.7%)|становится лучше|
+|cache.statecontracts.blk_write_time|28.42|39.03|+10.61 (+37.3%)|становится хуже|
+|cluster.buffers_checkpoint|16793607|11698150|-5095457 (-30.3%)|стабильный результат|
+|cluster.checkpoint_sync_time|4.820|3.520|-1.300 (-27.0%)|становится лучше|
+|cluster.checkpoint_write_time|25187|38898|+13711 (+54.4%)|становится хуже|
+|cluster.checkpoints_req|56.00|39.00|-17.00 (-30.4%)|становится лучше|
+|cluster.checkpoints_timed|2.000|7.000|+5.000 (+250.0%)|становится хуже|
+|cluster.maxwritten_clean|35836|80728|+44892 (+125.3%)|становится хуже|
+|dml.Total.DELETE|113183|149889|+36706 (+32.4%)|стабильный результат|
+|dml.Total.FETCH|136390589|157636191|+21245602 (+15.6%)|стабильный результат|
+|dml.Total.ROLLBACK|2700|2970|+270.00 (+10.0%)|становится хуже|
+|dml.postgres.COMMIT|309093|340165|+31072 (+10.1%)|стабильный результат|
+|dml.postgres.DELETE|108513|145237|+36724 (+33.8%)|стабильный результат|
+|dml.postgres.FETCH|130237462|151800568|+21563106 (+16.6%)|стабильный результат|
+|dml.postgres.INSERT|132520|144674|+12154 (+9.2%)|стабильный результат|
+|dml.postgres.ROLLBACK|900.00|990.00|+90.00 (+10.0%)|становится хуже|
+|dml.postgres.UPDATE|47570|52153|+4583 (+9.6%)|стабильный результат|
+|dml.statecontracts.FETCH|6153127|5835623|-317504 (-5.2%)|стабильный результат|
+|dml.statecontracts.ROLLBACK|1800|1980|+180.00 (+10.0%)|становится хуже|
+|queries.postgres/"sa-d00000011757"|218.20|33.47|+10.24 (+44.1%)|стабильный результат|
+|queries.postgres/postgres|158.40|220.26|+61.86 (+39.1%)|стабильный результат|
+|queries.statecontracts/as_admin|12703|456.84|+82.06 (+21.9%)|стабильный результат|
+|sessions.Total.active_time|89634|110381|+20746 (+23.1%)|становится хуже|
+|sessions.Total.session_time|7842135|8249493|+407358 (+5.2%)|становится хуже|
+|sessions.Total.sessions|9005|9716|+711.00 (+7.9%)|стабильный результат|
+|sessions.postgres.active_time|616.47|816.20|+199.73 (+32.4%)|становится хуже|
+|sessions.postgres.idle_in_transaction_time|24.68|29.20|+4.520 (+18.3%)|становится хуже|
+|sessions.postgres.session_time|493945|544151|+50206 (+10.2%)|становится хуже|
+|sessions.postgres.sessions|2924|3241|+317.00 (+10.8%)|стабильный результат|
+|sessions.statecontracts.active_time|89018|109564|+20547 (+23.1%)|становится хуже|
+|sessions.statecontracts.sessions|6081|6475|+394.00 (+6.5%)|стабильный результат|
+|tables.postgres.pg_catalog.pg_attribute.idx_scan|203621|225514|+21893 (+10.8%)|стабильный результат|
+|tables.postgres.pg_catalog.pg_database.idx_scan|202750|189878|-12872 (-6.3%)|стабильный результат|
+|tables.postgres.pg_catalog.pg_db_role_setting.seq_scan|2859668|3003316|+143648 (+5.0%)|стабильный результат|
+|tables.postgres.pg_catalog.pg_index.idx_scan|526897|580259|+53362 (+10.1%)|стабильный результат|
+|tables.postgres.pgse_profile.last_stat_tables_srv4.idx_scan|205364|239736|+34372 (+16.7%)|стабильный результат|
+|tables.postgres.pgse_profile.last_stat_tables_srv5.idx_scan|429596|483202|+53606 (+12.5%)|стабильный результат|
+|tables.postgres.pgse_profile.sample_stat_tables.idx_scan|3755|27175|+23420 (+623.7%)|стабильный результат|
+|tables.postgres.pgse_profile.sample_stat_tables.n_tup_del|—|11474|+11474|изменения незначительны|
+|tables.postgres.pgse_profile.sample_stat_tablespaces.idx_scan|—|12678|+12678|изменения незначительны|
+|tables.postgres.pgse_profile.stmt_list.idx_scan|12354|—|-12354 (-100.0%)|стабильный результат|
+|tables.statecontracts.pg_catalog.pg_attribute.idx_scan|602329|568977|-33352 (-5.5%)|стабильный результат|
+|tables.statecontracts.pg_catalog.pg_database.idx_scan|202750|189878|-12872 (-6.3%)|стабильный результат|
+|tables.statecontracts.pg_catalog.pg_db_role_setting.idx_scan|133148|121956|-11192 (-8.4%)|стабильный результат|
+|tables.statecontracts.pg_catalog.pg_db_role_setting.seq_scan|2859668|3003316|+143648 (+5.0%)|стабильный результат|
+|tables.statecontracts.statecontracts.t_dspc_sys_versions.seq_scan|28784|—|-28784 (-100.0%)|стабильный результат|
+|wal.wal_buffers_full|932205|664448|-267757 (-28.7%)|становится лучше|
+
+h3. Pairwise детализация
+
+h4. nt1 → nt2
+
+||Метрика||nt1||nt2||Δ||
+|cluster.buffers_checkpoint|16793607|11698150|-5095457 (-30.3%)|
+|cluster.checkpoint_sync_time|4.820|3.520|-1.300 (-27.0%)|
+|cluster.checkpoint_write_time|25187|38898|+13711 (+54.4%)|
+|cluster.checkpoints_req|56.00|39.00|-17.00 (-30.4%)|
+|cluster.checkpoints_timed|2.000|7.000|+5.000 (+250.0%)|
+|cluster.maxwritten_clean|35836|80728|+44892 (+125.3%)|
+|wal.wal_buffers_full|932205|664448|-267757 (-28.7%)|
+|dml.Total.DELETE|113183|149889|+36706 (+32.4%)|
+|dml.Total.ROLLBACK|2700|2970|+270.00 (+10.0%)|
+|dml.Total.FETCH|136390589|157636191|+21245602 (+15.6%)|
+|dml.postgres.INSERT|132520|144674|+12154 (+9.2%)|
+|dml.postgres.UPDATE|47570|52153|+4583 (+9.6%)|
+|dml.postgres.DELETE|108513|145237|+36724 (+33.8%)|
+|dml.postgres.COMMIT|309093|340165|+31072 (+10.1%)|
+|dml.postgres.ROLLBACK|900.00|990.00|+90.00 (+10.0%)|
+|dml.postgres.FETCH|130237462|151800568|+21563106 (+16.6%)|
+|dml.statecontracts.ROLLBACK|1800|1980|+180.00 (+10.0%)|
+|dml.statecontracts.FETCH|6153127|5835623|-317504 (-5.2%)|
+|tables.statecontracts.pg_catalog.pg_db_role_setting.seq_scan|2859668|3003316|+143648 (+5.0%)|
+|tables.postgres.pg_catalog.pg_db_role_setting.seq_scan|2859668|3003316|+143648 (+5.0%)|
+|tables.postgres.pgse_profile.last_stat_tables_srv5.idx_scan|429596|483202|+53606 (+12.5%)|
+|tables.postgres.pg_catalog.pg_index.idx_scan|526897|580259|+53362 (+10.1%)|
+|tables.postgres.pgse_profile.last_stat_tables_srv4.idx_scan|205364|239736|+34372 (+16.7%)|
+|tables.statecontracts.pg_catalog.pg_attribute.idx_scan|602329|568977|-33352 (-5.5%)|
+|tables.statecontracts.statecontracts.t_dspc_sys_versions.seq_scan|28784|—|-28784 (-100.0%)|
+|tables.postgres.pgse_profile.sample_stat_tables.idx_scan|3755|27175|+23420 (+623.7%)|
+|tables.postgres.pg_catalog.pg_attribute.idx_scan|203621|225514|+21893 (+10.8%)|
+|tables.postgres.pg_catalog.pg_database.idx_scan|202750|189878|-12872 (-6.3%)|
+|tables.statecontracts.pg_catalog.pg_database.idx_scan|202750|189878|-12872 (-6.3%)|
+|tables.postgres.pgse_profile.sample_stat_tablespaces.idx_scan|—|12678|+12678|
+|tables.postgres.pgse_profile.stmt_list.idx_scan|12354|—|-12354 (-100.0%)|
+|tables.postgres.pgse_profile.sample_stat_tables.n_tup_del|—|11474|+11474|
+|tables.statecontracts.pg_catalog.pg_db_role_setting.idx_scan|133148|121956|-11192 (-8.4%)|
+|queries.statecontracts/as_admin|12703|15378|+2676 (+21.1%)|
+|queries.statecontracts/as_admin|17812|20024|+2213 (+12.4%)|
+|queries.statecontracts/as_admin|4313|5698|+1385 (+32.1%)|
+|queries.statecontracts/as_admin|4558|5431|+872.41 (+19.1%)|
+|queries.statecontracts/as_admin|2357|2888|+531.28 (+22.5%)|
+|queries.statecontracts/as_admin|3439|3950|+511.45 (+14.9%)|
+|queries.statecontracts/as_admin|985.87|1373|+387.27 (+39.3%)|
+|queries.statecontracts/as_admin|357.93|474.58|+116.65 (+32.6%)|
+|queries.statecontracts/as_admin|616.85|723.35|+106.50 (+17.3%)|
+|queries.statecontracts/as_admin|374.78|456.84|+82.06 (+21.9%)|
+|queries.postgres/postgres|158.40|220.26|+61.86 (+39.1%)|
+|queries.postgres/"sa-d00000011757"|218.20|270.75|+52.55 (+24.1%)|
+|queries.postgres/"sa-d00000011757"|52.40|76.74|+24.34 (+46.5%)|
+|queries.postgres/"sa-d00000011757"|23.80|34.80|+11.00 (+46.2%)|
+|queries.postgres/"sa-d00000011757"|23.23|33.47|+10.24 (+44.1%)|
+|sessions.Total.sessions|9005|9716|+711.00 (+7.9%)|
+|sessions.Total.active_time|89634|110381|+20746 (+23.1%)|
+|sessions.Total.session_time|7842135|8249493|+407358 (+5.2%)|
+|sessions.postgres.sessions|2924|3241|+317.00 (+10.8%)|
+|sessions.postgres.idle_in_transaction_time|24.68|29.20|+4.520 (+18.3%)|
+|sessions.postgres.active_time|616.47|816.20|+199.73 (+32.4%)|
+|sessions.postgres.session_time|493945|544151|+50206 (+10.2%)|
+|sessions.statecontracts.sessions|6081|6475|+394.00 (+6.5%)|
+|sessions.statecontracts.active_time|89018|109564|+20547 (+23.1%)|
+|cache.Total.blk_read_time|266.54|284.46|+17.92 (+6.7%)|
+|cache.Total.blk_write_time|28.44|39.04|+10.60 (+37.3%)|
+|cache.postgres.blk_read_time|18.27|23.99|+5.720 (+31.3%)|
+|cache.postgres.blk_write_time|0.030|0.010|-0.020 (-66.7%)|
+|cache.statecontracts.blk_write_time|28.42|39.03|+10.61 (+37.3%)|
+
+h2. Риски и блокеры
+
+||Проверка||Статус||Комментарий||
+|Деградация целевых метрик >=20%|BLOCKER|Найдено 8 критичных деградаций|
+|Рост критичных симптомов после изменений|OK|improved_pairs=1, degraded_pairs=0|
+|Низкая сопоставимость прогонов|OK|workload_match_score=N/A|
+|Слишком много одновременных изменений|BLOCKER|changed_params_count=11|
+|Порог ухудшений >=10%|WARN|warning_degradations=5|
+
+h2. Следующие действия
+
+# (подтвердить cpu.dominant_queries) EXPLAIN (ANALYZE, BUFFERS) для топ-3 SQL по sum_cpu_time из отчёта
+# (подтвердить cpu.dominant_queries) Сопоставить pg_stat_statements (calls, mean_exec_time) с pg_stat_kcache (sum_cpu_time)
+# (подтвердить cpu.dominant_queries) Проверить, совпадает ли пик CPU на OS с интервалом отчёта pg_profile
+# (опровергнуть cpu.dominant_queries) Если sum_cpu_time топ-запросов <5% интервала — CPU уходит не в SQL (фон, autovacuum, checkpoint)
+# (опровергнуть cpu.dominant_queries) Сравнить топ CPU между двумя периодами: запрос исчез из топа — не корневая причина текущего пика
+# (подтвердить cpu.high_call_volume) Проверить calls и total_exec_time в top_statements для топ CPU запросов
+# (подтвердить cpu.high_call_volume) Найти источник частых вызовов (ORM N+1, polling, отсутствие pool)
+# (опровергнуть cpu.high_call_volume) Если calls низкий при высоком CPU — причина не в частоте, а в тяжёлом плане/функции
+# (подтвердить wal.high_generation_rate) wal_stats: wal_bytes, wal_bytes_per_sec за интервал
+# (подтвердить wal.high_generation_rate) Сравнить WAL MB/h между периодами (compare_runs / compare_nt_prod)
+# (опровергнуть wal.high_generation_rate) wal_bytes низкий за интервал — симптом мог быть кратковременным вне окна отчёта
+# (подтвердить wal.buffers_full) wal_stats.wal_buffers_full
+
+h3. Проблемные запросы и варианты оптимизации
+
+||Запрос (hex/id)||Почему проблемный||Вариант оптимизации||Как проверить в следующем прогоне||
+|—|Недостаточно данных для выделения query-level кандидатов.|Собрать top queries по симптому.|Запустить повторный прогон и добавить query evidence.|
+
+{expand:Сводка гипотез по симптомам}
+||Severity||ID||Сообщение||Отчёт(ы)||
+|{status:colour=Red|title=CRITICAL|subtle=false}|cpu.dominant_queries|Доминирующие SQL по CPU (pg_stat_kcache)|nt1, nt2|
+|{status:colour=Red|title=CRITICAL|subtle=false}|wal.buffers_full|Переполнение wal_buffers|nt1, nt2|
+|{status:colour=Red|title=CRITICAL|subtle=false}|wal.high_generation_rate|Высокая скорость генерации WAL (wal_bytes)|nt1, nt2|
+|{status:colour=Yellow|title=WARNING|subtle=false}|cpu.autovacuum_pressure|Autovacuum / analyze во время нагрузки|nt1, nt2|
+|{status:colour=Yellow|title=WARNING|subtle=false}|cpu.checkpoint_bgwriter|Checkpoint / bgwriter / IO wait в kernel CPU|nt1, nt2|
+|{status:colour=Yellow|title=WARNING|subtle=false}|cpu.high_call_volume|Высокий объём вызовов (CPU × calls)|nt1, nt2|
+|{status:colour=Yellow|title=WARNING|subtle=false}|wal.checkpoint_pressure|Checkpoint pressure (requested checkpoints)|nt1, nt2|
+|{status:colour=Yellow|title=WARNING|subtle=false}|wal.high_dml_tables|Write-heavy таблицы (DML volume)|nt1, nt2|
+|{status:colour=Yellow|title=WARNING|subtle=false}|wal.wal_heavy_queries|WAL-heavy SQL|nt1, nt2|
+
+{expand}
+
+{expand:Чеклист гипотез}
+||Проверка||Статус||
+|[Доминирующие SQL по CPU (pg_stat_kcache)|#sec_cpu_dominant_queries]|{status:colour=Red|title=FAIL|subtle=false}|
+|[Высокий объём вызовов (CPU × calls)|#sec_cpu_high_call_volume]|{status:colour=Yellow|title=SUSPECT|subtle=false}|
+|[Checkpoint / bgwriter / IO wait в kernel CPU|#sec_cpu_checkpoint_bgwriter]|{status:colour=Yellow|title=SUSPECT|subtle=false}|
+|[Autovacuum / analyze во время нагрузки|#sec_cpu_autovacuum_pressure]|{status:colour=Yellow|title=SUSPECT|subtle=false}|
+|[Параллельные запросы / max_parallel_workers|#sec_cpu_parallel_workers]|{status:colour=Green|title=PASS|subtle=false}|
+|[JIT-компиляция запросов|#sec_cpu_jit_overhead]|{status:colour=Green|title=PASS|subtle=false}|
+|[TLB pressure без HugePages (большой shared_buffers)|#sec_cpu_huge_pages_tlb]|{status:colour=Green|title=PASS|subtle=false}|
+|[Высокая скорость генерации WAL (wal_bytes)|#sec_wal_high_generation_rate]|{status:colour=Red|title=FAIL|subtle=false}|
+|[Переполнение wal_buffers|#sec_wal_buffers_full]|{status:colour=Red|title=FAIL|subtle=false}|
+|[WAL-heavy SQL|#sec_wal_wal_heavy_queries]|{status:colour=Yellow|title=SUSPECT|subtle=false}|
+|[Write-heavy таблицы (DML volume)|#sec_wal_high_dml_tables]|{status:colour=Yellow|title=SUSPECT|subtle=false}|
+|[Checkpoint pressure (requested checkpoints)|#sec_wal_checkpoint_pressure]|{status:colour=Yellow|title=SUSPECT|subtle=false}|
+|[Малый max_wal_size|#sec_wal_small_max_wal_size]|{status:colour=Green|title=PASS|subtle=false}|
+
+{expand}
+
+{expand:Высокая утилизация CPU БД}
+{anchor:sec_cpu_dominant_queries}
+* {status:colour=Red|title=CONFIRMED} Доминирующие SQL по CPU (pg_stat_kcache) — cpu.dominant_queries
+** [nt1] Топ CPU: sum_cpu_time=23229.9s, user_time_pct=31.9%
+** [nt1] hex=e2a55c68949e5d1e: select v1_0.object_id from statecontracts.t_value v1_0 where v1_0.inn is not nul…
+{anchor:sec_cpu_high_call_volume}
+* {status:colour=Yellow|title=SUSPECTED} Высокий объём вызовов (CPU × calls) — cpu.high_call_volume
+** [nt1] Высокий объём: calls=144,990,757, total_exec_time=17811.6s, mean=0.12ms hex=d5e326dff67d955a
+** [nt1] Высокий объём: calls=144,990,682, total_exec_time=12702.9s, mean=0.09ms hex=31df6528995548cf
+{anchor:sec_cpu_checkpoint_bgwriter}
+* {status:colour=Yellow|title=SUSPECTED} Checkpoint / bgwriter / IO wait в kernel CPU — cpu.checkpoint_bgwriter
+** [nt1] checkpoints_req=56, checkpoint_write_time=25187.0s
+** [nt2] checkpoints_req=39, checkpoint_write_time=38898.3s
+{anchor:sec_cpu_autovacuum_pressure}
+* {status:colour=Yellow|title=SUSPECTED} Autovacuum / analyze во время нагрузки — cpu.autovacuum_pressure
+** [nt1] Bloat: pgse_profile.sample_statements dead_pct=10.15296960859762%
+** [nt2] Bloat: pgse_profile.sample_stat_tables dead_pct=16.536570289395474%
+{anchor:sec_cpu_parallel_workers}
+* Параллельные запросы / max_parallel_workers — cpu.parallel_workers (possible / PASS)
+{anchor:sec_cpu_jit_overhead}
+* JIT-компиляция запросов — cpu.jit_overhead (possible / PASS)
+{anchor:sec_cpu_huge_pages_tlb}
+* TLB pressure без HugePages (большой shared_buffers) — cpu.huge_pages_tlb (possible / PASS)
+
+h2. EXPLAIN (ANALYZE, BUFFERS) — Высокая утилизация CPU БД
+
+{info}Ниже готовые команды для вставки в psql/клиент. На prod осторожно: ANALYZE выполняет запрос. При необходимости замените литералы/параметры на актуальные значения.{info}
+
+{expand:SQL · hex=e2a55c68949e5d1e}
+{code:language=sql|title=nt1 · hex=e2a55c68949e5d1e · sum_cpu_time=23229.9s}
+EXPLAIN (ANALYZE, BUFFERS)
+select v1_0.object_id from statecontracts.t_value v1_0 where v1_0.inn is not null and v1_0.inn=$1 and v1_0.kpp is not null and v1_0.kpp=$2 and v1_0.metrictype_entityid is not null and v1_0.metrictype_entityid=$3;
+{code}
+
+{expand}
+
+{expand:SQL · hex=d5e326dff67d955a}
+{code:language=sql|title=nt1 · hex=d5e326dff67d955a · sum_cpu_time=14123.0s}
+EXPLAIN (ANALYZE, BUFFERS)
+insert into statecontracts.t_value (chgcnt,date_,inn,sys_isdeleted,kpp,sys_lastchangedate,level_entityid,metrictype_entityid,offflag,sys_ownerid,sys_partitionid,sys_recmodelversion,rquid,sourcedatetime,value_,type,object_id) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,'Value',$16);
+{code}
+
+{expand}
+
+{expand:SQL · hex=7e5e1a652457d8db}
+{code:language=sql|title=nt1 · hex=7e5e1a652457d8db · sum_cpu_time=13030.6s}
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT txtype, changeeventmask, aggtype, ownerid, migrationstatus, silock, siversion, guid, version FROM statecontracts.T_REPL_AGGLOCK_VALUE WHERE rootid = $1 FOR UPDATE;
+{code}
+
+{expand}
+
+{expand}
+
+{expand:Высокая генерация WAL}
+{anchor:sec_wal_high_generation_rate}
+* {status:colour=Red|title=CONFIRMED} Высокая скорость генерации WAL (wal_bytes) — wal.high_generation_rate
+** [nt1] WAL generation ≈ 19972.4 MB/h
+** [nt2] WAL generation ≈ 17965.0 MB/h
+{anchor:sec_wal_buffers_full}
+* {status:colour=Red|title=CONFIRMED} Переполнение wal_buffers — wal.buffers_full
+** [nt1] wal_buffers_full=932205
+** [nt2] wal_buffers_full=664448
+{anchor:sec_wal_wal_heavy_queries}
+* {status:colour=Yellow|title=SUSPECTED} WAL-heavy SQL — wal.wal_heavy_queries
+** [nt1] WAL-heavy SQL: wal_bytes=106 GB hex=d5e326dff67d955a
+** [nt2] WAL-heavy SQL: wal_bytes=106 GB hex=d5e326dff67d955a
+{anchor:sec_wal_high_dml_tables}
+* {status:colour=Yellow|title=SUSPECTED} Write-heavy таблицы (DML volume) — wal.high_dml_tables
+** [nt1] DML table statecontracts.t_value: ins=145000000 upd=None del=None
+** [nt2] DML table statecontracts.t_value: ins=145000000 upd=None del=None
+{anchor:sec_wal_checkpoint_pressure}
+* {status:colour=Yellow|title=SUSPECTED} Checkpoint pressure (requested checkpoints) — wal.checkpoint_pressure
+** [nt1] checkpoints_req=56
+** [nt2] checkpoints_req=39
+{anchor:sec_wal_small_max_wal_size}
+* Малый max_wal_size — wal.small_max_wal_size (possible / PASS)
+
+h2. EXPLAIN (ANALYZE, BUFFERS) — Высокая генерация WAL
+
+{info}Ниже готовые команды для вставки в psql/клиент. На prod осторожно: ANALYZE выполняет запрос. При необходимости замените литералы/параметры на актуальные значения.{info}
+
+{expand:SQL · hex=d5e326dff67d955a}
+{code:language=sql|title=nt1 · hex=d5e326dff67d955a · wal_bytes}
+EXPLAIN (ANALYZE, BUFFERS)
+insert into statecontracts.t_value (chgcnt,date_,inn,sys_isdeleted,kpp,sys_lastchangedate,level_entityid,metrictype_entityid,offflag,sys_ownerid,sys_partitionid,sys_recmodelversion,rquid,sourcedatetime,value_,type,object_id) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,'Value',$16);
+{code}
+
+{expand}
+
+{expand:SQL · hex=3f7ffea106f6e78e}
+{code:language=sql|title=nt1 · hex=3f7ffea106f6e78e · wal_bytes}
+EXPLAIN (ANALYZE, BUFFERS)
+insert into statecontracts.t_contracts (chgcnt,claimed,contractid,customerinn,customername,enddate,fined,sys_isdeleted,sys_lastchangedate,number_,offflag,sys_ownerid,sys_partitionid,purchasetype,sys_recmodelversion,rquid,sourcedatetime,startdate,startyear,status,subject,sum_,supplierinn,suppliername,terminationdate,terminationkind,terminationreason,type,object_id) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$29,$28);
+{code}
+
+{expand}
+
+{expand:SQL · hex=31df6528995548cf}
+{code:language=sql|title=nt1 · hex=31df6528995548cf · wal_bytes}
+EXPLAIN (ANALYZE, BUFFERS)
+INSERT INTO statecontracts.T_REPL_AGGLOCK_VALUE (rootid, siversion, guid, version, sys_lastchangedate) VALUES ($1, $2, $3, $4, LOCALTIMESTAMP) ON CONFLICT (rootid) DO NOTHING RETURNING "sys_lastchangedate";
+{code}
+
+{expand}
+
+{expand}
+
+{expand:Что уже есть на PROD / расхождение НТ}
+h3. Высокая утилизация CPU БД
+* {status:colour=Yellow|title=MEDIUM} Критичность расхождения NT vs PROD
+* Уже есть на PROD: cpu.checkpoint_bgwriter, cpu.dominant_queries, cpu.high_call_volume
+* Только на НТ: cpu.autovacuum_pressure
+
+h3. Высокая генерация WAL
+* {status:colour=Green|title=LOW} Критичность расхождения NT vs PROD
+* Уже есть на PROD: wal.buffers_full, wal.checkpoint_pressure, wal.high_dml_tables, wal.high_generation_rate, wal.wal_heavy_queries
+* Только на НТ: нет
+
+{expand}
+
+{expand:Справочно: прогоны и baseline}
+||Метка||Файл||Интервал||
+|nt1|pgprofile_srv=10_3_81_94_from=2026_07_31_09_00_to=2026_08_01_00.html|2026 07 31 09 00 .. 2026 08 01 00|
+|nt2|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|2026 08 11 16 30 .. 2026 08 12 09|
+
+h3. PROD baseline
+
+||Метка||Файл||Интервал||
+|prod1|pgprofile_srv=10_3_81_94_from=2026_08_12_16_00_to=2026_08_13_08.html|2026 08 12 16 00 .. 2026 08 13 08|
+
+{expand}
+
+h2. NT vs PROD: оценка расхождения по прогонам
+||NT||PROD||Settings valid||Perf warnings||Critical settings||
+|nt1|prod1|no|42|9|
+|nt2|prod1|no|36|6|

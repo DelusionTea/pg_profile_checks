@@ -4,6 +4,8 @@
 
 Скрипты читают данные прямо из HTML-файла: отчёт pg_profile — это одностраничное приложение, внутри которого в JavaScript-объекте `const data={...}` лежат все метрики, настройки и тексты запросов. Внешняя база данных не нужна.
 
+**Агенту:** не читай этот файл целиком. Индекс — [docs/ai/README.md](docs/ai/README.md). Конфиги АС и ссылки Bitbucket — [docs/ai/system-config.md](docs/ai/system-config.md).
+
 ## Архитектура
 
 ```
@@ -20,11 +22,14 @@ HTML-отчёт(ы) pg_profile
 └───────────────────────────────────────────────────────────┘
         │
         ├── findings.json, advisor.json   → CI / аудит
+        ├── influence_table*.json/.wiki   → влияние GUC на метрики (пара / серия)
+        ├── oracle_report, quality_report → проверка таблицы и quality gate
         ├── confluence_stub.wiki          → Confluence (таблицы)
         └── confluence_prompt.txt         → gigacli (текст, опционально)
                     │
                     ▼
             confluence_page.wiki → страница в Confluence
+            (опц.) llm_*         → Headless Qwen из UI или run_llm.py
 ```
 
 **Важно:** `knowledge/` — это YAML-база знаний, которую читает Python (`pgprofile_advisor.py`). Это **не** скиллы для GigaCode/Cursor и **не** нужно подключать к gigacli вручную. Рекомендации уже попадают в `brief.md` и `confluence_*`.
@@ -139,9 +144,11 @@ application:
 
 Если одинаковое имя контейнера встречается в нескольких pod (например, `istio-proxy`), для запуска CLI указывайте оба параметра: `--pod-name` и `--container-name`.
 
-#### 5) Drag-and-drop в UI (секция «Дополнительно»)
+#### 5) Drag-and-drop в UI
 
-При загрузке через UI файл классифицируется по имени:
+В списке АС есть пункт **«добавить новую систему»**: имя папки + `resources.yaml` / `jvm-config.txt` → `POST /api/jvm/systems`.
+
+При загрузке файл классифицируется по имени:
 
 - ресурсный: имя содержит `resource` или `values` и расширение `.yaml/.yml`;
 - JVM-конфиг: имя содержит `jvm` или `java` и расширение `.txt/.yaml/.yml`.
@@ -212,7 +219,11 @@ python3 ui/server.py
 
 ```bash
 .venv/bin/python ui/server.py --host 127.0.0.1 --port 8090
+.venv/bin/python ui/server.py --llm-config llm_providers.yaml --llm-provider qwen_local
+.venv/bin/python ui/server.py --skip-llm-probe
 ```
+
+Адрес, модель, таймаут и `default_provider` — в `llm_providers.yaml`. Токен шлюза только из `PGPROFILE_LLM_TOKEN` при старте процесса (в yaml нельзя). По умолчанию `default_provider: dry_run`: при старте живой Qwen не зовётся, блок **Headless Qwen** и вкладка **Качество** скрыты. Чтобы показать их — `default_provider: qwen_local` (или `qwen_gateway` + токен) и успешный probe. `--skip-llm-probe` или `ui.probe_on_startup: false` скрывают те же блоки.
 
 Если порт занят (`Address already in use`):
 
@@ -228,23 +239,34 @@ python3 ui/server.py
 2. Для каждого файла: метка **НТ** / **ПРОМ**, label, порядок.
 3. Выбор сценария (или «Авто по меткам»):
    - расследование проблемы(ам);
-   - несколько прогонов НТ (+ опционально ПРОМ-baseline);
+   - несколько прогонов НТ (+ опционально ПРОМ-baseline) — серийная таблица влияния GUC;
    - health-check одного отчёта;
    - стабильные проблемы ПРОМ;
-   - НТ vs ПРОМ (gate).
+   - НТ vs ПРОМ (gate);
+   - сравнение двух отчётов (diff) — метрики + Defined settings + таблица влияния.
 4. Проблемы из playbook (`high_cpu`, `high_memory`, `high_wal`, `slow_query`) — опционально. **Если ничего не отмечено** — полный health-check всего отчёта; при нескольких файлах — findings, общие для всех, и специфичные для отдельных отчётов. Если отмечены симптомы — точечное расследование (при нескольких — объединённый Confluence-текст).
 5. Результат:
    - Wiki Markup для Confluence (копировать / скачать `.wiki`);
    - промпт для ИИ (gigacli пока не вызывается из UI);
    - brief;
+   - вкладка **Качество** и блок **Headless Qwen** — только если при старте UI живой Qwen ответил (иначе скрыты);
    - ZIP со всем `analysis_out` сессии + `README_AI.txt`.
 
-6. Режим **JVM checks** (переключатель в header `PG/JVM`):
-   - выбор АС, pod и контейнера;
-   - выбор проблем (опционально, но для точечного сценария рекомендуется);
-   - ввод контекстных метрик (GC/heap/oldgen/newgen/memory%), которые усиливают точность;
-   - если проблема отмечена, для неё обязательны ключевые поля (например, для `gc_latency` нужен `gc_pause_p95_ms`);
-   - если проблемы не отмечены, анализ всё равно возможен при заполненных контекстных метриках;
+### Два пути к модели
+
+1. **Кнопка «Запросить Qwen»** (или `run_llm.py`): Python собирает бандл, ответ проходит quality gate. `dry_run` всегда блокирует публикацию. Модель не анализирует HTML и не ходит в БД.
+2. **ZIP** с `README_AI.txt`: файлы для gigacli / ChatGPT / другого чата. Внешняя модель не получает плагины UI, парсер отчётов и **не** проходит quality gate. В Confluence ответ несут сами.
+
+Не обещаем, что внешняя модель «имеет все функции» кнопки Qwen. Policy по умолчанию `none`: SQL из findings может уйти в промпт; `bank_redact` — решение контура.
+
+### Режим JVM checks
+
+Переключатель в header `PG/JVM`:
+   - пошаговое дерево отсечения: АС / pod / контейнер → подов на одном плече (плеч всегда два) → причина рестарта → растёт ли память (какой график, % за часы, heap used до/после GC) → CPU throttle и CPU % of limits с двух плеч → GC p95 → при необходимости времена отклика пользователя;
+   - «Не знаю» допустимо: анализ запускается, копируемую `JAVA_TOOL_OPTIONS` не даём, пока критические узлы не закрыты;
+   - нет пресетов и чекбоксов проблем: нельзя пропустить дерево;
+   - heap/OldGen открываются при OOMKilled, Java OOME **или** если указали, что память растёт; OldGen used можно ввести в % или целым MiB;
+   - блок проверки перед запуском (system/pod/container + ответы дерева);
    - drag-and-drop `resources/jvm-config` в секции «Дополнительно» для перезаписи конфигов выбранной АС;
    - встроенные demo АС и контейнеры видны всегда.
    - при неоднозначном имени контейнера (одинаковый контейнер в нескольких pod) CLI требует явный `--pod-name`.
@@ -255,20 +277,23 @@ python3 ui/server.py
 У части параметров — справка «когда менять / для каких БД» из `knowledge/threshold_guidance.yaml`
 (ориентир — документация Postgres Pro). Поиск и фильтр «только ситуативные» — на странице.
 
-После анализа UI показывает summary pills, карточки findings, превью Wiki Markup и чеклист проверки.
-Confluence-страницы строятся по каркасу: вердикт → TOC → действия → сводка → детали в `{expand}`.
+После анализа UI показывает summary pills (в том числе **oracle**), карточки findings, превью Wiki Markup и чеклист проверки.
+Пилюля oracle кликабельна — открывает вкладку **Качество**. Confluence-страницы строятся по каркасу: вердикт → TOC → действия → сводка → детали в `{expand}`.
 
 Для JVM-анализа в wiki добавляются:
-- первый блок с выбранными проблемами и введёнными значениями;
-- шапка с целевым `pod/container`, ресурсами контейнера и текущими JVM-опциями *(актуально для настройки)*;
-- блок context-validation (чего не хватает для точности);
-- guardrails (например, запрет на «сжатие heap» при уже высокой утилизации);
-- copy/paste блок с предлагаемыми изменениями `jvm-config`;
-- подсказки, когда уместен scale-out (увеличение pod'ов), а когда сначала нужен JVM/memory tuning.
+- вердикт, можно ли копировать `JAVA_TOOL_OPTIONS`, «На основании» / «Перепроверьте» / ответы дерева;
+- кандидаты флагов в `{expand}`, если копировать нельзя;
+- цель (АС/pod/контейнер), ресурсы контейнера и текущие JVM-опции;
+- copy/paste `jvm-config` только если ворота дерева закрыты и есть подтверждающая метрика.
 
 SLA по памяти:
-- `memory usage % limit` принят как фиксированный порог `80%` для JVM-режима.
-- Порог `memory_limit_pressure_ratio` в встроенном `jvmcheck_runtime/thresholds_jvm.yaml` установлен в `0.80` для default и профилей.
+- `memory usage % limit` — фиксированный порог **80%** (`memory_sla_percent` в `jvm_diagnostic_tree.yaml`, согласован с `memory_limit_pressure_ratio: 0.80`).
+- Если при текущей скорости рост до 80% займёт **больше 30 дней** (`memory_sla_not_critical_days`), проблема **не критична**: limit из-за этого роста не поднимаем.
+- Скорость роста считайте **после стабильной динамики**, не со старта пода.
+- Если GC очищает heap, но минимум после каждой следующей сборки выше — это не плато, проблема всё ещё есть.
+- Иначе время до OOMKilled (100%) ≤ 24 ч по-прежнему срочное.
+- Длинные паузы (от 16 с) без пользовательских симптомов: в wiki — доп. анализ (GC log / safepoint / cause), без копирования G1, пока нет боли пользователя, liveness или CPU-SLA на очистке.
+- Смена настроек перезапускает под и обнуляет память: ретест роста после выкатки несопоставим с текущим прогоном.
 
 Проверка согласованности knowledge (recommendations ↔ prod_tuning, guc_guidance ↔ guc_impact):
 
@@ -306,7 +331,7 @@ python3.11 ui/server.py --session-ttl-hours 6
 python3.11 ui/server.py --session-ttl-hours 0
 ```
 
-Остановка сервера сама по себе файлы не удаляет — их заберёт следующий старт (если TTL > 0) или ручная очистка. Нужный результат лучше сразу скачать ZIP.
+Остановка сервера сама по себе файлы не удаляет — их заберёт следующий старт (если TTL > 0) или ручная очистка. Нужный результат лучше сразу скачать ZIP. В корне архива — `README_AI.txt`. ZIP — файлы, не плагины; quality gate только у кнопки Qwen (см. «Два пути к модели» выше).
 
 Ручная очистка всего каталога:
 
@@ -345,7 +370,10 @@ Standalone UI можно перенести в уже развёрнутый Gat
 | `analyze_prod_stability.py` | **Несколько PROD-отчётов**: стабильные проблемы + GUC-рекомендации |
 | `investigate_symptom.py` | **Расследование симптома**: CPU / память / WAL / медленный SQL |
 | `analyze_nt_runs.py` | **Несколько НТ-прогонов**: симптомы + влияние GUC (+ опционально ПРОМ) |
-| `analyze_pgprofile.py` | **Оркестратор**: все анализы + JSON + brief + Confluence |
+| `analyze_pgprofile.py` | **Оркестратор**: все анализы + JSON + brief + Confluence + oracle |
+| `run_llm.py` | **Headless Qwen**: бандл из артефактов → local/gateway/`dry_run` |
+| `run_quality.py` | Сводный quality report (oracle + confidence trail + LLM gate) |
+| `scripts/check_smoke.py` | **Smoke перед релизом** (A/B/C без живого Qwen) |
 | `merge_confluence.py` | Сборка `confluence_stub.wiki` + ответ ИИ → `confluence_page.wiki` |
 | `ui/server.py` | **UI**: локальный HTTP-визард (stdlib, без новых pip-пакетов) |
 
@@ -509,6 +537,72 @@ python compare_runs.py RUN_A.html RUN_B.html --run-a-id sprint42 --run-b-id spri
 ```bash
 python compare_runs.py a.html b.html --run-a-id v1 --run-b-id v2 --format json -o runs.json
 ```
+
+---
+
+## 3a. Таблица влияния GUC → метрики
+
+`compare_runs.py` показывает, **что** изменилось в метриках. Таблица влияния отвечает на другой вопрос: **какие Defined settings сменились и с какими метриками это совпало**. Связь не выдумывается: если для параметра нет подсказки в `knowledge/guc_impact.yaml`, строка остаётся без `affected_metric`, `impact=neutral`, `confidence=low`.
+
+Два режима.
+
+### Пара прогонов (before → after)
+
+Нужны оба флага: `--compare-run` (метрики) и `--compare-settings` (Defined settings). В UI это сценарий **«Сравнение двух отчётов (diff)»**.
+
+```bash
+python analyze_pgprofile.py \
+  --report run_before.html \
+  --compare-run run_after.html \
+  --compare-settings run_after.html \
+  --output-dir ./analysis_out/
+```
+
+Появляются `influence_table.json`, `influence_table.csv`, `influence_summary.md` и `influence_summary.wiki` (это человекочитаемое сравнение для Confluence).
+
+### Серия НТ (2+ отчёта по порядку)
+
+`--nt-reports` требует `--symptoms`. В UI: сценарий **«Несколько прогонов НТ»**, отчёты с меткой НТ, отмеченный симптом.
+
+```bash
+python analyze_pgprofile.py \
+  --nt-reports nt1.html nt2.html nt3.html \
+  --nt-label nt1 --nt-label nt2 --nt-label nt3 \
+  --symptoms high_cpu \
+  --output-dir ./analysis_out/
+```
+
+Появляются `influence_table_series.json` / `.csv` и `influence_summary_series.md` / `.wiki` плюс `nt_runs_confluence.wiki`.
+
+Тот же анализ без оркестратора: `python analyze_nt_runs.py nt1.html nt2.html --symptoms high_cpu`.
+
+### Как читать confidence и evidence
+
+| Поле | Значения | Смысл |
+|------|----------|--------|
+| `evidence_type` | `probable` | Совпадение во времени. Гипотеза, не причинность. |
+| `evidence_type` | `proven` | Изолированный эффект. В паре: сменился **один** параметр и `workload_match ≥ 0.85`. В серии: ≥3 пары, `stability_score ≥ 0.7`, шум IQR/\|медиана Δ%\| < 1. |
+| `confidence` | `low` / `medium` / `high` | Насколько можно опираться на строку. Много одновременных GUC, плохая сопоставимость нагрузки, нет связи с метрикой — понижение. |
+| `impact` | `improved` / `degraded` / `neutral` | Полярность **метрики** (для `*time`, `blks_read`, `checkpoints_req` рост — ухудшение). |
+| `workload_match_score` | 0…1 | Сопоставимость окон/серверов. Низкий балл — сравнивать осторожно. |
+
+Правила, которые повторяются в `influence_summary*.md`:
+
+- **PROVEN** — эффект устойчив; **PROBABLE** — только корреляция.
+- Для `probable` нельзя утверждать причинность: нужен отдельный изолированный прогон.
+- Числа только из `influence_table*.json`; модель и оператор не добавляют своих Δ.
+
+В серийной строке `direction=increased|decreased` — как изменился **GUC**, не метрика. Не путать с `up`/`down` у метрик.
+
+### Oracle и качество
+
+После анализа пишутся `oracle_report.json` / `.md` и `quality_report.json` / `.md`.
+
+- `pass` / `warning` / `fail` — согласованность таблицы (знак Δ, полнота полей, ложный `proven`).
+- Вкладка UI **Качество** и `python run_quality.py --output-dir ./analysis_out/` показывают слои и trail «почему confidence стал low».
+- `--exit-code` оркестратора **не** зависит от oracle. Для CI по качеству: `python analyze_pgprofile.py … --exit-code-quality` или `python run_quality.py --output-dir ./analysis_out/ --exit-code`.
+
+Разбор красного oracle и blocked LLM — [docs/LLM_QUALITY_RUNBOOK.md](docs/LLM_QUALITY_RUNBOOK.md).
 
 ---
 
@@ -804,6 +898,20 @@ python analyze_pgprofile.py \
   --symptom-label prom1 --symptom-label prom2 \
   --output-dir ./analysis_out/ \
   --confluence-title "PROD: высокий CPU"
+
+# Пара прогонов: метрики + settings → таблица влияния
+python analyze_pgprofile.py \
+  --report run_before.html \
+  --compare-run run_after.html \
+  --compare-settings run_after.html \
+  --output-dir ./analysis_out/
+
+# Серия НТ + симптомы → серийная таблица влияния
+python analyze_pgprofile.py \
+  --nt-reports nt1.html nt2.html nt3.html \
+  --nt-label nt1 --nt-label nt2 --nt-label nt3 \
+  --symptoms high_cpu \
+  --output-dir ./analysis_out/
 ```
 
 ### Флаги
@@ -815,6 +923,10 @@ python analyze_pgprofile.py \
 | `--compare-run` | Второй HTML для сравнения прогонов |
 | `--run-a-id`, `--run-b-id` | Метки прогонов |
 | `--compare-settings` | Второй HTML для diff настроек (требует `--report`) |
+| `--nt-reports` | 2+ HTML НТ по порядку; требует `--symptoms` |
+| `--nt-label` | Метка для каждого `--nt-reports` (повторять) |
+| `--prod-reports` | PROD baseline для `--nt-reports` |
+| `--symptoms` | Симптомы для серии НТ: `high_cpu,high_wal,...` |
 | `--compare-prod` | PROD HTML для НТ vs ПРОМ (требует `--report` = НТ) |
 | `--stable-prod-reports` | 2+ PROD HTML для анализа стабильных проблем |
 | `--stable-prod-label` | Метка для каждого `--stable-prod-reports` |
@@ -830,6 +942,7 @@ python analyze_pgprofile.py \
 | `--confluence-title` | Заголовок страницы Confluence (auto по умолчанию) |
 | `--min-change-pct`, `--top-n` | Параметры compare_runs |
 | `--exit-code` | Exit `1`, если есть находки / расхождения |
+| `--exit-code-quality` | Exit `1`, если oracle/quality = `fail` (`--exit-code` не меняет) |
 
 ### Файлы в `--output-dir`
 
@@ -838,11 +951,19 @@ python analyze_pgprofile.py \
 | `health_check.json` | Python | Health-check (если `--report`) |
 | `run_comparison.json` | Python | Сравнение прогонов (если `--compare-run`) |
 | `settings_diff.json` | Python | Diff настроек (если `--compare-settings`) |
+| `influence_table.json` / `.csv` | Python | Влияние GUC на метрики (пара, если `--compare-run` + `--compare-settings`) |
+| `influence_summary.md` / `.wiki` | Python | Краткое резюме влияния для Confluence |
+| `influence_table_series.json` / `.csv` | Python | Влияние по серии (если `--nt-reports`) |
+| `influence_summary_series.md` / `.wiki` | Python | Резюме серийного влияния |
+| `nt_runs.json` | Python | Несколько НТ + симптомы + GUC |
+| `nt_runs_confluence.wiki` | Python | Wiki: симптомы + влияние GUC |
+| `oracle_report.json` / `.md` | Python | Проверка таблицы влияния |
+| `quality_report.json` / `.md` | Python | Слои oracle + trail confidence + LLM gate |
 | `findings.json` | Python | Все находки (combined) |
 | `advisor.json` | Python | Находки + рекомендации из `knowledge/` |
 | `brief.md` | Python | Краткий brief |
 | `summary_prompt.txt` | Python | Промпт для LLM (`prompts/analyst.md` + brief) |
-| `confluence_stub.wiki` | Python | Шапка + таблица находок (Wiki Markup) |
+| `confluence_stub.wiki` | Python | Шапка: всё ли хорошо / что изменилось / что сделать; таблицы находок в Expand |
 | `confluence_prompt.txt` | Python | Промпт для gigacli (Wiki Markup) |
 | `stable_prod.json` | Python | Стабильные PROD-проблемы (если `--stable-prod-reports`) |
 | `stable_prod_confluence_stub.wiki` | Python | Таблицы стабильных GUC-рекомендаций |
@@ -874,7 +995,7 @@ python analyze_pgprofile.py \
   --confluence-title "НТ sprint-42: pg_profile"
 ```
 
-`confluence_stub.wiki` можно вставить в Confluence **сразу** — таблица находок уже готова.
+`confluence_stub.wiki` можно вставить в Confluence **сразу**: сверху вердикт «всё ли хорошо», при сравнении — «что изменилось», затем план; длинные таблицы — в Expand.
 
 ### Шаг 2. gigacli (DeepSeek V4 Flash, 262k)
 
@@ -977,7 +1098,7 @@ python compare_settings.py nt.html prod.html --exit-code
 python check_report.py load_test.html --exit-code
 ```
 
-### Сравнить два прогона
+### Сравнить два прогона (метрики)
 
 ```bash
 python compare_runs.py run_v1.html run_v2.html \
@@ -985,14 +1106,69 @@ python compare_runs.py run_v1.html run_v2.html \
   --only dml,queries,cluster
 ```
 
+### Пара прогонов: таблица влияния GUC → метрики
+
+```bash
+python analyze_pgprofile.py \
+  --report run_before.html \
+  --compare-run run_after.html \
+  --compare-settings run_after.html \
+  --output-dir ./analysis_out/
+python run_quality.py --output-dir ./analysis_out/
+```
+
+В UI: два HTML, сценарий «Сравнение двух отчётов (diff)».
+
+### Серия НТ + симптом
+
+```bash
+python analyze_pgprofile.py \
+  --nt-reports nt1.html nt2.html nt3.html \
+  --nt-label nt1 --nt-label nt2 --nt-label nt3 \
+  --symptoms high_cpu \
+  --output-dir ./analysis_out/
+```
+
+### Headless Qwen (после анализа)
+
+По умолчанию `dry_run` — без сети, проверка цепочки. Боевой провайдер: [docs/QWEN_HEADLESS.md](docs/QWEN_HEADLESS.md). Ошибки и quality gate: [docs/LLM_QUALITY_RUNBOOK.md](docs/LLM_QUALITY_RUNBOOK.md).
+
+```bash
+python run_llm.py --list-providers
+python run_llm.py --output-dir ./analysis_out/ --task summary --print-bundle
+python run_llm.py --output-dir ./analysis_out/ --task summary --provider dry_run
+```
+
+В UI после анализа: блок **Headless Qwen** → **Запросить Qwen**, если при старте `ui/server.py` провайдер из `llm_providers.yaml` ответил. `dry_run`, `--skip-llm-probe` или ошибка соединения скрывают блок и вкладку **Качество**.
+
 ### Полный отчёт для Confluence
 
 ```bash
 python analyze_pgprofile.py --report nt.html --output-dir ./analysis_out/
-# → gigacli + merge_confluence.py (см. раздел 5)
+# → gigacli + merge_confluence.py (см. раздел 7)
 ```
 
-### CI (без LLM)
+### CI (без живого Qwen)
+
+Минимум CLI — [docs/RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md) (этапы A/B/C):
+
+```bash
+python scripts/check_smoke.py
+```
+
+Перед релизом **UI** — полная матрица сценариев (три HTML из `resources/`). Копия `e2e/series` в `case_matrix/` этому не замена:
+
+```bash
+python scripts/check_smoke.py --full
+```
+
+Совместимость со старыми `run_comparison` / `settings_diff`:
+
+```bash
+python scripts/check_contract_backcompat.py
+```
+
+Точечный health-check без LLM:
 
 ```bash
 python compare_settings.py nt.html prod.html --exit-code
@@ -1000,7 +1176,7 @@ python check_report.py report.html --exit-code
 python analyze_pgprofile.py --report report.html --output-dir ./out/ --exit-code
 ```
 
-Аудит и пайплайны опираются на Python и `findings.json`, не на gigacli.
+Аудит и пайплайны опираются на Python и `findings.json`, не на gigacli. Oracle/quality в CI: `python analyze_pgprofile.py … --exit-code-quality` или `python run_quality.py --output-dir ./out/ --exit-code`.
 
 ---
 
@@ -1015,10 +1191,16 @@ pg_profile_checks/
 ├── analyze_prod_stability.py # CLI: стабильные PROD-проблемы + GUC
 ├── investigate_symptom.py   # CLI: расследование симптома
 ├── analyze_pgprofile.py     # CLI: оркестратор
+├── run_llm.py               # CLI: Headless Qwen
+├── run_quality.py           # CLI: quality report
 ├── merge_confluence.py      # CLI: stub + body → confluence_page.wiki
 ├── pgprofile_parser.py      # Парсинг HTML → JSON
 ├── pgprofile_health.py      # Логика health-check
 ├── pgprofile_compare.py     # Логика сравнения прогонов
+├── pgprofile_influence.py   # Таблица влияния GUC → метрики
+├── pgprofile_oracle.py      # Проверка influence-таблиц
+├── pgprofile_quality.py     # Сводный quality report
+├── pgprofile_llm.py         # Провайдеры dry_run / qwen_local / qwen_gateway
 ├── pgprofile_nt_prod.py     # НТ vs ПРОМ: settings gate + отчёт
 ├── pgprofile_stable_prod.py # N PROD-отчётов: стабильность + tuning
 ├── pgprofile_symptoms.py    # Расследование симптомов (CPU/RAM/WAL/SQL)
@@ -1038,7 +1220,14 @@ pg_profile_checks/
 │   ├── analysis_runner.py   # UI → analyze_pgprofile.run_pipeline
 │   └── web/                 # HTML/CSS/JS + mascot (стиль Gatling Monitor)
 ├── docs/
-│   └── INTEGRATION_GATLING_MONITOR.md
+│   ├── ai/                  # индекс и playbook для агента (не читать корневой README целиком)
+│   │   ├── README.md
+│   │   └── system-config.md
+│   ├── INTEGRATION_GATLING_MONITOR.md
+│   ├── QWEN_HEADLESS.md     # настройка local/gateway Qwen
+│   ├── LLM_QUALITY_RUNBOOK.md
+│   └── RELEASE_CHECKLIST.md # A/B/C готов + smoke
+├── llm_providers.yaml
 ├── analyze_nt_runs.py       # CLI: несколько НТ + симптомы + GUC impact
 ├── pgprofile_nt_runs.py
 ├── thresholds.yaml
@@ -1060,5 +1249,7 @@ pg_profile_checks/
 - Только HTML-отчёты pg_profile в текущем формате (`const data={...}`).
 - `compare_settings.py` — только **Defined settings**. Параметр, явно заданный на одной среде и дефолтный на другой, попадёт в «Only in NT» / «Only in PROD» — это ожидаемо.
 - Пороги в `thresholds.yaml` — ориентир; подбирайте под свою нагрузку.
-- ИИ (gigacli) — опционально, только для оформления текста; цифры и таблицы — из Python.
-- UI не вызывает gigacli сам: только отдаёт stub/wiki, prompt и ZIP; сессии в temp с TTL по умолчанию 24ч (см. раздел UI).
+- Таблица влияния не приписывает метрику параметру без известной связи. `probable` ≠ причинность.
+- ИИ (gigacli и Headless Qwen) — опционально. Цифры и таблицы — из Python. Qwen по умолчанию `dry_run` (сеть не трогает, публикацию блокирует quality gate).
+- UI не вызывает gigacli сам: только отдаёт stub/wiki, prompt, ответ Qwen и ZIP; сессии в temp с TTL по умолчанию 24ч (см. раздел UI).
+- `--exit-code` оркестратора не учитывает oracle/quality; для этого `--exit-code-quality` или `run_quality.py --exit-code`.

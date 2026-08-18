@@ -1,0 +1,132 @@
+{
+  "findings": [
+    {
+      "code": "memory.request_pressure",
+      "severity": "warning",
+      "message": "Working set significantly exceeds memory request.",
+      "evidence": {
+        "memory_request_ratio": "1.400"
+      },
+      "threshold": "working_set/request >= 1.15",
+      "details": {
+        "container_memory_working_set_mib": "5734",
+        "container_memory_request_mib": "4096"
+      }
+    },
+    {
+      "code": "heap.metric_missing",
+      "severity": "info",
+      "message": "Heap utilization is not provided. Recommendations may be less precise.",
+      "evidence": {
+        "source": "context_metric"
+      },
+      "threshold": "provide heap_used_mib or heap_used_percent",
+      "details": {
+        "source": "ui.metric_input"
+      }
+    },
+    {
+      "code": "oldgen.metric_missing",
+      "severity": "info",
+      "message": "OldGen utilization is not provided. OldGen recommendations may be less precise.",
+      "evidence": {
+        "source": "context_metric"
+      },
+      "threshold": "provide old_gen_used_percent or old_gen_used_mib",
+      "details": {
+        "source": "ui.metric_input"
+      }
+    },
+    {
+      "code": "platform.non_heap_accumulation",
+      "severity": "critical",
+      "message": "RSS контейнера растёт, при этом после GC heap снизился. GC работает. Увеличьте memory limit; G1 не копируйте.",
+      "evidence": {},
+      "threshold": "",
+      "details": {
+        "source": "diagnostic_tree"
+      }
+    }
+  ],
+  "recommendations": [
+    {
+      "title": "Увеличьте memory limit контейнера",
+      "rationale": "RSS растёт, а GC отрабатывает нормально: после сборки heap снизился. Нехватка ёмкости контейнера, не настройка G1.",
+      "suggested_java_tool_options": [],
+      "confidence": "high",
+      "evidence_score": 80,
+      "risk_score": 35,
+      "expected_gain": "ниже memory usage % и запас до OOMKilled",
+      "verification_window": "то же окно нагрузки после выкатки limit",
+      "rollback_plan": [
+        "Вернуть прежний memory limit, если на ноде появятся Evicted."
+      ],
+      "rule_ids": [
+        "platform.non_heap_accumulation"
+      ],
+      "blocking_conditions": [],
+      "requires_platform_escalation": true,
+      "notes": [
+        "G1 не копировать: сборщик уже работает.",
+        "Цифры memory request, memory limit и расчётного `-Xmx` — в таблице «Ресурсы и JVM настройки»."
+      ]
+    },
+    {
+      "title": "Raise container memory request to match actual usage",
+      "rationale": "Working set is above memory request. Raise request toward observed usage (still below limit). This is not a G1 change.",
+      "suggested_java_tool_options": [],
+      "confidence": "low",
+      "evidence_score": 30,
+      "risk_score": 30,
+      "expected_gain": "better scheduling predictability",
+      "verification_window": "30-60m after deploy",
+      "rollback_plan": [
+        "Rollback to previous JVM option set if SLA worsens."
+      ],
+      "rule_ids": [
+        "memory.request_pressure"
+      ],
+      "blocking_conditions": [],
+      "requires_platform_escalation": false,
+      "notes": [
+        "Increase memory request closer to baseline working set, keeping it below limit.",
+        "Do not change JAVA_TOOL_OPTIONS for this finding."
+      ]
+    }
+  ],
+  "memory_plan": null,
+  "lifecycle_status": "tuning_attempted",
+  "tuning_target_snapshot": {
+    "title": "Ресурсы и JVM настройки контейнера (актуально для настройки)",
+    "pod_name": "counteragent-demo",
+    "container_name": "application",
+    "resources": {
+      "requests": {
+        "cpu_millicores": 2000,
+        "memory_mib": 4096,
+        "ephemeral_storage_mib": null
+      },
+      "limits": {
+        "cpu_millicores": 4000,
+        "memory_mib": 8192,
+        "ephemeral_storage_mib": null
+      }
+    },
+    "java_tool_options": [
+      "-XX:+UseContainerSupport",
+      "-XX:+UseG1GC",
+      "-XX:MaxRAMPercentage=70.0",
+      "-XX:InitialRAMPercentage=45.0",
+      "-XX:MaxGCPauseMillis=250",
+      "-XX:+ExitOnOutOfMemoryError"
+    ]
+  },
+  "tree": {
+    "copyable_allowed": false,
+    "pause_copyable_allowed": false,
+    "ha_exceeded": false,
+    "block_reasons": [
+      "RSS растёт, а GC отрабатывает нормально. G1 это не лечит: нужен memory limit контейнера."
+    ]
+  }
+}

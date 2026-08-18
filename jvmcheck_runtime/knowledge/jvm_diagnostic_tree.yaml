@@ -1,0 +1,64 @@
+shoulders: 2
+ha_cpu_sum_pct_limit: 80
+# Memory usage SLA: 80% of limit. If time to reach 80% is over 30 days, growth is not critical.
+memory_sla_percent: 80
+memory_sla_not_critical_days: 30
+# Example plateau below SLA 80%. Time-to-SLA math does not prove a leak if usage levels off here.
+memory_plateau_example_percent: 75
+# p95 at or above 16s: extra GC analysis even when user latency did not grow.
+gc_pause_extreme_ms: 16000
+# GC has not run yet, but growth is at least this steep (10% / 12h): schedule a second window
+# of the same length. Do not raise limit yet if current usage is still at or below this.
+gc_pending_steep_percent: 10
+gc_pending_steep_hours: 12
+gc_pending_low_usage_percent: 40
+questions:
+  - id: pods_per_shoulder
+    label: Сколько подов этой АС на одном плече
+  - id: restart_kind
+    label: Почему рестартовал контейнер
+    options: [oomkilled, evicted, java_oome, none, unknown]
+  - id: heap_growing
+    label: Память в тесте растёт (рестарта ещё нет)
+    options: [yes, no, unknown]
+  - id: memory_cause_closed
+    label: Причину OOM или OOME уже закрыли
+    options: [yes, no, unknown]
+  - id: cpu_throttled
+    label: Есть CPU throttle
+    options: [yes, no, unknown]
+  - id: cpu_pct_limits_shoulder_1
+    label: CPU % of limits этой АС на плече 1
+  - id: cpu_pct_limits_shoulder_2
+    label: CPU % of limits этой АС на плече 2
+  - id: gc_pause_p95_ms
+    label: GC pause p95, мс
+  - id: user_latency_grew
+    label: В том же окне росли времена отклика пользователя
+    options: [yes, no, unknown]
+  - id: pauses_coincide_throttle
+    label: Паузы GC совпадали с CPU throttle
+    options: [yes, no, unknown]
+  - id: growth_of
+    label: Какой показатель рос
+    options: [oldgen, heap, container_rss, unknown]
+  - id: heap_growth_percent
+    label: На сколько процентов он вырос
+  - id: heap_growth_hours
+    label: За сколько часов
+  - id: gc_ran_in_window
+    label: За это время GC успел отработать
+    options: [yes, no, unknown]
+  - id: heap_used_before_gc_mib
+    label: Heap used сразу до GC, MiB
+  - id: heap_used_after_gc_mib
+    label: Heap used сразу после GC, MiB
+  - id: oldgen_returned_after_gc
+    label: OldGen после GC снизился
+    options: [yes, no, unknown]
+  - id: post_gc_floor_rising
+    label: Минимум heap после каждой следующей GC выше, чем после предыдущей
+    options: [yes, no, unknown]
+  - id: gc_cpu_spike_sla
+    label: Всплеск CPU на очистке GC нарушал SLA
+    options: [yes, no, unknown]

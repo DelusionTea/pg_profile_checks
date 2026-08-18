@@ -9,6 +9,12 @@ from typing import Any
 
 from pgprofile_health import ReportContext, Warning
 from pgprofile_compare import CompareResult, MetricDiff, RunSnapshot
+from pgprofile_contracts import (
+    SCHEMA_VERSION,
+    build_confidence_meta,
+    build_run_identity_pair,
+    build_workload_match,
+)
 
 
 def _json_safe(value: Any) -> Any:
@@ -224,26 +230,44 @@ def run_comparison_to_dict(
         if finding:
             findings.append(finding)
 
+    run_a_meta = {
+        "run_id": run_a.run_id,
+        "path": str(run_a.path),
+        "filename": run_a.path.name,
+        "server": run_a.ctx.properties.get("server_name"),
+        "report_start": run_a.ctx.properties.get("report_start1"),
+        "report_end": run_a.ctx.properties.get("report_end1"),
+        "interval_hours": run_a.ctx.interval_hours,
+    }
+    run_b_meta = {
+        "run_id": run_b.run_id,
+        "path": str(run_b.path),
+        "filename": run_b.path.name,
+        "server": run_b.ctx.properties.get("server_name"),
+        "report_start": run_b.ctx.properties.get("report_start1"),
+        "report_end": run_b.ctx.properties.get("report_end1"),
+        "interval_hours": run_b.ctx.interval_hours,
+    }
+    workload_match = build_workload_match(run_a_meta, run_b_meta)
+
     return {
         "type": "run_comparison",
-        "run_a": {
-            "run_id": run_a.run_id,
-            "path": str(run_a.path),
-            "filename": run_a.path.name,
-            "server": run_a.ctx.properties.get("server_name"),
-            "report_start": run_a.ctx.properties.get("report_start1"),
-            "report_end": run_a.ctx.properties.get("report_end1"),
-            "interval_hours": run_a.ctx.interval_hours,
+        "contract": {
+            "schema": "run_comparison_v1",
+            "schema_version": SCHEMA_VERSION,
         },
-        "run_b": {
-            "run_id": run_b.run_id,
-            "path": str(run_b.path),
-            "filename": run_b.path.name,
-            "server": run_b.ctx.properties.get("server_name"),
-            "report_start": run_b.ctx.properties.get("report_start1"),
-            "report_end": run_b.ctx.properties.get("report_end1"),
-            "interval_hours": run_b.ctx.interval_hours,
-        },
+        "run_a": run_a_meta,
+        "run_b": run_b_meta,
+        "run_identity": build_run_identity_pair(run_a_meta, run_b_meta),
+        "workload_match": workload_match,
+        "confidence_meta": build_confidence_meta(
+            changed_params_count=0,
+            workload_match_score=workload_match["workload_match_score"],
+            isolated_change=False,
+            changed_params_threshold=10,
+            mode="pair",
+        ),
+        "influence_rows": [],
         "interval_diff_hours": round(interval_diff, 2),
         "interval_mismatch": interval_diff > 0.01,
         "findings": findings,
@@ -271,7 +295,7 @@ def settings_diff_to_dict(
     critical, informational = split_settings_rows(diffs)
     findings = []
     for row in critical + informational:
-        if row.status is DiffStatus.SAME:
+        if row.status == DiffStatus.SAME:
             continue
         level = classify_setting_name(row.name)
         findings.append(
@@ -289,24 +313,70 @@ def settings_diff_to_dict(
             }
         )
 
-    differ = sum(1 for r in diffs if r.status is DiffStatus.DIFFER)
-    only_a = sum(1 for r in diffs if r.status is DiffStatus.ONLY_NT)
-    only_b = sum(1 for r in diffs if r.status is DiffStatus.ONLY_PROD)
+    differ = sum(1 for r in diffs if r.status == DiffStatus.DIFFER)
+    only_a = sum(1 for r in diffs if r.status == DiffStatus.ONLY_NT)
+    only_b = sum(1 for r in diffs if r.status == DiffStatus.ONLY_PROD)
+
+    run_a_meta = {
+        "run_id": label_a,
+        "path": str(path_a),
+        "filename": path_a.name,
+        "meta": meta_a,
+        "server": meta_a.get("server"),
+        "report_start": meta_a.get("from"),
+        "report_end": meta_a.get("to"),
+        "interval_hours": None,
+    }
+    run_b_meta = {
+        "run_id": label_b,
+        "path": str(path_b),
+        "filename": path_b.name,
+        "meta": meta_b,
+        "server": meta_b.get("server"),
+        "report_start": meta_b.get("from"),
+        "report_end": meta_b.get("to"),
+        "interval_hours": None,
+    }
+    changed_params = [row for row in diffs if row.status != DiffStatus.SAME]
+    workload_match = build_workload_match(run_a_meta, run_b_meta)
 
     return {
         "type": "settings_diff",
+        "contract": {
+            "schema": "settings_diff_v1",
+            "schema_version": SCHEMA_VERSION,
+        },
         "run_a": {
-            "run_id": label_a,
-            "path": str(path_a),
-            "filename": path_a.name,
-            "meta": meta_a,
+            "run_id": run_a_meta["run_id"],
+            "path": run_a_meta["path"],
+            "filename": run_a_meta["filename"],
+            "meta": run_a_meta["meta"],
         },
         "run_b": {
-            "run_id": label_b,
-            "path": str(path_b),
-            "filename": path_b.name,
-            "meta": meta_b,
+            "run_id": run_b_meta["run_id"],
+            "path": run_b_meta["path"],
+            "filename": run_b_meta["filename"],
+            "meta": run_b_meta["meta"],
         },
+        "run_identity": build_run_identity_pair(run_a_meta, run_b_meta),
+        "workload_match": workload_match,
+        "confidence_meta": build_confidence_meta(
+            changed_params_count=len(changed_params),
+            workload_match_score=workload_match["workload_match_score"],
+            isolated_change=len(changed_params) == 1,
+            changed_params_threshold=10,
+            mode="pair",
+        ),
+        "settings_changes": [
+            {
+                "parameter": row.name,
+                "status": row.status.value,
+                "old": row.nt_value,
+                "new": row.prod_value,
+            }
+            for row in changed_params
+        ],
+        "influence_rows": [],
         "findings": findings,
         "summary": {
             "differ": differ,

@@ -1,0 +1,5 @@
+parameter,old,new,delta_pct,delta_iqr_pct,affected_metric,direction,impact,stability_score,confidence,evidence_type,evidence_count,workload_match_score,notes
+max_wal_size,16384 (128.0 MB),16384 (128.0 MB),-36.28,74.58,checkpoints_req,increased,neutral,0.5,medium,probable,2,,"pairs=2; stability=0.500; effects=nt_before->nt_after:improved, nt_after->nt_old:degraded"
+huge_pages,—,—,-32.31,55.1,blk_read_time,changed,neutral,0.0,medium,probable,2,,"pairs=2; stability=0.000; effects=nt_before->nt_after:neutral, nt_after->nt_old:neutral"
+shared_buffers,1048576 (8192.0 MB),1048576 (8192.0 MB),-32.31,68.6,blks_read,increased,neutral,0.5,medium,probable,2,,"pairs=2; stability=0.500; effects=nt_before->nt_after:improved, nt_after->nt_old:degraded"
+wal_buffers,2048 (16.0 MB),2048 (16.0 MB),13.01,72.89,wal_buffers_full,increased,neutral,0.0,medium,probable,2,,"pairs=2; stability=0.000; effects=nt_before->nt_after:neutral, nt_after->nt_old:neutral"

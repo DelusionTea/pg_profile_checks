@@ -1,0 +1,57 @@
+{
+  "findings": [],
+  "recommendations": [
+    {
+      "title": "No critical JVM changes required",
+      "rationale": "Current metrics do not indicate GC or heap pressure above thresholds.",
+      "suggested_java_tool_options": [],
+      "confidence": "low",
+      "evidence_score": 65,
+      "risk_score": 10,
+      "expected_gain": "keep baseline stable",
+      "verification_window": "next scheduled load profile",
+      "rollback_plan": [
+        "No rollback required."
+      ],
+      "rule_ids": [],
+      "blocking_conditions": [],
+      "requires_platform_escalation": false,
+      "notes": []
+    }
+  ],
+  "memory_plan": null,
+  "lifecycle_status": "tuning_attempted",
+  "tuning_target_snapshot": {
+    "title": "Ресурсы и JVM настройки контейнера (актуально для настройки)",
+    "pod_name": "counteragent-demo",
+    "container_name": "application",
+    "resources": {
+      "requests": {
+        "cpu_millicores": 2000,
+        "memory_mib": 4096,
+        "ephemeral_storage_mib": null
+      },
+      "limits": {
+        "cpu_millicores": 4000,
+        "memory_mib": 8192,
+        "ephemeral_storage_mib": null
+      }
+    },
+    "java_tool_options": [
+      "-XX:+UseContainerSupport",
+      "-XX:+UseG1GC",
+      "-XX:MaxRAMPercentage=70.0",
+      "-XX:InitialRAMPercentage=45.0",
+      "-XX:MaxGCPauseMillis=250",
+      "-XX:+ExitOnOutOfMemoryError"
+    ]
+  },
+  "tree": {
+    "copyable_allowed": false,
+    "pause_copyable_allowed": false,
+    "ha_exceeded": false,
+    "block_reasons": [
+      "Нет GC pause p95. Копировать JAVA_TOOL_OPTIONS нельзя."
+    ]
+  }
+}

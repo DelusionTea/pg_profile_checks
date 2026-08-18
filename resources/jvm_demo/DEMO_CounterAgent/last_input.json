@@ -1,19 +1,35 @@
 {
   "containers": {
     "application": {
-      "gc_pause_p95_ms": 265,
-      "gc_pause_p99_ms": 410,
-      "gc_time_ratio_percent": 13,
-      "container_memory_usage_percent": 78,
-      "heap_used_mib": 3200,
+      "gc_pause_p95_ms": 320.0,
+      "heap_used_mib": null,
       "heap_used_percent": null,
       "old_gen_used_mib": null,
       "old_gen_capacity_mib": null,
       "old_gen_used_percent": null,
-      "new_gen_used_mib": null,
-      "new_gen_capacity_mib": null,
-      "new_gen_used_percent": null,
-      "updated_at": "2026-07-22T20:10:04Z"
+      "container_memory_usage_percent": null,
+      "tree": {
+        "pods_per_shoulder": 2,
+        "restart_kind": "none",
+        "memory_cause_closed": null,
+        "heap_growing": null,
+        "heap_growth_percent": null,
+        "heap_growth_hours": null,
+        "growth_of": null,
+        "gc_ran_in_window": null,
+        "heap_used_before_gc_mib": null,
+        "heap_used_after_gc_mib": null,
+        "oldgen_returned_after_gc": null,
+        "cpu_throttled": "no",
+        "cpu_pct_limits_shoulder_1": null,
+        "cpu_pct_limits_shoulder_2": null,
+        "user_latency_grew": "yes",
+        "user_latency_p95_ms": null,
+        "pauses_coincide_throttle": null,
+        "post_gc_floor_rising": null,
+        "gc_cpu_spike_sla": null
+      },
+      "updated_at": "2026-08-18T16:15:06Z"
     }
   }
 }

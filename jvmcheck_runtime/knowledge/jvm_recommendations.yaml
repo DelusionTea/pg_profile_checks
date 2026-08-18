@@ -105,11 +105,11 @@ recommendations:
 
   - id: memory.request_pressure
     severity: warning
-    title: Memory usage significantly exceeds request
-    rationale: Working set is above declared memory request.
+    title: Raise container memory request to match actual usage
+    rationale: Working set is above memory request. Raise request toward observed usage (still below limit). This is not a G1 change.
     actions:
-      - Align requests with actual baseline usage.
-      - Review HPA/VPA assumptions.
+      - Increase memory request closer to baseline working set, keeping it below limit.
+      - Do not change JAVA_TOOL_OPTIONS for this finding.
     suggested_flags: []
     expected_gain: better scheduling predictability
     risk_score: 30

@@ -14,7 +14,7 @@ from pgprofile_compare import (
     format_value_cell,
     interval_diff_hours,
 )
-from pgprofile_classify import split_settings_rows
+from pgprofile_classify import SETTINGS_INFORMATIONAL, split_settings_rows
 from pgprofile_health import CATEGORY_LABELS, CHECKERS
 from pgprofile_nt_prod import NtProdValidation
 from pgprofile_stable_prod import StableFinding, StableProdAnalysis, TuningRecommendation
@@ -68,6 +68,61 @@ _CAUSE_STATUS = {
     "unlikely": "{status:colour=Green|title=UNLIKELY|subtle=false}",
 }
 
+WIKI_CATEGORY_LABELS = {
+    "checkpoints": "Контрольные точки",
+    "queries": "Медленные запросы",
+    "autovacuum": "Autovacuum",
+    "wal": "WAL",
+    "cache": "Кэш и чтение с диска",
+    "sessions": "Сессии и транзакции",
+    "memory": "Настройки памяти",
+    "io": "Ввод-вывод",
+    "disk": "Табличные пространства / диск",
+    "locks": "Блокировки",
+}
+
+_ACTION_GUC_KEYS = (
+    "idle_in_transaction_session_timeout",
+    "max_wal_size",
+    "min_wal_size",
+    "wal_buffers",
+    "shared_buffers",
+    "checkpoint_completion_target",
+    "checkpoint_timeout",
+    "statement_timeout",
+    "lock_timeout",
+    "max_connections",
+    "work_mem",
+    "effective_cache_size",
+)
+
+_DERIVED_GUC = frozenset(
+    {
+        "shared_memory_size",
+        "shared_memory_size_in_huge_pages",
+        "commit_timestamp_buffers",
+        "subtransaction_buffers",
+        "transaction_buffers",
+    }
+)
+
+_METRIC_RU = {
+    "checkpoint_write_time": "время записи checkpoint",
+    "checkpoint_sync_time": "время sync checkpoint",
+    "checkpoints_req": "requested checkpoints",
+    "checkpoints_timed": "плановые checkpoints",
+    "maxwritten_clean": "прерывания bgwriter",
+    "buffers_checkpoint": "буферы checkpoint",
+    "wal_buffers_full": "переполнения wal_buffers",
+    "wal_bytes": "объём WAL",
+    "blk_read_time": "время чтения блоков",
+    "blk_write_time": "время записи блоков",
+    "blks_read": "блоки, прочитанные с диска",
+    "idle_in_transaction_time": "время idle in transaction",
+    "active_time": "время active-сессий",
+    "session_time": "время сессий",
+}
+
 
 def _status(severity: str) -> str:
     return _SEVERITY_STATUS.get(severity.lower(), _SEVERITY_STATUS["warning"])
@@ -86,12 +141,18 @@ def _cause_status(status: str) -> str:
 
 
 def _wiki_escape(text: str) -> str:
-    """Escape wiki-special chars; neutralize [..] so Confluence won't create pages."""
+    """Escape wiki-special chars; neutralize [..] so Confluence won't create pages.
+
+    Pipes become the `&#124;` entity: a backslash escape is not honoured inside
+    Confluence tables and would silently shift the row into extra columns.
+    """
     return (
         str(text)
-        .replace("|", "\\|")
+        .replace("|", "&#124;")
         .replace("[", "(")
         .replace("]", ")")
+        .replace("{", "(")
+        .replace("}", ")")
         .replace("\n", " ")
     )
 
@@ -166,7 +227,7 @@ def _checklist_from_health_findings(
 
     rows: list[tuple[str, str, str]] = []
     for cat in CHECKERS:
-        label = CATEGORY_LABELS.get(cat, cat)
+        label = WIKI_CATEGORY_LABELS.get(cat, CATEGORY_LABELS.get(cat, cat))
         rows.append((label, by_cat.get(cat, "PASS"), f"sec_{cat}"))
     return rows
 
@@ -225,7 +286,7 @@ def _wiki_actions_section(actions: list[str], *, heading: str = "Что сдел
     lines = [f"h2. {heading}", ""]
     cleaned = [a.strip() for a in actions if a and str(a).strip()]
     if not cleaned:
-        lines.append("_Нет приоритетных действий — см. сводку findings._")
+        lines.append("_Нет приоритетных действий — см. сводку находок._")
         lines.append("")
         return lines
     for idx, action in enumerate(cleaned[:limit], 1):
@@ -263,7 +324,7 @@ def _wiki_findings_summary_table(
         by_cat.setdefault(_finding_category(row[1]), []).append(row)
 
     for cat in CHECKERS:
-        label = CATEGORY_LABELS.get(cat, cat)
+        label = WIKI_CATEGORY_LABELS.get(cat, CATEGORY_LABELS.get(cat, cat))
         lines.append(_wiki_anchor(f"sec_{cat}"))
         lines.append(f"h3. {label}")
         lines.append("")
@@ -272,7 +333,7 @@ def _wiki_findings_summary_table(
             key=lambda r: (_SEVERITY_RANK.get(str(r[0]).lower(), 9), str(r[1])),
         )
         if not cat_rows:
-            lines.append("_Нет findings — PASS._")
+            lines.append("_Нет находок — PASS._")
             lines.append("")
             continue
         lines.append("||Severity||ID||Сообщение||Отчёт(ы)||")
@@ -294,23 +355,235 @@ def _wiki_llm_footer() -> list[str]:
     ]
 
 
+def _is_health_finding_id(fid: str) -> bool:
+    return not str(fid).startswith(("run_compare.", "settings."))
+
+
+def _action_dedupe_key(text: str) -> str:
+    low = text.lower()
+    if "pooling" in low or "connection pool" in low or "pgbouncer" in low:
+        return "pooling"
+    if "pg_stat_activity" in low:
+        return "pg_stat_activity"
+    for guc in _ACTION_GUC_KEYS:
+        if guc in text and low.startswith(
+            ("установить", "увеличить", "рассмотреть", "поднять", "проверить")
+        ):
+            return guc
+    base = re.sub(r"\s*\([^)]*\)\s*$", "", text).strip()
+    return base.casefold()
+
+
 def _collect_actions_from_advisor(reports: list[AdvisorReport], *, limit: int = 8) -> list[str]:
-    actions: list[str] = []
-    seen: set[str] = set()
+    seen_text: set[str] = set()
     ranked: list[tuple[int, str]] = []
     for report in reports:
         for item in report.advised_findings:
+            fid = str((item.finding or {}).get("id") or "")
+            if not _is_health_finding_id(fid):
+                continue
             sev = str((item.finding or {}).get("severity") or "warning").lower()
             rank = _SEVERITY_RANK.get(sev, 9)
             for action in (item.advice or {}).get("actions") or []:
                 text = str(action).strip()
-                if text and text not in seen:
-                    seen.add(text)
+                if text and text not in seen_text:
+                    seen_text.add(text)
                     ranked.append((rank, text))
     ranked.sort(key=lambda x: x[0])
-    for _, text in ranked[:limit]:
-        actions.append(text)
-    return actions
+    kept: list[str] = []
+    seen_key: set[str] = set()
+    for _, text in ranked:
+        key = _action_dedupe_key(text)
+        if key in seen_key:
+            continue
+        seen_key.add(key)
+        kept.append(text)
+        if len(kept) >= limit:
+            break
+    return kept
+
+
+def _reports_have_compare(reports: list[AdvisorReport]) -> bool:
+    return any(r.source_type in {"run_comparison", "settings_diff"} for r in reports)
+
+
+def _metric_is_noise(fid: str, message: str) -> bool:
+    blob = f"{fid} {message}"
+    if "pg_catalog" in blob or "pgse_profile" in blob:
+        return True
+    if "pg_conf_load_time" in blob or "pg_postmaster_start_time" in blob:
+        return True
+    if str(fid).startswith("run_compare.queries."):
+        return True
+    if str(fid).startswith("run_compare.tables."):
+        return True
+    if str(fid).startswith("run_compare.dml."):
+        return True
+    return False
+
+
+def _metric_label(fid: str, message: str) -> str:
+    key = str(message or "").strip() or str(fid).rsplit(".", 1)[-1]
+    short = key.split(".")[-1]
+    ru = _METRIC_RU.get(short)
+    if ru and short != key:
+        return f"{ru} ({key})"
+    return ru or key
+
+
+def _fmt_compact(value: Any) -> str:
+    if value is None:
+        return "—"
+    if isinstance(value, float):
+        if abs(value) >= 1000:
+            return f"{value:.0f}"
+        return f"{value:.2f}".rstrip("0").rstrip(".")
+    return str(value)
+
+
+def _change_direction(delta_pct: Any) -> str:
+    try:
+        pct = float(delta_pct)
+    except (TypeError, ValueError):
+        return "изменилось"
+    if pct > 0:
+        return f"выросло на {pct:.0f}%"
+    if pct < 0:
+        return f"снизилось на {abs(pct):.0f}%"
+    return "без изменения"
+
+
+def _collect_guc_changes(reports: list[AdvisorReport], *, limit: int = 8) -> tuple[list[str], int]:
+    rows: list[tuple[str, str, str]] = []
+    for report in reports:
+        if report.source_type != "settings_diff":
+            continue
+        for item in report.advised_findings:
+            f = item.finding or {}
+            name = str(f.get("message") or "")
+            if not name or name in SETTINGS_INFORMATIONAL:
+                continue
+            details = f.get("details") or {}
+            if str(details.get("issue_level") or "") == "informational":
+                continue
+            a = _fmt_compact(details.get("value_a"))
+            b = _fmt_compact(details.get("value_b"))
+            rows.append((name, a, b))
+    names = {name for name, _, _ in rows}
+    if "shared_buffers" in names:
+        rows = [row for row in rows if row[0] not in _DERIVED_GUC]
+    bullets: list[str] = []
+    extra = 0
+    for name, a, b in rows:
+        line = f"* *{name}*: {a} → {b}"
+        if len(bullets) < limit:
+            bullets.append(line)
+        else:
+            extra += 1
+    return bullets, extra
+
+
+def _collect_metric_changes(
+    reports: list[AdvisorReport], *, limit: int = 8
+) -> tuple[list[str], list[tuple[str, str, str, str]], int]:
+    ranked: list[tuple[float, str, dict[str, Any]]] = []
+    for report in reports:
+        if report.source_type != "run_comparison":
+            continue
+        for item in report.advised_findings:
+            f = item.finding or {}
+            fid = str(f.get("id") or "")
+            message = str(f.get("message") or "")
+            if _metric_is_noise(fid, message):
+                continue
+            details = f.get("details") or {}
+            pct = details.get("delta_pct")
+            try:
+                score = abs(float(pct)) if pct is not None else 0.0
+            except (TypeError, ValueError):
+                score = 0.0
+            try:
+                va = float(details.get("value_a")) if details.get("value_a") is not None else None
+            except (TypeError, ValueError):
+                va = None
+            if va is not None and abs(va) < 1 and score > 200:
+                continue
+            ranked.append((score, fid, f))
+    ranked.sort(key=lambda x: -x[0])
+    bullets: list[str] = []
+    table_rows: list[tuple[str, str, str, str]] = []
+    extra = 0
+    for score, _fid, f in ranked:
+        details = f.get("details") or {}
+        label = _metric_label(str(f.get("id") or ""), str(f.get("message") or ""))
+        a = _fmt_compact(details.get("value_a"))
+        b = _fmt_compact(details.get("value_b"))
+        direction = _change_direction(details.get("delta_pct"))
+        table_rows.append((label, a, b, direction))
+        if len(bullets) < limit:
+            bullets.append(f"* *{label}*: {a} → {b} ({direction})")
+        else:
+            extra += 1
+    return bullets, table_rows, extra
+
+
+def _top_health_headline(finding_rows: list[tuple[str, str, str, str]]) -> str:
+    ordered = sorted(
+        finding_rows,
+        key=lambda r: (_SEVERITY_RANK.get(str(r[0]).lower(), 9), str(r[1])),
+    )
+    if not ordered:
+        return ""
+    return str(ordered[0][2] or "").strip()[:160]
+
+
+def _health_ok_panel(
+    *,
+    fail_n: int,
+    suspect_n: int,
+    pass_n: int,
+    high: int,
+    total: int,
+    compare: bool,
+    guc_n: int,
+    metric_n: int,
+    headline: str,
+) -> tuple[str, str, list[str]]:
+    """Return (macro, title, body lines) for the above-the-fold verdict."""
+    title = "Всё ли хорошо"
+    problems = fail_n + suspect_n
+    if not problems and not high and not (compare and (guc_n or metric_n)):
+        body = [
+            "Да: по порогам анализа критичных проблем нет.",
+            f"Чеклист: {pass_n} из {fail_n + suspect_n + pass_n} областей без замечаний.",
+        ]
+        return "info", title, body
+
+    body: list[str] = []
+    if problems or high:
+        if suspect_n:
+            body.append(
+                f"Нет. Проблемных областей: *{fail_n}* (ещё {suspect_n} к проверке); "
+                f"находок: *{total}* (высокий приоритет: *{high}*)."
+            )
+        else:
+            body.append(
+                f"Нет. Проблемных областей: *{fail_n}*; "
+                f"находок: *{total}* (высокий приоритет: *{high}*)."
+            )
+    elif compare:
+        body.append("Сводка по здоровью интервала без критичных FAIL, но прогоны различаются.")
+    if compare:
+        bits = []
+        if guc_n:
+            bits.append(f"изменились *{guc_n}* настроек")
+        if metric_n:
+            bits.append(f"*{metric_n}* метрик сдвинулись сильнее порога")
+        if bits:
+            body.append("Между прогонами " + "; ".join(bits) + ".")
+    if headline:
+        body.append(f"Главное: {headline}")
+    return "warning", title, body
 
 
 EXPLAIN_ANALYZE_PREFIX = "EXPLAIN (ANALYZE, BUFFERS)"
@@ -654,10 +927,14 @@ def build_confluence_stub(
     page_title: str | None = None,
 ) -> str:
     title = page_title or _page_title(reports)
-    total = sum(r.summary.get("total_findings", 0) for r in reports)
-    high = sum(r.summary.get("high_priority", 0) for r in reports)
+    health_reports = [r for r in reports if r.source_type == "health_check"] or [
+        r for r in reports if r.source_type not in {"run_comparison", "settings_diff"}
+    ]
+    compare = _reports_have_compare(reports)
+    total = sum(r.summary.get("total_findings", 0) for r in health_reports)
+    high = sum(r.summary.get("high_priority", 0) for r in health_reports)
     finding_rows: list[tuple[str, str, str, str]] = []
-    for report in reports:
+    for report in health_reports:
         meta = report.meta or {}
         rm = meta.get("report_meta") if isinstance(meta.get("report_meta"), dict) else {}
         report_label = str(
@@ -668,10 +945,13 @@ def build_confluence_stub(
         )
         for item in report.advised_findings:
             f = item.finding or {}
+            fid = str(f.get("id") or "?")
+            if not _is_health_finding_id(fid):
+                continue
             finding_rows.append(
                 (
                     str(f.get("severity") or "warning"),
-                    str(f.get("id") or "?"),
+                    fid,
                     str(f.get("message") or "")[:160],
                     report_label,
                 )
@@ -682,25 +962,54 @@ def build_confluence_stub(
     suspect_n = sum(1 for row in checklist if row[1] == "SUSPECT")
     pass_n = sum(1 for row in checklist if row[1] == "PASS")
 
-    verdict_macro = "warning" if fail_n or high or total else "info"
-    verdict_title = "Краткий вердикт" if total else "Краткий вердикт — чисто"
-    verdict_body = [
-        f"Чеклист: FAIL *{fail_n}* · SUSPECT *{suspect_n}* · PASS *{pass_n}*.",
-        f"Находок: *{total}* (высокий приоритет: *{high}*).",
-        "Сначала чеклист и действия, затем детали findings / EXPLAIN в Expand.",
-    ]
-    if not total:
-        verdict_body = [
-            f"Чеклист: FAIL *{fail_n}* · SUSPECT *{suspect_n}* · PASS *{pass_n}*.",
-            "Критических/предупреждающих находок по порогам нет.",
-        ]
+    guc_bullets, guc_extra = _collect_guc_changes(reports)
+    metric_bullets, metric_rows, metric_extra = _collect_metric_changes(reports)
+    guc_n = len(guc_bullets) + guc_extra
+    metric_n = len(metric_bullets) + metric_extra
+    headline = _top_health_headline(finding_rows)
+    verdict_macro, verdict_title, verdict_body = _health_ok_panel(
+        fail_n=fail_n,
+        suspect_n=suspect_n,
+        pass_n=pass_n,
+        high=high,
+        total=len(finding_rows) or total,
+        compare=compare,
+        guc_n=guc_n,
+        metric_n=metric_n,
+        headline=headline,
+    )
 
     lines: list[str] = [f"h1. {title}", ""]
     lines.extend(_wiki_panel(verdict_macro, verdict_title, verdict_body))
+    if compare:
+        lines.extend(
+            _wiki_changes_section(
+                guc_bullets,
+                metric_bullets,
+                guc_extra=guc_extra,
+                metric_extra=metric_extra,
+            )
+        )
+    lines.extend(_wiki_actions_section(_collect_actions_from_advisor(reports)))
     lines.extend(_wiki_checklist_table(checklist))
     lines.extend(_wiki_toc())
-    lines.extend(_wiki_actions_section(_collect_actions_from_advisor(reports)))
-    lines.extend(_wiki_findings_summary_table(finding_rows, group_by_category=True))
+
+    findings_body = _wiki_findings_summary_table(
+        finding_rows, heading="Сводка находок", group_by_category=True
+    )
+    if findings_body and findings_body[0].startswith("h2."):
+        findings_body = findings_body[2:]
+    lines.extend(_wiki_expand("Сводка находок по областям", findings_body))
+    if metric_rows:
+        metric_table = [
+            "||Метрика||Было||Стало||Как изменилось||",
+        ]
+        for label, a, b, direction in metric_rows[:25]:
+            metric_table.append(
+                f"|{_wiki_escape(label)}|{_wiki_escape(a)}|{_wiki_escape(b)}|{_wiki_escape(direction)}|"
+            )
+        metric_table.append("")
+        lines.extend(_wiki_expand("Изменения метрик (подробно)", metric_table))
     lines.extend(
         _wiki_expand(
             "Справочно: параметры анализа",
@@ -709,11 +1018,43 @@ def build_confluence_stub(
             + [""],
         )
     )
-    lines.extend(
-        _explain_analyze_wiki_section(_collect_explain_queries_from_advisor(reports))
+    explain_lines = _explain_analyze_wiki_section(
+        _collect_explain_queries_from_advisor(reports)
     )
+    if explain_lines:
+        body = explain_lines[2:] if explain_lines[0].startswith("h2.") else explain_lines
+        lines.extend(_wiki_expand("EXPLAIN (ANALYZE, BUFFERS) — скопировать в psql", body))
     lines.extend(_wiki_llm_footer())
     return "\n".join(lines).rstrip() + "\n"
+
+
+def _wiki_changes_section(
+    guc_bullets: list[str],
+    metric_bullets: list[str],
+    *,
+    guc_extra: int = 0,
+    metric_extra: int = 0,
+) -> list[str]:
+    lines = ["h2. Что изменилось", ""]
+    if not guc_bullets and not metric_bullets:
+        lines.append(
+            "_Значимых отличий настроек (кроме времени старта/reload) и ключевых метрик нет._"
+        )
+        lines.append("")
+        return lines
+    if guc_bullets:
+        lines.append("*Настройки:*")
+        lines.extend(guc_bullets)
+        if guc_extra:
+            lines.append(f"_ещё {guc_extra} — в Expand._")
+        lines.append("")
+    if metric_bullets:
+        lines.append("*Метрики:*")
+        lines.extend(metric_bullets)
+        if metric_extra:
+            lines.append(f"_ещё {metric_extra} — в Expand._")
+        lines.append("")
+    return lines
 
 
 def build_confluence_llm_prompt(brief: str) -> str:

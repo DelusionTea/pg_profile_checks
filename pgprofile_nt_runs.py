@@ -25,6 +25,38 @@ from pgprofile_symptoms import (
 
 DEFAULT_GUC_IMPACT = Path(__file__).resolve().parent / "knowledge" / "guc_impact.yaml"
 
+_LINK_LEGEND_LINES = [
+    "Расшифровка колонки «Связь»:",
+    "* *PROVEN* — эффект подтвержден: все связанные метрики изменились в ожидаемую сторону.",
+    "* *PROBABLE* — направление метрик согласуется с ожидаемым эффектом, но одновременно "
+    "менялись другие параметры или нагрузка.",
+    "* *WEAK* — связанные метрики не подтверждают ожидаемый эффект настройки.",
+    "* *NO-LINK* — для параметра нет правила в базе знаний по выбранным проблемам, "
+    "влияние на метрики не оценивалось.",
+    "",
+]
+
+_TREND_LEGEND_LINES = [
+    "Расшифровка колонки «Тренд»:",
+    "* *становится лучше* / *становится хуже* — все переходы между прогонами изменили метрику "
+    "в одну сторону по смыслу метрики.",
+    "* *нестабильный результат* — переходы дали разный знак: часть улучшений, часть ухудшений.",
+    "* *рост* / *снижение* / *разнонаправленно, влияние не оценивается* — метрика изменилась, "
+    "но для нее не задано, что считать улучшением (например, buffers_checkpoint).",
+    "* *изменения незначительны* — все изменения меньше 5%.",
+    "",
+]
+
+_VERDICT_LEGEND_LINES = [
+    "Расшифровка колонки «Оценка»:",
+    "* *улучшение* / *ухудшение* — метрика изменилась в сторону, ожидаемую (или обратную) "
+    "для этого направления изменения параметра.",
+    "* *неоднозначно* — для пары «параметр + метрика» правило не задано: либо направление "
+    "изменения параметра не удалось определить численно, либо для метрики не задано, "
+    "что считать улучшением.",
+    "",
+]
+
 
 @dataclass
 class GucChangeImpact:
@@ -46,7 +78,9 @@ class RunPairAnalysis:
     settings_changes: list[DiffRow]
     guc_impacts: list[GucChangeImpact]
     compare_summary: dict[str, Any]
+    compare_findings: list[dict[str, Any]]
     narrative: str
+    workload_match: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -82,6 +116,21 @@ def parse_symptom_list(raw: list[str] | str) -> list[str]:
     return [normalize_symptom(p) for p in parts]
 
 
+def _setting_numeric(value: str) -> float | None:
+    """Numeric value of a GUC, including fractions like checkpoint_completion_target=0.7.
+
+    Floats are parsed first: parse_setting_int() truncates "0.5" and "0.7" both to 0,
+    which would report a real change as no change at all.
+    """
+    text = str(value).strip()
+    try:
+        return float(text)
+    except (TypeError, ValueError):
+        pass
+    parsed = parse_setting_int(text)
+    return float(parsed) if parsed is not None else None
+
+
 def _setting_direction(old: str | None, new: str | None) -> str:
     if old is None or new is None:
         return "changed"
@@ -91,12 +140,12 @@ def _setting_direction(old: str | None, new: str | None) -> str:
         return "enabled"
     if old_l in {"on", "true"} and new_l in {"off", "false"}:
         return "disabled"
-    old_i = parse_setting_int(old)
-    new_i = parse_setting_int(new)
-    if old_i is not None and new_i is not None:
-        if new_i > old_i:
+    old_num = _setting_numeric(old)
+    new_num = _setting_numeric(new)
+    if old_num is not None and new_num is not None:
+        if new_num > old_num:
             return "increased"
-        if new_i < old_i:
+        if new_num < old_num:
             return "decreased"
     return "changed"
 
@@ -153,11 +202,14 @@ def _metric_improved(metric_key: str, delta: float | None, direction: str) -> bo
 
 
 def _find_metric_delta(compare_dict: dict[str, Any], metric_key: str) -> dict[str, Any] | None:
+    """Return the compare finding's details plus the pg_profile section it came from."""
     suffix = f".{metric_key}"
     for finding in compare_dict.get("findings", []):
         fid = finding.get("id", "")
         if fid.endswith(suffix) or finding.get("message") == metric_key:
-            return finding.get("details", {})
+            details = dict(finding.get("details", {}))
+            details["section"] = finding.get("category")
+            return details
     return None
 
 
@@ -217,9 +269,15 @@ def infer_guc_impacts(
                 checked_count += 1
                 if improved:
                     improved_count += 1
+            section = details.get("section")
             correlated.append(
                 {
                     "metric": metric_key,
+                    "section": section,
+                    "metric_id": f"{section}.{metric_key}" if section else metric_key,
+                    "value_a": details.get("value_a"),
+                    "value_b": details.get("value_b"),
+                    "unit": details.get("unit") or "count",
                     "delta": delta,
                     "delta_pct": delta_pct,
                     "per_hour_a": details.get("per_hour_a"),
@@ -384,7 +442,9 @@ def analyze_run_pair(
         settings_changes=settings_changes,
         guc_impacts=guc_impacts,
         compare_summary=compare_dict.get("summary", {}),
+        compare_findings=compare_dict.get("findings", []),
         narrative=narrative,
+        workload_match=compare_dict.get("workload_match", {}),
     )
 
 
@@ -496,7 +556,7 @@ def analyze_nt_runs(
 
 
 def nt_runs_to_dict(analysis: NtRunsAnalysis) -> dict[str, Any]:
-    return {
+    payload = {
         "type": "nt_runs_analysis",
         "symptoms": analysis.symptoms,
         "reports": [
@@ -530,7 +590,9 @@ def nt_runs_to_dict(analysis: NtRunsAnalysis) -> dict[str, Any]:
                 "run_a": pa.run_a_label,
                 "run_b": pa.run_b_label,
                 "compare_summary": pa.compare_summary,
+                "compare_findings": pa.compare_findings,
                 "narrative": pa.narrative,
+                "workload_match": pa.workload_match,
                 "settings_changes": [
                     {
                         "guc": row.name,
@@ -555,6 +617,10 @@ def nt_runs_to_dict(analysis: NtRunsAnalysis) -> dict[str, Any]:
             for pa in analysis.pair_analyses
         ],
     }
+    from pgprofile_influence import build_series_influence_from_nt_runs_dict
+
+    payload["influence_series"] = build_series_influence_from_nt_runs_dict(payload)
+    return payload
 
 
 def build_nt_runs_brief(analysis: NtRunsAnalysis) -> str:
@@ -628,6 +694,7 @@ def build_nt_runs_brief(analysis: NtRunsAnalysis) -> str:
 def build_nt_runs_confluence_wiki(analysis: NtRunsAnalysis, *, page_title: str | None = None) -> str:
     from pgprofile_confluence import (
         _checklist_from_symptom_causes,
+        _wiki_escape,
         _wiki_actions_section,
         _wiki_anchor,
         _wiki_checklist_table,
@@ -641,18 +708,501 @@ def build_nt_runs_confluence_wiki(analysis: NtRunsAnalysis, *, page_title: str |
     title = page_title or "НТ: анализ прогонов и влияние настроек"
     symptom_titles = ", ".join(SYMPTOM_TITLES.get(s, s) for s in analysis.symptoms)
 
-    confirmed = 0
-    suspected = 0
-    finding_rows: list[tuple[str, str, str, str]] = []
+    def _fmt_metric_value(value: Any) -> str:
+        if value is None:
+            return "—"
+        if isinstance(value, (int, float)):
+            abs_value = abs(float(value))
+            if abs_value >= 1000:
+                return f"{float(value):.0f}"
+            if abs_value >= 10:
+                return f"{float(value):.2f}"
+            return f"{float(value):.3f}"
+        return str(value)
+
+    def _fmt_delta_cell(delta_obj: dict[str, Any] | None) -> str:
+        if not isinstance(delta_obj, dict):
+            return "—"
+        delta = delta_obj.get("delta")
+        delta_pct = delta_obj.get("delta_pct")
+        if not isinstance(delta, (int, float)) and not isinstance(delta_pct, (int, float)):
+            return "—"
+        delta_text = ""
+        if isinstance(delta, (int, float)):
+            sign = "+" if float(delta) > 0 else ""
+            delta_text = f"{sign}{_fmt_metric_value(delta)}"
+        pct_text = ""
+        if isinstance(delta_pct, (int, float)):
+            sign = "+" if float(delta_pct) > 0 else ""
+            pct_text = f"{sign}{float(delta_pct):.1f}%"
+        if delta_text and pct_text:
+            return f"{delta_text} ({pct_text})"
+        return delta_text or pct_text or "—"
+
+    def _unit_suffix(unit: Any) -> str:
+        return {"sec": " с", "pct": " %", "ms": " мс"}.get(str(unit or "count"), "")
+
+    def _fmt_bytes(value: float) -> str:
+        for limit, suffix in ((1024**4, "ТБ"), (1024**3, "ГБ"), (1024**2, "МБ"), (1024, "КБ")):
+            if abs(value) >= limit:
+                return f"{value / limit:.1f} {suffix}"
+        return f"{value:.0f} Б"
+
+    def _fmt_with_unit(value: Any, unit: Any) -> str:
+        if str(unit) == "bytes":
+            return _fmt_bytes(float(value))
+        return f"{_fmt_metric_value(value)}{_unit_suffix(unit)}"
+
+    def _fmt_measured_value(value: Any, per_hour: Any, unit: Any) -> str:
+        if not isinstance(value, (int, float)):
+            return "—"
+        text = _fmt_with_unit(value, unit)
+        if isinstance(per_hour, (int, float)):
+            text += f" ({_fmt_with_unit(per_hour, unit)}/ч)"
+        return text
+
+    def _fmt_signed_value(value: Any, unit: Any) -> str:
+        if not isinstance(value, (int, float)):
+            return "—"
+        sign = "+" if float(value) > 0 else ""
+        return f"{sign}{_fmt_with_unit(value, unit)}"
+
+    def _fmt_pct(value: Any) -> str:
+        if not isinstance(value, (int, float)):
+            return "—"
+        return f"{float(value):+.1f}%"
+
+    def _confidence_badge(raw: str | None) -> str:
+        value = str(raw or "").strip().lower()
+        if value in {"proven", "high"}:
+            return "{status:colour=Green|title=PROVEN|subtle=false}"
+        if value in {"probable", "likely", "possible", "medium"}:
+            return "{status:colour=Yellow|title=PROBABLE|subtle=false}"
+        return "{status:colour=Blue|title=WEAK|subtle=false}"
+
+    def _hypothesis_badge(status: str) -> str:
+        if status == "CONFIRMED":
+            return "{status:colour=Green|title=CONFIRMED|subtle=false}"
+        if status == "PARTIAL":
+            return "{status:colour=Yellow|title=PARTIAL|subtle=false}"
+        if status == "REJECTED":
+            return "{status:colour=Red|title=REJECTED|subtle=false}"
+        return "{status:colour=Blue|title=INCONCLUSIVE|subtle=false}"
+
+    def _decision_badge(decision: str) -> str:
+        if decision == "GO":
+            return "{status:colour=Green|title=GO|subtle=false}"
+        if decision == "NO-GO":
+            return "{status:colour=Red|title=NO-GO|subtle=false}"
+        return "{status:colour=Yellow|title=NEED-VALIDATION|subtle=false}"
+
+    def _metric_degraded(metric: str, delta_pct: float) -> bool | None:
+        lower_metric = metric.lower()
+        lower_better = (
+            "time",
+            "latency",
+            "deadlock",
+            "rollback",
+            "fatal",
+            "buffers_full",
+            "wal_",
+            "checkpoints_",
+            "blks_read",
+            "blk_read_time",
+            "blk_write_time",
+        )
+        higher_better = ("hit_pct",)
+        if any(token in lower_metric for token in lower_better):
+            return delta_pct > 0
+        if any(token in lower_metric for token in higher_better):
+            return delta_pct < 0
+        return None
+
+    influence_series = nt_runs_to_dict(analysis).get("influence_series", {})
+    settings_table = influence_series.get("settings_table") if isinstance(influence_series, dict) else {}
+    metrics_table = influence_series.get("metrics_table") if isinstance(influence_series, dict) else {}
+    functional = influence_series.get("functional_summary", {}) if isinstance(influence_series, dict) else {}
+    workload_match = influence_series.get("workload_match", {}) if isinstance(influence_series, dict) else {}
+
+    all_report_labels = [str(label) for label in analysis.report_labels] + [
+        str(label) for label in analysis.prod_labels
+    ]
+    run_labels = list((settings_table or {}).get("run_labels") or all_report_labels)
+    changed_settings_rows = list((settings_table or {}).get("rows") or [])
+    equal_settings_rows = list((settings_table or {}).get("equal_rows") or [])
+
+    metric_rows_all = (metrics_table or {}).get("rows", []) if isinstance(metrics_table, dict) else []
+    metric_run_labels = (metrics_table or {}).get("run_labels", []) if isinstance(metrics_table, dict) else []
+    metric_pair_labels = (metrics_table or {}).get("pair_labels", []) if isinstance(metrics_table, dict) else []
+    symptom_tokens = {
+        "high_cpu": ("queries.", "sessions.", "cache.", "cluster."),
+        "high_wal": ("wal.", "cluster.", "dml.", "tables."),
+        "high_memory": ("memory", "cache", "temp"),
+        "slow_query": ("queries.",),
+    }
+    active_tokens = tuple(
+        token for symptom in analysis.symptoms for token in symptom_tokens.get(symptom, ())
+    )
+    related_metric_rows: list[dict[str, Any]] = []
+    other_metric_rows: list[dict[str, Any]] = []
+    for row in metric_rows_all:
+        metric_name = str(row.get("metric") or "").lower()
+        if active_tokens and any(token in metric_name for token in active_tokens):
+            related_metric_rows.append(row)
+        else:
+            other_metric_rows.append(row)
+
+    # Risk and hypothesis scoring.
+    warning_degradations = 0
+    blocker_degradations = 0
+    improved_votes = 0
+    degraded_votes = 0
+    for row in related_metric_rows:
+        for pair_label in metric_pair_labels:
+            delta_obj = (row.get("deltas") or {}).get(pair_label)
+            if not isinstance(delta_obj, dict):
+                continue
+            delta_pct = delta_obj.get("delta_pct")
+            if not isinstance(delta_pct, (int, float)):
+                continue
+            degraded = _metric_degraded(str(row.get("metric") or ""), float(delta_pct))
+            if degraded is True:
+                degraded_votes += 1
+                if abs(float(delta_pct)) >= 20:
+                    blocker_degradations += 1
+                elif abs(float(delta_pct)) >= 10:
+                    warning_degradations += 1
+            elif degraded is False:
+                improved_votes += 1
+
+    improved_pairs = int(functional.get("improved_pairs") or 0)
+    degraded_pairs = int(functional.get("degraded_pairs") or 0)
+    changed_params_count = len(changed_settings_rows)
+    blocker_many_changes = changed_params_count > 10
+    workload_score = workload_match.get("workload_match_score")
+    blocker_low_workload = isinstance(workload_score, (int, float)) and float(workload_score) < 0.6
+    blocker_symptom_growth = degraded_pairs > improved_pairs
+    blocker_metric_regression = blocker_degradations > 0
+
+    if not related_metric_rows or (improved_votes == 0 and degraded_votes == 0):
+        hypothesis_status = "INCONCLUSIVE"
+    elif blocker_low_workload:
+        hypothesis_status = "INCONCLUSIVE"
+    elif improved_pairs > degraded_pairs and blocker_degradations == 0 and degraded_votes == 0:
+        hypothesis_status = "CONFIRMED"
+    elif degraded_votes > improved_votes:
+        hypothesis_status = "REJECTED"
+    else:
+        hypothesis_status = "PARTIAL"
+
+    blocker_count = sum(
+        1
+        for item in (
+            blocker_metric_regression,
+            blocker_symptom_growth,
+            blocker_low_workload,
+            blocker_many_changes,
+        )
+        if item
+    )
+    if blocker_count > 0 or hypothesis_status == "REJECTED":
+        decision = "NO-GO"
+    elif hypothesis_status in {"PARTIAL", "INCONCLUSIVE"}:
+        decision = "NEED-VALIDATION"
+    else:
+        decision = "GO"
+
+    if not isinstance(workload_score, (int, float)):
+        _workload_status = "НЕТ ДАННЫХ"
+        _workload_comment = "Сопоставимость прогонов не рассчитана, оценивайте выводы осторожнее."
+    else:
+        _workload_status = "BLOCKER" if blocker_low_workload else "OK"
+        _workload_comment = (
+            f"workload_match_score={float(workload_score):.2f} "
+            f"(уровень {workload_match.get('level') or 'unknown'}, минимум по парам; порог 0.60)"
+        )
+
     actions: list[str] = []
+    for inv in analysis.symptom_investigations:
+        for step in inv.action_plan[:8]:
+            if step not in actions:
+                actions.append(step)
+
+    min_change_pct = next(
+        (
+            pa.compare_summary.get("min_change_pct")
+            for pa in analysis.pair_analyses
+            if isinstance(pa.compare_summary, dict)
+            and isinstance(pa.compare_summary.get("min_change_pct"), (int, float))
+        ),
+        5.0,
+    )
+
+    def _append_metrics_table(rows: list[dict[str, Any]]) -> list[str]:
+        out: list[str] = []
+        if not rows or not metric_run_labels:
+            out.append("_Нет данных по изменениям метрик._")
+            out.append("")
+            return out
+        header_cells = ["Метрика"]
+        for idx, label in enumerate(metric_run_labels):
+            header_cells.append(_wiki_escape(str(label)))
+            if idx > 0:
+                header_cells.append(_wiki_escape(f"Δ {metric_run_labels[idx - 1]}→{label}"))
+        header_cells.append("Тренд")
+        out.append("||" + "||".join(header_cells) + "||")
+        for row in rows:
+            row_cells = [f"{_wiki_escape(str(row.get('metric') or ''))}"]
+            values = row.get("values", {})
+            deltas = row.get("deltas", {})
+            for idx, label in enumerate(metric_run_labels):
+                row_cells.append(_wiki_escape(_fmt_metric_value((values or {}).get(label))))
+                if idx > 0:
+                    pair_label = (
+                        metric_pair_labels[idx - 1]
+                        if idx - 1 < len(metric_pair_labels)
+                        else f"{metric_run_labels[idx - 1]}->{label}"
+                    )
+                    row_cells.append(_wiki_escape(_fmt_delta_cell((deltas or {}).get(pair_label))))
+            row_cells.append(_wiki_escape(str(row.get("trend") or "—")))
+            out.append("|" + "|".join(row_cells) + "|")
+        out.append("")
+        out.append(
+            f"«—» означает, что по этой паре прогонов метрика не попала в сравнение: "
+            f"изменение ниже порога значимости ({float(min_change_pct):g}%) "
+            "или метрика отсутствует в одном из отчетов. Тренд в таком случае построен "
+            "только по тем парам, где изменение зафиксировано."
+        )
+        out.append("")
+        out.extend(_TREND_LEGEND_LINES)
+        return out
+
+    lines: list[str] = [f"h1. {title}", ""]
+    lines.extend(
+        [
+            "h2. Краткие выводы",
+            "",
+            "||Параметр||Значение||",
+            f"|Решение|{_decision_badge(decision)}|",
+            f"|Статус гипотезы|{_hypothesis_badge(hypothesis_status)}|",
+            f"|Симптомы|{_wiki_escape(symptom_titles)}|",
+            f"|Прогонов НТ|{len(analysis.report_labels)}|",
+            f"|Всего отчетов в сравнении|{len(all_report_labels)}|",
+            f"|Изменено параметров|{changed_params_count}|",
+            f"|Связанных метрик (по выбранным проблемам)|{len(related_metric_rows)}|",
+            f"|Улучшений / ухудшений (голоса)|{improved_votes} / {degraded_votes}|",
+            "",
+        ]
+    )
+
+    lines.extend(
+        [
+            "h2. Отличия настроек между прогонами",
+            "",
+        ]
+    )
+    if changed_settings_rows:
+        lines.append("||Параметр||" + "||".join(_wiki_escape(label) for label in run_labels) + "||")
+        for row in changed_settings_rows:
+            values = row.get("values", {})
+            cells = [_wiki_escape(str((values or {}).get(label) or "—")) for label in run_labels]
+            lines.append(f"|{_wiki_escape(str(row.get('parameter') or ''))}|{'|'.join(cells)}|")
+        lines.append("")
+    else:
+        lines.append("_Измененных параметров между прогонами нет._")
+        lines.append("")
+
+    if equal_settings_rows:
+        expand_body = ["||Параметр||" + "||".join(_wiki_escape(label) for label in run_labels) + "||"]
+        for row in equal_settings_rows:
+            values = row.get("values", {})
+            cells = [_wiki_escape(str((values or {}).get(label) or "—")) for label in run_labels]
+            expand_body.append(f"|{_wiki_escape(str(row.get('parameter') or ''))}|{'|'.join(cells)}|")
+        expand_body.append("")
+        lines.extend(_wiki_expand("Одинаковые настройки (без изменений)", expand_body))
+
+    lines.append("h3. Связь настроек и метрик по парам")
+    lines.append("")
+    snapshot_by_label: dict[str, dict[str, Any]] = {label: {} for label in run_labels}
+    for row in list(changed_settings_rows) + list(equal_settings_rows):
+        param = str(row.get("parameter") or "")
+        values = row.get("values") or {}
+        if not param or not isinstance(values, dict):
+            continue
+        for label in run_labels:
+            snapshot_by_label.setdefault(label, {})[param] = values.get(label)
+    # NT pairs carry metric correlation; PROD is compared by settings only, because
+    # cross-environment metric deltas belong to the NT vs PROD section.
+    pair_specs: list[tuple[str, str, dict[str, Any], bool]] = [
+        (str(pa.run_a_label), str(pa.run_b_label), {str(gi.guc): gi for gi in pa.guc_impacts}, False)
+        for pa in analysis.pair_analyses
+    ]
+    if analysis.report_labels and analysis.prod_labels:
+        last_nt_label = str(analysis.report_labels[-1])
+        for prod_label in analysis.prod_labels:
+            pair_specs.append((last_nt_label, str(prod_label), {}, True))
+    for label_a, label_b, impact_by_guc, settings_only in pair_specs:
+        suffix = " (настройки, метрики см. раздел НТ vs PROD)" if settings_only else ""
+        lines.append(f"h4. {label_a} → {label_b}{suffix}")
+        lines.append("")
+        snap_a = snapshot_by_label.get(label_a, {})
+        snap_b = snapshot_by_label.get(label_b, {})
+        pair_changed_params = sorted(
+            param
+            for param in set(snap_a) | set(snap_b)
+            if str(snap_a.get(param) or "—") != str(snap_b.get(param) or "—")
+        )
+        for guc in impact_by_guc:
+            if guc not in pair_changed_params:
+                pair_changed_params.append(guc)
+        if not pair_changed_params:
+            lines.append("_Отличий в настройках между прогонами пары нет._")
+            lines.append("")
+            continue
+        lines.append("||Параметр||Было||Стало||Направление||Связь||")
+        for param in pair_changed_params:
+            gi = impact_by_guc.get(param)
+            value_from = gi.value_from if gi else _format_guc_value(param, snap_a.get(param))
+            value_to = gi.value_to if gi else _format_guc_value(param, snap_b.get(param))
+            direction = gi.direction if gi else _setting_direction(snap_a.get(param), snap_b.get(param))
+            link_cell = (
+                _confidence_badge(gi.confidence) if gi else "{status:colour=Grey|title=NO-LINK|subtle=false}"
+            )
+            lines.append(
+                f"|{_wiki_escape(str(param))}|{_wiki_escape(str(value_from))}|"
+                f"{_wiki_escape(str(value_to))}|{_wiki_escape(str(direction))}|"
+                f"{link_cell}|"
+            )
+        lines.append("")
+        lines.extend(_LINK_LEGEND_LINES)
+        if settings_only:
+            lines.append(
+                "_Метрики между НТ и PROD не сопоставляются напрямую: разная нагрузка. "
+                "Сравнение результатов — в разделе «NT vs PROD»._"
+            )
+            lines.append("")
+            continue
+        lines.append(
+            "Значения метрик взяты из указанного раздела отчета pg_profile за весь интервал прогона; "
+            "в скобках — нормировка на час, если интервалы прогонов различаются. "
+            f"Δ = {label_b} − {label_a}."
+        )
+        lines.append("")
+        lines.append(
+            "||Параметр||Метрика (раздел pg_profile)||"
+            f"{_wiki_escape(label_a)}||{_wiki_escape(label_b)}||Δ||Δ %||Оценка||"
+        )
+        for param in pair_changed_params:
+            gi = impact_by_guc.get(param)
+            correlated = (gi.correlated_metrics or []) if gi else []
+            if not correlated:
+                reason = (
+                    "Нет достаточных метрик для связи."
+                    if gi
+                    else "Параметр не связан с выбранными проблемами."
+                )
+                lines.append(f"|{_wiki_escape(str(param))}|—|—|—|—|—|{_wiki_escape(reason)}|")
+                continue
+            for row in correlated[:6]:
+                improved = row.get("improved")
+                verdict = "неоднозначно"
+                if improved is True:
+                    verdict = "улучшение"
+                elif improved is False:
+                    verdict = "ухудшение"
+                lines.append(
+                    f"|{_wiki_escape(str(param))}|"
+                    f"{_wiki_escape(str(row.get('metric_id') or row.get('metric') or '—'))}|"
+                    f"{_wiki_escape(_fmt_measured_value(row.get('value_a'), row.get('per_hour_a'), row.get('unit')))}|"
+                    f"{_wiki_escape(_fmt_measured_value(row.get('value_b'), row.get('per_hour_b'), row.get('unit')))}|"
+                    f"{_wiki_escape(_fmt_signed_value(row.get('delta'), row.get('unit')))}|"
+                    f"{_wiki_escape(_fmt_pct(row.get('delta_pct')))}|"
+                    f"{_wiki_escape(verdict)}|"
+                )
+        lines.append("")
+        lines.extend(_VERDICT_LEGEND_LINES)
+
+    lines.extend(["h2. Изменения метрик между прогонами", ""])
+    if analysis.prod_labels:
+        lines.append(
+            "_Серия метрик построена по прогонам НТ: "
+            f"{_wiki_escape(', '.join(str(label) for label in analysis.report_labels))}. "
+            f"PROD ({_wiki_escape(', '.join(str(label) for label in analysis.prod_labels))}) "
+            "участвует в сравнении настроек и в разделе «NT vs PROD»._"
+        )
+        lines.append("")
+    lines.extend(["h3. Series summary (связанные метрики)", ""])
+    lines.extend(_append_metrics_table(related_metric_rows))
+    if other_metric_rows:
+        lines.extend(_wiki_expand("Прочие метрики (не связаны напрямую с выбранными проблемами)", _append_metrics_table(other_metric_rows)))
+
+    lines.append("h3. Pairwise детализация")
+    lines.append("")
+    has_pair_metrics = False
+    for pa in analysis.pair_analyses:
+        pair_findings = pa.compare_findings or []
+        if not pair_findings:
+            continue
+        has_pair_metrics = True
+        lines.append(f"h4. {pa.run_a_label} → {pa.run_b_label}")
+        lines.append("")
+        lines.append(f"||Метрика||{_wiki_escape(pa.run_a_label)}||{_wiki_escape(pa.run_b_label)}||Δ||")
+        for finding in pair_findings:
+            details = finding.get("details") or {}
+            metric_name = f"{finding.get('category')}.{finding.get('message')}"
+            lines.append(
+                f"|{_wiki_escape(str(metric_name))}|{_wiki_escape(_fmt_metric_value(details.get('value_a')))}|"
+                f"{_wiki_escape(_fmt_metric_value(details.get('value_b')))}|"
+                f"{_wiki_escape(_fmt_delta_cell({'delta': details.get('delta'), 'delta_pct': details.get('delta_pct')}))}|"
+            )
+        lines.append("")
+    if not has_pair_metrics:
+        lines.append("_Нет значимых изменений метрик в попарных сравнениях._")
+        lines.append("")
+
+    lines.extend(
+        [
+            "h2. Риски и блокеры",
+            "",
+            "||Проверка||Статус||Комментарий||",
+            f"|Деградация целевых метрик >=20%|{'BLOCKER' if blocker_metric_regression else 'OK'}|"
+            f"{'Найдено ' + str(blocker_degradations) + ' критичных деградаций' if blocker_metric_regression else 'Критичных деградаций не найдено'}|",
+            f"|Рост критичных симптомов после изменений|{'BLOCKER' if blocker_symptom_growth else 'OK'}|"
+            f"improved_pairs={improved_pairs}, degraded_pairs={degraded_pairs}|",
+            f"|Низкая сопоставимость прогонов|{_workload_status}|{_wiki_escape(_workload_comment)}|",
+            f"|Слишком много одновременных изменений|{'BLOCKER' if blocker_many_changes else 'OK'}|"
+            f"changed_params_count={changed_params_count}|",
+            f"|Порог ухудшений >=10%|{'WARN' if warning_degradations > 0 else 'OK'}|"
+            f"warning_degradations={warning_degradations}|",
+            "",
+        ]
+    )
+
+    lines.extend(_wiki_actions_section(actions[:12], heading="Следующие действия", limit=12))
+
+    lines.append("h3. Проблемные запросы и варианты оптимизации")
+    lines.append("")
+    lines.append("||Запрос (hex/id)||Почему проблемный||Вариант оптимизации||Как проверить в следующем прогоне||")
+    query_rows = 0
+    for inv in analysis.symptom_investigations:
+        for match in (inv.query_matches or [])[:5]:
+            query_rows += 1
+            lines.append(
+                f"|{_wiki_escape(str(match.get('hexqueryid') or match.get('queryid') or '—'))}|"
+                f"{_wiki_escape(str(match.get('preview') or inv.symptom_title))}|"
+                f"Проверить индекс/план, снизить scan/IO, рассмотреть rewrite SQL.|"
+                f"EXPLAIN (ANALYZE, BUFFERS) до/после и сравнить p95 latency, calls, wal_bytes.|"
+            )
+    if query_rows == 0:
+        lines.append("|—|Недостаточно данных для выделения query-level кандидатов.|Собрать top queries по симптому.|Запустить повторный прогон и добавить query evidence.|")
+    lines.append("")
+
+    # Supporting details and evidence in expand blocks.
+    finding_rows: list[tuple[str, str, str, str]] = []
     checklist: list[tuple[str, str]] = []
     for inv in analysis.symptom_investigations:
         checklist.extend(_checklist_from_symptom_causes(inv.causes))
         for cause in inv.causes:
-            if cause.status.value == "confirmed":
-                confirmed += 1
-            elif cause.status.value == "suspected":
-                suspected += 1
             if cause.status.value in ("confirmed", "suspected") or cause.evidence:
                 finding_rows.append(
                     (
@@ -662,50 +1212,9 @@ def build_nt_runs_confluence_wiki(analysis: NtRunsAnalysis, *, page_title: str |
                         ", ".join(cause.reports_matched) or "—",
                     )
                 )
-        for step in inv.action_plan[:4]:
-            if step not in actions:
-                actions.append(step)
 
-    fail_n = sum(1 for row in checklist if row[1] == "FAIL")
-    suspect_n = sum(1 for row in checklist if row[1] == "SUSPECT")
-    pass_n = sum(1 for row in checklist if row[1] == "PASS")
-    guc_changed = sum(1 for pa in analysis.pair_analyses if pa.guc_impacts)
-    verdict_body = [
-        f"Симптомы: *{symptom_titles}*.",
-        f"Чеклист гипотез: FAIL *{fail_n}* · SUSPECT *{suspect_n}* · PASS *{pass_n}*.",
-        f"Прогонов НТ: *{len(analysis.report_labels)}*; пар с изменением GUC: *{guc_changed}*.",
-        f"Confirmed / Suspected гипотез: *{confirmed}* / *{suspected}*.",
-        "Сначала — влияние GUC и действия; детали симптомов — в expand ниже.",
-    ]
-
-    lines: list[str] = [f"h1. {title}", ""]
-    lines.extend(_wiki_panel("warning" if confirmed else "info", "Краткий вердикт", verdict_body))
-    lines.extend(_wiki_checklist_table(checklist, heading="Чеклист гипотез"))
-    lines.extend(_wiki_toc())
-    lines.extend(_wiki_actions_section(actions[:8]))
-
-    # GUC impact first (cross-run)
-    guc_body: list[str] = []
-    for pa in analysis.pair_analyses:
-        guc_body.append(f"h3. {pa.run_a_label} → {pa.run_b_label}")
-        if not pa.guc_impacts:
-            guc_body.append("{note:title=Настройки}")
-            guc_body.append(pa.narrative)
-            guc_body.append("{note}")
-        else:
-            guc_body.append("{info:title=Изменённые GUC и вероятный эффект}")
-            for gi in pa.guc_impacts:
-                guc_body.append(
-                    f"* *{{{gi.guc}}}*: {gi.value_from} → {gi.value_to} "
-                    f"({gi.direction}, уверенность: {gi.confidence})"
-                )
-                for effect in gi.likely_effects:
-                    guc_body.append(f"** {effect}")
-            guc_body.append("{info}")
-        guc_body.append("")
-    lines.extend(["h2. Влияние изменений настроек (попарно)", ""] + guc_body)
-
-    lines.extend(_wiki_findings_summary_table(finding_rows, heading="Сводка гипотез по симптомам"))
+    lines.extend(_wiki_expand("Сводка гипотез по симптомам", _wiki_findings_summary_table(finding_rows, heading="Сводка гипотез по симптомам")[2:]))
+    lines.extend(_wiki_expand("Чеклист гипотез", _wiki_checklist_table(checklist, heading="Чеклист гипотез")[2:]))
 
     for inv in analysis.symptom_investigations:
         body: list[str] = []

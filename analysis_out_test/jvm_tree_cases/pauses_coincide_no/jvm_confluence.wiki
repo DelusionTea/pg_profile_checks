@@ -1,0 +1,130 @@
+h2. Выкатывать JAVA_TOOL_OPTIONS
+*Да*
+
+h2. Что сделать сейчас
+# Скопируйте блок jvm-config ниже. После выкатки снова снимите GC p95 в том же окне — он должен стать ниже порога 250 мс.
+
+h3. Почему так
+* Плеч всегда два. Подов на одном плече: 2.
+* Рестарт контейнера: не рестартовал.
+* Память в тесте растёт: нет.
+* CPU throttle: да.
+* CPU % of limits по плечам: 35.0 + 30.0 = 65 (лимит 80).
+* GC pause p95 320 мс, порог 250 мс; паузы выше порога.
+* Времена отклика пользователя в том же окне: да.
+* Совпадение пауз GC с throttle: нет.
+
+h3. Что перепроверить
+* Липкая сессия может неравномерно делить плечи. При сумме CPU % of limits ≤ 80% это не повод чинить баланс кластеров.
+
+h3. Ответы по дереву
+|| Вопрос || Ответ ||
+| Сколько подов этой АС на одном плече | 2 |
+| Почему рестартовал контейнер | не рестартовал |
+| Память в тесте растёт (рестарта ещё нет) | нет |
+| Есть CPU throttle | да |
+| CPU % of limits этой АС на плече 1 | 35.0 |
+| CPU % of limits этой АС на плече 2 | 30.0 |
+| GC pause p95, мс | 320 мс |
+| В том же окне росли времена отклика пользователя | да |
+| Паузы GC совпадали с CPU throttle | нет |
+
+h2. Цель и ответы дерева
+*Система:* DEMO_CounterAgent
+*Pod:* counteragent-demo
+*Контейнер:* application
+*Подов на одном плече:* 2 (плеч всегда 2)
+*Рестарт:* не рестартовал
+*CPU throttle:* да
+
+|| Параметр || Значение ||
+| gc_pause_p95_ms | 320.0 |
+| cpu_pct_limits_shoulder_1 | 35.0 |
+| cpu_pct_limits_shoulder_2 | 30.0 |
+| user_latency_grew | да |
+
+
+h2. Рекомендации по JVM-тюнингу
+*Система:* DEMO_CounterAgent
+*Целевой pod:* counteragent-demo
+*Целевой контейнер:* application
+
+h3. Ресурсы и JVM настройки контейнера (актуально для настройки)
+|| Параметр || Было || Стало || Что делает ||
+| -XX:MaxGCPauseMillis | 250 | 200 | Целевая пауза G1 в мс. Ниже — короче стопы, обычно больше работы GC. |
+| -XX:InitiatingHeapOccupancyPercent | не задан | 30 | С какой доли заполнения heap G1 начинает concurrent cycle. Ниже — цикл раньше, меньше риск длинной mixed-паузы. |
+
+h3. Контекст рантайма
+|| Параметр || Значение ||
+| JDK version | N/A |
+| Spring Boot version | N/A |
+| Heap used (MiB) | N/A |
+| OldGen used (MiB) | N/A |
+| OldGen capacity (MiB) | N/A |
+| GC pause p95 (ms) | 320.0 |
+| GC pause p99 (ms) | N/A |
+| GC time ratio (%) | N/A |
+| Container memory working set (MiB) | N/A |
+| Container memory limit (MiB) | 8192 |
+
+h3. Findings
+* *[HIGH]* gc.long_pause_p95: GC p95 выше порога.
+** gc_pause_p95_ms: 320.0
+
+h3. Рекомендованные Java Tool Options
+h4. Рекомендация 1: Снизьте GC p95
+*Обоснование:* GC p95 выше порога профиля.
+*Уверенность:* low
+*Оценка доказательности:* 33/100
+*Оценка риска:* 45/100
+*Ожидаемый эффект:* короче хвост задержки
+*Окно верификации:* 30–60 мин после выкатки
+*Нужна платформенная эскалация:* No
+*Предлагаемые опции:*
+|| Флаг || Было || Стало || Что делает ||
+| -XX:MaxGCPauseMillis=200 | 250 | 200 | Целевая пауза G1 в мс. Ниже — короче стопы, обычно больше работы GC. |
+| -XX:InitiatingHeapOccupancyPercent=30 | не задан | 30 | С какой доли заполнения heap G1 начинает concurrent cycle. Ниже — цикл раньше, меньше риск длинной mixed-паузы. |
+*План отката:*
+** Rollback to previous JVM option set if SLA worsens.
+*Примечания:*
+** Collect GC logs for 30-60 minutes after rollout.
+** Tune G1 pause target and initiating occupancy.
+** Compare p95 and p99 against baseline.
+
+
+h3. Инженерный план валидации
+# Apply recommended JVM options in test/stage environment first. Keep previous values for rollback.
+# Run at least one representative load profile and compare with baseline metrics collected before the change.
+# If no measurable improvement after the observation window, set status to предыдущая попытка тюнинга не дала эффекта and prepare escalation to dump analysis.
+
+h3. Риски и побочные эффекты изменений
+* Any JVM option change can shift latency and throughput profile; always compare SLA/SLO against baseline.
+* Rollback plan is mandatory: keep previous JVM flags and resource limits so the team can revert quickly.
+
+h3. Правило эскалации
+* If tuning recommendations do not improve GC/heap/memory-pressure metrics in the defined observation window, escalate to development team for heap dump and memory analysis.
+
+
+h3. Контекст прогона
+*Целевой контейнер:* application
+
+h3. Результат анализа
+* Findings: 1; рекомендаций: 1.
+
+h3. Предлагаемые изменения (Copy/Paste)
+h4. jvm-config
+{code:yaml}
+application:
+  javaToolOptions: >
+    -XX:+UseContainerSupport
+    -XX:+UseG1GC
+    -XX:MaxRAMPercentage=70.0
+    -XX:InitialRAMPercentage=45.0
+    -XX:MaxGCPauseMillis=200
+    -XX:+ExitOnOutOfMemoryError
+    -XX:InitiatingHeapOccupancyPercent=30
+{code}
+
+h4. Сводка изменений
+* изменить -XX:MaxGCPauseMillis: 250 -> 200
+* добавить -XX:InitiatingHeapOccupancyPercent=30

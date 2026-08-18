@@ -1,0 +1,151 @@
+{
+  "type": "quality_report",
+  "verdict": "warning",
+  "skipped": false,
+  "publishable": false,
+  "layers": [
+    {
+      "name": "rule_based",
+      "verdict": "warning",
+      "skipped": false
+    },
+    {
+      "name": "statistical",
+      "verdict": "pass",
+      "skipped": true
+    },
+    {
+      "name": "llm",
+      "verdict": "warning",
+      "skipped": false
+    }
+  ],
+  "reasons": [
+    "cache.postgres.blk_write_time Δ=1600.0% looks implausible",
+    "influence table has attributed rows, but the answer cites no claims",
+    "dry-run answer is not publishable",
+    "quality score 90/100, publishable=False"
+  ],
+  "counts": {
+    "pass": 9,
+    "warning": 4,
+    "fail": 0
+  },
+  "confidence_trail": [
+    {
+      "parameter": "*",
+      "scope": "run",
+      "source": "influence_table.json",
+      "from": "medium",
+      "to": "medium",
+      "change": "unchanged",
+      "confidence": "medium",
+      "evidence_type": "probable",
+      "reason": "Confidence baseline for pair comparison without isolated causality proof."
+    },
+    {
+      "parameter": "commit_timestamp_buffers",
+      "scope": "row",
+      "source": "influence_table.json",
+      "from": "medium",
+      "to": "low",
+      "change": "downgrade",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "reason": "unattributed; confidence downgraded to low"
+    },
+    {
+      "parameter": "pg_conf_load_time",
+      "scope": "row",
+      "source": "influence_table.json",
+      "from": "medium",
+      "to": "low",
+      "change": "downgrade",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "reason": "unattributed; confidence downgraded to low"
+    },
+    {
+      "parameter": "pg_postmaster_start_time",
+      "scope": "row",
+      "source": "influence_table.json",
+      "from": "medium",
+      "to": "low",
+      "change": "downgrade",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "reason": "unattributed; confidence downgraded to low"
+    },
+    {
+      "parameter": "shared_buffers",
+      "scope": "row",
+      "source": "influence_table.json",
+      "from": "medium",
+      "to": "medium",
+      "change": "unchanged",
+      "confidence": "medium",
+      "evidence_type": "probable",
+      "reason": "Confidence baseline for pair comparison without isolated causality proof."
+    },
+    {
+      "parameter": "shared_memory_size",
+      "scope": "row",
+      "source": "influence_table.json",
+      "from": "medium",
+      "to": "low",
+      "change": "downgrade",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "reason": "unattributed; confidence downgraded to low"
+    },
+    {
+      "parameter": "shared_memory_size_in_huge_pages",
+      "scope": "row",
+      "source": "influence_table.json",
+      "from": "medium",
+      "to": "low",
+      "change": "downgrade",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "reason": "unattributed; confidence downgraded to low"
+    },
+    {
+      "parameter": "subtransaction_buffers",
+      "scope": "row",
+      "source": "influence_table.json",
+      "from": "medium",
+      "to": "low",
+      "change": "downgrade",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "reason": "unattributed; confidence downgraded to low"
+    },
+    {
+      "parameter": "transaction_buffers",
+      "scope": "row",
+      "source": "influence_table.json",
+      "from": "medium",
+      "to": "low",
+      "change": "downgrade",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "reason": "unattributed; confidence downgraded to low"
+    }
+  ],
+  "llm": {
+    "present": true,
+    "publishable": false,
+    "score": 90,
+    "verdict": "warning",
+    "task": "summary",
+    "reasons": [
+      "influence table has attributed rows, but the answer cites no claims",
+      "dry-run answer is not publishable"
+    ],
+    "source": "llm_quality_summary.json"
+  },
+  "sources": [
+    "influence_table.json",
+    "llm_quality_summary.json"
+  ]
+}

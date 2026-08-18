@@ -1,0 +1,121 @@
+{
+  "type": "settings_diff",
+  "contract": {
+    "schema": "settings_diff_v1",
+    "schema_version": "1.0"
+  },
+  "run_a": {
+    "run_id": "NT",
+    "path": "resources/_test_modified.html",
+    "filename": "_test_modified.html",
+    "meta": {
+      "path": "resources/_test_modified.html",
+      "filename": "_test_modified.html",
+      "server": "",
+      "from": "",
+      "to": "",
+      "version": "PostgreSQL 15.5 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 8.5.0 20210514 (Platform V SberLinux 8.5.0-28), 64-bit"
+    }
+  },
+  "run_b": {
+    "run_id": "PROD",
+    "path": "resources/_test_removed_defined.html",
+    "filename": "_test_removed_defined.html",
+    "meta": {
+      "path": "resources/_test_removed_defined.html",
+      "filename": "_test_removed_defined.html",
+      "server": "",
+      "from": "",
+      "to": "",
+      "version": "PostgreSQL 15.5 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 8.5.0 20210514 (Platform V SberLinux 8.5.0-28), 64-bit"
+    }
+  },
+  "run_identity": {
+    "mode": "pair",
+    "runs": [
+      {
+        "role": "before",
+        "run_id": "NT",
+        "server": "",
+        "report_start": "",
+        "report_end": "",
+        "interval_hours": null
+      },
+      {
+        "role": "after",
+        "run_id": "PROD",
+        "server": "",
+        "report_start": "",
+        "report_end": "",
+        "interval_hours": null
+      }
+    ]
+  },
+  "workload_match": {
+    "workload_match_score": 0.8,
+    "level": "medium",
+    "components": {
+      "interval_similarity": null,
+      "server_similarity": 0.8
+    },
+    "notes": "Higher score means better run comparability for influence interpretation."
+  },
+  "confidence_meta": {
+    "mode": "pair",
+    "changed_params_count": 2,
+    "changed_params_threshold": 10,
+    "confidence": "medium",
+    "evidence_type": "probable",
+    "notes": "Confidence baseline for pair comparison without isolated causality proof."
+  },
+  "settings_changes": [
+    {
+      "parameter": "archive_timeout",
+      "status": "ONLY_NT",
+      "old": "180",
+      "new": null
+    },
+    {
+      "parameter": "autovacuum_naptime",
+      "status": "DIFFER",
+      "old": "99",
+      "new": "10"
+    }
+  ],
+  "influence_rows": [],
+  "findings": [
+    {
+      "id": "settings.only_nt.archive_timeout",
+      "category": "settings",
+      "severity": "warning",
+      "message": "archive_timeout",
+      "details": {
+        "status": "ONLY_NT",
+        "value_a": "180",
+        "value_b": null,
+        "issue_level": "critical"
+      }
+    },
+    {
+      "id": "settings.differ.autovacuum_naptime",
+      "category": "settings",
+      "severity": "warning",
+      "message": "autovacuum_naptime",
+      "details": {
+        "status": "DIFFER",
+        "value_a": "99",
+        "value_b": "10",
+        "issue_level": "critical"
+      }
+    }
+  ],
+  "summary": {
+    "differ": 1,
+    "only_a": 1,
+    "only_b": 0,
+    "total_issues": 2,
+    "critical_count": 2,
+    "informational_count": 0,
+    "settings_valid": false
+  }
+}

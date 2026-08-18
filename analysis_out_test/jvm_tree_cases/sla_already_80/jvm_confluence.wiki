@@ -1,0 +1,169 @@
+h2. Выкатывать JAVA_TOOL_OPTIONS
+*Нет*
+
+h2. Что сделать сейчас
+# JAVA_TOOL_OPTIONS из-за этого роста не копируйте. Смотрите план ниже: упрётся в SLA 80%, будет OOMKilled, или выйдет на плато. Смена настроек перезапустит под и оборвёт текущий ретест.
+
+h3. Почему так
+* Плеч всегда два. Подов на одном плече: 2.
+* Рестарт контейнера: не рестартовал.
+* Память в тесте растёт: да.
+* CPU throttle: нет.
+* Скорость роста считайте после выхода на стабильную динамику, не со старта пода (прогрев и заполнение кэша в этот расчёт не входят).
+* GC pause p95 80 мс, порог 250 мс; ниже порога.
+* RSS / memory usage контейнера вырос на 1% за 24 ч, 0.04 %/ч.
+* Memory usage уже на уровне SLA 80% или выше.
+* До OOMKilled контейнера примерно 432 ч (~18 сут) — в ближайшие сутки не дойдём.
+
+h3. Что перепроверить
+* Снимите те же метрики в том же окне нагрузки и сравните с этим отчётом.
+
+h3. План: SLA, OOM или плато
+* Скорость считайте после выхода на стабильную динамику, не со старта пода. Прогрев и заполнение кэша в этот расчёт не входят.
+* Три исхода: упрётся в SLA 80%, будет OOMKilled / упрётся в limit, или выйдет на плато ниже SLA (часто около 75%). Если до SLA 80% больше 30 дней — сейчас не критично.
+* Плато vs утечка: несколько циклов GC без рестарта. Если минимум после каждой следующей очистки выше — это не плато, проблема всё ещё есть.
+* Смена JAVA_TOOL_OPTIONS, memory request или memory limit перезапустит под: память обнулится принудительно. Неизвестно, сколько ждать повторного выхода на ту же динамику — ретест роста после выкатки настроек нельзя сравнивать с этим прогоном.
+
+h3. Ответы по дереву
+|| Вопрос || Ответ ||
+| Сколько подов этой АС на одном плече | 2 |
+| Почему рестартовал контейнер | не рестартовал |
+| Память в тесте растёт (рестарта ещё нет) | да |
+| Какой показатель рос | RSS / memory usage контейнера |
+| На сколько процентов он вырос | 1 % |
+| За сколько часов | 24 ч |
+| Есть CPU throttle | нет |
+| GC pause p95, мс | 80 мс |
+
+{expand:Кандидаты флагов (не копировать)}
+|| Флаг || Было || Стало || Что делает || Что снять ||
+| -XX:MaxRAMPercentage=60.0 | 70.0 | 60.0 | Доля memory limit контейнера под Java heap. При росте limit хип вырастет сам. | -XX:MaxRAMPercentage |
+| -XX:InitialRAMPercentage=35.0 | 45.0 | 35.0 | Стартовый heap как доля memory limit. Должна быть ниже MaxRAMPercentage. | -XX:InitialRAMPercentage |
+| -XX:+ExitOnOutOfMemoryError | включён | включён | Процесс завершается при Java OOME, чтобы оркестратор перезапустил контейнер. | -XX:+ExitOnOutOfMemoryError |
+{expand}
+
+h2. Цель и ответы дерева
+*Система:* DEMO_CounterAgent
+*Pod:* counteragent-demo
+*Контейнер:* application
+*Подов на одном плече:* 2 (плеч всегда 2)
+*Рестарт:* не рестартовал
+*CPU throttle:* нет
+
+|| Параметр || Значение ||
+| gc_pause_p95_ms | 80.0 |
+
+
+h2. Рекомендации по JVM-тюнингу
+*Система:* DEMO_CounterAgent
+*Целевой pod:* counteragent-demo
+*Целевой контейнер:* application
+
+h3. Ресурсы и JVM настройки контейнера (актуально для настройки)
+|| Параметр || Было || Стало || Что делает ||
+| Memory request (MiB) | 4096 | 6717 | Гарантированная память контейнера. Поднимите к фактическому working set, ниже limit. |
+| Memory limit (MiB) | 8192 | 9420 | Потолок RSS. Выше — OOMKilled. |
+
+h3. Контекст рантайма
+|| Параметр || Значение ||
+| JDK version | N/A |
+| Spring Boot version | N/A |
+| Heap used (MiB) | N/A |
+| OldGen used (MiB) | N/A |
+| OldGen capacity (MiB) | N/A |
+| GC pause p95 (ms) | 80.0 |
+| GC pause p99 (ms) | N/A |
+| GC time ratio (%) | N/A |
+| Container memory working set (MiB) | 6717 |
+| Container memory limit (MiB) | 8192 |
+
+h3. Findings
+* *[CRITICAL]* memory.limit_pressure: Потребление памяти близко к memory limit.
+** container_memory_working_set_mib: 6717
+** container_memory_limit_mib: 8192
+* *[WARNING]* memory.request_pressure: Working set заметно выше memory request.
+** container_memory_working_set_mib: 6717
+** container_memory_request_mib: 4096
+* *[INFO]* heap.metric_missing: Heap used не задан. Рекомендации могут быть менее точными.
+** source: ui.metric_input
+* *[INFO]* oldgen.metric_missing: OldGen used не задан. Рекомендации по OldGen могут быть менее точными.
+** source: ui.metric_input
+
+h3. Рекомендованные Java Tool Options
+h4. Рекомендация 1: Снизьте давление на memory limit
+*Обоснование:* Working set близко к memory limit контейнера.
+*Уверенность:* low
+*Оценка доказательности:* 38/100
+*Оценка риска:* 65/100
+*Ожидаемый эффект:* fewer OOM/restarts
+*Окно верификации:* 30–60 мин после выкатки
+*Нужна платформенная эскалация:* No
+*Предлагаемые опции:*
+|| Флаг || Было || Стало || Что делает ||
+| -XX:MaxRAMPercentage=60.0 | 70.0 | 60.0 | Доля memory limit контейнера под Java heap. При росте limit хип вырастет сам. |
+| -XX:InitialRAMPercentage=35.0 | 45.0 | 35.0 | Стартовый heap как доля memory limit. Должна быть ниже MaxRAMPercentage. |
+*План отката:*
+** Rollback to previous JVM option set if SLA worsens.
+*Примечания:*
+** Lower JVM max RAM percentage.
+** Rebalance pod memory budget if needed.
+
+h4. Рекомендация 2: Поднимите memory request контейнера под фактическое потребление
+*Обоснование:* Процесс ест больше, чем memory request. Поднимите request к фактическому потреблению (ниже limit). Это не настройка G1.
+*Уверенность:* low
+*Оценка доказательности:* 30/100
+*Оценка риска:* 30/100
+*Ожидаемый эффект:* better scheduling predictability
+*Окно верификации:* 30–60 мин после выкатки
+*Нужна платформенная эскалация:* No
+*План отката:*
+** Rollback to previous JVM option set if SLA worsens.
+*Примечания:*
+** Поднимите memory request ближе к фактическому working set, но оставьте его ниже limit.
+** JAVA_TOOL_OPTIONS из-за этого finding не меняйте.
+
+h4. Рекомендация 3: Перераспределите memory quota pod
+*Обоснование:* Memory limit pressure requires container budget adjustment in addition to JVM tuning.
+*Уверенность:* low
+*Оценка доказательности:* 70/100
+*Оценка риска:* 60/100
+*Ожидаемый эффект:* avoid OOM and restarts under peaks
+*Окно верификации:* 1-2 peak windows
+*Нужна платформенная эскалация:* Yes
+*План отката:*
+** Rollback pod resources to previous limits if donor containers degrade.
+*Блокирующие условия:*
+** Platform quota constraints
+*Примечания:*
+** If no improvement after tuning window, escalate for heap dump analysis.
+
+h3. План по pod memory quota
+|| Field || Value ||
+| Status | needs_platform_escalation |
+| Target container | application |
+| Requested delta (MiB) | 1228 |
+| Donor suggestions | istioProxy: 512MiB, vaultAgent: 256MiB |
+| Notes | No safe in-pod memory rebalance found. Consider increasing pod/namespace quota or redesigning container resource profile. |
+
+h3. Инженерный план валидации
+# Apply recommended JVM options in test/stage environment first. Keep previous values for rollback.
+# Run at least one representative load profile and compare with baseline metrics collected before the change.
+# If no measurable improvement after the observation window, set status to предыдущая попытка тюнинга не дала эффекта and prepare escalation to dump analysis.
+
+h3. Риски и побочные эффекты изменений
+* Any JVM option change can shift latency and throughput profile; always compare SLA/SLO against baseline.
+* If pod/namespace quota cannot be increased, tuning-only approach may hit a hard capacity ceiling.
+* Rollback plan is mandatory: keep previous JVM flags and resource limits so the team can revert quickly.
+
+h3. Правило эскалации
+* If tuning recommendations do not improve GC/heap/memory-pressure metrics in the defined observation window, escalate to development team for heap dump and memory analysis.
+
+
+h3. Контекст прогона
+*Целевой контейнер:* application
+
+h3. Результат анализа
+* Findings: 4; рекомендаций: 3.
+
+h3. Предлагаемые изменения (Copy/Paste)
+* Копируемую строку JAVA_TOOL_OPTIONS не даём — см. кандидатов в Expand выше.

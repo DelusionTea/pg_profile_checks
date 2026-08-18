@@ -1,0 +1,267 @@
+# pg_profile Analysis Brief
+
+Source type: `health_check`
+
+- Server: tsldd-pprb01138.delta.sbrf.ru
+- Interval: 2026-08-11 16:30:02+03 .. 2026-08-12 09:00:02+03 (16.5 h)
+- Report: pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html
+
+Total findings: 75
+
+## [CRITICAL] High ratio of requested checkpoints
+- **ID:** `checkpoints.high_requested_ratio`
+- **Message:** Requested checkpoints: 39/46 (84.8%), threshold 30%
+- **Recommendation:** Большая доля requested checkpoints означает, что WAL заполняется быстрее,
+чем срабатывают плановые checkpoints. Это типичный признак слишком малого
+max_wal_size или высокой write-нагрузки.
+- **Actions:**
+  - Увеличить max_wal_size (часто 1–4 GB+ для OLTP под нагрузкой)
+  - Проверить wal_buffers_full и общий объём WAL за интервал
+  - Сопоставить с checkpoint_timeout — не уменьшать timeout вместо max_wal_size
+
+## [WARNING] High absolute count of requested checkpoints
+- **ID:** `checkpoints.high_requested_count`
+- **Message:** Requested checkpoints: 39 (threshold 10)
+- **Recommendation:** За интервал отчёта зафиксировано много requested checkpoints.
+Сравните нормализованное значение /час с предыдущими прогонами.
+- **Actions:**
+  - Проверить max_wal_size и рост WAL
+  - Оценить пики INSERT/UPDATE и wal-heavy запросы
+
+## [WARNING] High checkpoint write time per hour
+- **ID:** `checkpoints.high_write_time_per_hour`
+- **Message:** Checkpoint write time: 2357.5s/hour (threshold 60s/hour)
+- **Recommendation:** Нормализованное время записи checkpoint за час высокое — устойчивое IO-давление
+от checkpoints, а не только длинный единичный интервал отчёта.
+- **Actions:**
+  - Поднять checkpoint_completion_target (0.7–0.9) для сглаживания записи
+  - Согласовать max_wal_size и checkpoint_timeout с объёмом WAL
+  - Проверить latency диска (iostat) в окнах checkpoint
+
+## [WARNING] Long total checkpoint write time
+- **ID:** `checkpoints.high_write_time`
+- **Message:** Checkpoint write time: 38898.3s over 16.5h interval (threshold 300s)
+- **Recommendation:** Длительная запись checkpoint увеличивает IO latency и может влиять на
+время отклика запросов во время checkpoint.
+- **Actions:**
+  - Проверить производительность диска (IOPS, latency)
+  - Оценить checkpoint_completion_target
+  - Снизить write-нагрузку или распределить её во времени
+
+## [WARNING] Bgwriter interrupts (maxwritten_clean)
+- **ID:** `checkpoints.maxwritten_clean`
+- **Message:** Bgwriter interrupts (maxwritten_clean): 80728 (threshold 100)
+- **Recommendation:** Bgwriter часто прерывается из-за max_write_pages — буферы сбрасываются
+медленнее, чем backend их загрязняет.
+- **Actions:**
+  - Увеличить shared_buffers при низком cache hit
+  - Настроить bgwriter (в новых версиях часто autotune)
+  - Проверить checkpoint и WAL pressure
+
+## [WARNING] Slow SQL queries detected
+- **ID:** `queries.slow_execution`
+- **Message:** statecontracts/as_admin: max=35536.1ms, calls=1
+  select $3, t0.OBJECT_ID c2 from statecontracts.T_CONTRACTS t0 where t0.RQUID &lt;> $1 limit $2
+- **Recommendation:** Запросы с высоким mean/max/total execution time — кандидаты на оптимизацию
+плана, индексов или переписывания SQL.
+- **Actions:**
+  - Выполнить EXPLAIN (ANALYZE, BUFFERS) для топ-запросов
+  - Проверить индексы и статистику (ANALYZE)
+  - Оценить work_mem при temp spills
+
+## [WARNING] Slow SQL queries detected
+- **ID:** `queries.slow_execution`
+- **Message:** statecontracts/as_admin: max=26526.6ms, calls=1
+  select $3, t0.OBJECT_ID c2 from statecontracts.T_PARTICIPANT t0 where t0.RQUID &lt;> $1 limit $2
+- **Recommendation:** Запросы с высоким mean/max/total execution time — кандидаты на оптимизацию
+плана, индексов или переписывания SQL.
+- **Actions:**
+  - Выполнить EXPLAIN (ANALYZE, BUFFERS) для топ-запросов
+  - Проверить индексы и статистику (ANALYZE)
+  - Оценить work_mem при temp spills
+
+## [WARNING] Slow SQL queries detected
+- **ID:** `queries.slow_execution`
+- **Message:** postgres/postgres: mean=6674.5ms, max=12758.8ms, total=220.3s, calls=33
+  SELECT pgse_profile.take_sample()
+- **Recommendation:** Запросы с высоким mean/max/total execution time — кандидаты на оптимизацию
+плана, индексов или переписывания SQL.
+- **Actions:**
+  - Выполнить EXPLAIN (ANALYZE, BUFFERS) для топ-запросов
+  - Проверить индексы и статистику (ANALYZE)
+  - Оценить work_mem при temp spills
+
+## [WARNING] Slow SQL queries detected
+- **ID:** `queries.slow_execution`
+- **Message:** postgres/"sa-d00000011757": total=76.7s, calls=5939
+  SELECT spcname, pg_tablespace_size(spcname) AS size FROM pg_tablespace ORDER BY size DESC LIMIT 25
+- **Recommendation:** Запросы с высоким mean/max/total execution time — кандидаты на оптимизацию
+плана, индексов или переписывания SQL.
+- **Actions:**
+  - Выполнить EXPLAIN (ANALYZE, BUFFERS) для топ-запросов
+  - Проверить индексы и статистику (ANALYZE)
+  - Оценить work_mem при temp spills
+
+## [WARNING] Slow SQL queries detected
+- **ID:** `queries.slow_execution`
+- **Message:** statecontracts/as_admin: total=5698.0s, calls=23999073
+  insert into statecontracts.t_participant (aggregateroot_id,chgcnt,inn,sys_isdeleted,sys_lastchangedate,name,offflag,s...
+- **Recommendation:** Запросы с высоким mean/max/total execution time — кандидаты на оптимизацию
+плана, индексов или переписывания SQL.
+- **Actions:**
+  - Выполнить EXPLAIN (ANALYZE, BUFFERS) для топ-запросов
+  - Проверить индексы и статистику (ANALYZE)
+  - Оценить work_mem при temp spills
+
+## [WARNING] Slow SQL queries detected
+- **ID:** `queries.slow_execution`
+- **Message:** statecontracts/as_admin: total=723.4s, calls=23999073
+  select p1_0.object_id from statecontracts.t_participant p1_0 where p1_0.inn is not null and p1_0.inn=$1 and p1_0.pare...
+- **Recommendation:** Запросы с высоким mean/max/total execution time — кандидаты на оптимизацию
+плана, индексов или переписывания SQL.
+- **Actions:**
+  - Выполнить EXPLAIN (ANALYZE, BUFFERS) для топ-запросов
+  - Проверить индексы и статистику (ANALYZE)
+  - Оценить work_mem при temp spills
+
+## [WARNING] Slow SQL queries detected
+- **ID:** `queries.slow_execution`
+- **Message:** statecontracts/as_admin: total=20024.2s, calls=144991055
+  insert into statecontracts.t_value (chgcnt,date_,inn,sys_isdeleted,kpp,sys_lastchangedate,level_entityid,metrictype_e...
+- **Recommendation:** Запросы с высоким mean/max/total execution time — кандидаты на оптимизацию
+плана, индексов или переписывания SQL.
+- **Actions:**
+  - Выполнить EXPLAIN (ANALYZE, BUFFERS) для топ-запросов
+  - Проверить индексы и статистику (ANALYZE)
+  - Оценить work_mem при temp spills
+
+## [WARNING] Slow SQL queries detected
+- **ID:** `queries.slow_execution`
+- **Message:** statecontracts/as_admin: total=2888.0s, calls=11999535
+  insert into statecontracts.t_contracts (chgcnt,claimed,contractid,customerinn,customername,enddate,fined,sys_isdelete...
+- **Recommendation:** Запросы с высоким mean/max/total execution time — кандидаты на оптимизацию
+плана, индексов или переписывания SQL.
+- **Actions:**
+  - Выполнить EXPLAIN (ANALYZE, BUFFERS) для топ-запросов
+  - Проверить индексы и статистику (ANALYZE)
+  - Оценить work_mem при temp spills
+
+## [WARNING] Slow SQL queries detected
+- **ID:** `queries.slow_execution`
+- **Message:** statecontracts/as_admin: total=1373.1s, calls=11999539
+  INSERT INTO statecontracts.T_REPL_AGGLOCK_CONTRACTS (rootid, siversion, guid, version, sys_lastchangedate) VALUES ($1...
+- **Recommendation:** Запросы с высоким mean/max/total execution time — кандидаты на оптимизацию
+плана, индексов или переписывания SQL.
+- **Actions:**
+  - Выполнить EXPLAIN (ANALYZE, BUFFERS) для топ-запросов
+  - Проверить индексы и статистику (ANALYZE)
+  - Оценить work_mem при temp spills
+
+## [WARNING] Slow SQL queries detected
+- **ID:** `queries.slow_execution`
+- **Message:** statecontracts/as_admin: total=15378.4s, calls=144989282
+  INSERT INTO statecontracts.T_REPL_AGGLOCK_VALUE (rootid, siversion, guid, version, sys_lastchangedate) VALUES ($1, $2...
+- **Recommendation:** Запросы с высоким mean/max/total execution time — кандидаты на оптимизацию
+плана, индексов или переписывания SQL.
+- **Actions:**
+  - Выполнить EXPLAIN (ANALYZE, BUFFERS) для топ-запросов
+  - Проверить индексы и статистику (ANALYZE)
+  - Оценить work_mem при temp spills
+
+## [WARNING] High dead tuples ratio on table
+- **ID:** `autovacuum.table_high_dead_pct`
+- **Message:** postgres.pgse_profile.sample_stat_tables: dead_pct=16.5%, n_dead=112895, last_autovacuum=never
+- **Recommendation:** Высокий процент мёртвых строк — autovacuum не успевает или заблокирован
+long transactions.
+- **Actions:**
+  - Проверить idle in transaction и lock waits
+  - Настроить per-table autovacuum при необходимости
+  - Рассмотреть VACUUM (ANALYZE) в окно обслуживания
+
+## [WARNING] High dead tuples ratio on table
+- **ID:** `autovacuum.table_high_dead_pct`
+- **Message:** postgres.pgse_profile.sample_stat_tables_total: dead_pct=16.4%, n_dead=5688, last_autovacuum=never
+- **Recommendation:** Высокий процент мёртвых строк — autovacuum не успевает или заблокирован
+long transactions.
+- **Actions:**
+  - Проверить idle in transaction и lock waits
+  - Настроить per-table autovacuum при необходимости
+  - Рассмотреть VACUUM (ANALYZE) в окно обслуживания
+
+## [WARNING] High dead tuples ratio on table
+- **ID:** `autovacuum.table_high_dead_pct`
+- **Message:** postgres.pgse_profile.sample_kcache: dead_pct=16.0%, n_dead=40596, last_autovacuum=never
+- **Recommendation:** Высокий процент мёртвых строк — autovacuum не успевает или заблокирован
+long transactions.
+- **Actions:**
+  - Проверить idle in transaction и lock waits
+  - Настроить per-table autovacuum при необходимости
+  - Рассмотреть VACUUM (ANALYZE) в окно обслуживания
+
+## [WARNING] High dead tuples ratio on table
+- **ID:** `autovacuum.table_high_dead_pct`
+- **Message:** postgres.pgse_profile.sample_stat_indexes: dead_pct=15.8%, n_dead=44728, last_autovacuum=never
+- **Recommendation:** Высокий процент мёртвых строк — autovacuum не успевает или заблокирован
+long transactions.
+- **Actions:**
+  - Проверить idle in transaction и lock waits
+  - Настроить per-table autovacuum при необходимости
+  - Рассмотреть VACUUM (ANALYZE) в окно обслуживания
+
+## [WARNING] High dead tuples ratio on table
+- **ID:** `autovacuum.table_high_dead_pct`
+- **Message:** postgres.pgse_profile.sample_statements: dead_pct=15.7%, n_dead=43183, last_autovacuum=never
+- **Recommendation:** Высокий процент мёртвых строк — autovacuum не успевает или заблокирован
+long transactions.
+- **Actions:**
+  - Проверить idle in transaction и lock waits
+  - Настроить per-table autovacuum при необходимости
+  - Рассмотреть VACUUM (ANALYZE) в окно обслуживания
+
+## [WARNING] WAL buffers frequently full
+- **ID:** `wal.buffers_full`
+- **Message:** wal_buffers_full: 664448 (threshold 1000)
+- **Recommendation:** wal_buffers переполняется — процессы ждут освобождения WAL buffer.
+Типичная рекомендация коммьюнити: увеличить wal_buffers (часто 64MB на busy systems).
+- **Actions:**
+  - Увеличить wal_buffers (единицы 8kB в pg_profile settings)
+  - Проверить пики WAL generation
+
+## [WARNING] High backend write ratio
+- **ID:** `wal.backend_writes_high`
+- **Message:** Backend buffers written (21842039) exceed checkpoint buffers written (11698150)
+- **Recommendation:** Backend'ы сами пишут dirty buffers чаще ожидаемого — bgwriter/checkpoint
+не успевают, растёт latency пользовательских сессий.
+- **Actions:**
+  - Проверить shared_buffers, bgwriter и checkpoint_completion_target
+  - Сопоставить с maxwritten_clean и checkpoint write time
+  - Оценить write-heavy SQL и batch DML
+
+## [WARNING] Cache or I/O read finding
+- **ID:** `cache.high_read_time`
+- **Message:** statecontracts: blk_read_time=260.5s (threshold 60s)
+- **Recommendation:** Review cache hit ratios and disk read patterns.
+- **Actions:**
+  - Identify tables with high physical reads
+
+## [WARNING] Low table I/O hit ratio
+- **ID:** `cache.low_table_hit_ratio`
+- **Message:** postgres.pgse_profile.sample_statements: table hit_pct=94.92% (threshold 95.0%)
+- **Recommendation:** Горячие таблицы читаются с диска чаще ожидаемого — узкий buffer pool,
+холодный working set или неоптимальные планы/индексы.
+- **Actions:**
+  - Найти top I/O tables в pg_profile и проверить индексы/partitioning
+  - Оценить shared_buffers и effective_cache_size
+  - EXPLAIN (ANALYZE, BUFFERS) для запросов к этим таблицам
+
+## [WARNING] Low table I/O hit ratio
+- **ID:** `cache.low_table_hit_ratio`
+- **Message:** postgres.pgse_profile.sample_kcache: table hit_pct=92.32% (threshold 95.0%)
+- **Recommendation:** Горячие таблицы читаются с диска чаще ожидаемого — узкий buffer pool,
+холодный working set или неоптимальные планы/индексы.
+- **Actions:**
+  - Найти top I/O tables в pg_profile и проверить индексы/partitioning
+  - Оценить shared_buffers и effective_cache_size
+  - EXPLAIN (ANALYZE, BUFFERS) для запросов к этим таблицам
+
+... and 50 more findings

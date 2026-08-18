@@ -1,0 +1,59 @@
+{
+  "type": "run_comparison",
+  "contract": {
+    "schema": "run_comparison_v1",
+    "schema_version": "1.0"
+  },
+  "run_identity": {
+    "mode": "pair",
+    "runs": [
+      {
+        "role": "before",
+        "run_id": "before",
+        "server": "srv-a",
+        "report_start": "2026-01-01 00:00:00+03",
+        "report_end": "2026-01-01 01:00:00+03",
+        "interval_hours": 1.0
+      },
+      {
+        "role": "after",
+        "run_id": "after",
+        "server": "srv-b",
+        "report_start": "2026-01-02 00:00:00+03",
+        "report_end": "2026-01-02 01:00:00+03",
+        "interval_hours": 1.0
+      }
+    ]
+  },
+  "workload_match": {
+    "workload_match_score": 0.7,
+    "level": "medium",
+    "components": {
+      "interval_similarity": 1.0,
+      "server_similarity": 0.5
+    },
+    "notes": "fixture"
+  },
+  "confidence_meta": {
+    "mode": "pair",
+    "changed_params_count": 0,
+    "changed_params_threshold": 10,
+    "workload_match_score": 0.7,
+    "isolated_change": false,
+    "confidence": "medium",
+    "evidence_type": "probable",
+    "proven_criteria": {
+      "requires_isolated_change": true,
+      "requires_changed_params_count": 1,
+      "requires_workload_match_score_at_least": 0.85
+    },
+    "notes": "fixture"
+  },
+  "influence_rows": [],
+  "findings": [],
+  "summary": {
+    "total_compared": 0,
+    "significant_count": 0,
+    "min_change_pct": 5.0
+  }
+}

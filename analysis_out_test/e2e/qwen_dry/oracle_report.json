@@ -1,0 +1,130 @@
+{
+  "type": "oracle_report",
+  "layer": "hybrid",
+  "layers": [
+    {
+      "name": "rule_based",
+      "verdict": "warning",
+      "skipped": false
+    },
+    {
+      "name": "statistical",
+      "verdict": "pass",
+      "skipped": true
+    },
+    {
+      "name": "llm",
+      "verdict": "warning",
+      "skipped": false
+    }
+  ],
+  "verdict": "warning",
+  "skipped": false,
+  "sources": [
+    "influence_table.json",
+    "llm_quality_summary.json"
+  ],
+  "counts": {
+    "pass": 9,
+    "warning": 4,
+    "fail": 0
+  },
+  "reasons": [
+    "cache.postgres.blk_write_time Δ=1600.0% looks implausible",
+    "influence table has attributed rows, but the answer cites no claims",
+    "dry-run answer is not publishable",
+    "quality score 90/100, publishable=False"
+  ],
+  "confidence_adjustments": [],
+  "checks": [
+    {
+      "id": "completeness.contract",
+      "status": "pass",
+      "message": "influence payload matches the JSON contract",
+      "layer": "rule_based"
+    },
+    {
+      "id": "completeness.rows",
+      "status": "pass",
+      "message": "rows is present",
+      "where": "rows",
+      "layer": "rule_based"
+    },
+    {
+      "id": "completeness.workload_match",
+      "status": "pass",
+      "message": "workload_match is present",
+      "where": "workload_match",
+      "layer": "rule_based"
+    },
+    {
+      "id": "completeness.confidence_meta",
+      "status": "pass",
+      "message": "confidence_meta is present",
+      "where": "confidence_meta",
+      "layer": "rule_based"
+    },
+    {
+      "id": "sanity.summary_delta_magnitude",
+      "status": "warning",
+      "message": "cache.postgres.blk_write_time Δ=1600.0% looks implausible",
+      "where": "functional_summary.top_degraded[0]",
+      "layer": "rule_based"
+    },
+    {
+      "id": "completeness.rows",
+      "status": "pass",
+      "message": "8 influence row(s) have the required fields",
+      "where": "rows",
+      "layer": "rule_based"
+    },
+    {
+      "id": "statistical.series_present",
+      "status": "pass",
+      "message": "no series influence table; statistical oracle skipped",
+      "layer": "statistical"
+    },
+    {
+      "id": "llm.structure",
+      "status": "pass",
+      "message": "answer JSON has the required fields",
+      "where": "llm_quality_summary.json",
+      "layer": "llm"
+    },
+    {
+      "id": "llm.verdict_enum",
+      "status": "pass",
+      "message": "verdict is an allowed value",
+      "where": "llm_quality_summary.json",
+      "layer": "llm"
+    },
+    {
+      "id": "llm.summary",
+      "status": "pass",
+      "message": "summary is present",
+      "where": "llm_quality_summary.json",
+      "layer": "llm"
+    },
+    {
+      "id": "llm.claims_present",
+      "status": "warning",
+      "message": "influence table has attributed rows, but the answer cites no claims",
+      "where": "llm_quality_summary.json",
+      "layer": "llm"
+    },
+    {
+      "id": "llm.publish",
+      "status": "warning",
+      "message": "dry-run answer is not publishable",
+      "where": "llm_quality_summary.json",
+      "layer": "llm"
+    },
+    {
+      "id": "llm.score",
+      "status": "warning",
+      "message": "quality score 90/100, publishable=False",
+      "where": "llm_quality_summary.json",
+      "layer": "llm"
+    }
+  ]
+}

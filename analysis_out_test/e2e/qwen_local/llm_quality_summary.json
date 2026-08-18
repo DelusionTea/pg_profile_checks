@@ -1,0 +1,46 @@
+{
+  "type": "llm_quality",
+  "layer": "llm",
+  "task": "summary",
+  "verdict": "pass",
+  "score": 100,
+  "publishable": true,
+  "parsed": true,
+  "dry_run": false,
+  "reasons": [],
+  "checks": [
+    {
+      "id": "llm.structure",
+      "status": "pass",
+      "message": "answer JSON has the required fields"
+    },
+    {
+      "id": "llm.verdict_enum",
+      "status": "pass",
+      "message": "verdict is an allowed value"
+    },
+    {
+      "id": "llm.summary",
+      "status": "pass",
+      "message": "summary is present"
+    },
+    {
+      "id": "llm.claim_grounded",
+      "status": "pass",
+      "message": "1 claim(s) match analysis artifacts"
+    },
+    {
+      "id": "llm.publish",
+      "status": "pass",
+      "message": "answer may be published"
+    }
+  ],
+  "counts": {
+    "pass": 5,
+    "warning": 0,
+    "fail": 0
+  },
+  "answer_verdict": "need-validation",
+  "unsupported_subjects": [],
+  "overclaims": []
+}

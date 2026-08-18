@@ -1,0 +1,89 @@
+h2. Выкатывать JAVA_TOOL_OPTIONS
+*Нет*
+
+h2. Что сделать сейчас
+# Нет GC pause p95. Копировать JAVA_TOOL_OPTIONS нельзя.
+
+h3. Почему так
+* Плеч всегда два. Подов на одном плече: 2.
+* Рестарт контейнера: не рестартовал.
+* Память в тесте растёт: не знаю.
+* CPU throttle: нет.
+* GC pause p95 не указан.
+
+h3. Что перепроверить
+* Снова снимите те же метрики в том же окне нагрузки и сравните с этим отчётом.
+
+h3. Ответы по дереву
+|| Вопрос || Ответ ||
+| Сколько подов этой АС на одном плече | 2 |
+| Почему рестартовал контейнер | не рестартовал |
+| Есть CPU throttle | нет |
+
+h2. Цель и ответы дерева
+*Система:* DEMO_CounterAgent
+*Pod:* counteragent-demo
+*Контейнер:* application
+*Подов на одном плече:* 2 (плеч всегда 2)
+*Рестарт:* не рестартовал
+*CPU throttle:* нет
+
+
+h2. Рекомендации по JVM-тюнингу
+*Система:* DEMO_CounterAgent
+*Целевой pod:* counteragent-demo
+*Целевой контейнер:* application
+
+h3. Ресурсы и JVM настройки контейнера (актуально для настройки)
+* Нет изменений ресурсов или JVM-флагов — смотрите рекомендации ниже.
+
+h3. Контекст рантайма
+|| Параметр || Значение ||
+| JDK version | N/A |
+| Spring Boot version | N/A |
+| Heap used (MiB) | N/A |
+| OldGen used (MiB) | N/A |
+| OldGen capacity (MiB) | N/A |
+| GC pause p95 (ms) | N/A |
+| GC pause p99 (ms) | N/A |
+| GC time ratio (%) | N/A |
+| Container memory working set (MiB) | N/A |
+| Container memory limit (MiB) | 8192 |
+
+h3. Findings
+* Критичные findings не обнаружены.
+
+h3. Рекомендованные Java Tool Options
+h4. Рекомендация 1: Критичных изменений JVM не требуется
+*Обоснование:* Текущие метрики не показывают давление GC или heap выше порогов.
+*Уверенность:* low
+*Оценка доказательности:* 65/100
+*Оценка риска:* 10/100
+*Ожидаемый эффект:* оставить baseline без изменений
+*Окно верификации:* следующий профильный прогон нагрузки
+*Нужна платформенная эскалация:* No
+*План отката:*
+** Откат не требуется.
+
+
+h3. Инженерный план валидации
+# Apply recommended JVM options in test/stage environment first. Keep previous values for rollback.
+# Run at least one representative load profile and compare with baseline metrics collected before the change.
+# If no measurable improvement after the observation window, set status to предыдущая попытка тюнинга не дала эффекта and prepare escalation to dump analysis.
+
+h3. Риски и побочные эффекты изменений
+* Any JVM option change can shift latency and throughput profile; always compare SLA/SLO against baseline.
+* Rollback plan is mandatory: keep previous JVM flags and resource limits so the team can revert quickly.
+
+h3. Правило эскалации
+* If tuning recommendations do not improve GC/heap/memory-pressure metrics in the defined observation window, escalate to development team for heap dump and memory analysis.
+
+
+h3. Контекст прогона
+*Целевой контейнер:* application
+
+h3. Результат анализа
+* Findings: 0; рекомендаций: 1.
+
+h3. Предлагаемые изменения (Copy/Paste)
+* Копируемую строку JAVA_TOOL_OPTIONS не даём — см. кандидатов в Expand выше.

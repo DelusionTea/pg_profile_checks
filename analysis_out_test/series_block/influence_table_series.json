@@ -1,0 +1,1652 @@
+{
+  "type": "influence_table_series",
+  "mode": "series",
+  "row_count": 4,
+  "run_identity": {
+    "mode": "series",
+    "reports": [
+      {
+        "label": "nt_before",
+        "path": "resources/counter_nt_before_settings.html",
+        "filename": "counter_nt_before_settings.html",
+        "meta": {
+          "path": "resources/counter_nt_before_settings.html",
+          "filename": "counter_nt_before_settings.html",
+          "server": "",
+          "from": "",
+          "to": "",
+          "version": "PostgreSQL 15.5 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 8.5.0 20210514 (Platform V SberLinux 8.5.0-28), 64-bit"
+        }
+      },
+      {
+        "label": "nt_after",
+        "path": "resources/counter_nt_with_settings.html",
+        "filename": "counter_nt_with_settings.html",
+        "meta": {
+          "path": "resources/counter_nt_with_settings.html",
+          "filename": "counter_nt_with_settings.html",
+          "server": "",
+          "from": "",
+          "to": "",
+          "version": "PostgreSQL 15.5 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 8.5.0 20210514 (Platform V SberLinux 8.5.0-28), 64-bit"
+        }
+      },
+      {
+        "label": "nt_old",
+        "path": "resources/counter_nt_old_version.html",
+        "filename": "counter_nt_old_version.html",
+        "meta": {
+          "path": "resources/counter_nt_old_version.html",
+          "filename": "counter_nt_old_version.html",
+          "server": "",
+          "from": "",
+          "to": "",
+          "version": "PostgreSQL 15.5 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 8.5.0 20210514 (Platform V SberLinux 8.5.0-28), 64-bit"
+        }
+      }
+    ]
+  },
+  "workload_match": {
+    "workload_match_score": null,
+    "level": "series",
+    "notes": "Series mode aggregates consecutive pair analyses."
+  },
+  "confidence_meta": {
+    "mode": "series",
+    "confidence": "medium",
+    "evidence_type": "probable",
+    "notes": "Confidence is aggregated from repeated pair evidence."
+  },
+  "functional_summary": {
+    "total_pairs": 2,
+    "improved_pairs": 1,
+    "degraded_pairs": 1,
+    "neutral_pairs": 0,
+    "series_mode": "median+iqr"
+  },
+  "settings_table": {
+    "run_labels": [
+      "nt_before",
+      "nt_after",
+      "nt_old"
+    ],
+    "rows": [
+      {
+        "parameter": "max_wal_size",
+        "values": {
+          "nt_before": "16384",
+          "nt_after": "24576",
+          "nt_old": "16384"
+        }
+      },
+      {
+        "parameter": "shared_buffers",
+        "values": {
+          "nt_before": "1048576",
+          "nt_after": "1258240",
+          "nt_old": "1048576"
+        }
+      },
+      {
+        "parameter": "shared_memory_size",
+        "values": {
+          "nt_before": "9194",
+          "nt_after": "10877",
+          "nt_old": "9194"
+        }
+      },
+      {
+        "parameter": "shared_memory_size_in_huge_pages",
+        "values": {
+          "nt_before": "4597",
+          "nt_after": "5439",
+          "nt_old": "4597"
+        }
+      },
+      {
+        "parameter": "synchronous_standby_names",
+        "values": {
+          "nt_before": "\"tsldd-pprb02835.cloud.delta.sbrf.ru\"",
+          "nt_after": "\"tsldd-pprb02835.cloud.delta.sbrf.ru\"",
+          "nt_old": "\"tsldd-pprb02833.cloud.delta.sbrf.ru\""
+        }
+      },
+      {
+        "parameter": "wal_buffers",
+        "values": {
+          "nt_before": "2048",
+          "nt_after": "3072",
+          "nt_old": "2048"
+        }
+      }
+    ]
+  },
+  "metrics_table": {
+    "run_labels": [
+      "nt_before",
+      "nt_after",
+      "nt_old"
+    ],
+    "pair_labels": [
+      "nt_before->nt_after",
+      "nt_after->nt_old"
+    ],
+    "rows": [
+      {
+        "metric": "cache.Total.blk_read_time",
+        "values": {
+          "nt_before": 3613927.14,
+          "nt_after": 2446290.04,
+          "nt_old": 156945.88
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": -1167637.1,
+            "delta_pct": -32.30937024369562
+          },
+          "nt_after->nt_old": {
+            "delta": -2289344.16,
+            "delta_pct": -93.58433066260613
+          }
+        },
+        "trend": "становится лучше"
+      },
+      {
+        "metric": "cache.Total.blk_write_time",
+        "values": {
+          "nt_before": 434888.8,
+          "nt_after": 304804.12,
+          "nt_old": 40582.35
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": -130084.68,
+            "delta_pct": -29.912170651440093
+          },
+          "nt_after->nt_old": {
+            "delta": -264221.77,
+            "delta_pct": -86.68576067803808
+          }
+        },
+        "trend": "становится лучше"
+      },
+      {
+        "metric": "cache.Total.blks_hit_pct",
+        "values": {
+          "nt_before": null,
+          "nt_after": 81.64,
+          "nt_old": 95.21
+        },
+        "deltas": {
+          "nt_before->nt_after": null,
+          "nt_after->nt_old": {
+            "delta": 13.569999999999993,
+            "delta_pct": 16.6217540421362
+          }
+        },
+        "trend": "становится лучше"
+      },
+      {
+        "metric": "cache.Total.blks_read",
+        "values": {
+          "nt_before": null,
+          "nt_after": 3703014875.0,
+          "nt_old": 366259612.0
+        },
+        "deltas": {
+          "nt_before->nt_after": null,
+          "nt_after->nt_old": {
+            "delta": -3336755263.0,
+            "delta_pct": -90.10915093880091
+          }
+        },
+        "trend": "становится лучше"
+      },
+      {
+        "metric": "cache.counteragent.blk_read_time",
+        "values": {
+          "nt_before": 3613339.13,
+          "nt_after": 2445919.26,
+          "nt_old": 156907.24
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": -1167419.87,
+            "delta_pct": -32.308616158041055
+          },
+          "nt_after->nt_old": {
+            "delta": -2289012.0199999996,
+            "delta_pct": -93.58493787730342
+          }
+        },
+        "trend": "становится лучше"
+      },
+      {
+        "metric": "cache.counteragent.blk_write_time",
+        "values": {
+          "nt_before": 434839.52,
+          "nt_after": 304778.11,
+          "nt_old": 40578.61
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": -130061.41000000003,
+            "delta_pct": -29.910209173260064
+          },
+          "nt_after->nt_old": {
+            "delta": -264199.5,
+            "delta_pct": -86.68585155279033
+          }
+        },
+        "trend": "становится лучше"
+      },
+      {
+        "metric": "cache.counteragent.blks_hit_pct",
+        "values": {
+          "nt_before": null,
+          "nt_after": 81.56,
+          "nt_old": 95.15
+        },
+        "deltas": {
+          "nt_before->nt_after": null,
+          "nt_after->nt_old": {
+            "delta": 13.590000000000003,
+            "delta_pct": 16.66257969592938
+          }
+        },
+        "trend": "становится лучше"
+      },
+      {
+        "metric": "cache.counteragent.blks_read",
+        "values": {
+          "nt_before": null,
+          "nt_after": 3702573433.0,
+          "nt_old": 366089935.0
+        },
+        "deltas": {
+          "nt_before->nt_after": null,
+          "nt_after->nt_old": {
+            "delta": -3336483498.0,
+            "delta_pct": -90.1125543726657
+          }
+        },
+        "trend": "становится лучше"
+      },
+      {
+        "metric": "cache.postgres.blk_read_time",
+        "values": {
+          "nt_before": 588.01,
+          "nt_after": 370.78,
+          "nt_old": 38.64
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": -217.23000000000002,
+            "delta_pct": -36.94324926446829
+          },
+          "nt_after->nt_old": {
+            "delta": -332.14,
+            "delta_pct": -89.5787259291224
+          }
+        },
+        "trend": "становится лучше"
+      },
+      {
+        "metric": "cache.postgres.blk_write_time",
+        "values": {
+          "nt_before": 49.28,
+          "nt_after": 26.01,
+          "nt_old": 3.73
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": -23.27,
+            "delta_pct": -47.21996753246753
+          },
+          "nt_after->nt_old": {
+            "delta": -22.28,
+            "delta_pct": -85.65936178392926
+          }
+        },
+        "trend": "становится лучше"
+      },
+      {
+        "metric": "cache.postgres.blks_read",
+        "values": {
+          "nt_before": 488720.0,
+          "nt_after": 441442.0,
+          "nt_old": 169677.0
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": -47278.0,
+            "delta_pct": -9.673841872646914
+          },
+          "nt_after->nt_old": {
+            "delta": -271765.0,
+            "delta_pct": -61.563013940676235
+          }
+        },
+        "trend": "становится лучше"
+      },
+      {
+        "metric": "cluster.buffers_backend",
+        "values": {
+          "nt_before": 463195650.0,
+          "nt_after": 365372858.0,
+          "nt_old": 89192225.0
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": -97822792.0,
+            "delta_pct": -21.119108523579616
+          },
+          "nt_after->nt_old": {
+            "delta": -276180633.0,
+            "delta_pct": -75.58871080675621
+          }
+        },
+        "trend": "стабильный результат"
+      },
+      {
+        "metric": "cluster.buffers_checkpoint",
+        "values": {
+          "nt_before": 4136935.0,
+          "nt_after": 1812275.0,
+          "nt_old": 12848030.0
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": -2324660.0,
+            "delta_pct": -56.192809410831934
+          },
+          "nt_after->nt_old": {
+            "delta": 11035755.0,
+            "delta_pct": 608.9448345311832
+          }
+        },
+        "trend": "стабильный результат"
+      },
+      {
+        "metric": "cluster.checkpoint_sync_time",
+        "values": {
+          "nt_before": 831.19,
+          "nt_after": 385.16,
+          "nt_old": 64.9
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": -446.03000000000003,
+            "delta_pct": -53.661617680674695
+          },
+          "nt_after->nt_old": {
+            "delta": -320.26,
+            "delta_pct": -83.14985979852528
+          }
+        },
+        "trend": "становится лучше"
+      },
+      {
+        "metric": "cluster.checkpoint_write_time",
+        "values": {
+          "nt_before": 56617.23,
+          "nt_after": 52294.35,
+          "nt_old": 66400.22
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": -4322.880000000005,
+            "delta_pct": -7.635272866581436
+          },
+          "nt_after->nt_old": {
+            "delta": 14105.870000000003,
+            "delta_pct": 26.973984761260066
+          }
+        },
+        "trend": "нестабильный результат"
+      },
+      {
+        "metric": "cluster.checkpoints_req",
+        "values": {
+          "nt_before": 309.0,
+          "nt_after": 125.0,
+          "nt_old": 67.0
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": -184.0,
+            "delta_pct": -59.54692556634304
+          },
+          "nt_after->nt_old": {
+            "delta": -58.0,
+            "delta_pct": -46.4
+          }
+        },
+        "trend": "становится лучше"
+      },
+      {
+        "metric": "cluster.checkpoints_timed",
+        "values": {
+          "nt_before": 1.0,
+          "nt_after": 12.0,
+          "nt_old": 19.0
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": 11.0,
+            "delta_pct": 1100.0
+          },
+          "nt_after->nt_old": {
+            "delta": 7.0,
+            "delta_pct": 58.333333333333336
+          }
+        },
+        "trend": "становится хуже"
+      },
+      {
+        "metric": "cluster.maxwritten_clean",
+        "values": {
+          "nt_before": 234051.0,
+          "nt_after": 220108.0,
+          "nt_old": 208253.0
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": -13943.0,
+            "delta_pct": -5.9572486338447606
+          },
+          "nt_after->nt_old": {
+            "delta": -11855.0,
+            "delta_pct": -5.385992331037491
+          }
+        },
+        "trend": "становится лучше"
+      },
+      {
+        "metric": "cluster.wal_size",
+        "values": {
+          "nt_before": 2791663375072.0,
+          "nt_after": 1773823600776.0,
+          "nt_old": 675639262400.0
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": -1017839774296.0,
+            "delta_pct": -36.45997520276774
+          },
+          "nt_after->nt_old": {
+            "delta": -1098184338376.0,
+            "delta_pct": -61.910572048741145
+          }
+        },
+        "trend": "становится лучше"
+      },
+      {
+        "metric": "dml.Total.COMMIT",
+        "values": {
+          "nt_before": null,
+          "nt_after": 135847529.0,
+          "nt_old": 67277748.0
+        },
+        "deltas": {
+          "nt_before->nt_after": null,
+          "nt_after->nt_old": {
+            "delta": -68569781.0,
+            "delta_pct": -50.47554527105164
+          }
+        },
+        "trend": "стабильный результат"
+      },
+      {
+        "metric": "dml.Total.DELETE",
+        "values": {
+          "nt_before": 2517941.0,
+          "nt_after": 4455676.0,
+          "nt_old": 5897098.0
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": 1937735.0,
+            "delta_pct": 76.95712488894696
+          },
+          "nt_after->nt_old": {
+            "delta": 1441422.0,
+            "delta_pct": 32.35024270166861
+          }
+        },
+        "trend": "стабильный результат"
+      },
+      {
+        "metric": "dml.Total.FETCH",
+        "values": {
+          "nt_before": 8225454680.0,
+          "nt_after": 9509738346.0,
+          "nt_old": 965854897.0
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": 1284283666.0,
+            "delta_pct": 15.613527956365811
+          },
+          "nt_after->nt_old": {
+            "delta": -8543883449.0,
+            "delta_pct": -89.8435176462425
+          }
+        },
+        "trend": "стабильный результат"
+      },
+      {
+        "metric": "dml.Total.INSERT",
+        "values": {
+          "nt_before": 9916495.0,
+          "nt_after": 18269131.0,
+          "nt_old": 136821891.0
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": 8352636.0,
+            "delta_pct": 84.22972027919138
+          },
+          "nt_after->nt_old": {
+            "delta": 118552760.0,
+            "delta_pct": 648.9239143339659
+          }
+        },
+        "trend": "стабильный результат"
+      },
+      {
+        "metric": "dml.Total.ROLLBACK",
+        "values": {
+          "nt_before": 19471.0,
+          "nt_after": 4373.0,
+          "nt_old": 3907.0
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": -15098.0,
+            "delta_pct": -77.54095834831287
+          },
+          "nt_after->nt_old": {
+            "delta": -466.0,
+            "delta_pct": -10.656300022867597
+          }
+        },
+        "trend": "становится лучше"
+      },
+      {
+        "metric": "dml.Total.UPDATE",
+        "values": {
+          "nt_before": 447271146.0,
+          "nt_after": 376281572.0,
+          "nt_old": 109237801.0
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": -70989574.0,
+            "delta_pct": -15.871708835874694
+          },
+          "nt_after->nt_old": {
+            "delta": -267043771.0,
+            "delta_pct": -70.96913345519881
+          }
+        },
+        "trend": "стабильный результат"
+      },
+      {
+        "metric": "dml.counteragent.COMMIT",
+        "values": {
+          "nt_before": null,
+          "nt_after": 135603182.0,
+          "nt_old": 67019224.0
+        },
+        "deltas": {
+          "nt_before->nt_after": null,
+          "nt_after->nt_old": {
+            "delta": -68583958.0,
+            "delta_pct": -50.57695327532948
+          }
+        },
+        "trend": "стабильный результат"
+      },
+      {
+        "metric": "dml.counteragent.DELETE",
+        "values": {
+          "nt_before": 2322038.0,
+          "nt_after": 4252897.0,
+          "nt_old": 5677656.0
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": 1930859.0,
+            "delta_pct": 83.15363486730192
+          },
+          "nt_after->nt_old": {
+            "delta": 1424759.0,
+            "delta_pct": 33.500905382848444
+          }
+        },
+        "trend": "стабильный результат"
+      },
+      {
+        "metric": "dml.counteragent.FETCH",
+        "values": {
+          "nt_before": 8050858991.0,
+          "nt_after": 9335288277.0,
+          "nt_old": 791447635.0
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": 1284429286.0,
+            "delta_pct": 15.95394090786902
+          },
+          "nt_after->nt_old": {
+            "delta": -8543840642.0,
+            "delta_pct": -91.52197970200936
+          }
+        },
+        "trend": "стабильный результат"
+      },
+      {
+        "metric": "dml.counteragent.INSERT",
+        "values": {
+          "nt_before": 9723591.0,
+          "nt_after": 18068126.0,
+          "nt_old": 136603247.0
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": 8344535.0,
+            "delta_pct": 85.81742074507247
+          },
+          "nt_after->nt_old": {
+            "delta": 118535121.0,
+            "delta_pct": 656.045463707747
+          }
+        },
+        "trend": "стабильный результат"
+      },
+      {
+        "metric": "dml.counteragent.ROLLBACK",
+        "values": {
+          "nt_before": 18389.0,
+          "nt_after": 3233.0,
+          "nt_old": 2646.0
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": -15156.0,
+            "delta_pct": -82.41883734841481
+          },
+          "nt_after->nt_old": {
+            "delta": -587.0,
+            "delta_pct": -18.156510980513456
+          }
+        },
+        "trend": "становится лучше"
+      },
+      {
+        "metric": "dml.counteragent.UPDATE",
+        "values": {
+          "nt_before": 447215608.0,
+          "nt_after": 376221066.0,
+          "nt_old": 109167757.0
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": -70994542.0,
+            "delta_pct": -15.874790756408483
+          },
+          "nt_after->nt_old": {
+            "delta": -267053309.0,
+            "delta_pct": -70.98308232426304
+          }
+        },
+        "trend": "стабильный результат"
+      },
+      {
+        "metric": "dml.postgres.COMMIT",
+        "values": {
+          "nt_before": 217174.0,
+          "nt_after": 244347.0,
+          "nt_old": 258524.0
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": 27173.0,
+            "delta_pct": 12.512087082247415
+          },
+          "nt_after->nt_old": {
+            "delta": 14177.0,
+            "delta_pct": 5.801994704252559
+          }
+        },
+        "trend": "стабильный результат"
+      },
+      {
+        "metric": "dml.postgres.DELETE",
+        "values": {
+          "nt_before": null,
+          "nt_after": 202779.0,
+          "nt_old": 219442.0
+        },
+        "deltas": {
+          "nt_before->nt_after": null,
+          "nt_after->nt_old": {
+            "delta": 16663.0,
+            "delta_pct": 8.21732033395963
+          }
+        },
+        "trend": "стабильный результат"
+      },
+      {
+        "metric": "dml.postgres.INSERT",
+        "values": {
+          "nt_before": null,
+          "nt_after": 201005.0,
+          "nt_old": 218644.0
+        },
+        "deltas": {
+          "nt_before->nt_after": null,
+          "nt_after->nt_old": {
+            "delta": 17639.0,
+            "delta_pct": 8.77540359692545
+          }
+        },
+        "trend": "стабильный результат"
+      },
+      {
+        "metric": "dml.postgres.ROLLBACK",
+        "values": {
+          "nt_before": 1082.0,
+          "nt_after": 1140.0,
+          "nt_old": 1261.0
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": 58.0,
+            "delta_pct": 5.360443622920518
+          },
+          "nt_after->nt_old": {
+            "delta": 121.0,
+            "delta_pct": 10.614035087719298
+          }
+        },
+        "trend": "становится хуже"
+      },
+      {
+        "metric": "dml.postgres.UPDATE",
+        "values": {
+          "nt_before": 55538.0,
+          "nt_after": 60506.0,
+          "nt_old": 70044.0
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": 4968.0,
+            "delta_pct": 8.945226691634556
+          },
+          "nt_after->nt_old": {
+            "delta": 9538.0,
+            "delta_pct": 15.763725911479852
+          }
+        },
+        "trend": "стабильный результат"
+      },
+      {
+        "metric": "queries.counteragent/as_admin",
+        "values": {
+          "nt_before": 661064.19,
+          "nt_after": 366977.99,
+          "nt_old": null
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": -6416.91,
+            "delta_pct": -100.0
+          },
+          "nt_after->nt_old": {
+            "delta": -10907.04,
+            "delta_pct": -100.0
+          }
+        },
+        "trend": "стабильный результат"
+      },
+      {
+        "metric": "sessions.Total.active_time",
+        "values": {
+          "nt_before": 6131643.53,
+          "nt_after": 4200455.83,
+          "nt_old": 537500.55
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": -1931187.7000000002,
+            "delta_pct": -31.49543332960193
+          },
+          "nt_after->nt_old": {
+            "delta": -3662955.2800000003,
+            "delta_pct": -87.203756645621
+          }
+        },
+        "trend": "становится лучше"
+      },
+      {
+        "metric": "sessions.Total.deadlocks",
+        "values": {
+          "nt_before": 913.0,
+          "nt_after": 52.0,
+          "nt_old": null
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": -861.0,
+            "delta_pct": -94.30449069003286
+          },
+          "nt_after->nt_old": {
+            "delta": -52.0,
+            "delta_pct": -100.0
+          }
+        },
+        "trend": "становится лучше"
+      },
+      {
+        "metric": "sessions.Total.idle_in_transaction_time",
+        "values": {
+          "nt_before": null,
+          "nt_after": 3040656.64,
+          "nt_old": 1178606.11
+        },
+        "deltas": {
+          "nt_before->nt_after": null,
+          "nt_after->nt_old": {
+            "delta": -1862050.53,
+            "delta_pct": -61.23843466916409
+          }
+        },
+        "trend": "становится лучше"
+      },
+      {
+        "metric": "sessions.Total.session_time",
+        "values": {
+          "nt_before": 34163492.17,
+          "nt_after": 32393171.8,
+          "nt_old": 26170837.21
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": -1770320.370000001,
+            "delta_pct": -5.181906935013433
+          },
+          "nt_after->nt_old": {
+            "delta": -6222334.59,
+            "delta_pct": -19.20878458095295
+          }
+        },
+        "trend": "становится лучше"
+      },
+      {
+        "metric": "sessions.Total.sessions",
+        "values": {
+          "nt_before": null,
+          "nt_after": 26492.0,
+          "nt_old": 23858.0
+        },
+        "deltas": {
+          "nt_before->nt_after": null,
+          "nt_after->nt_old": {
+            "delta": -2634.0,
+            "delta_pct": -9.942624188434245
+          }
+        },
+        "trend": "стабильный результат"
+      },
+      {
+        "metric": "sessions.Total.sessions_fatal",
+        "values": {
+          "nt_before": null,
+          "nt_after": 244.0,
+          "nt_old": null
+        },
+        "deltas": {
+          "nt_before->nt_after": null,
+          "nt_after->nt_old": {
+            "delta": -244.0,
+            "delta_pct": -100.0
+          }
+        },
+        "trend": "становится лучше"
+      },
+      {
+        "metric": "sessions.counteragent.active_time",
+        "values": {
+          "nt_before": 6128624.88,
+          "nt_after": 4198136.08,
+          "nt_old": 536415.05
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": -1930488.7999999998,
+            "delta_pct": -31.4995425205401
+          },
+          "nt_after->nt_old": {
+            "delta": -3661721.0300000003,
+            "delta_pct": -87.22254258132575
+          }
+        },
+        "trend": "становится лучше"
+      },
+      {
+        "metric": "sessions.counteragent.deadlocks",
+        "values": {
+          "nt_before": 913.0,
+          "nt_after": 52.0,
+          "nt_old": null
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": -861.0,
+            "delta_pct": -94.30449069003286
+          },
+          "nt_after->nt_old": {
+            "delta": -52.0,
+            "delta_pct": -100.0
+          }
+        },
+        "trend": "становится лучше"
+      },
+      {
+        "metric": "sessions.counteragent.idle_in_transaction_time",
+        "values": {
+          "nt_before": null,
+          "nt_after": 3040548.3,
+          "nt_old": 1178565.31
+        },
+        "deltas": {
+          "nt_before->nt_after": null,
+          "nt_after->nt_old": {
+            "delta": -1861982.9899999998,
+            "delta_pct": -61.23839539072607
+          }
+        },
+        "trend": "становится лучше"
+      },
+      {
+        "metric": "sessions.counteragent.session_time",
+        "values": {
+          "nt_before": 33695877.17,
+          "nt_after": 31898104.74,
+          "nt_old": 25618658.51
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": -1797772.4300000034,
+            "delta_pct": -5.335289005625264
+          },
+          "nt_after->nt_old": {
+            "delta": -6279446.229999997,
+            "delta_pct": -19.68595401257685
+          }
+        },
+        "trend": "становится лучше"
+      },
+      {
+        "metric": "sessions.counteragent.sessions",
+        "values": {
+          "nt_before": null,
+          "nt_after": 22814.0,
+          "nt_old": 19709.0
+        },
+        "deltas": {
+          "nt_before->nt_after": null,
+          "nt_after->nt_old": {
+            "delta": -3105.0,
+            "delta_pct": -13.610063995792057
+          }
+        },
+        "trend": "стабильный результат"
+      },
+      {
+        "metric": "sessions.counteragent.sessions_fatal",
+        "values": {
+          "nt_before": null,
+          "nt_after": 244.0,
+          "nt_old": null
+        },
+        "deltas": {
+          "nt_before->nt_after": null,
+          "nt_after->nt_old": {
+            "delta": -244.0,
+            "delta_pct": -100.0
+          }
+        },
+        "trend": "становится лучше"
+      },
+      {
+        "metric": "sessions.postgres.active_time",
+        "values": {
+          "nt_before": 3018.64,
+          "nt_after": 2319.75,
+          "nt_old": 1085.5
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": -698.8899999999999,
+            "delta_pct": -23.15247926218429
+          },
+          "nt_after->nt_old": {
+            "delta": -1234.25,
+            "delta_pct": -53.20616445737687
+          }
+        },
+        "trend": "становится лучше"
+      },
+      {
+        "metric": "sessions.postgres.idle_in_transaction_time",
+        "values": {
+          "nt_before": 142.77,
+          "nt_after": 108.34,
+          "nt_old": 40.81
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": -34.43000000000001,
+            "delta_pct": -24.11571058345591
+          },
+          "nt_after->nt_old": {
+            "delta": -67.53,
+            "delta_pct": -62.33154882776444
+          }
+        },
+        "trend": "становится лучше"
+      },
+      {
+        "metric": "sessions.postgres.session_time",
+        "values": {
+          "nt_before": 467615.0,
+          "nt_after": 495067.07,
+          "nt_old": 552178.71
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": 27452.070000000007,
+            "delta_pct": 5.870656416068776
+          },
+          "nt_after->nt_old": {
+            "delta": 57111.639999999956,
+            "delta_pct": 11.536141961532596
+          }
+        },
+        "trend": "становится хуже"
+      },
+      {
+        "metric": "sessions.postgres.sessions",
+        "values": {
+          "nt_before": 3496.0,
+          "nt_after": 3678.0,
+          "nt_old": 4149.0
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": 182.0,
+            "delta_pct": 5.205949656750572
+          },
+          "nt_after->nt_old": {
+            "delta": 471.0,
+            "delta_pct": 12.805872756933116
+          }
+        },
+        "trend": "стабильный результат"
+      },
+      {
+        "metric": "sessions.postgres.sessions_fatal",
+        "values": {
+          "nt_before": 2.0,
+          "nt_after": null,
+          "nt_old": null
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": -2.0,
+            "delta_pct": -100.0
+          },
+          "nt_after->nt_old": null
+        },
+        "trend": "становится лучше"
+      },
+      {
+        "metric": "tables.counteragent.counteragent.t_client.idx_scan",
+        "values": {
+          "nt_before": null,
+          "nt_after": 353738990.0,
+          "nt_old": 204564654.0
+        },
+        "deltas": {
+          "nt_before->nt_after": null,
+          "nt_after->nt_old": {
+            "delta": -149174336.0,
+            "delta_pct": -42.17073611252184
+          }
+        },
+        "trend": "стабильный результат"
+      },
+      {
+        "metric": "tables.counteragent.counteragent.t_client.n_tup_ins",
+        "values": {
+          "nt_before": 760000.0,
+          "nt_after": 4000000.0,
+          "nt_old": null
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": 3240000.0,
+            "delta_pct": 426.3157894736842
+          },
+          "nt_after->nt_old": null
+        },
+        "trend": "стабильный результат"
+      },
+      {
+        "metric": "tables.counteragent.counteragent.t_clientfeaturemapping.idx_scan",
+        "values": {
+          "nt_before": 4619434.0,
+          "nt_after": 4017957.0,
+          "nt_old": null
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": -601477.0,
+            "delta_pct": -13.020577845684125
+          },
+          "nt_after->nt_old": null
+        },
+        "trend": "стабильный результат"
+      },
+      {
+        "metric": "tables.counteragent.counteragent.t_feedback.idx_scan",
+        "values": {
+          "nt_before": null,
+          "nt_after": 74326716.0,
+          "nt_old": 24103019.0
+        },
+        "deltas": {
+          "nt_before->nt_after": null,
+          "nt_after->nt_old": {
+            "delta": -50223697.0,
+            "delta_pct": -67.57152704015606
+          }
+        },
+        "trend": "стабильный результат"
+      },
+      {
+        "metric": "tables.counteragent.counteragent.t_feedbackwaitinglist.idx_scan",
+        "values": {
+          "nt_before": 391706753.0,
+          "nt_after": 355896840.0,
+          "nt_old": 112454717.0
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": -35809913.0,
+            "delta_pct": -9.142020842311085
+          },
+          "nt_after->nt_old": {
+            "delta": -243442123.0,
+            "delta_pct": -68.40244015653525
+          }
+        },
+        "trend": "стабильный результат"
+      },
+      {
+        "metric": "tables.counteragent.counteragent.t_feedbackwaitinglist.n_tup_ins",
+        "values": {
+          "nt_before": 3291458.0,
+          "nt_after": 2640704.0,
+          "nt_old": null
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": -650754.0,
+            "delta_pct": -19.770995103081976
+          },
+          "nt_after->nt_old": null
+        },
+        "trend": "стабильный результат"
+      },
+      {
+        "metric": "tables.counteragent.counteragent.t_feedbackwaitinglist.n_tup_upd",
+        "values": {
+          "nt_before": 126531975.0,
+          "nt_after": 89998684.0,
+          "nt_old": 32946064.0
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": -36533291.0,
+            "delta_pct": -28.872773858149294
+          },
+          "nt_after->nt_old": {
+            "delta": -57052620.0,
+            "delta_pct": -63.39272694254063
+          }
+        },
+        "trend": "стабильный результат"
+      },
+      {
+        "metric": "tables.counteragent.counteragent.t_notificationcandidate.idx_scan",
+        "values": {
+          "nt_before": null,
+          "nt_after": 58890445.0,
+          "nt_old": 16903788.0
+        },
+        "deltas": {
+          "nt_before->nt_after": null,
+          "nt_after->nt_old": {
+            "delta": -41986657.0,
+            "delta_pct": -71.29621282365926
+          }
+        },
+        "trend": "стабильный результат"
+      },
+      {
+        "metric": "tables.counteragent.counteragent.t_repl_agglock_client.idx_scan",
+        "values": {
+          "nt_before": 63519950.0,
+          "nt_after": 70000000.0,
+          "nt_old": null
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": 6480050.0,
+            "delta_pct": 10.201598080603024
+          },
+          "nt_after->nt_old": null
+        },
+        "trend": "стабильный результат"
+      },
+      {
+        "metric": "tables.counteragent.counteragent.t_repl_agglock_client.n_tup_ins",
+        "values": {
+          "nt_before": 760000.0,
+          "nt_after": 4000000.0,
+          "nt_old": 35000000.0
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": 3240000.0,
+            "delta_pct": 426.3157894736842
+          },
+          "nt_after->nt_old": {
+            "delta": 31000000.0,
+            "delta_pct": 775.0
+          }
+        },
+        "trend": "стабильный результат"
+      },
+      {
+        "metric": "tables.counteragent.counteragent.t_repl_agglock_client.n_tup_upd",
+        "values": {
+          "nt_before": null,
+          "nt_after": 31000000.0,
+          "nt_old": null
+        },
+        "deltas": {
+          "nt_before->nt_after": null,
+          "nt_after->nt_old": {
+            "delta": -31000000.0,
+            "delta_pct": -100.0
+          }
+        },
+        "trend": "стабильный результат"
+      },
+      {
+        "metric": "tables.counteragent.counteragent.t_repl_agglock_feedbackwaitinglist.idx_scan",
+        "values": {
+          "nt_before": 263511432.0,
+          "nt_after": 189300064.0,
+          "nt_old": 76920758.0
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": -74211368.0,
+            "delta_pct": -28.162485185841955
+          },
+          "nt_after->nt_old": {
+            "delta": -112379306.0,
+            "delta_pct": -59.36569889379435
+          }
+        },
+        "trend": "стабильный результат"
+      },
+      {
+        "metric": "tables.counteragent.counteragent.t_repl_agglock_feedbackwaitinglist.n_tup_ins",
+        "values": {
+          "nt_before": 3281017.0,
+          "nt_after": 2639756.0,
+          "nt_old": 38460379.0
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": -641261.0,
+            "delta_pct": -19.544580232287732
+          },
+          "nt_after->nt_old": {
+            "delta": 35820623.0,
+            "delta_pct": 1356.9671969682047
+          }
+        },
+        "trend": "стабильный результат"
+      },
+      {
+        "metric": "tables.counteragent.counteragent.t_repl_agglock_feedbackwaitinglist.n_tup_upd",
+        "values": {
+          "nt_before": 128474660.0,
+          "nt_after": 92010273.0,
+          "nt_old": null
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": -36464387.0,
+            "delta_pct": -28.38255185886462
+          },
+          "nt_after->nt_old": {
+            "delta": -92010273.0,
+            "delta_pct": -100.0
+          }
+        },
+        "trend": "стабильный результат"
+      },
+      {
+        "metric": "tables.counteragent.counteragent.t_repl_agglock_transaction.idx_scan",
+        "values": {
+          "nt_before": 130756832.0,
+          "nt_after": 138000000.0,
+          "nt_old": 70000000.0
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": 7243168.0,
+            "delta_pct": 5.53941839153766
+          },
+          "nt_after->nt_old": {
+            "delta": -68000000.0,
+            "delta_pct": -49.27536231884058
+          }
+        },
+        "trend": "стабильный результат"
+      },
+      {
+        "metric": "tables.counteragent.counteragent.t_repl_agglock_transaction.n_tup_ins",
+        "values": {
+          "nt_before": 378488.0,
+          "nt_after": 2000000.0,
+          "nt_old": 35000000.0
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": 1621512.0,
+            "delta_pct": 428.4183382300099
+          },
+          "nt_after->nt_old": {
+            "delta": 33000000.0,
+            "delta_pct": 1650.0
+          }
+        },
+        "trend": "стабильный результат"
+      },
+      {
+        "metric": "tables.counteragent.counteragent.t_repl_agglock_transaction.n_tup_upd",
+        "values": {
+          "nt_before": null,
+          "nt_after": 67000000.0,
+          "nt_old": null
+        },
+        "deltas": {
+          "nt_before->nt_after": null,
+          "nt_after->nt_old": {
+            "delta": -67000000.0,
+            "delta_pct": -100.0
+          }
+        },
+        "trend": "стабильный результат"
+      },
+      {
+        "metric": "tables.counteragent.counteragent.t_transaction.idx_scan",
+        "values": {
+          "nt_before": null,
+          "nt_after": 206854826.0,
+          "nt_old": 103107105.0
+        },
+        "deltas": {
+          "nt_before->nt_after": null,
+          "nt_after->nt_old": {
+            "delta": -103747721.0,
+            "delta_pct": -50.15484676195082
+          }
+        },
+        "trend": "стабильный результат"
+      },
+      {
+        "metric": "tables.counteragent.counteragent.t_transaction.n_tup_del",
+        "values": {
+          "nt_before": null,
+          "nt_after": 2000000.0,
+          "nt_old": null
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": 2000000.0,
+            "delta_pct": null
+          },
+          "nt_after->nt_old": null
+        },
+        "trend": "изменения незначительны"
+      },
+      {
+        "metric": "tables.counteragent.counteragent.t_transaction.n_tup_ins",
+        "values": {
+          "nt_before": 378488.0,
+          "nt_after": 2000000.0,
+          "nt_old": null
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": 1621512.0,
+            "delta_pct": 428.4183382300099
+          },
+          "nt_after->nt_old": null
+        },
+        "trend": "стабильный результат"
+      },
+      {
+        "metric": "tables.counteragent.counteragent.t_transaction.n_tup_upd",
+        "values": {
+          "nt_before": null,
+          "nt_after": 65000000.0,
+          "nt_old": 33000000.0
+        },
+        "deltas": {
+          "nt_before->nt_after": null,
+          "nt_after->nt_old": {
+            "delta": -32000000.0,
+            "delta_pct": -49.23076923076923
+          }
+        },
+        "trend": "стабильный результат"
+      },
+      {
+        "metric": "tables.counteragent.pg_catalog.pg_statistic.idx_scan",
+        "values": {
+          "nt_before": 3930742.0,
+          "nt_after": 3142288.0,
+          "nt_old": null
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": -788454.0,
+            "delta_pct": -20.058655592252048
+          },
+          "nt_after->nt_old": null
+        },
+        "trend": "стабильный результат"
+      },
+      {
+        "metric": "wal.wal_buffers_full",
+        "values": {
+          "nt_before": 19453.0,
+          "nt_after": 39986.0,
+          "nt_old": 132212.0
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": 20533.0,
+            "delta_pct": 105.55184290340821
+          },
+          "nt_after->nt_old": {
+            "delta": 92226.0,
+            "delta_pct": 230.64572600410145
+          }
+        },
+        "trend": "становится хуже"
+      },
+      {
+        "metric": "wal.wal_bytes",
+        "values": {
+          "nt_before": 2752283715507.0,
+          "nt_after": 1758645861763.0,
+          "nt_old": 668997963270.0
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": -993637853744.0,
+            "delta_pct": -36.10230472046234
+          },
+          "nt_after->nt_old": {
+            "delta": -1089647898493.0,
+            "delta_pct": -61.959483838358125
+          }
+        },
+        "trend": "становится лучше"
+      },
+      {
+        "metric": "wal.wal_records",
+        "values": {
+          "nt_before": 2826136364.0,
+          "nt_after": 2436237022.0,
+          "nt_old": 1174300797.0
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": -389899342.0,
+            "delta_pct": -13.796197061353123
+          },
+          "nt_after->nt_old": {
+            "delta": -1261936225.0,
+            "delta_pct": -51.798581730936355
+          }
+        },
+        "trend": "становится лучше"
+      },
+      {
+        "metric": "wal.wal_sync",
+        "values": {
+          "nt_before": 5028688.0,
+          "nt_after": 5682947.0,
+          "nt_old": null
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": 654259.0,
+            "delta_pct": 13.010530778604679
+          },
+          "nt_after->nt_old": null
+        },
+        "trend": "становится хуже"
+      },
+      {
+        "metric": "wal.wal_write",
+        "values": {
+          "nt_before": 5125951.0,
+          "nt_after": 5833690.0,
+          "nt_old": 6398832.0
+        },
+        "deltas": {
+          "nt_before->nt_after": {
+            "delta": 707739.0,
+            "delta_pct": 13.806979426841966
+          },
+          "nt_after->nt_old": {
+            "delta": 565142.0,
+            "delta_pct": 9.687556246560925
+          }
+        },
+        "trend": "становится хуже"
+      }
+    ]
+  },
+  "rows": [
+    {
+      "parameter": "max_wal_size",
+      "old": "16384 (128.0 MB)",
+      "new": "16384 (128.0 MB)",
+      "delta_pct": -36.28,
+      "affected_metric": "checkpoints_req",
+      "direction": "increased",
+      "impact": "neutral",
+      "confidence": "medium",
+      "evidence_type": "probable",
+      "evidence_count": 2,
+      "workload_match_score": null,
+      "notes": "pairs=2; stability=0.500; effects=nt_before->nt_after:improved, nt_after->nt_old:degraded",
+      "stability_score": 0.5,
+      "delta_iqr_pct": 74.58
+    },
+    {
+      "parameter": "huge_pages",
+      "old": "—",
+      "new": "—",
+      "delta_pct": -32.31,
+      "affected_metric": "blk_read_time",
+      "direction": "changed",
+      "impact": "neutral",
+      "confidence": "medium",
+      "evidence_type": "probable",
+      "evidence_count": 2,
+      "workload_match_score": null,
+      "notes": "pairs=2; stability=0.000; effects=nt_before->nt_after:neutral, nt_after->nt_old:neutral",
+      "stability_score": 0.0,
+      "delta_iqr_pct": 55.1
+    },
+    {
+      "parameter": "shared_buffers",
+      "old": "1048576 (8192.0 MB)",
+      "new": "1048576 (8192.0 MB)",
+      "delta_pct": -32.31,
+      "affected_metric": "blks_read",
+      "direction": "increased",
+      "impact": "neutral",
+      "confidence": "medium",
+      "evidence_type": "probable",
+      "evidence_count": 2,
+      "workload_match_score": null,
+      "notes": "pairs=2; stability=0.500; effects=nt_before->nt_after:improved, nt_after->nt_old:degraded",
+      "stability_score": 0.5,
+      "delta_iqr_pct": 68.6
+    },
+    {
+      "parameter": "wal_buffers",
+      "old": "2048 (16.0 MB)",
+      "new": "2048 (16.0 MB)",
+      "delta_pct": 13.01,
+      "affected_metric": "wal_buffers_full",
+      "direction": "increased",
+      "impact": "neutral",
+      "confidence": "medium",
+      "evidence_type": "probable",
+      "evidence_count": 2,
+      "workload_match_score": null,
+      "notes": "pairs=2; stability=0.000; effects=nt_before->nt_after:neutral, nt_after->nt_old:neutral",
+      "stability_score": 0.0,
+      "delta_iqr_pct": 72.89
+    }
+  ]
+}

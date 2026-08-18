@@ -1,0 +1,112 @@
+h2. Выкатывать JAVA_TOOL_OPTIONS
+*Нет*
+
+h2. Что сделать сейчас
+# Есть CPU throttle, но нет CPU % of limits с обоих плеч. Критичность не снижаем, флаги не копируем.
+
+h3. Почему так
+* Плеч всегда два. Подов на одном плече: 2.
+* Рестарт контейнера: не рестартовал.
+* Память в тесте растёт: нет.
+* CPU throttle: да.
+* GC pause p95 320 мс, порог 250 мс; паузы выше порога.
+* Времена отклика пользователя в том же окне: да.
+
+h3. Что перепроверить
+* Снова снимите те же метрики в том же окне нагрузки и сравните с этим отчётом.
+
+h3. Ответы по дереву
+|| Вопрос || Ответ ||
+| Сколько подов этой АС на одном плече | 2 |
+| Почему рестартовал контейнер | не рестартовал |
+| Память в тесте растёт (рестарта ещё нет) | нет |
+| Есть CPU throttle | да |
+| GC pause p95, мс | 320 мс |
+| В том же окне росли времена отклика пользователя | да |
+
+{expand:Кандидаты флагов (не копировать)}
+|| Флаг || Было || Стало || Что делает || Что снять ||
+| -XX:+UseG1GC | включён | включён | Включает сборщик G1. | -XX:+UseG1GC |
+| -XX:MaxGCPauseMillis=200 | 250 | 200 | Целевая пауза G1 в мс. Ниже — короче стопы, обычно больше работы GC. | -XX:MaxGCPauseMillis |
+| -XX:InitiatingHeapOccupancyPercent=30 | не задан | 30 | С какой доли заполнения heap G1 начинает concurrent cycle. Ниже — цикл раньше, меньше риск длинной mixed-паузы. | -XX:InitiatingHeapOccupancyPercent |
+{expand}
+
+h2. Цель и ответы дерева
+*Система:* DEMO_CounterAgent
+*Pod:* counteragent-demo
+*Контейнер:* application
+*Подов на одном плече:* 2 (плеч всегда 2)
+*Рестарт:* не рестартовал
+*CPU throttle:* да
+
+|| Параметр || Значение ||
+| gc_pause_p95_ms | 320.0 |
+| user_latency_grew | да |
+
+
+h2. Рекомендации по JVM-тюнингу
+*Система:* DEMO_CounterAgent
+*Целевой pod:* counteragent-demo
+*Целевой контейнер:* application
+
+h3. Ресурсы и JVM настройки контейнера (актуально для настройки)
+* Нет изменений ресурсов или JVM-флагов — смотрите рекомендации ниже.
+
+h3. Контекст рантайма
+|| Параметр || Значение ||
+| JDK version | N/A |
+| Spring Boot version | N/A |
+| Heap used (MiB) | N/A |
+| OldGen used (MiB) | N/A |
+| OldGen capacity (MiB) | N/A |
+| GC pause p95 (ms) | 320.0 |
+| GC pause p99 (ms) | N/A |
+| GC time ratio (%) | N/A |
+| Container memory working set (MiB) | N/A |
+| Container memory limit (MiB) | 8192 |
+
+h3. Findings
+* *[HIGH]* gc.long_pause_p95: GC p95 выше порога.
+** gc_pause_p95_ms: 320.0
+
+h3. Рекомендованные Java Tool Options
+h4. Рекомендация 1: Снизьте GC p95
+*Обоснование:* GC p95 выше порога профиля.
+*Уверенность:* low
+*Оценка доказательности:* 33/100
+*Оценка риска:* 45/100
+*Ожидаемый эффект:* короче хвост задержки
+*Окно верификации:* 30–60 мин после выкатки
+*Нужна платформенная эскалация:* No
+*План отката:*
+** Rollback to previous JVM option set if SLA worsens.
+*Примечания:*
+** Collect GC logs for 30-60 minutes after rollout.
+** Tune G1 pause target and initiating occupancy.
+** Compare p95 and p99 against baseline.
+** кандидат: -XX:+UseG1GC
+** кандидат: -XX:MaxGCPauseMillis=200
+** кандидат: -XX:InitiatingHeapOccupancyPercent=30
+
+
+h3. Инженерный план валидации
+# Apply recommended JVM options in test/stage environment first. Keep previous values for rollback.
+# Run at least one representative load profile and compare with baseline metrics collected before the change.
+# If no measurable improvement after the observation window, set status to предыдущая попытка тюнинга не дала эффекта and prepare escalation to dump analysis.
+
+h3. Риски и побочные эффекты изменений
+* Any JVM option change can shift latency and throughput profile; always compare SLA/SLO against baseline.
+* Rollback plan is mandatory: keep previous JVM flags and resource limits so the team can revert quickly.
+
+h3. Правило эскалации
+* If tuning recommendations do not improve GC/heap/memory-pressure metrics in the defined observation window, escalate to development team for heap dump and memory analysis.
+
+
+h3. Контекст прогона
+*Целевой контейнер:* application
+
+h3. Результат анализа
+* Findings: 1; рекомендаций: 1.
+
+h3. Предлагаемые изменения (Copy/Paste)
+* Копируемую строку JAVA_TOOL_OPTIONS не даём — см. кандидатов в Expand выше.

@@ -1,0 +1,152 @@
+h1. pg_profile: валидация НТ vs ПРОМ
+
+{warning:title=ПРОГОН НЕВАЛИДЕН}
+Defined settings GUC расходятся: *6* критичных отличий.
+Сравнение метрик *не следует* использовать до выравнивания GUC.
+{warning}
+
+h2. Параметры сравнения
+
+||Параметр||Значение||
+|Дата формирования|2026-08-13 17:53|
+|НТ отчёт|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
+|ПРОМ отчёт|pgprofile_srv=10_3_81_94_from=2026_08_12_16_00_to=2026_08_13_08.html|
+|НТ интервал|16.5 ч|
+|ПРОМ интервал|16.5 ч|
+|Порог расхождения|>= 5%|
+|GUC валидность|НЕВАЛИДНО|
+|Справочно: объём WAL/операций|60|
+|Предупреждения производительности|36|
+
+h2. Критичные расхождения GUC
+
+||Параметр||НТ||ПРОМ||Статус||
+|commit_timestamp_buffers|976|1024|DIFFER|
+|shared_buffers|504320|537600|DIFFER|
+|shared_memory_size|4452|4724|DIFFER|
+|shared_memory_size_in_huge_pages|2226|2362|DIFFER|
+|subtransaction_buffers|976|1024|DIFFER|
+|transaction_buffers|976|1024|DIFFER|
+
+h2. Справочно: runtime / метаданные
+
+||Параметр||НТ||ПРОМ||Статус||
+|pg_conf_load_time|2026-08-10 12:11:58.339478+03|2026-08-12 13:51:51.80184+03|DIFFER|
+|pg_postmaster_start_time|2026-08-10 12:10:53.521971+03|2026-08-12 13:50:49.898345+03|DIFFER|
+
+h2. Справочно: DML операции
+
+||Метрика||nt1||prod1||Delta||
+|Total.COMMIT|9.46M (573.23K/h)|9.94M (602.69K/h)|+486.13K (+5.1%)|
+|Total.FETCH|157.64M (9.55M/h)|149.00M (9.03M/h)|-8.64M (-5.5%)|
+|postgres.COMMIT|340.17K (20.62K/h)|238.73K (14.47K/h)|-101.44K (-29.8%)|
+|postgres.FETCH|151.80M (9.20M/h)|141.09M (8.55M/h)|-10.71M (-7.1%)|
+|statecontracts.COMMIT|9.12M (552.61K/h)|9.71M (588.22K/h)|+587.57K (+6.4%)|
+|statecontracts.FETCH|5.84M (353.67K/h)|7.91M (479.48K/h)|+2.08M (+35.6%)|
+
+h2. Справочно: checkpoints (объём)
+
+||Метрика||nt1||prod1||Delta||
+|buffers_checkpoint|11.70M (708.98K/h)|12.51M (758.12K/h)|+810.90K (+6.9%)|
+|checkpoints_req|39 (2.36/h)|30 (1.82/h)|-9 (-23.1%)|
+|checkpoints_timed|7 (0.42/h)|14 (0.85/h)|+7 (+100.0%)|
+
+h2. Справочно: DML по таблицам
+
+||Метрика||nt1||prod1||Delta||
+|postgres.pg_catalog.pg_db_role_setting.seq_scan|3.00M (182.02K/h)|1.82M (110.23K/h)|-1.18M (-39.4%)|
+|statecontracts.pg_catalog.pg_db_role_setting.seq_scan|3.00M (182.02K/h)|1.82M (110.23K/h)|-1.18M (-39.4%)|
+|postgres.pg_catalog.pg_index.idx_scan|580.26K (35.17K/h)|368.09K (22.31K/h)|-212.17K (-36.6%)|
+|statecontracts.pg_catalog.pg_database.seq_scan|241.50K (14.64K/h)|42.59K (2.58K/h)|-198.91K (-82.4%)|
+|postgres.pg_catalog.pg_database.seq_scan|241.50K (14.64K/h)|64.46K (3.91K/h)|-177.04K (-73.3%)|
+|statecontracts.pg_catalog.pg_database.idx_scan|189.88K (11.51K/h)|34.03K (2.06K/h)|-155.85K (-82.1%)|
+|postgres.pg_catalog.pg_database.idx_scan|189.88K (11.51K/h)|54.08K (3.28K/h)|-135.80K (-71.5%)|
+|statecontracts.pg_catalog.pg_attribute.idx_scan|568.98K (34.48K/h)|689.49K (41.79K/h)|+120.52K (+21.2%)|
+|statecontracts.pg_catalog.pg_class.idx_scan|506.03K (30.67K/h)|588.19K (35.65K/h)|+82.17K (+16.2%)|
+|statecontracts.pg_catalog.pg_statistic.idx_scan|1.10M (66.83K/h)|1.17M (71.02K/h)|+69.09K (+6.3%)|
+|postgres.pgse_profile.last_stat_tables_srv4.idx_scan|239.74K (14.53K/h)|221.68K (13.44K/h)|-18.05K (-7.5%)|
+|postgres.pg_catalog.pg_class.seq_scan|32.40K (1.96K/h)|27.36K (1.66K/h)|-5.03K (-15.5%)|
+|postgres.pg_catalog.pg_index.seq_scan|7.37K (446.36/h)|4.83K (292.85/h)|-2.53K (-34.4%)|
+|postgres.pgse_profile.sample_stat_tablespaces.idx_scan|12.68K (768.36/h)|14.01K (848.79/h)|+1.33K (+10.5%)|
+|statecontracts.statecontracts.t_value.seq_scan|1.19K (71.88/h)|68 (4.12/h)|-1.12K (-94.3%)|
+
+h2. Checkpoints — предупреждения
+
+||Метрика||nt1||prod1||Delta||
+|checkpoint_sync_time|3.5s (0.2s/h)|4.0s (0.2s/h)|+0.5s (+13.6%)|
+|maxwritten_clean|80.73K (4.89K/h)|63.11K (3.83K/h)|-17.61K (-21.8%)|
+
+h2. Cache — предупреждения
+
+||Метрика||nt1||prod1||Delta||
+|Total.blk_write_time|39.0s (2.4s/h)|28.8s (1.7s/h)|-10.2s (-26.2%)|
+|postgres.blks_read|96.77K (5.86K/h)|122.78K (7.44K/h)|+26.01K (+26.9%)|
+|postgres.blk_read_time|24.0s (1.5s/h)|28.8s (1.7s/h)|+4.8s (+19.9%)|
+|postgres.blk_write_time|0.0s (0.0s/h)|0.2s (0.0s/h)|+0.2s (+1600.0%)|
+|statecontracts.blk_read_time|260.5s (15.8s/h)|244.7s (14.8s/h)|-15.8s (-6.0%)|
+|statecontracts.blk_write_time|39.0s (2.4s/h)|28.7s (1.7s/h)|-10.4s (-26.6%)|
+
+h2. Справочно: SQL — объём и calls
+
+||Запрос||Параметр||nt1||prod1||Delta||
+|statecontracts/as_admin|total_time|26.5s (1.6s/h)|25.0s (1.5s/h)|-1.5s (-5.7%)|
+|statecontracts/as_admin|wal_bytes|642.13M (38.92M/h)|-|-642.13M (-100.0%)|
+|statecontracts/as_admin|wal_bytes|194.02M (11.76M/h)|680.75M (41.26M/h)|+486.74M (+250.9%)|
+|postgres/postgres|wal_bytes|373.53M (22.64M/h)|446.20M (27.04M/h)|+72.67M (+19.5%)|
+|statecontracts/as_admin|calls|-|147.07K (8.91K/h)|+147.07K|
+|statecontracts/as_admin|total_time|-|6.5s (0.4s/h)|+6.5s|
+|statecontracts/as_admin|shared_blks_read|-|24 (1.45/h)|+24|
+|postgres/postgres|calls|-|1 (0.06/h)|+1|
+|postgres/postgres|total_time|-|0.0s (0.0s/h)|+0.0s|
+|postgres/postgres|wal_bytes|-|127.75K (7.74K/h)|+127.75K|
+|postgres/postgres|shared_blks_read|-|34 (2.06/h)|+34|
+|statecontracts/as_admin|calls|-|1 (0.06/h)|+1|
+|statecontracts/as_admin|total_time|-|0.0s (0.0s/h)|+0.0s|
+|statecontracts/as_admin|wal_bytes|-|77.03K (4.67K/h)|+77.03K|
+|statecontracts/as_admin|shared_blks_read|-|33 (2/h)|+33|
+|statecontracts/as_admin|calls|-|60.99K (3.70K/h)|+60.99K|
+|statecontracts/as_admin|total_time|-|3.0s (0.2s/h)|+3.0s|
+|statecontracts/as_admin|shared_blks_read|-|4 (0.24/h)|+4|
+|statecontracts/as_admin|calls|-|60.68K (3.68K/h)|+60.68K|
+|statecontracts/as_admin|total_time|-|2.7s (0.2s/h)|+2.7s|
+|statecontracts/as_admin|shared_blks_read|-|8 (0.48/h)|+8|
+|postgres/"sa-d00000011757"|calls|118.62K (7.19K/h)|68.72K (4.16K/h)|-49.91K (-42.1%)|
+|postgres/"sa-d00000011757"|total_time|270.8s (16.4s/h)|156.7s (9.5s/h)|-114.1s (-42.1%)|
+|postgres/"sa-d00000011757"|calls|5.94K (359.94/h)|3.44K (208.73/h)|-2.50K (-42.0%)|
+|postgres/"sa-d00000011757"|total_time|5.0s (0.3s/h)|2.8s (0.2s/h)|-2.2s (-44.8%)|
+|postgres/"sa-d00000011757"|wal_bytes|1.61K (97.45/h)|39.45K (2.39K/h)|+37.84K (+2353.5%)|
+|statecontracts/as_admin|calls|37.10K (2.25K/h)|-|-37.10K (-100.0%)|
+|statecontracts/as_admin|total_time|0.7s (0.0s/h)|-|-0.7s (-100.0%)|
+|statecontracts/as_admin|wal_bytes|261.51K (15.85K/h)|293.59K (17.79K/h)|+32.08K (+12.3%)|
+
+h2. SQL — производительность (mean/max time)
+
+||Запрос||Параметр||nt1||prod1||Delta||
+|statecontracts/as_admin|mean_exec_time|26526.6ms|25020.3ms|-1506.3ms (-5.7%)|
+|statecontracts/as_admin|max_exec_time|26526.6ms|25020.3ms|-1506.3ms (-5.7%)|
+|postgres/postgres|max_exec_time|12758.8ms|11140.5ms|-1618.3ms (-12.7%)|
+|statecontracts/as_admin|mean_exec_time|-|0.0ms|+0.0ms|
+|statecontracts/as_admin|max_exec_time|-|8.3ms|+8.3ms|
+|postgres/postgres|mean_exec_time|-|21.6ms|+21.6ms|
+|postgres/postgres|max_exec_time|-|21.6ms|+21.6ms|
+|statecontracts/as_admin|mean_exec_time|-|15.0ms|+15.0ms|
+|statecontracts/as_admin|max_exec_time|-|15.0ms|+15.0ms|
+|statecontracts/as_admin|mean_exec_time|-|0.1ms|+0.1ms|
+|statecontracts/as_admin|max_exec_time|-|8.8ms|+8.8ms|
+|statecontracts/as_admin|mean_exec_time|-|0.0ms|+0.0ms|
+|statecontracts/as_admin|max_exec_time|-|7.7ms|+7.7ms|
+|postgres/"sa-d00000011757"|max_exec_time|51.4ms|37.0ms|-14.4ms (-28.1%)|
+|postgres/"sa-d00000011757"|max_exec_time|8.8ms|5.9ms|-2.9ms (-33.2%)|
+|statecontracts/as_admin|mean_exec_time|0.0ms|-|-0.0ms (-100.0%)|
+|statecontracts/as_admin|max_exec_time|0.8ms|-|-0.8ms (-100.0%)|
+|statecontracts/as_admin|max_exec_time|2.3ms|16.0ms|+13.8ms (+608.8%)|
+|postgres/zabbix_oasubd|mean_exec_time|0.0ms|-|-0.0ms (-100.0%)|
+|postgres/zabbix_oasubd|max_exec_time|1.2ms|-|-1.2ms (-100.0%)|
+
+{info:title=О документе}
+Таблицы сформированы Python (compare_nt_prod). Краткая интерпретация — разделы ниже от ИИ.
+{info}
+
+----
+
+_Ниже — вывод ИИ (Confluence Wiki Markup). Вставьте ответ gigacli или merge_confluence.py._

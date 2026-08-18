@@ -1,19 +1,35 @@
 {
   "containers": {
     "app::application": {
-      "gc_pause_p95_ms": 250.0,
-      "gc_pause_p99_ms": null,
-      "gc_time_ratio_percent": null,
-      "container_memory_usage_percent": 75.0,
-      "heap_used_mib": 2048,
+      "gc_pause_p95_ms": 200.0,
+      "heap_used_mib": 300,
       "heap_used_percent": null,
       "old_gen_used_mib": null,
       "old_gen_capacity_mib": null,
-      "old_gen_used_percent": null,
-      "new_gen_used_mib": null,
-      "new_gen_capacity_mib": null,
-      "new_gen_used_percent": null,
-      "updated_at": "2026-07-24T09:23:50Z"
+      "old_gen_used_percent": 30.0,
+      "container_memory_usage_percent": 15.0,
+      "tree": {
+        "pods_per_shoulder": 2,
+        "restart_kind": "none",
+        "memory_cause_closed": "unknown",
+        "heap_growing": "yes",
+        "heap_growth_percent": 5.0,
+        "heap_growth_hours": 2.0,
+        "growth_of": "container_rss",
+        "gc_ran_in_window": "no",
+        "heap_used_before_gc_mib": null,
+        "heap_used_after_gc_mib": null,
+        "oldgen_returned_after_gc": "unknown",
+        "cpu_throttled": "no",
+        "cpu_pct_limits_shoulder_1": null,
+        "cpu_pct_limits_shoulder_2": null,
+        "user_latency_grew": "unknown",
+        "user_latency_p95_ms": null,
+        "pauses_coincide_throttle": "unknown",
+        "post_gc_floor_rising": "unknown",
+        "gc_cpu_spike_sla": "unknown"
+      },
+      "updated_at": "2026-08-18T16:12:10Z"
     },
     "app::istioProxy": {
       "gc_pause_p95_ms": 250,

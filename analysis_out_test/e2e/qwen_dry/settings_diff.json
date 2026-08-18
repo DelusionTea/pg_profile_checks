@@ -1,0 +1,381 @@
+{
+  "type": "settings_diff",
+  "contract": {
+    "schema": "settings_diff_v1",
+    "schema_version": "1.0"
+  },
+  "run_a": {
+    "run_id": "NT",
+    "path": "/Users/svetlanachernysheva/Documents/pg_profile_checks/resources/pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html",
+    "filename": "pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html",
+    "meta": {
+      "path": "/Users/svetlanachernysheva/Documents/pg_profile_checks/resources/pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html",
+      "filename": "pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html",
+      "server": "10.3.81.94",
+      "from": "2026 08 11 16 30",
+      "to": "2026 08 12 09",
+      "version": "PostgreSQL 15.5 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 8.5.0 20210514 (Platform V SberLinux 8.5.0-28), 64-bit"
+    }
+  },
+  "run_b": {
+    "run_id": "PROD",
+    "path": "/Users/svetlanachernysheva/Documents/pg_profile_checks/resources/pgprofile_srv=10_3_81_94_from=2026_08_12_16_00_to=2026_08_13_08.html",
+    "filename": "pgprofile_srv=10_3_81_94_from=2026_08_12_16_00_to=2026_08_13_08.html",
+    "meta": {
+      "path": "/Users/svetlanachernysheva/Documents/pg_profile_checks/resources/pgprofile_srv=10_3_81_94_from=2026_08_12_16_00_to=2026_08_13_08.html",
+      "filename": "pgprofile_srv=10_3_81_94_from=2026_08_12_16_00_to=2026_08_13_08.html",
+      "server": "10.3.81.94",
+      "from": "2026 08 12 16 00",
+      "to": "2026 08 13 08",
+      "version": "PostgreSQL 15.5 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 8.5.0 20210514 (Platform V SberLinux 8.5.0-28), 64-bit"
+    }
+  },
+  "run_identity": {
+    "mode": "pair",
+    "runs": [
+      {
+        "role": "before",
+        "run_id": "NT",
+        "server": "10.3.81.94",
+        "report_start": "2026 08 11 16 30",
+        "report_end": "2026 08 12 09",
+        "interval_hours": null
+      },
+      {
+        "role": "after",
+        "run_id": "PROD",
+        "server": "10.3.81.94",
+        "report_start": "2026 08 12 16 00",
+        "report_end": "2026 08 13 08",
+        "interval_hours": null
+      }
+    ]
+  },
+  "workload_match": {
+    "workload_match_score": 1.0,
+    "level": "high",
+    "components": {
+      "interval_similarity": null,
+      "server_similarity": 1.0
+    },
+    "notes": "Higher score means better run comparability for influence interpretation."
+  },
+  "confidence_meta": {
+    "mode": "pair",
+    "changed_params_count": 8,
+    "changed_params_threshold": 10,
+    "workload_match_score": 1.0,
+    "isolated_change": false,
+    "confidence": "medium",
+    "evidence_type": "probable",
+    "proven_criteria": {
+      "requires_isolated_change": true,
+      "requires_changed_params_count": 1,
+      "requires_workload_match_score_at_least": 0.85
+    },
+    "notes": "Confidence baseline for pair comparison without isolated causality proof."
+  },
+  "settings_changes": [
+    {
+      "parameter": "commit_timestamp_buffers",
+      "status": "DIFFER",
+      "old": "976",
+      "new": "1024"
+    },
+    {
+      "parameter": "pg_conf_load_time",
+      "status": "DIFFER",
+      "old": "2026-08-10 12:11:58.339478+03",
+      "new": "2026-08-12 13:51:51.80184+03"
+    },
+    {
+      "parameter": "pg_postmaster_start_time",
+      "status": "DIFFER",
+      "old": "2026-08-10 12:10:53.521971+03",
+      "new": "2026-08-12 13:50:49.898345+03"
+    },
+    {
+      "parameter": "shared_buffers",
+      "status": "DIFFER",
+      "old": "504320",
+      "new": "537600"
+    },
+    {
+      "parameter": "shared_memory_size",
+      "status": "DIFFER",
+      "old": "4452",
+      "new": "4724"
+    },
+    {
+      "parameter": "shared_memory_size_in_huge_pages",
+      "status": "DIFFER",
+      "old": "2226",
+      "new": "2362"
+    },
+    {
+      "parameter": "subtransaction_buffers",
+      "status": "DIFFER",
+      "old": "976",
+      "new": "1024"
+    },
+    {
+      "parameter": "transaction_buffers",
+      "status": "DIFFER",
+      "old": "976",
+      "new": "1024"
+    }
+  ],
+  "influence_rows": [
+    {
+      "parameter": "commit_timestamp_buffers",
+      "old": "976",
+      "new": "1024",
+      "delta_pct": null,
+      "affected_metric": "",
+      "direction": "flat",
+      "metric_direction": "flat",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 0,
+      "workload_match_score": 1.0,
+      "notes": "Confidence baseline for pair comparison without isolated causality proof. No known link between this parameter and the compared metrics.",
+      "confidence_reasons": [
+        "unattributed; confidence downgraded to low"
+      ]
+    },
+    {
+      "parameter": "pg_conf_load_time",
+      "old": "2026-08-10 12:11:58.339478+03",
+      "new": "2026-08-12 13:51:51.80184+03",
+      "delta_pct": null,
+      "affected_metric": "",
+      "direction": "flat",
+      "metric_direction": "flat",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 0,
+      "workload_match_score": 1.0,
+      "notes": "Confidence baseline for pair comparison without isolated causality proof. No known link between this parameter and the compared metrics.",
+      "confidence_reasons": [
+        "unattributed; confidence downgraded to low"
+      ]
+    },
+    {
+      "parameter": "pg_postmaster_start_time",
+      "old": "2026-08-10 12:10:53.521971+03",
+      "new": "2026-08-12 13:50:49.898345+03",
+      "delta_pct": null,
+      "affected_metric": "",
+      "direction": "flat",
+      "metric_direction": "flat",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 0,
+      "workload_match_score": 1.0,
+      "notes": "Confidence baseline for pair comparison without isolated causality proof. No known link between this parameter and the compared metrics.",
+      "confidence_reasons": [
+        "unattributed; confidence downgraded to low"
+      ]
+    },
+    {
+      "parameter": "shared_buffers",
+      "old": "504320",
+      "new": "537600",
+      "delta_pct": 26.883687283625278,
+      "affected_metric": "cache.postgres.blks_read",
+      "direction": "up",
+      "metric_direction": "up",
+      "impact": "degraded",
+      "confidence": "medium",
+      "evidence_type": "probable",
+      "evidence_count": 1,
+      "workload_match_score": 1.0,
+      "notes": "Confidence baseline for pair comparison without isolated causality proof. Hint matched 3 metrics; evidence_count is 1 if attributed.",
+      "confidence_reasons": [
+        "Confidence baseline for pair comparison without isolated causality proof."
+      ]
+    },
+    {
+      "parameter": "shared_memory_size",
+      "old": "4452",
+      "new": "4724",
+      "delta_pct": null,
+      "affected_metric": "",
+      "direction": "flat",
+      "metric_direction": "flat",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 0,
+      "workload_match_score": 1.0,
+      "notes": "Confidence baseline for pair comparison without isolated causality proof. No known link between this parameter and the compared metrics.",
+      "confidence_reasons": [
+        "unattributed; confidence downgraded to low"
+      ]
+    },
+    {
+      "parameter": "shared_memory_size_in_huge_pages",
+      "old": "2226",
+      "new": "2362",
+      "delta_pct": null,
+      "affected_metric": "",
+      "direction": "flat",
+      "metric_direction": "flat",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 0,
+      "workload_match_score": 1.0,
+      "notes": "Confidence baseline for pair comparison without isolated causality proof. No known link between this parameter and the compared metrics.",
+      "confidence_reasons": [
+        "unattributed; confidence downgraded to low"
+      ]
+    },
+    {
+      "parameter": "subtransaction_buffers",
+      "old": "976",
+      "new": "1024",
+      "delta_pct": null,
+      "affected_metric": "",
+      "direction": "flat",
+      "metric_direction": "flat",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 0,
+      "workload_match_score": 1.0,
+      "notes": "Confidence baseline for pair comparison without isolated causality proof. No known link between this parameter and the compared metrics.",
+      "confidence_reasons": [
+        "unattributed; confidence downgraded to low"
+      ]
+    },
+    {
+      "parameter": "transaction_buffers",
+      "old": "976",
+      "new": "1024",
+      "delta_pct": null,
+      "affected_metric": "",
+      "direction": "flat",
+      "metric_direction": "flat",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 0,
+      "workload_match_score": 1.0,
+      "notes": "Confidence baseline for pair comparison without isolated causality proof. No known link between this parameter and the compared metrics.",
+      "confidence_reasons": [
+        "unattributed; confidence downgraded to low"
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "id": "settings.differ.commit_timestamp_buffers",
+      "category": "settings",
+      "severity": "warning",
+      "message": "commit_timestamp_buffers",
+      "details": {
+        "status": "DIFFER",
+        "value_a": "976",
+        "value_b": "1024",
+        "issue_level": "critical"
+      }
+    },
+    {
+      "id": "settings.differ.shared_buffers",
+      "category": "settings",
+      "severity": "warning",
+      "message": "shared_buffers",
+      "details": {
+        "status": "DIFFER",
+        "value_a": "504320",
+        "value_b": "537600",
+        "issue_level": "critical"
+      }
+    },
+    {
+      "id": "settings.differ.shared_memory_size",
+      "category": "settings",
+      "severity": "warning",
+      "message": "shared_memory_size",
+      "details": {
+        "status": "DIFFER",
+        "value_a": "4452",
+        "value_b": "4724",
+        "issue_level": "critical"
+      }
+    },
+    {
+      "id": "settings.differ.shared_memory_size_in_huge_pages",
+      "category": "settings",
+      "severity": "warning",
+      "message": "shared_memory_size_in_huge_pages",
+      "details": {
+        "status": "DIFFER",
+        "value_a": "2226",
+        "value_b": "2362",
+        "issue_level": "critical"
+      }
+    },
+    {
+      "id": "settings.differ.subtransaction_buffers",
+      "category": "settings",
+      "severity": "warning",
+      "message": "subtransaction_buffers",
+      "details": {
+        "status": "DIFFER",
+        "value_a": "976",
+        "value_b": "1024",
+        "issue_level": "critical"
+      }
+    },
+    {
+      "id": "settings.differ.transaction_buffers",
+      "category": "settings",
+      "severity": "warning",
+      "message": "transaction_buffers",
+      "details": {
+        "status": "DIFFER",
+        "value_a": "976",
+        "value_b": "1024",
+        "issue_level": "critical"
+      }
+    },
+    {
+      "id": "settings.differ.pg_conf_load_time",
+      "category": "settings",
+      "severity": "info",
+      "message": "pg_conf_load_time",
+      "details": {
+        "status": "DIFFER",
+        "value_a": "2026-08-10 12:11:58.339478+03",
+        "value_b": "2026-08-12 13:51:51.80184+03",
+        "issue_level": "informational"
+      }
+    },
+    {
+      "id": "settings.differ.pg_postmaster_start_time",
+      "category": "settings",
+      "severity": "info",
+      "message": "pg_postmaster_start_time",
+      "details": {
+        "status": "DIFFER",
+        "value_a": "2026-08-10 12:10:53.521971+03",
+        "value_b": "2026-08-12 13:50:49.898345+03",
+        "issue_level": "informational"
+      }
+    }
+  ],
+  "summary": {
+    "differ": 8,
+    "only_a": 0,
+    "only_b": 0,
+    "total_issues": 8,
+    "critical_count": 6,
+    "informational_count": 2,
+    "settings_valid": false
+  }
+}

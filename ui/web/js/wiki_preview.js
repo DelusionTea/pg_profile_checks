@@ -21,8 +21,41 @@
     );
   }
 
+  /**
+   * Split a wiki table row into cells.
+   * Pipes inside macros `{...}`, links `[...]` or escaped as `\|` / `&#124;`
+   * are cell content, not separators.
+   */
+  function splitTableCells(line) {
+    const cells = [];
+    let cur = "";
+    let depth = 0;
+    for (let i = 0; i < line.length; i += 1) {
+      const ch = line[i];
+      if (ch === "\\" && line[i + 1] === "|") {
+        cur += "|";
+        i += 1;
+        continue;
+      }
+      if (ch === "{" || ch === "[") depth += 1;
+      else if (ch === "}" || ch === "]") depth = Math.max(0, depth - 1);
+      if (ch === "|" && depth === 0) {
+        if (line[i + 1] === "|") i += 1;
+        cells.push(cur);
+        cur = "";
+        continue;
+      }
+      cur += ch;
+    }
+    cells.push(cur);
+    if (cells.length && cells[0].trim() === "") cells.shift();
+    if (cells.length && cells[cells.length - 1].trim() === "") cells.pop();
+    return cells;
+  }
+
   function inlineFormat(text) {
     let s = escapeHtml(text);
+    s = s.replace(/&amp;#124;/g, "|");
     s = s.replace(
       /\{status:colour=([^|]+)\|title=([^}|]+)[^}]*\}/g,
       function (_, colour, title) {
@@ -60,13 +93,14 @@
 
     function flushTable() {
       if (inTable) {
-        out.push("</tbody></table>");
         inTable = false;
+        push("</tbody></table>");
       }
     }
 
     function flushPanel() {
       if (!inPanel) return;
+      flushTable();
       out.push(
         '<div class="wiki-panel wiki-panel-' +
           escapeHtml(inPanel.macro) +
@@ -82,6 +116,7 @@
 
     function flushExpand() {
       if (!inExpand) return;
+      flushTable();
       out.push(
         "<details class=\"wiki-expand\"><summary>" +
           escapeHtml(inExpand.title) +
@@ -182,7 +217,7 @@
 
       if (line.indexOf("||") === 0) {
         flushTable();
-        const cells = line.split("||").filter(Boolean);
+        const cells = splitTableCells(line);
         push(
           '<table class="wiki-table"><thead><tr>' +
             cells.map((c) => "<th>" + inlineFormat(c) + "</th>").join("") +
@@ -193,13 +228,10 @@
         continue;
       }
       if (inTable && line.indexOf("|") === 0 && line.indexOf("||") !== 0) {
-        const cells = line.split("|").filter((_, idx, arr) => idx > 0 && idx < arr.length);
-        // split("|") on "|a|b|" → ["", "a", "b", ""] — take middle
-        const parts = line.split("|");
-        const mid = parts.slice(1, parts[parts.length - 1] === "" ? -1 : undefined);
+        const cells = splitTableCells(line);
         push(
           "<tr>" +
-            mid.map((c) => "<td>" + inlineFormat(c) + "</td>").join("") +
+            cells.map((c) => "<td>" + inlineFormat(c) + "</td>").join("") +
             "</tr>"
         );
         i += 1;

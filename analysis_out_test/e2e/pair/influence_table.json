@@ -1,0 +1,303 @@
+{
+  "type": "influence_table",
+  "mode": "pair",
+  "run_identity": {
+    "mode": "pair",
+    "runs": [
+      {
+        "role": "before",
+        "run_id": "run_a",
+        "server": "tsldd-pprb01138.delta.sbrf.ru",
+        "report_start": "2026-08-11 16:30:02+03",
+        "report_end": "2026-08-12 09:00:02+03",
+        "interval_hours": 16.5
+      },
+      {
+        "role": "after",
+        "run_id": "run_b",
+        "server": "tsldd-pprb01138.delta.sbrf.ru",
+        "report_start": "2026-08-12 16:00:02+03",
+        "report_end": "2026-08-13 08:30:02+03",
+        "interval_hours": 16.5
+      }
+    ]
+  },
+  "workload_match": {
+    "workload_match_score": 1.0,
+    "level": "high",
+    "components": {
+      "interval_similarity": 1.0,
+      "server_similarity": 1.0
+    },
+    "notes": "Higher score means better run comparability for influence interpretation."
+  },
+  "confidence_meta": {
+    "mode": "pair",
+    "changed_params_count": 8,
+    "changed_params_threshold": 10,
+    "workload_match_score": 1.0,
+    "isolated_change": false,
+    "confidence": "medium",
+    "evidence_type": "probable",
+    "proven_criteria": {
+      "requires_isolated_change": true,
+      "requires_changed_params_count": 1,
+      "requires_workload_match_score_at_least": 0.85
+    },
+    "notes": "Confidence baseline for pair comparison without isolated causality proof."
+  },
+  "functional_summary": {
+    "total_metrics_analyzed": 51,
+    "improved_count": 7,
+    "degraded_count": 7,
+    "neutral_count": 37,
+    "top_improved": [
+      {
+        "metric": "sessions.postgres.active_time",
+        "direction": "down",
+        "impact": "improved",
+        "delta": -237.41000000000008,
+        "delta_pct": -29.08723352119579
+      },
+      {
+        "metric": "cache.statecontracts.blk_write_time",
+        "direction": "down",
+        "impact": "improved",
+        "delta": -10.370000000000001,
+        "delta_pct": -26.56930566231104
+      },
+      {
+        "metric": "cache.Total.blk_write_time",
+        "direction": "down",
+        "impact": "improved",
+        "delta": -10.21,
+        "delta_pct": -26.152663934426233
+      },
+      {
+        "metric": "cluster.checkpoints_req",
+        "direction": "down",
+        "impact": "improved",
+        "delta": -9.0,
+        "delta_pct": -23.076923076923077
+      },
+      {
+        "metric": "cluster.maxwritten_clean",
+        "direction": "down",
+        "impact": "improved",
+        "delta": -17615.0,
+        "delta_pct": -21.820186304627885
+      },
+      {
+        "metric": "sessions.postgres.session_time",
+        "direction": "down",
+        "impact": "improved",
+        "delta": -100374.07000000007,
+        "delta_pct": -18.445981112279732
+      },
+      {
+        "metric": "cache.statecontracts.blk_read_time",
+        "direction": "down",
+        "impact": "improved",
+        "delta": -15.750000000000028,
+        "delta_pct": -6.046761623219575
+      }
+    ],
+    "top_degraded": [
+      {
+        "metric": "cache.postgres.blk_write_time",
+        "direction": "up",
+        "impact": "degraded",
+        "delta": 0.16,
+        "delta_pct": 1600.0
+      },
+      {
+        "metric": "cluster.checkpoints_timed",
+        "direction": "up",
+        "impact": "degraded",
+        "delta": 7.0,
+        "delta_pct": 100.0
+      },
+      {
+        "metric": "cache.postgres.blks_read",
+        "direction": "up",
+        "impact": "degraded",
+        "delta": 26014.0,
+        "delta_pct": 26.883687283625278
+      },
+      {
+        "metric": "cache.postgres.blk_read_time",
+        "direction": "up",
+        "impact": "degraded",
+        "delta": 4.780000000000001,
+        "delta_pct": 19.924968736973746
+      },
+      {
+        "metric": "cluster.checkpoint_sync_time",
+        "direction": "up",
+        "impact": "degraded",
+        "delta": 0.48,
+        "delta_pct": 13.636363636363637
+      },
+      {
+        "metric": "sessions.statecontracts.idle_in_transaction_time",
+        "direction": "up",
+        "impact": "degraded",
+        "delta": 100835.35999999987,
+        "delta_pct": 7.348683041409174
+      },
+      {
+        "metric": "sessions.Total.idle_in_transaction_time",
+        "direction": "up",
+        "impact": "degraded",
+        "delta": 100835.33000000007,
+        "delta_pct": 7.348524422072535
+      }
+    ]
+  },
+  "rows": [
+    {
+      "parameter": "commit_timestamp_buffers",
+      "old": "976",
+      "new": "1024",
+      "delta_pct": null,
+      "affected_metric": "",
+      "direction": "flat",
+      "metric_direction": "flat",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 0,
+      "workload_match_score": 1.0,
+      "notes": "Confidence baseline for pair comparison without isolated causality proof. No known link between this parameter and the compared metrics.",
+      "confidence_reasons": [
+        "unattributed; confidence downgraded to low"
+      ]
+    },
+    {
+      "parameter": "pg_conf_load_time",
+      "old": "2026-08-10 12:11:58.339478+03",
+      "new": "2026-08-12 13:51:51.80184+03",
+      "delta_pct": null,
+      "affected_metric": "",
+      "direction": "flat",
+      "metric_direction": "flat",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 0,
+      "workload_match_score": 1.0,
+      "notes": "Confidence baseline for pair comparison without isolated causality proof. No known link between this parameter and the compared metrics.",
+      "confidence_reasons": [
+        "unattributed; confidence downgraded to low"
+      ]
+    },
+    {
+      "parameter": "pg_postmaster_start_time",
+      "old": "2026-08-10 12:10:53.521971+03",
+      "new": "2026-08-12 13:50:49.898345+03",
+      "delta_pct": null,
+      "affected_metric": "",
+      "direction": "flat",
+      "metric_direction": "flat",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 0,
+      "workload_match_score": 1.0,
+      "notes": "Confidence baseline for pair comparison without isolated causality proof. No known link between this parameter and the compared metrics.",
+      "confidence_reasons": [
+        "unattributed; confidence downgraded to low"
+      ]
+    },
+    {
+      "parameter": "shared_buffers",
+      "old": "504320",
+      "new": "537600",
+      "delta_pct": 26.883687283625278,
+      "affected_metric": "cache.postgres.blks_read",
+      "direction": "up",
+      "metric_direction": "up",
+      "impact": "degraded",
+      "confidence": "medium",
+      "evidence_type": "probable",
+      "evidence_count": 1,
+      "workload_match_score": 1.0,
+      "notes": "Confidence baseline for pair comparison without isolated causality proof. Hint matched 3 metrics; evidence_count is 1 if attributed.",
+      "confidence_reasons": [
+        "Confidence baseline for pair comparison without isolated causality proof."
+      ]
+    },
+    {
+      "parameter": "shared_memory_size",
+      "old": "4452",
+      "new": "4724",
+      "delta_pct": null,
+      "affected_metric": "",
+      "direction": "flat",
+      "metric_direction": "flat",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 0,
+      "workload_match_score": 1.0,
+      "notes": "Confidence baseline for pair comparison without isolated causality proof. No known link between this parameter and the compared metrics.",
+      "confidence_reasons": [
+        "unattributed; confidence downgraded to low"
+      ]
+    },
+    {
+      "parameter": "shared_memory_size_in_huge_pages",
+      "old": "2226",
+      "new": "2362",
+      "delta_pct": null,
+      "affected_metric": "",
+      "direction": "flat",
+      "metric_direction": "flat",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 0,
+      "workload_match_score": 1.0,
+      "notes": "Confidence baseline for pair comparison without isolated causality proof. No known link between this parameter and the compared metrics.",
+      "confidence_reasons": [
+        "unattributed; confidence downgraded to low"
+      ]
+    },
+    {
+      "parameter": "subtransaction_buffers",
+      "old": "976",
+      "new": "1024",
+      "delta_pct": null,
+      "affected_metric": "",
+      "direction": "flat",
+      "metric_direction": "flat",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 0,
+      "workload_match_score": 1.0,
+      "notes": "Confidence baseline for pair comparison without isolated causality proof. No known link between this parameter and the compared metrics.",
+      "confidence_reasons": [
+        "unattributed; confidence downgraded to low"
+      ]
+    },
+    {
+      "parameter": "transaction_buffers",
+      "old": "976",
+      "new": "1024",
+      "delta_pct": null,
+      "affected_metric": "",
+      "direction": "flat",
+      "metric_direction": "flat",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 0,
+      "workload_match_score": 1.0,
+      "notes": "Confidence baseline for pair comparison without isolated causality proof. No known link between this parameter and the compared metrics.",
+      "confidence_reasons": [
+        "unattributed; confidence downgraded to low"
+      ]
+    }
+  ]
+}

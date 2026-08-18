@@ -1,0 +1,147 @@
+h2. Выкатывать JAVA_TOOL_OPTIONS
+*Нет*
+
+h2. Что сделать сейчас
+# Увеличьте memory request с 4096 MiB до 5324 MiB и memory limit с 8192 MiB до 9420 MiB. GC отрабатывает нормально: после сборки heap снизился.
+# Heap задан `-XX:MaxRAMPercentage=70`. Сейчас memory request 4096 MiB, memory limit 8192 MiB, расчётный `-Xmx` 5734 MiB.
+# Выставить: memory request 5324 MiB, memory limit 9420 MiB, `-XX:MaxRAMPercentage=70` (расчётный `-Xmx` 6594 MiB).
+# G1 не копируйте: сборщик уже работает.
+
+h3. Почему так
+* Плеч всегда два. Подов на одном плече: 2.
+* Рестарт контейнера: не рестартовал.
+* Память в тесте растёт: да.
+* CPU throttle: нет.
+* Скорость роста считайте после выхода на стабильную динамику, не со старта пода (прогрев и заполнение кэша в этот расчёт не входят).
+* GC pause p95 80 мс, порог 250 мс; ниже порога.
+* RSS / memory usage контейнера вырос на 10% за 12 ч, 0.83 %/ч.
+* До memory usage 80% (SLA) примерно 12 ч.
+* До OOMKilled контейнера примерно 36 ч.
+* Heap used до GC 600 MiB, после GC 400 MiB. После сборки heap снизился — GC отработал нормально.
+* Рос RSS контейнера, а после GC heap снизился — живой Java heap не течёт, нехватка ёмкости контейнера.
+
+h3. Что перепроверить
+* При этой скорости до OOMKilled примерно 36 ч. Поднимите memory limit до этого срока.
+* После увеличения limit в том же окне нагрузки memory usage % должен снизиться, рестартов быть не должно.
+* Heap used сразу после GC по-прежнему должен быть заметно ниже, чем до GC. Если перестанет снижаться — это уже живые объекты в heap, не нехватка limit.
+* После выкатки memory request, memory limit и `-Xmx` должны совпасть с таблицей «Ресурсы и JVM настройки». Memory usage % в том же окне должен снизиться.
+
+h3. План: SLA, OOM или плато
+* Скорость считайте после выхода на стабильную динамику, не со старта пода. Прогрев и заполнение кэша в этот расчёт не входят.
+* Три исхода: упрётся в SLA 80%, будет OOMKilled / упрётся в limit, или выйдет на плато ниже SLA (часто около 75%). Если до SLA 80% больше 30 дней — сейчас не критично.
+* Плато vs утечка: несколько циклов GC без рестарта. Если минимум после каждой следующей очистки выше — это не плато, проблема всё ещё есть.
+* Смена JAVA_TOOL_OPTIONS, memory request или memory limit перезапустит под: память обнулится принудительно. Неизвестно, сколько ждать повторного выхода на ту же динамику — ретест роста после выкатки настроек нельзя сравнивать с этим прогоном.
+
+h3. Ответы по дереву
+|| Вопрос || Ответ ||
+| Сколько подов этой АС на одном плече | 2 |
+| Почему рестартовал контейнер | не рестартовал |
+| Память в тесте растёт (рестарта ещё нет) | да |
+| Какой показатель рос | RSS / memory usage контейнера |
+| На сколько процентов он вырос | 10 % |
+| За сколько часов | 12 ч |
+| За это время GC успел отработать | да |
+| Heap used сразу до GC, MiB | 600 MiB |
+| Heap used сразу после GC, MiB | 400 MiB |
+| OldGen после GC снизился | да |
+| Есть CPU throttle | нет |
+| GC pause p95, мс | 80 мс |
+
+h2. Цель и ответы дерева
+*Система:* DEMO_CounterAgent
+*Pod:* counteragent-demo
+*Контейнер:* application
+*Подов на одном плече:* 2 (плеч всегда 2)
+*Рестарт:* не рестартовал
+*CPU throttle:* нет
+
+|| Параметр || Значение ||
+| gc_pause_p95_ms | 80.0 |
+
+
+h2. Рекомендации по JVM-тюнингу
+*Система:* DEMO_CounterAgent
+*Целевой pod:* counteragent-demo
+*Целевой контейнер:* application
+
+h3. Ресурсы и JVM настройки контейнера (актуально для настройки)
+|| Параметр || Было || Стало || Что делает ||
+| Memory request (MiB) | 4096 | 5734 | Гарантированная память контейнера. Поднимите к фактическому working set, ниже limit. |
+| Memory limit (MiB) | 8192 | 9420 | Потолок RSS. Выше — OOMKilled. |
+| -Xmx (расчётный) | 5734 MiB | 6594 MiB | Жёсткий потолок Java heap. |
+
+h3. Контекст рантайма
+|| Параметр || Значение ||
+| JDK version | N/A |
+| Spring Boot version | N/A |
+| Heap used (MiB) | N/A |
+| OldGen used (MiB) | N/A |
+| OldGen capacity (MiB) | N/A |
+| GC pause p95 (ms) | 80.0 |
+| GC pause p99 (ms) | N/A |
+| GC time ratio (%) | N/A |
+| Container memory working set (MiB) | 5734 |
+| Container memory limit (MiB) | 8192 |
+
+h3. Findings
+* *[WARNING]* memory.request_pressure: Working set заметно выше memory request.
+** container_memory_working_set_mib: 5734
+** container_memory_request_mib: 4096
+* *[INFO]* heap.metric_missing: Heap used не задан. Рекомендации могут быть менее точными.
+** source: ui.metric_input
+* *[INFO]* oldgen.metric_missing: OldGen used не задан. Рекомендации по OldGen могут быть менее точными.
+** source: ui.metric_input
+* *[CRITICAL]* platform.non_heap_accumulation: RSS контейнера растёт, при этом после GC heap снизился. GC работает. Увеличьте memory limit; G1 не копируйте.
+** source: diagnostic_tree
+
+h3. Рекомендованные Java Tool Options
+h4. Рекомендация 1: Увеличьте memory limit контейнера
+*Обоснование:* RSS растёт, а GC отрабатывает нормально: после сборки heap снизился. Нехватка ёмкости контейнера, не настройка G1.
+*Уверенность:* high
+*Оценка доказательности:* 80/100
+*Оценка риска:* 35/100
+*Ожидаемый эффект:* ниже memory usage % и запас до OOMKilled
+*Окно верификации:* то же окно нагрузки после выкатки limit
+*Нужна платформенная эскалация:* Yes
+*План отката:*
+** Вернуть прежний memory limit, если на ноде появятся Evicted.
+*Примечания:*
+** G1 не копировать: сборщик уже работает.
+** Цифры memory request, memory limit и расчётного `-Xmx` — в таблице «Ресурсы и JVM настройки».
+
+h4. Рекомендация 2: Поднимите memory request контейнера под фактическое потребление
+*Обоснование:* Процесс ест больше, чем memory request. Поднимите request к фактическому потреблению (ниже limit). Это не настройка G1.
+*Уверенность:* low
+*Оценка доказательности:* 30/100
+*Оценка риска:* 30/100
+*Ожидаемый эффект:* better scheduling predictability
+*Окно верификации:* 30–60 мин после выкатки
+*Нужна платформенная эскалация:* No
+*План отката:*
+** Rollback to previous JVM option set if SLA worsens.
+*Примечания:*
+** Поднимите memory request ближе к фактическому working set, но оставьте его ниже limit.
+** JAVA_TOOL_OPTIONS из-за этого finding не меняйте.
+
+
+h3. Инженерный план валидации
+# Apply recommended JVM options in test/stage environment first. Keep previous values for rollback.
+# Run at least one representative load profile and compare with baseline metrics collected before the change.
+# If no measurable improvement after the observation window, set status to предыдущая попытка тюнинга не дала эффекта and prepare escalation to dump analysis.
+
+h3. Риски и побочные эффекты изменений
+* Any JVM option change can shift latency and throughput profile; always compare SLA/SLO against baseline.
+* Rollback plan is mandatory: keep previous JVM flags and resource limits so the team can revert quickly.
+
+h3. Правило эскалации
+* If tuning recommendations do not improve GC/heap/memory-pressure metrics in the defined observation window, escalate to development team for heap dump and memory analysis.
+
+
+h3. Контекст прогона
+*Целевой контейнер:* application
+
+h3. Результат анализа
+* Findings: 4; рекомендаций: 2.
+
+h3. Предлагаемые изменения (Copy/Paste)
+* Копируемую строку JAVA_TOOL_OPTIONS не даём — см. кандидатов в Expand выше.

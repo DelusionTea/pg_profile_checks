@@ -1,0 +1,21 @@
+{
+  "type": "run_comparison",
+  "contract": {
+    "schema": "run_comparison_v1",
+    "schema_version": "1.0"
+  },
+  "run_identity": {
+    "mode": "pair",
+    "runs": [
+      { "role": "before", "run_id": "a" },
+      { "role": "after", "run_id": "b" }
+    ]
+  },
+  "workload_match": {
+    "workload_match_score": 1.4
+  },
+  "confidence_meta": {
+    "confidence": "medium",
+    "evidence_type": "probable"
+  }
+}

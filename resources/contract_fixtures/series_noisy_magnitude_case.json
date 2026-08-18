@@ -1,0 +1,56 @@
+{
+  "type": "nt_runs_analysis",
+  "reports": [
+    { "label": "r1" },
+    { "label": "r2" },
+    { "label": "r3" },
+    { "label": "r4" }
+  ],
+  "pair_analyses": [
+    {
+      "run_a": "r1",
+      "run_b": "r2",
+      "guc_impacts": [
+        {
+          "guc": "max_wal_size",
+          "value_from": "1024",
+          "value_to": "2048",
+          "direction": "increased",
+          "correlated_metrics": [
+            { "metric": "checkpoints_req", "delta_pct": -5.0, "improved": true }
+          ]
+        }
+      ]
+    },
+    {
+      "run_a": "r2",
+      "run_b": "r3",
+      "guc_impacts": [
+        {
+          "guc": "max_wal_size",
+          "value_from": "2048",
+          "value_to": "3072",
+          "direction": "increased",
+          "correlated_metrics": [
+            { "metric": "checkpoints_req", "delta_pct": -80.0, "improved": true }
+          ]
+        }
+      ]
+    },
+    {
+      "run_a": "r3",
+      "run_b": "r4",
+      "guc_impacts": [
+        {
+          "guc": "max_wal_size",
+          "value_from": "3072",
+          "value_to": "4096",
+          "direction": "increased",
+          "correlated_metrics": [
+            { "metric": "checkpoints_req", "delta_pct": -10.0, "improved": true }
+          ]
+        }
+      ]
+    }
+  ]
+}

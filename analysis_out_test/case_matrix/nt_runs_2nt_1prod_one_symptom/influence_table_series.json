@@ -1,0 +1,824 @@
+{
+  "type": "influence_table_series",
+  "mode": "series",
+  "row_count": 2,
+  "run_identity": {
+    "mode": "series",
+    "reports": [
+      {
+        "label": "nt1",
+        "path": "resources/pgprofile_srv=10_3_81_94_from=2026_07_31_09_00_to=2026_08_01_00.html",
+        "filename": "pgprofile_srv=10_3_81_94_from=2026_07_31_09_00_to=2026_08_01_00.html",
+        "meta": {
+          "path": "resources/pgprofile_srv=10_3_81_94_from=2026_07_31_09_00_to=2026_08_01_00.html",
+          "filename": "pgprofile_srv=10_3_81_94_from=2026_07_31_09_00_to=2026_08_01_00.html",
+          "server": "10.3.81.94",
+          "from": "2026 07 31 09 00",
+          "to": "2026 08 01 00",
+          "version": "PostgreSQL 15.5 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 8.5.0 20210514 (Platform V SberLinux 8.5.0-28), 64-bit"
+        }
+      },
+      {
+        "label": "nt2",
+        "path": "resources/pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html",
+        "filename": "pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html",
+        "meta": {
+          "path": "resources/pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html",
+          "filename": "pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html",
+          "server": "10.3.81.94",
+          "from": "2026 08 11 16 30",
+          "to": "2026 08 12 09",
+          "version": "PostgreSQL 15.5 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 8.5.0 20210514 (Platform V SberLinux 8.5.0-28), 64-bit"
+        }
+      }
+    ]
+  },
+  "workload_match": {
+    "workload_match_score": 0.9364,
+    "level": "high",
+    "pair_scores": [
+      0.9364
+    ],
+    "notes": "Минимальный балл по парам прогонов (худшая сопоставимость)."
+  },
+  "confidence_meta": {
+    "mode": "series",
+    "confidence": "medium",
+    "evidence_type": "probable",
+    "notes": "Confidence is aggregated from repeated pair evidence."
+  },
+  "functional_summary": {
+    "total_pairs": 1,
+    "improved_pairs": 1,
+    "degraded_pairs": 0,
+    "neutral_pairs": 0,
+    "series_mode": "median+iqr"
+  },
+  "settings_table": {
+    "run_labels": [
+      "nt1",
+      "nt2"
+    ],
+    "rows": [
+      {
+        "parameter": "checkpoint_completion_target",
+        "values": {
+          "nt1": "0.5",
+          "nt2": "0.7"
+        }
+      },
+      {
+        "parameter": "max_wal_size",
+        "values": {
+          "nt1": "8192",
+          "nt2": "12288"
+        }
+      }
+    ]
+  },
+  "metrics_table": {
+    "run_labels": [
+      "nt1",
+      "nt2"
+    ],
+    "pair_labels": [
+      "nt1->nt2"
+    ],
+    "rows": [
+      {
+        "metric": "cache.Total.blk_read_time",
+        "values": {
+          "nt1": 266.54,
+          "nt2": 284.46
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 17.91999999999996,
+            "delta_pct": 6.723193516920522
+          }
+        },
+        "trend": "становится хуже"
+      },
+      {
+        "metric": "cache.Total.blk_write_time",
+        "values": {
+          "nt1": 28.44,
+          "nt2": 39.04
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 10.599999999999998,
+            "delta_pct": 37.27144866385372
+          }
+        },
+        "trend": "становится хуже"
+      },
+      {
+        "metric": "cache.postgres.blk_read_time",
+        "values": {
+          "nt1": 18.27,
+          "nt2": 23.99
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 5.719999999999999,
+            "delta_pct": 31.308155446086474
+          }
+        },
+        "trend": "становится хуже"
+      },
+      {
+        "metric": "cache.postgres.blk_write_time",
+        "values": {
+          "nt1": 0.03,
+          "nt2": 0.01
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": -0.019999999999999997,
+            "delta_pct": -66.66666666666666
+          }
+        },
+        "trend": "становится лучше"
+      },
+      {
+        "metric": "cache.statecontracts.blk_write_time",
+        "values": {
+          "nt1": 28.42,
+          "nt2": 39.03
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 10.61,
+            "delta_pct": 37.33286418015482
+          }
+        },
+        "trend": "становится хуже"
+      },
+      {
+        "metric": "cluster.buffers_checkpoint",
+        "values": {
+          "nt1": 16793607.0,
+          "nt2": 11698150.0
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": -5095457.0,
+            "delta_pct": -30.341647270893024
+          }
+        },
+        "trend": "снижение, влияние не оценивается"
+      },
+      {
+        "metric": "cluster.checkpoint_sync_time",
+        "values": {
+          "nt1": 4.82,
+          "nt2": 3.52
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": -1.3000000000000003,
+            "delta_pct": -26.970954356846477
+          }
+        },
+        "trend": "становится лучше"
+      },
+      {
+        "metric": "cluster.checkpoint_write_time",
+        "values": {
+          "nt1": 25186.98,
+          "nt2": 38898.35
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 13711.369999999999,
+            "delta_pct": 54.43832488055337
+          }
+        },
+        "trend": "становится хуже"
+      },
+      {
+        "metric": "cluster.checkpoints_req",
+        "values": {
+          "nt1": 56.0,
+          "nt2": 39.0
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": -17.0,
+            "delta_pct": -30.357142857142858
+          }
+        },
+        "trend": "становится лучше"
+      },
+      {
+        "metric": "cluster.checkpoints_timed",
+        "values": {
+          "nt1": 2.0,
+          "nt2": 7.0
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 5.0,
+            "delta_pct": 250.0
+          }
+        },
+        "trend": "становится хуже"
+      },
+      {
+        "metric": "cluster.maxwritten_clean",
+        "values": {
+          "nt1": 35836.0,
+          "nt2": 80728.0
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 44892.0,
+            "delta_pct": 125.27067753097444
+          }
+        },
+        "trend": "становится хуже"
+      },
+      {
+        "metric": "dml.Total.DELETE",
+        "values": {
+          "nt1": 113183.0,
+          "nt2": 149889.0
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 36706.0,
+            "delta_pct": 32.430665382610464
+          }
+        },
+        "trend": "рост, влияние не оценивается"
+      },
+      {
+        "metric": "dml.Total.FETCH",
+        "values": {
+          "nt1": 136390589.0,
+          "nt2": 157636191.0
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 21245602.0,
+            "delta_pct": 15.577029291955034
+          }
+        },
+        "trend": "рост, влияние не оценивается"
+      },
+      {
+        "metric": "dml.Total.ROLLBACK",
+        "values": {
+          "nt1": 2700.0,
+          "nt2": 2970.0
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 270.0,
+            "delta_pct": 10.0
+          }
+        },
+        "trend": "становится хуже"
+      },
+      {
+        "metric": "dml.postgres.COMMIT",
+        "values": {
+          "nt1": 309093.0,
+          "nt2": 340165.0
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 31072.0,
+            "delta_pct": 10.052637879214346
+          }
+        },
+        "trend": "рост, влияние не оценивается"
+      },
+      {
+        "metric": "dml.postgres.DELETE",
+        "values": {
+          "nt1": 108513.0,
+          "nt2": 145237.0
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 36724.0,
+            "delta_pct": 33.84294969266355
+          }
+        },
+        "trend": "рост, влияние не оценивается"
+      },
+      {
+        "metric": "dml.postgres.FETCH",
+        "values": {
+          "nt1": 130237462.0,
+          "nt2": 151800568.0
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 21563106.0,
+            "delta_pct": 16.556761525343607
+          }
+        },
+        "trend": "рост, влияние не оценивается"
+      },
+      {
+        "metric": "dml.postgres.INSERT",
+        "values": {
+          "nt1": 132520.0,
+          "nt2": 144674.0
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 12154.0,
+            "delta_pct": 9.171445819498944
+          }
+        },
+        "trend": "рост, влияние не оценивается"
+      },
+      {
+        "metric": "dml.postgres.ROLLBACK",
+        "values": {
+          "nt1": 900.0,
+          "nt2": 990.0
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 90.0,
+            "delta_pct": 10.0
+          }
+        },
+        "trend": "становится хуже"
+      },
+      {
+        "metric": "dml.postgres.UPDATE",
+        "values": {
+          "nt1": 47570.0,
+          "nt2": 52153.0
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 4583.0,
+            "delta_pct": 9.634223249947446
+          }
+        },
+        "trend": "рост, влияние не оценивается"
+      },
+      {
+        "metric": "dml.statecontracts.FETCH",
+        "values": {
+          "nt1": 6153127.0,
+          "nt2": 5835623.0
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": -317504.0,
+            "delta_pct": -5.160043015526902
+          }
+        },
+        "trend": "снижение, влияние не оценивается"
+      },
+      {
+        "metric": "dml.statecontracts.ROLLBACK",
+        "values": {
+          "nt1": 1800.0,
+          "nt2": 1980.0
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 180.0,
+            "delta_pct": 10.0
+          }
+        },
+        "trend": "становится хуже"
+      },
+      {
+        "metric": "queries.postgres/\"sa-d00000011757\"",
+        "values": {
+          "nt1": 218.2,
+          "nt2": 33.47
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 10.239999999999998,
+            "delta_pct": 44.08092983211364
+          }
+        },
+        "trend": "рост, влияние не оценивается"
+      },
+      {
+        "metric": "queries.postgres/postgres",
+        "values": {
+          "nt1": 158.4,
+          "nt2": 220.26
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 61.859999999999985,
+            "delta_pct": 39.05303030303029
+          }
+        },
+        "trend": "рост, влияние не оценивается"
+      },
+      {
+        "metric": "queries.statecontracts/as_admin",
+        "values": {
+          "nt1": 12702.91,
+          "nt2": 456.84
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 82.06,
+            "delta_pct": 21.895512033726455
+          }
+        },
+        "trend": "рост, влияние не оценивается"
+      },
+      {
+        "metric": "sessions.Total.active_time",
+        "values": {
+          "nt1": 89634.27,
+          "nt2": 110380.67
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 20746.399999999994,
+            "delta_pct": 23.14561160591813
+          }
+        },
+        "trend": "становится хуже"
+      },
+      {
+        "metric": "sessions.Total.session_time",
+        "values": {
+          "nt1": 7842134.66,
+          "nt2": 8249492.7
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 407358.04000000004,
+            "delta_pct": 5.194479024669031
+          }
+        },
+        "trend": "становится хуже"
+      },
+      {
+        "metric": "sessions.Total.sessions",
+        "values": {
+          "nt1": 9005.0,
+          "nt2": 9716.0
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 711.0,
+            "delta_pct": 7.895613548028873
+          }
+        },
+        "trend": "рост, влияние не оценивается"
+      },
+      {
+        "metric": "sessions.postgres.active_time",
+        "values": {
+          "nt1": 616.47,
+          "nt2": 816.2
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 199.73000000000002,
+            "delta_pct": 32.39898129673788
+          }
+        },
+        "trend": "становится хуже"
+      },
+      {
+        "metric": "sessions.postgres.idle_in_transaction_time",
+        "values": {
+          "nt1": 24.68,
+          "nt2": 29.2
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 4.52,
+            "delta_pct": 18.31442463533225
+          }
+        },
+        "trend": "становится хуже"
+      },
+      {
+        "metric": "sessions.postgres.session_time",
+        "values": {
+          "nt1": 493945.4,
+          "nt2": 544151.43
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 50206.03000000003,
+            "delta_pct": 10.164287388849056
+          }
+        },
+        "trend": "становится хуже"
+      },
+      {
+        "metric": "sessions.postgres.sessions",
+        "values": {
+          "nt1": 2924.0,
+          "nt2": 3241.0
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 317.0,
+            "delta_pct": 10.841313269493844
+          }
+        },
+        "trend": "рост, влияние не оценивается"
+      },
+      {
+        "metric": "sessions.statecontracts.active_time",
+        "values": {
+          "nt1": 89017.81,
+          "nt2": 109564.47
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 20546.660000000003,
+            "delta_pct": 23.081515934844955
+          }
+        },
+        "trend": "становится хуже"
+      },
+      {
+        "metric": "sessions.statecontracts.sessions",
+        "values": {
+          "nt1": 6081.0,
+          "nt2": 6475.0
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 394.0,
+            "delta_pct": 6.479197500411116
+          }
+        },
+        "trend": "рост, влияние не оценивается"
+      },
+      {
+        "metric": "tables.postgres.pg_catalog.pg_attribute.idx_scan",
+        "values": {
+          "nt1": 203621.0,
+          "nt2": 225514.0
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 21893.0,
+            "delta_pct": 10.751837973489964
+          }
+        },
+        "trend": "рост, влияние не оценивается"
+      },
+      {
+        "metric": "tables.postgres.pg_catalog.pg_database.idx_scan",
+        "values": {
+          "nt1": 202750.0,
+          "nt2": 189878.0
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": -12872.0,
+            "delta_pct": -6.348705302096177
+          }
+        },
+        "trend": "снижение, влияние не оценивается"
+      },
+      {
+        "metric": "tables.postgres.pg_catalog.pg_db_role_setting.idx_scan",
+        "values": {
+          "nt1": 133148.0,
+          "nt2": 121956.0
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": -11192.0,
+            "delta_pct": -8.405683900621865
+          }
+        },
+        "trend": "снижение, влияние не оценивается"
+      },
+      {
+        "metric": "tables.postgres.pg_catalog.pg_db_role_setting.seq_scan",
+        "values": {
+          "nt1": 2859668.0,
+          "nt2": 3003316.0
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 143648.0,
+            "delta_pct": 5.0232404600813805
+          }
+        },
+        "trend": "рост, влияние не оценивается"
+      },
+      {
+        "metric": "tables.postgres.pg_catalog.pg_index.idx_scan",
+        "values": {
+          "nt1": 526897.0,
+          "nt2": 580259.0
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 53362.0,
+            "delta_pct": 10.127596095631594
+          }
+        },
+        "trend": "рост, влияние не оценивается"
+      },
+      {
+        "metric": "tables.postgres.pgse_profile.last_stat_tables_srv4.idx_scan",
+        "values": {
+          "nt1": 205364.0,
+          "nt2": 239736.0
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 34372.0,
+            "delta_pct": 16.737110691260398
+          }
+        },
+        "trend": "рост, влияние не оценивается"
+      },
+      {
+        "metric": "tables.postgres.pgse_profile.last_stat_tables_srv5.idx_scan",
+        "values": {
+          "nt1": 429596.0,
+          "nt2": 483202.0
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 53606.0,
+            "delta_pct": 12.478235365319975
+          }
+        },
+        "trend": "рост, влияние не оценивается"
+      },
+      {
+        "metric": "tables.postgres.pgse_profile.sample_stat_tables.idx_scan",
+        "values": {
+          "nt1": 3755.0,
+          "nt2": 27175.0
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 23420.0,
+            "delta_pct": 623.7017310252996
+          }
+        },
+        "trend": "рост, влияние не оценивается"
+      },
+      {
+        "metric": "tables.postgres.pgse_profile.sample_stat_tables.n_tup_del",
+        "values": {
+          "nt1": null,
+          "nt2": 11474.0
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 11474.0,
+            "delta_pct": null
+          }
+        },
+        "trend": "изменения незначительны"
+      },
+      {
+        "metric": "tables.postgres.pgse_profile.sample_stat_tablespaces.idx_scan",
+        "values": {
+          "nt1": null,
+          "nt2": 12678.0
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 12678.0,
+            "delta_pct": null
+          }
+        },
+        "trend": "изменения незначительны"
+      },
+      {
+        "metric": "tables.postgres.pgse_profile.stmt_list.idx_scan",
+        "values": {
+          "nt1": 12354.0,
+          "nt2": null
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": -12354.0,
+            "delta_pct": -100.0
+          }
+        },
+        "trend": "снижение, влияние не оценивается"
+      },
+      {
+        "metric": "tables.statecontracts.pg_catalog.pg_attribute.idx_scan",
+        "values": {
+          "nt1": 602329.0,
+          "nt2": 568977.0
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": -33352.0,
+            "delta_pct": -5.537173206005356
+          }
+        },
+        "trend": "снижение, влияние не оценивается"
+      },
+      {
+        "metric": "tables.statecontracts.pg_catalog.pg_database.idx_scan",
+        "values": {
+          "nt1": 202750.0,
+          "nt2": 189878.0
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": -12872.0,
+            "delta_pct": -6.348705302096177
+          }
+        },
+        "trend": "снижение, влияние не оценивается"
+      },
+      {
+        "metric": "tables.statecontracts.pg_catalog.pg_db_role_setting.seq_scan",
+        "values": {
+          "nt1": 2859668.0,
+          "nt2": 3003316.0
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 143648.0,
+            "delta_pct": 5.0232404600813805
+          }
+        },
+        "trend": "рост, влияние не оценивается"
+      },
+      {
+        "metric": "tables.statecontracts.statecontracts.t_dspc_sys_versions.seq_scan",
+        "values": {
+          "nt1": 28784.0,
+          "nt2": null
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": -28784.0,
+            "delta_pct": -100.0
+          }
+        },
+        "trend": "снижение, влияние не оценивается"
+      },
+      {
+        "metric": "wal.wal_buffers_full",
+        "values": {
+          "nt1": 932205.0,
+          "nt2": 664448.0
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": -267757.0,
+            "delta_pct": -28.72297402395396
+          }
+        },
+        "trend": "становится лучше"
+      }
+    ]
+  },
+  "rows": [
+    {
+      "parameter": "max_wal_size",
+      "old": "8192 (64.0 MB)",
+      "new": "12288 (96.0 MB)",
+      "delta_pct": -28.72,
+      "affected_metric": "checkpoints_req",
+      "direction": "increased",
+      "impact": "improved",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 1,
+      "workload_match_score": null,
+      "notes": "pairs=1; stability=1.000; effects=nt1->nt2:improved",
+      "stability_score": 1.0,
+      "delta_iqr_pct": 42.4
+    },
+    {
+      "parameter": "checkpoint_completion_target",
+      "old": "0.5",
+      "new": "0.7",
+      "delta_pct": -26.97,
+      "affected_metric": "checkpoint_write_time",
+      "direction": "increased",
+      "impact": "improved",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 1,
+      "workload_match_score": null,
+      "notes": "pairs=1; stability=1.000; effects=nt1->nt2:improved",
+      "stability_score": 1.0,
+      "delta_iqr_pct": 42.4
+    }
+  ]
+}

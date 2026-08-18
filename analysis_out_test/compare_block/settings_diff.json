@@ -1,0 +1,925 @@
+{
+  "type": "settings_diff",
+  "contract": {
+    "schema": "settings_diff_v1",
+    "schema_version": "1.0"
+  },
+  "run_a": {
+    "run_id": "before",
+    "path": "resources/credithistory_prom1.html",
+    "filename": "credithistory_prom1.html",
+    "meta": {
+      "path": "resources/credithistory_prom1.html",
+      "filename": "credithistory_prom1.html",
+      "server": "",
+      "from": "",
+      "to": "",
+      "version": "PostgreSQL 15.5 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 11.5.0 20240719 (Platform V SberLinux 11.5.0-5), 64-bit"
+    }
+  },
+  "run_b": {
+    "run_id": "after",
+    "path": "resources/pgprofile_srv=10_55_51_82_from=2026_03_13_12_30_to=2026_03_14_03.html",
+    "filename": "pgprofile_srv=10_55_51_82_from=2026_03_13_12_30_to=2026_03_14_03.html",
+    "meta": {
+      "path": "resources/pgprofile_srv=10_55_51_82_from=2026_03_13_12_30_to=2026_03_14_03.html",
+      "filename": "pgprofile_srv=10_55_51_82_from=2026_03_13_12_30_to=2026_03_14_03.html",
+      "server": "10.55.51.82",
+      "from": "2026 03 13 12 30",
+      "to": "2026 03 14 03",
+      "version": "PostgreSQL 15.5 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 8.5.0 20210514 (Platform V SberLinux 8.5.0-28), 64-bit"
+    }
+  },
+  "run_identity": {
+    "mode": "pair",
+    "runs": [
+      {
+        "role": "before",
+        "run_id": "before",
+        "server": "",
+        "report_start": "",
+        "report_end": "",
+        "interval_hours": null
+      },
+      {
+        "role": "after",
+        "run_id": "after",
+        "server": "10.55.51.82",
+        "report_start": "2026 03 13 12 30",
+        "report_end": "2026 03 14 03",
+        "interval_hours": null
+      }
+    ]
+  },
+  "workload_match": {
+    "workload_match_score": 0.8,
+    "level": "medium",
+    "components": {
+      "interval_similarity": null,
+      "server_similarity": 0.8
+    },
+    "notes": "Higher score means better run comparability for influence interpretation."
+  },
+  "confidence_meta": {
+    "mode": "pair",
+    "changed_params_count": 26,
+    "changed_params_threshold": 10,
+    "workload_match_score": 0.8,
+    "isolated_change": false,
+    "confidence": "low",
+    "evidence_type": "probable",
+    "proven_criteria": {
+      "requires_isolated_change": true,
+      "requires_changed_params_count": 1,
+      "requires_workload_match_score_at_least": 0.85
+    },
+    "notes": "Confidence downgraded because too many parameters changed simultaneously."
+  },
+  "settings_changes": [
+    {
+      "parameter": "archive_command",
+      "status": "DIFFER",
+      "old": "/opt/pangolin-backup-tools/bin/pg_probackup archive-push -B /pgarclogs/06 --instance pprb_prom-86vc1o --wal-file-path=%p --wal-file-name=%f --compress --overwrite -j 4 --batch-size=100",
+      "new": "/opt/pangolin-backup-tools/bin/pg_probackup archive-push -B /pgarclogs/06 --instance pprb_test-7ti63t --wal-file-path=%p --wal-file-name=%f --compress --overwrite -j 4 --batch-size=100"
+    },
+    {
+      "parameter": "archive_mode",
+      "status": "ONLY_NT",
+      "old": "always",
+      "new": null
+    },
+    {
+      "parameter": "authentication_max_workers",
+      "status": "DIFFER",
+      "old": "8",
+      "new": "4"
+    },
+    {
+      "parameter": "autovacuum_work_mem",
+      "status": "DIFFER",
+      "old": "254976",
+      "new": "163840"
+    },
+    {
+      "parameter": "cluster_name",
+      "status": "DIFFER",
+      "old": "pprb_prom-86vc1o",
+      "new": "pprb_test-7ti63t"
+    },
+    {
+      "parameter": "commit_timestamp_buffers",
+      "status": "DIFFER",
+      "old": "736",
+      "new": "1024"
+    },
+    {
+      "parameter": "disk_retry_count",
+      "status": "ONLY_NT",
+      "old": "21",
+      "new": null
+    },
+    {
+      "parameter": "effective_cache_size",
+      "status": "DIFFER",
+      "old": "1147520",
+      "new": "2286976"
+    },
+    {
+      "parameter": "force_failover_timeout",
+      "status": "DIFFER",
+      "old": "85",
+      "new": "108"
+    },
+    {
+      "parameter": "maintenance_work_mem",
+      "status": "DIFFER",
+      "old": "1223680",
+      "new": "2439168"
+    },
+    {
+      "parameter": "max_parallel_workers",
+      "status": "DIFFER",
+      "old": "3",
+      "new": "20"
+    },
+    {
+      "parameter": "max_prepared_transactions",
+      "status": "DIFFER",
+      "old": "18",
+      "new": "12"
+    },
+    {
+      "parameter": "max_worker_processes",
+      "status": "ONLY_NT",
+      "old": "32",
+      "new": null
+    },
+    {
+      "parameter": "performance_insights.directory",
+      "status": "ONLY_NT",
+      "old": "/pgdata/pg_perf_insights",
+      "new": null
+    },
+    {
+      "parameter": "pg_conf_load_time",
+      "status": "DIFFER",
+      "old": "2026-07-04 03:44:40.49286+03",
+      "new": "2026-02-28 19:58:48.556477+03"
+    },
+    {
+      "parameter": "pg_postmaster_start_time",
+      "status": "DIFFER",
+      "old": "2026-05-23 13:21:22.197985+03",
+      "new": "2026-02-18 18:18:45.940638+03"
+    },
+    {
+      "parameter": "pg_stat_kcache.linux_hz",
+      "status": "DIFFER",
+      "old": "1000000",
+      "new": "500000"
+    },
+    {
+      "parameter": "primary_slot_name",
+      "status": "DIFFER",
+      "old": "pslod_pprb00823_cloud_omega_sbrf_ru",
+      "new": "tvldd_pprb06733_delta_sbrf_ru"
+    },
+    {
+      "parameter": "sec_admin_default_auth",
+      "status": "ONLY_PROD",
+      "old": null,
+      "new": ""
+    },
+    {
+      "parameter": "shared_buffers",
+      "status": "DIFFER",
+      "old": "382464",
+      "new": "762240"
+    },
+    {
+      "parameter": "shared_memory_size",
+      "status": "DIFFER",
+      "old": "3536",
+      "new": "6571"
+    },
+    {
+      "parameter": "shared_memory_size_in_huge_pages",
+      "status": "DIFFER",
+      "old": "1768",
+      "new": "3286"
+    },
+    {
+      "parameter": "subtransaction_buffers",
+      "status": "DIFFER",
+      "old": "736",
+      "new": "1024"
+    },
+    {
+      "parameter": "synchronous_standby_names",
+      "status": "DIFFER",
+      "old": "\"pslod-pprb00824.cloud.omega.sbrf.ru\"",
+      "new": "\"tvldd-pprb06732.delta.sbrf.ru\""
+    },
+    {
+      "parameter": "transaction_buffers",
+      "status": "DIFFER",
+      "old": "736",
+      "new": "1024"
+    },
+    {
+      "parameter": "version",
+      "status": "DIFFER",
+      "old": "PostgreSQL 15.5 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 11.5.0 20240719 (Platform V SberLinux 11.5.0-5), 64-bit",
+      "new": "PostgreSQL 15.5 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 8.5.0 20210514 (Platform V SberLinux 8.5.0-28), 64-bit"
+    }
+  ],
+  "influence_rows": [
+    {
+      "parameter": "archive_command",
+      "old": "/opt/pangolin-backup-tools/bin/pg_probackup archive-push -B /pgarclogs/06 --instance pprb_prom-86vc1o --wal-file-path=%p --wal-file-name=%f --compress --overwrite -j 4 --batch-size=100",
+      "new": "/opt/pangolin-backup-tools/bin/pg_probackup archive-push -B /pgarclogs/06 --instance pprb_test-7ti63t --wal-file-path=%p --wal-file-name=%f --compress --overwrite -j 4 --batch-size=100",
+      "delta_pct": null,
+      "affected_metric": "dml.taxes.INSERT",
+      "direction": "up",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 94,
+      "workload_match_score": 0.5875,
+      "notes": "Confidence downgraded because too many parameters changed simultaneously. Low workload match; treat attribution as hypothesis. Many settings changed simultaneously; causal confidence is reduced."
+    },
+    {
+      "parameter": "archive_mode",
+      "old": "always",
+      "new": null,
+      "delta_pct": null,
+      "affected_metric": "dml.taxes.INSERT",
+      "direction": "up",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 94,
+      "workload_match_score": 0.5875,
+      "notes": "Confidence downgraded because too many parameters changed simultaneously. Low workload match; treat attribution as hypothesis. Many settings changed simultaneously; causal confidence is reduced."
+    },
+    {
+      "parameter": "authentication_max_workers",
+      "old": "8",
+      "new": "4",
+      "delta_pct": null,
+      "affected_metric": "dml.taxes.INSERT",
+      "direction": "up",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 94,
+      "workload_match_score": 0.5875,
+      "notes": "Confidence downgraded because too many parameters changed simultaneously. Low workload match; treat attribution as hypothesis. Many settings changed simultaneously; causal confidence is reduced."
+    },
+    {
+      "parameter": "autovacuum_work_mem",
+      "old": "254976",
+      "new": "163840",
+      "delta_pct": null,
+      "affected_metric": "dml.taxes.INSERT",
+      "direction": "up",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 94,
+      "workload_match_score": 0.5875,
+      "notes": "Confidence downgraded because too many parameters changed simultaneously. Low workload match; treat attribution as hypothesis. Many settings changed simultaneously; causal confidence is reduced."
+    },
+    {
+      "parameter": "cluster_name",
+      "old": "pprb_prom-86vc1o",
+      "new": "pprb_test-7ti63t",
+      "delta_pct": null,
+      "affected_metric": "dml.taxes.INSERT",
+      "direction": "up",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 94,
+      "workload_match_score": 0.5875,
+      "notes": "Confidence downgraded because too many parameters changed simultaneously. Low workload match; treat attribution as hypothesis. Many settings changed simultaneously; causal confidence is reduced."
+    },
+    {
+      "parameter": "commit_timestamp_buffers",
+      "old": "736",
+      "new": "1024",
+      "delta_pct": null,
+      "affected_metric": "dml.taxes.INSERT",
+      "direction": "up",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 94,
+      "workload_match_score": 0.5875,
+      "notes": "Confidence downgraded because too many parameters changed simultaneously. Low workload match; treat attribution as hypothesis. Many settings changed simultaneously; causal confidence is reduced."
+    },
+    {
+      "parameter": "disk_retry_count",
+      "old": "21",
+      "new": null,
+      "delta_pct": null,
+      "affected_metric": "dml.taxes.INSERT",
+      "direction": "up",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 94,
+      "workload_match_score": 0.5875,
+      "notes": "Confidence downgraded because too many parameters changed simultaneously. Low workload match; treat attribution as hypothesis. Many settings changed simultaneously; causal confidence is reduced."
+    },
+    {
+      "parameter": "effective_cache_size",
+      "old": "1147520",
+      "new": "2286976",
+      "delta_pct": null,
+      "affected_metric": "cache.taxes.blks_read",
+      "direction": "up",
+      "impact": "degraded",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 9,
+      "workload_match_score": 0.5875,
+      "notes": "Confidence downgraded because too many parameters changed simultaneously. Low workload match; treat attribution as hypothesis. Many settings changed simultaneously; causal confidence is reduced."
+    },
+    {
+      "parameter": "force_failover_timeout",
+      "old": "85",
+      "new": "108",
+      "delta_pct": null,
+      "affected_metric": "dml.taxes.INSERT",
+      "direction": "up",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 94,
+      "workload_match_score": 0.5875,
+      "notes": "Confidence downgraded because too many parameters changed simultaneously. Low workload match; treat attribution as hypothesis. Many settings changed simultaneously; causal confidence is reduced."
+    },
+    {
+      "parameter": "maintenance_work_mem",
+      "old": "1223680",
+      "new": "2439168",
+      "delta_pct": null,
+      "affected_metric": "dml.taxes.INSERT",
+      "direction": "up",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 94,
+      "workload_match_score": 0.5875,
+      "notes": "Confidence downgraded because too many parameters changed simultaneously. Low workload match; treat attribution as hypothesis. Many settings changed simultaneously; causal confidence is reduced."
+    },
+    {
+      "parameter": "max_parallel_workers",
+      "old": "3",
+      "new": "20",
+      "delta_pct": null,
+      "affected_metric": "dml.taxes.INSERT",
+      "direction": "up",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 94,
+      "workload_match_score": 0.5875,
+      "notes": "Confidence downgraded because too many parameters changed simultaneously. Low workload match; treat attribution as hypothesis. Many settings changed simultaneously; causal confidence is reduced."
+    },
+    {
+      "parameter": "max_prepared_transactions",
+      "old": "18",
+      "new": "12",
+      "delta_pct": null,
+      "affected_metric": "dml.taxes.INSERT",
+      "direction": "up",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 94,
+      "workload_match_score": 0.5875,
+      "notes": "Confidence downgraded because too many parameters changed simultaneously. Low workload match; treat attribution as hypothesis. Many settings changed simultaneously; causal confidence is reduced."
+    },
+    {
+      "parameter": "max_worker_processes",
+      "old": "32",
+      "new": null,
+      "delta_pct": null,
+      "affected_metric": "dml.taxes.INSERT",
+      "direction": "up",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 94,
+      "workload_match_score": 0.5875,
+      "notes": "Confidence downgraded because too many parameters changed simultaneously. Low workload match; treat attribution as hypothesis. Many settings changed simultaneously; causal confidence is reduced."
+    },
+    {
+      "parameter": "performance_insights.directory",
+      "old": "/pgdata/pg_perf_insights",
+      "new": null,
+      "delta_pct": null,
+      "affected_metric": "dml.taxes.INSERT",
+      "direction": "up",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 94,
+      "workload_match_score": 0.5875,
+      "notes": "Confidence downgraded because too many parameters changed simultaneously. Low workload match; treat attribution as hypothesis. Many settings changed simultaneously; causal confidence is reduced."
+    },
+    {
+      "parameter": "pg_conf_load_time",
+      "old": "2026-07-04 03:44:40.49286+03",
+      "new": "2026-02-28 19:58:48.556477+03",
+      "delta_pct": null,
+      "affected_metric": "dml.taxes.INSERT",
+      "direction": "up",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 94,
+      "workload_match_score": 0.5875,
+      "notes": "Confidence downgraded because too many parameters changed simultaneously. Low workload match; treat attribution as hypothesis. Many settings changed simultaneously; causal confidence is reduced."
+    },
+    {
+      "parameter": "pg_postmaster_start_time",
+      "old": "2026-05-23 13:21:22.197985+03",
+      "new": "2026-02-18 18:18:45.940638+03",
+      "delta_pct": null,
+      "affected_metric": "dml.taxes.INSERT",
+      "direction": "up",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 94,
+      "workload_match_score": 0.5875,
+      "notes": "Confidence downgraded because too many parameters changed simultaneously. Low workload match; treat attribution as hypothesis. Many settings changed simultaneously; causal confidence is reduced."
+    },
+    {
+      "parameter": "pg_stat_kcache.linux_hz",
+      "old": "1000000",
+      "new": "500000",
+      "delta_pct": null,
+      "affected_metric": "dml.taxes.INSERT",
+      "direction": "up",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 94,
+      "workload_match_score": 0.5875,
+      "notes": "Confidence downgraded because too many parameters changed simultaneously. Low workload match; treat attribution as hypothesis. Many settings changed simultaneously; causal confidence is reduced."
+    },
+    {
+      "parameter": "primary_slot_name",
+      "old": "pslod_pprb00823_cloud_omega_sbrf_ru",
+      "new": "tvldd_pprb06733_delta_sbrf_ru",
+      "delta_pct": null,
+      "affected_metric": "dml.taxes.INSERT",
+      "direction": "up",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 94,
+      "workload_match_score": 0.5875,
+      "notes": "Confidence downgraded because too many parameters changed simultaneously. Low workload match; treat attribution as hypothesis. Many settings changed simultaneously; causal confidence is reduced."
+    },
+    {
+      "parameter": "sec_admin_default_auth",
+      "old": null,
+      "new": "",
+      "delta_pct": null,
+      "affected_metric": "dml.taxes.INSERT",
+      "direction": "up",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 94,
+      "workload_match_score": 0.5875,
+      "notes": "Confidence downgraded because too many parameters changed simultaneously. Low workload match; treat attribution as hypothesis. Many settings changed simultaneously; causal confidence is reduced."
+    },
+    {
+      "parameter": "shared_buffers",
+      "old": "382464",
+      "new": "762240",
+      "delta_pct": null,
+      "affected_metric": "cache.taxes.blks_read",
+      "direction": "up",
+      "impact": "degraded",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 9,
+      "workload_match_score": 0.5875,
+      "notes": "Confidence downgraded because too many parameters changed simultaneously. Low workload match; treat attribution as hypothesis. Many settings changed simultaneously; causal confidence is reduced."
+    },
+    {
+      "parameter": "shared_memory_size",
+      "old": "3536",
+      "new": "6571",
+      "delta_pct": null,
+      "affected_metric": "dml.taxes.INSERT",
+      "direction": "up",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 94,
+      "workload_match_score": 0.5875,
+      "notes": "Confidence downgraded because too many parameters changed simultaneously. Low workload match; treat attribution as hypothesis. Many settings changed simultaneously; causal confidence is reduced."
+    },
+    {
+      "parameter": "shared_memory_size_in_huge_pages",
+      "old": "1768",
+      "new": "3286",
+      "delta_pct": null,
+      "affected_metric": "dml.taxes.INSERT",
+      "direction": "up",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 94,
+      "workload_match_score": 0.5875,
+      "notes": "Confidence downgraded because too many parameters changed simultaneously. Low workload match; treat attribution as hypothesis. Many settings changed simultaneously; causal confidence is reduced."
+    },
+    {
+      "parameter": "subtransaction_buffers",
+      "old": "736",
+      "new": "1024",
+      "delta_pct": null,
+      "affected_metric": "dml.taxes.INSERT",
+      "direction": "up",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 94,
+      "workload_match_score": 0.5875,
+      "notes": "Confidence downgraded because too many parameters changed simultaneously. Low workload match; treat attribution as hypothesis. Many settings changed simultaneously; causal confidence is reduced."
+    },
+    {
+      "parameter": "synchronous_standby_names",
+      "old": "\"pslod-pprb00824.cloud.omega.sbrf.ru\"",
+      "new": "\"tvldd-pprb06732.delta.sbrf.ru\"",
+      "delta_pct": null,
+      "affected_metric": "dml.taxes.INSERT",
+      "direction": "up",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 94,
+      "workload_match_score": 0.5875,
+      "notes": "Confidence downgraded because too many parameters changed simultaneously. Low workload match; treat attribution as hypothesis. Many settings changed simultaneously; causal confidence is reduced."
+    },
+    {
+      "parameter": "transaction_buffers",
+      "old": "736",
+      "new": "1024",
+      "delta_pct": null,
+      "affected_metric": "dml.taxes.INSERT",
+      "direction": "up",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 94,
+      "workload_match_score": 0.5875,
+      "notes": "Confidence downgraded because too many parameters changed simultaneously. Low workload match; treat attribution as hypothesis. Many settings changed simultaneously; causal confidence is reduced."
+    },
+    {
+      "parameter": "version",
+      "old": "PostgreSQL 15.5 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 11.5.0 20240719 (Platform V SberLinux 11.5.0-5), 64-bit",
+      "new": "PostgreSQL 15.5 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 8.5.0 20210514 (Platform V SberLinux 8.5.0-28), 64-bit",
+      "delta_pct": null,
+      "affected_metric": "dml.taxes.INSERT",
+      "direction": "up",
+      "impact": "neutral",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "evidence_count": 94,
+      "workload_match_score": 0.5875,
+      "notes": "Confidence downgraded because too many parameters changed simultaneously. Low workload match; treat attribution as hypothesis. Many settings changed simultaneously; causal confidence is reduced."
+    }
+  ],
+  "findings": [
+    {
+      "id": "settings.differ.archive_command",
+      "category": "settings",
+      "severity": "warning",
+      "message": "archive_command",
+      "details": {
+        "status": "DIFFER",
+        "value_a": "/opt/pangolin-backup-tools/bin/pg_probackup archive-push -B /pgarclogs/06 --instance pprb_prom-86vc1o --wal-file-path=%p --wal-file-name=%f --compress --overwrite -j 4 --batch-size=100",
+        "value_b": "/opt/pangolin-backup-tools/bin/pg_probackup archive-push -B /pgarclogs/06 --instance pprb_test-7ti63t --wal-file-path=%p --wal-file-name=%f --compress --overwrite -j 4 --batch-size=100",
+        "issue_level": "critical"
+      }
+    },
+    {
+      "id": "settings.only_nt.archive_mode",
+      "category": "settings",
+      "severity": "warning",
+      "message": "archive_mode",
+      "details": {
+        "status": "ONLY_NT",
+        "value_a": "always",
+        "value_b": null,
+        "issue_level": "critical"
+      }
+    },
+    {
+      "id": "settings.differ.authentication_max_workers",
+      "category": "settings",
+      "severity": "warning",
+      "message": "authentication_max_workers",
+      "details": {
+        "status": "DIFFER",
+        "value_a": "8",
+        "value_b": "4",
+        "issue_level": "critical"
+      }
+    },
+    {
+      "id": "settings.differ.autovacuum_work_mem",
+      "category": "settings",
+      "severity": "warning",
+      "message": "autovacuum_work_mem",
+      "details": {
+        "status": "DIFFER",
+        "value_a": "254976",
+        "value_b": "163840",
+        "issue_level": "critical"
+      }
+    },
+    {
+      "id": "settings.differ.cluster_name",
+      "category": "settings",
+      "severity": "warning",
+      "message": "cluster_name",
+      "details": {
+        "status": "DIFFER",
+        "value_a": "pprb_prom-86vc1o",
+        "value_b": "pprb_test-7ti63t",
+        "issue_level": "critical"
+      }
+    },
+    {
+      "id": "settings.differ.commit_timestamp_buffers",
+      "category": "settings",
+      "severity": "warning",
+      "message": "commit_timestamp_buffers",
+      "details": {
+        "status": "DIFFER",
+        "value_a": "736",
+        "value_b": "1024",
+        "issue_level": "critical"
+      }
+    },
+    {
+      "id": "settings.only_nt.disk_retry_count",
+      "category": "settings",
+      "severity": "warning",
+      "message": "disk_retry_count",
+      "details": {
+        "status": "ONLY_NT",
+        "value_a": "21",
+        "value_b": null,
+        "issue_level": "critical"
+      }
+    },
+    {
+      "id": "settings.differ.effective_cache_size",
+      "category": "settings",
+      "severity": "warning",
+      "message": "effective_cache_size",
+      "details": {
+        "status": "DIFFER",
+        "value_a": "1147520",
+        "value_b": "2286976",
+        "issue_level": "critical"
+      }
+    },
+    {
+      "id": "settings.differ.force_failover_timeout",
+      "category": "settings",
+      "severity": "warning",
+      "message": "force_failover_timeout",
+      "details": {
+        "status": "DIFFER",
+        "value_a": "85",
+        "value_b": "108",
+        "issue_level": "critical"
+      }
+    },
+    {
+      "id": "settings.differ.maintenance_work_mem",
+      "category": "settings",
+      "severity": "warning",
+      "message": "maintenance_work_mem",
+      "details": {
+        "status": "DIFFER",
+        "value_a": "1223680",
+        "value_b": "2439168",
+        "issue_level": "critical"
+      }
+    },
+    {
+      "id": "settings.differ.max_parallel_workers",
+      "category": "settings",
+      "severity": "warning",
+      "message": "max_parallel_workers",
+      "details": {
+        "status": "DIFFER",
+        "value_a": "3",
+        "value_b": "20",
+        "issue_level": "critical"
+      }
+    },
+    {
+      "id": "settings.differ.max_prepared_transactions",
+      "category": "settings",
+      "severity": "warning",
+      "message": "max_prepared_transactions",
+      "details": {
+        "status": "DIFFER",
+        "value_a": "18",
+        "value_b": "12",
+        "issue_level": "critical"
+      }
+    },
+    {
+      "id": "settings.only_nt.max_worker_processes",
+      "category": "settings",
+      "severity": "warning",
+      "message": "max_worker_processes",
+      "details": {
+        "status": "ONLY_NT",
+        "value_a": "32",
+        "value_b": null,
+        "issue_level": "critical"
+      }
+    },
+    {
+      "id": "settings.only_nt.performance_insights.directory",
+      "category": "settings",
+      "severity": "warning",
+      "message": "performance_insights.directory",
+      "details": {
+        "status": "ONLY_NT",
+        "value_a": "/pgdata/pg_perf_insights",
+        "value_b": null,
+        "issue_level": "critical"
+      }
+    },
+    {
+      "id": "settings.differ.primary_slot_name",
+      "category": "settings",
+      "severity": "warning",
+      "message": "primary_slot_name",
+      "details": {
+        "status": "DIFFER",
+        "value_a": "pslod_pprb00823_cloud_omega_sbrf_ru",
+        "value_b": "tvldd_pprb06733_delta_sbrf_ru",
+        "issue_level": "critical"
+      }
+    },
+    {
+      "id": "settings.only_prod.sec_admin_default_auth",
+      "category": "settings",
+      "severity": "warning",
+      "message": "sec_admin_default_auth",
+      "details": {
+        "status": "ONLY_PROD",
+        "value_a": null,
+        "value_b": "",
+        "issue_level": "critical"
+      }
+    },
+    {
+      "id": "settings.differ.shared_buffers",
+      "category": "settings",
+      "severity": "warning",
+      "message": "shared_buffers",
+      "details": {
+        "status": "DIFFER",
+        "value_a": "382464",
+        "value_b": "762240",
+        "issue_level": "critical"
+      }
+    },
+    {
+      "id": "settings.differ.shared_memory_size",
+      "category": "settings",
+      "severity": "warning",
+      "message": "shared_memory_size",
+      "details": {
+        "status": "DIFFER",
+        "value_a": "3536",
+        "value_b": "6571",
+        "issue_level": "critical"
+      }
+    },
+    {
+      "id": "settings.differ.shared_memory_size_in_huge_pages",
+      "category": "settings",
+      "severity": "warning",
+      "message": "shared_memory_size_in_huge_pages",
+      "details": {
+        "status": "DIFFER",
+        "value_a": "1768",
+        "value_b": "3286",
+        "issue_level": "critical"
+      }
+    },
+    {
+      "id": "settings.differ.subtransaction_buffers",
+      "category": "settings",
+      "severity": "warning",
+      "message": "subtransaction_buffers",
+      "details": {
+        "status": "DIFFER",
+        "value_a": "736",
+        "value_b": "1024",
+        "issue_level": "critical"
+      }
+    },
+    {
+      "id": "settings.differ.synchronous_standby_names",
+      "category": "settings",
+      "severity": "warning",
+      "message": "synchronous_standby_names",
+      "details": {
+        "status": "DIFFER",
+        "value_a": "\"pslod-pprb00824.cloud.omega.sbrf.ru\"",
+        "value_b": "\"tvldd-pprb06732.delta.sbrf.ru\"",
+        "issue_level": "critical"
+      }
+    },
+    {
+      "id": "settings.differ.transaction_buffers",
+      "category": "settings",
+      "severity": "warning",
+      "message": "transaction_buffers",
+      "details": {
+        "status": "DIFFER",
+        "value_a": "736",
+        "value_b": "1024",
+        "issue_level": "critical"
+      }
+    },
+    {
+      "id": "settings.differ.version",
+      "category": "settings",
+      "severity": "warning",
+      "message": "version",
+      "details": {
+        "status": "DIFFER",
+        "value_a": "PostgreSQL 15.5 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 11.5.0 20240719 (Platform V SberLinux 11.5.0-5), 64-bit",
+        "value_b": "PostgreSQL 15.5 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 8.5.0 20210514 (Platform V SberLinux 8.5.0-28), 64-bit",
+        "issue_level": "critical"
+      }
+    },
+    {
+      "id": "settings.differ.pg_conf_load_time",
+      "category": "settings",
+      "severity": "info",
+      "message": "pg_conf_load_time",
+      "details": {
+        "status": "DIFFER",
+        "value_a": "2026-07-04 03:44:40.49286+03",
+        "value_b": "2026-02-28 19:58:48.556477+03",
+        "issue_level": "informational"
+      }
+    },
+    {
+      "id": "settings.differ.pg_postmaster_start_time",
+      "category": "settings",
+      "severity": "info",
+      "message": "pg_postmaster_start_time",
+      "details": {
+        "status": "DIFFER",
+        "value_a": "2026-05-23 13:21:22.197985+03",
+        "value_b": "2026-02-18 18:18:45.940638+03",
+        "issue_level": "informational"
+      }
+    },
+    {
+      "id": "settings.differ.pg_stat_kcache.linux_hz",
+      "category": "settings",
+      "severity": "info",
+      "message": "pg_stat_kcache.linux_hz",
+      "details": {
+        "status": "DIFFER",
+        "value_a": "1000000",
+        "value_b": "500000",
+        "issue_level": "informational"
+      }
+    }
+  ],
+  "summary": {
+    "differ": 21,
+    "only_a": 4,
+    "only_b": 1,
+    "total_issues": 26,
+    "critical_count": 23,
+    "informational_count": 3,
+    "settings_valid": false
+  }
+}

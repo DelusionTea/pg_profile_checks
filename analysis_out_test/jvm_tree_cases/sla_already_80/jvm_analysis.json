@@ -1,0 +1,172 @@
+{
+  "findings": [
+    {
+      "code": "memory.limit_pressure",
+      "severity": "critical",
+      "message": "Container memory consumption is close to memory limit.",
+      "evidence": {
+        "memory_limit_ratio": "0.820"
+      },
+      "threshold": "working_set/limit >= 0.80",
+      "details": {
+        "container_memory_working_set_mib": "6717",
+        "container_memory_limit_mib": "8192"
+      }
+    },
+    {
+      "code": "memory.request_pressure",
+      "severity": "warning",
+      "message": "Working set significantly exceeds memory request.",
+      "evidence": {
+        "memory_request_ratio": "1.640"
+      },
+      "threshold": "working_set/request >= 1.15",
+      "details": {
+        "container_memory_working_set_mib": "6717",
+        "container_memory_request_mib": "4096"
+      }
+    },
+    {
+      "code": "heap.metric_missing",
+      "severity": "info",
+      "message": "Heap utilization is not provided. Recommendations may be less precise.",
+      "evidence": {
+        "source": "context_metric"
+      },
+      "threshold": "provide heap_used_mib or heap_used_percent",
+      "details": {
+        "source": "ui.metric_input"
+      }
+    },
+    {
+      "code": "oldgen.metric_missing",
+      "severity": "info",
+      "message": "OldGen utilization is not provided. OldGen recommendations may be less precise.",
+      "evidence": {
+        "source": "context_metric"
+      },
+      "threshold": "provide old_gen_used_percent or old_gen_used_mib",
+      "details": {
+        "source": "ui.metric_input"
+      }
+    }
+  ],
+  "recommendations": [
+    {
+      "title": "Reduce memory limit pressure",
+      "rationale": "Working set is near container memory limit.",
+      "suggested_java_tool_options": [
+        "-XX:MaxRAMPercentage=60.0",
+        "-XX:InitialRAMPercentage=35.0",
+        "-XX:+ExitOnOutOfMemoryError"
+      ],
+      "confidence": "low",
+      "evidence_score": 38,
+      "risk_score": 65,
+      "expected_gain": "fewer OOM/restarts",
+      "verification_window": "30-60m after deploy",
+      "rollback_plan": [
+        "Rollback to previous JVM option set if SLA worsens."
+      ],
+      "rule_ids": [
+        "memory.limit_pressure"
+      ],
+      "blocking_conditions": [],
+      "requires_platform_escalation": false,
+      "notes": [
+        "Lower JVM max RAM percentage.",
+        "Rebalance pod memory budget if needed."
+      ]
+    },
+    {
+      "title": "Raise container memory request to match actual usage",
+      "rationale": "Working set is above memory request. Raise request toward observed usage (still below limit). This is not a G1 change.",
+      "suggested_java_tool_options": [],
+      "confidence": "low",
+      "evidence_score": 30,
+      "risk_score": 30,
+      "expected_gain": "better scheduling predictability",
+      "verification_window": "30-60m after deploy",
+      "rollback_plan": [
+        "Rollback to previous JVM option set if SLA worsens."
+      ],
+      "rule_ids": [
+        "memory.request_pressure"
+      ],
+      "blocking_conditions": [],
+      "requires_platform_escalation": false,
+      "notes": [
+        "Increase memory request closer to baseline working set, keeping it below limit.",
+        "Do not change JAVA_TOOL_OPTIONS for this finding."
+      ]
+    },
+    {
+      "title": "Quota-aware memory rebalance plan",
+      "rationale": "Memory limit pressure requires container budget adjustment in addition to JVM tuning.",
+      "suggested_java_tool_options": [],
+      "confidence": "low",
+      "evidence_score": 70,
+      "risk_score": 60,
+      "expected_gain": "avoid OOM and restarts under peaks",
+      "verification_window": "1-2 peak windows",
+      "rollback_plan": [
+        "Rollback pod resources to previous limits if donor containers degrade."
+      ],
+      "rule_ids": [
+        "memory.limit_pressure"
+      ],
+      "blocking_conditions": [
+        "Platform quota constraints"
+      ],
+      "requires_platform_escalation": true,
+      "notes": [
+        "If no improvement after tuning window, escalate for heap dump analysis."
+      ]
+    }
+  ],
+  "memory_plan": {
+    "status": "needs_platform_escalation",
+    "target_container": "application",
+    "requested_delta_mib": 1228,
+    "donor_suggestions": {
+      "istioProxy": 512,
+      "vaultAgent": 256
+    },
+    "notes": [
+      "No safe in-pod memory rebalance found.",
+      "Consider increasing pod/namespace quota or redesigning container resource profile."
+    ]
+  },
+  "lifecycle_status": "tuning_attempted",
+  "tuning_target_snapshot": {
+    "title": "Ресурсы и JVM настройки контейнера (актуально для настройки)",
+    "pod_name": "counteragent-demo",
+    "container_name": "application",
+    "resources": {
+      "requests": {
+        "cpu_millicores": 2000,
+        "memory_mib": 4096,
+        "ephemeral_storage_mib": null
+      },
+      "limits": {
+        "cpu_millicores": 4000,
+        "memory_mib": 8192,
+        "ephemeral_storage_mib": null
+      }
+    },
+    "java_tool_options": [
+      "-XX:+UseContainerSupport",
+      "-XX:+UseG1GC",
+      "-XX:MaxRAMPercentage=70.0",
+      "-XX:InitialRAMPercentage=45.0",
+      "-XX:MaxGCPauseMillis=250",
+      "-XX:+ExitOnOutOfMemoryError"
+    ]
+  },
+  "tree": {
+    "copyable_allowed": false,
+    "pause_copyable_allowed": false,
+    "ha_exceeded": false,
+    "block_reasons": []
+  }
+}

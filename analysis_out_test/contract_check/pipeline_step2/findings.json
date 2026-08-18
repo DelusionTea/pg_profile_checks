@@ -1,0 +1,1353 @@
+{
+  "type": "combined_analysis",
+  "analyses": [
+    {
+      "type": "health_check",
+      "report_meta": {
+        "path": "resources/_test_modified.html",
+        "filename": "_test_modified.html",
+        "server": "tvldd-pprb06733.delta.sbrf.ru",
+        "report_start": "2026-03-13 12:30:02+03",
+        "report_end": "2026-03-14 03:30:02+03",
+        "interval_hours": 15.0,
+        "pgprofile_version": "4.7"
+      },
+      "findings": [
+        {
+          "id": "checkpoints.high_requested_ratio",
+          "category": "checkpoints",
+          "severity": "critical",
+          "message": "Requested checkpoints: 45/64 (70.3%), threshold 30%",
+          "details": {
+            "requested": 45,
+            "timed": 19,
+            "ratio": 0.703125
+          }
+        },
+        {
+          "id": "checkpoints.high_requested_count",
+          "category": "checkpoints",
+          "severity": "warning",
+          "message": "Requested checkpoints: 45 (threshold 10)",
+          "details": {
+            "requested": 45
+          }
+        },
+        {
+          "id": "checkpoints.high_write_time_per_hour",
+          "category": "checkpoints",
+          "severity": "warning",
+          "message": "Checkpoint write time: 905.1s/hour (threshold 60s/hour)",
+          "details": {
+            "write_per_hour": 905.106667
+          }
+        },
+        {
+          "id": "checkpoints.high_write_time",
+          "category": "checkpoints",
+          "severity": "warning",
+          "message": "Checkpoint write time: 13576.6s over 15.0h interval (threshold 300s)",
+          "details": {
+            "write_time": 13576.6
+          }
+        },
+        {
+          "id": "checkpoints.maxwritten_clean",
+          "category": "checkpoints",
+          "severity": "warning",
+          "message": "Bgwriter interrupts (maxwritten_clean): 1821 (threshold 100)",
+          "details": {
+            "maxwritten_clean": 1821
+          }
+        },
+        {
+          "id": "queries.slow_execution",
+          "category": "queries",
+          "severity": "warning",
+          "message": "postgres/postgres: mean=6461.9ms, max=18142.9ms, total=193.9s, calls=30\n  SELECT pgse_profile.take_sample()",
+          "details": {
+            "hexqueryid": "ded394e847c2649a",
+            "mean_exec_time": 6461.87,
+            "max_exec_time": 18142.89,
+            "total_time": 193.86,
+            "calls": 30,
+            "query_text": "SELECT pgse_profile.take_sample()"
+          }
+        },
+        {
+          "id": "queries.slow_execution",
+          "category": "queries",
+          "severity": "warning",
+          "message": "taxes/as_admin: total=18341.2s, calls=86988667\n  insert into taxes.t_value (chgcnt,inn,sys_isdeleted,kpp,sys_lastchangedate,level_entityid,metrictype_entityid,offflag...",
+          "details": {
+            "hexqueryid": "1fe47c7c75cdb884",
+            "mean_exec_time": 0.21,
+            "max_exec_time": 156.33,
+            "total_time": 18341.22,
+            "calls": 86988667,
+            "query_text": "insert into taxes.t_value (chgcnt,inn,sys_isdeleted,kpp,sys_lastchangedate,level_entityid,metrictype_entityid,offflag,sys_ownerid,sys_partitionid,sys_recmodelversion,rquid,sourcedatetime,value_,valuestring,zeroreporting,type,object_id) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,'Value',$17)"
+          }
+        },
+        {
+          "id": "queries.slow_execution",
+          "category": "queries",
+          "severity": "warning",
+          "message": "taxes/as_admin: total=10238.5s, calls=86987557\n  INSERT INTO taxes.T_REPL_AGGLOCK_VALUE (rootid, siversion, guid, version, sys_lastchangedate) VALUES ($1, $2, $3, $4,...",
+          "details": {
+            "hexqueryid": "3bf7b841a0782b39",
+            "mean_exec_time": 0.12,
+            "max_exec_time": 137.58,
+            "total_time": 10238.45,
+            "calls": 86987557,
+            "query_text": "INSERT INTO taxes.T_REPL_AGGLOCK_VALUE (rootid, siversion, guid, version, sys_lastchangedate) VALUES ($1, $2, $3, $4, LOCALTIMESTAMP) ON CONFLICT (rootid) DO NOTHING RETURNING \"sys_lastchangedate\""
+          }
+        },
+        {
+          "id": "queries.slow_execution",
+          "category": "queries",
+          "severity": "warning",
+          "message": "taxes/as_admin: total=3074.6s, calls=86988671\n  select v1_0.object_id from taxes.t_value v1_0 where v1_0.inn is not null and v1_0.inn=$1 and v1_0.kpp is not null and...",
+          "details": {
+            "hexqueryid": "21de29606ada408b",
+            "mean_exec_time": 0.04,
+            "max_exec_time": 79.53,
+            "total_time": 3074.59,
+            "calls": 86988671,
+            "query_text": "select v1_0.object_id from taxes.t_value v1_0 where v1_0.inn is not null and v1_0.inn=$1 and v1_0.kpp is not null and v1_0.kpp=$2 and v1_0.metrictype_entityid is not null and v1_0.metrictype_entityid=$3"
+          }
+        },
+        {
+          "id": "queries.slow_execution",
+          "category": "queries",
+          "severity": "warning",
+          "message": "taxes/as_admin: total=3415.0s, calls=86987567\n  SELECT txtype, changeeventmask, aggtype, ownerid, migrationstatus, silock, siversion, guid, version FROM taxes.T_REPL...",
+          "details": {
+            "hexqueryid": "e0e25b94f626b270",
+            "mean_exec_time": 0.04,
+            "max_exec_time": 76.77,
+            "total_time": 3415.01,
+            "calls": 86987567,
+            "query_text": "SELECT txtype, changeeventmask, aggtype, ownerid, migrationstatus, silock, siversion, guid, version FROM taxes.T_REPL_AGGLOCK_VALUE WHERE rootid = $1 FOR UPDATE"
+          }
+        },
+        {
+          "id": "autovacuum.naptime_high",
+          "category": "autovacuum",
+          "severity": "warning",
+          "message": "autovacuum_naptime=99s exceeds threshold 60s (autovacuum runs too rarely)",
+          "details": {}
+        },
+        {
+          "id": "autovacuum.table_high_mods_pct",
+          "category": "autovacuum",
+          "severity": "warning",
+          "message": "taxes.taxes.t_repl_agglock_auditevent: mods_pct=167.6%, last_autoanalyze=never",
+          "details": {
+            "mods_pct": 167.588326
+          }
+        },
+        {
+          "id": "autovacuum.table_high_dead_pct",
+          "category": "autovacuum",
+          "severity": "warning",
+          "message": "taxes.taxes.t_repl_agglock_auditevent: dead_pct=16.2%, n_dead=633, last_autovacuum=never",
+          "details": {
+            "dead_pct": 16.205837
+          }
+        },
+        {
+          "id": "wal.buffers_full",
+          "category": "wal",
+          "severity": "warning",
+          "message": "wal_buffers_full: 40937 (threshold 1000)",
+          "details": {}
+        },
+        {
+          "id": "cache.high_read_time",
+          "category": "cache",
+          "severity": "warning",
+          "message": "taxes: blk_read_time=214.5s (threshold 60s)",
+          "details": {}
+        },
+        {
+          "id": "cache.low_table_hit_ratio",
+          "category": "cache",
+          "severity": "warning",
+          "message": "postgres.pgse_profile.sample_statements: table hit_pct=91.84% (threshold 95.0%)",
+          "details": {}
+        },
+        {
+          "id": "cache.low_table_hit_ratio",
+          "category": "cache",
+          "severity": "warning",
+          "message": "postgres.pgse_profile.sample_kcache: table hit_pct=89.36% (threshold 95.0%)",
+          "details": {}
+        },
+        {
+          "id": "cache.low_table_hit_ratio",
+          "category": "cache",
+          "severity": "warning",
+          "message": "postgres.pgse_profile.sample_stat_indexes: table hit_pct=94.27% (threshold 95.0%)",
+          "details": {}
+        },
+        {
+          "id": "cache.low_table_hit_ratio",
+          "category": "cache",
+          "severity": "warning",
+          "message": "postgres.pgse_profile.sample_settings: table hit_pct=93.11% (threshold 95.0%)",
+          "details": {}
+        },
+        {
+          "id": "sessions.high_idle_in_transaction",
+          "category": "sessions",
+          "severity": "critical",
+          "message": "taxes: idle_in_transaction_time=1112045.7s (threshold 3600s), idle_in_transaction_session_timeout=0",
+          "details": {
+            "idle_time": 1112045.67
+          }
+        },
+        {
+          "id": "sessions.connection_pressure",
+          "category": "sessions",
+          "severity": "warning",
+          "message": "postgres: connection pressure sessions=2884 (412% of max_connections=700)",
+          "details": {
+            "sessions": 2884,
+            "max_connections": 700,
+            "util_pct": 412.0
+          }
+        },
+        {
+          "id": "sessions.connection_pressure",
+          "category": "sessions",
+          "severity": "warning",
+          "message": "taxes: connection pressure sessions=6912 (987% of max_connections=700)",
+          "details": {
+            "sessions": 6912,
+            "max_connections": 700,
+            "util_pct": 987.428571
+          }
+        },
+        {
+          "id": "sessions.idle_timeout_disabled",
+          "category": "sessions",
+          "severity": "critical",
+          "message": "idle_in_transaction_session_timeout=0 while idle in transaction time is high",
+          "details": {}
+        },
+        {
+          "id": "memory.huge_pages_recommended",
+          "category": "memory",
+          "severity": "warning",
+          "message": "huge_pages=try with shared_buffers=5955MB (≥2048MB): prefer huge_pages=on; shared_memory_size_in_huge_pages=3286",
+          "details": {
+            "huge_pages": "try",
+            "shared_buffers_mb": 5955.0,
+            "shared_memory_size_in_huge_pages": "3286",
+            "min_shared_buffers_mb": 2048.0
+          }
+        },
+        {
+          "id": "memory.statement_timeout_zero",
+          "category": "memory",
+          "severity": "warning",
+          "message": "statement_timeout=0 (queries may run indefinitely)",
+          "details": {}
+        },
+        {
+          "id": "memory.lock_timeout_zero",
+          "category": "memory",
+          "severity": "warning",
+          "message": "lock_timeout=0 (no protection against lock waits)",
+          "details": {}
+        },
+        {
+          "id": "io.wal_heavy_query",
+          "category": "io",
+          "severity": "warning",
+          "message": "taxes/as_admin: wal=66.6GB, shared_blks_dirtied=4099983\n  insert into taxes.t_value (chgcnt,inn,sys_isdeleted,kpp,sys_lastchangedate,level_entityid,metrictype_entityid,offflag...",
+          "details": {
+            "hexqueryid": "1fe47c7c75cdb884",
+            "wal_bytes": 71518897867.0,
+            "io_time": 0.0,
+            "query_text": "insert into taxes.t_value (chgcnt,inn,sys_isdeleted,kpp,sys_lastchangedate,level_entityid,metrictype_entityid,offflag,sys_ownerid,sys_partitionid,sys_recmodelversion,rquid,sourcedatetime,value_,valuestring,zeroreporting,type,object_id) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,'Value',$17)"
+          }
+        },
+        {
+          "id": "io.wal_heavy_query",
+          "category": "io",
+          "severity": "warning",
+          "message": "taxes/as_admin: wal=26.5GB, shared_blks_dirtied=2172215\n  INSERT INTO taxes.T_REPL_AGGLOCK_VALUE (rootid, siversion, guid, version, sys_lastchangedate) VALUES ($1, $2, $3, $4,...",
+          "details": {
+            "hexqueryid": "3bf7b841a0782b39",
+            "wal_bytes": 28492684668.0,
+            "io_time": 0.0,
+            "query_text": "INSERT INTO taxes.T_REPL_AGGLOCK_VALUE (rootid, siversion, guid, version, sys_lastchangedate) VALUES ($1, $2, $3, $4, LOCALTIMESTAMP) ON CONFLICT (rootid) DO NOTHING RETURNING \"sys_lastchangedate\""
+          }
+        },
+        {
+          "id": "io.high_heap_reads",
+          "category": "io",
+          "severity": "warning",
+          "message": "taxes.taxes.t_value: heap_blks_read=2560817",
+          "details": {
+            "heap_blks_read": 2560817
+          }
+        },
+        {
+          "id": "io.high_heap_reads",
+          "category": "io",
+          "severity": "warning",
+          "message": "taxes.taxes.t_repl_agglock_value: heap_blks_read=2033941",
+          "details": {
+            "heap_blks_read": 2033941
+          }
+        },
+        {
+          "id": "io.high_seq_scan",
+          "category": "io",
+          "severity": "warning",
+          "message": "taxes.taxes.t_dspc_sys_versions: seq_scan=44384, idx_scan=0, ratio=44384.0",
+          "details": {
+            "seq_scan": 44384
+          }
+        },
+        {
+          "id": "io.high_seq_scan",
+          "category": "io",
+          "severity": "warning",
+          "message": "postgres.pgse_profile.last_stat_database_srv2: seq_scan=25144, idx_scan=0, ratio=25144.0",
+          "details": {
+            "seq_scan": 25144
+          }
+        },
+        {
+          "id": "io.high_seq_scan",
+          "category": "io",
+          "severity": "warning",
+          "message": "taxes.taxes.t_dspc_sys_config: seq_scan=22192, idx_scan=0, ratio=22192.0",
+          "details": {
+            "seq_scan": 22192
+          }
+        },
+        {
+          "id": "io.high_seq_scan",
+          "category": "io",
+          "severity": "warning",
+          "message": "postgres.pg_catalog.pg_am: seq_scan=9238, idx_scan=0, ratio=9238.0",
+          "details": {
+            "seq_scan": 9238
+          }
+        },
+        {
+          "id": "io.high_seq_scan",
+          "category": "io",
+          "severity": "warning",
+          "message": "taxes.taxes.t_repl_agglock_commonparam: seq_scan=7188, idx_scan=0, ratio=7188.0",
+          "details": {
+            "seq_scan": 7188
+          }
+        },
+        {
+          "id": "io.vacuum_ops_pressure",
+          "category": "io",
+          "severity": "warning",
+          "message": "taxes.taxes.t_dspc_sys_config: vacuum_ops=215, analyze_ops=214",
+          "details": {
+            "vacuum_ops": 215,
+            "analyze_ops": 214,
+            "kind": "vacuum_ops"
+          }
+        },
+        {
+          "id": "io.vacuum_ops_pressure",
+          "category": "io",
+          "severity": "warning",
+          "message": "taxes.taxes.t_repl_agglock_commonparam: vacuum_ops=71, analyze_ops=71",
+          "details": {
+            "vacuum_ops": 71,
+            "analyze_ops": 71,
+            "kind": "vacuum_ops"
+          }
+        },
+        {
+          "id": "io.vacuum_ops_pressure",
+          "category": "io",
+          "severity": "warning",
+          "message": "postgres.pg_catalog.pg_statistic: vacuum_ops=56, analyze_ops=0",
+          "details": {
+            "vacuum_ops": 56,
+            "analyze_ops": 0,
+            "kind": "vacuum_ops"
+          }
+        },
+        {
+          "id": "io.vacuum_ops_pressure",
+          "category": "io",
+          "severity": "warning",
+          "message": "taxes.taxes.t_value: vacuum_ops=33, analyze_ops=60",
+          "details": {
+            "vacuum_ops": 33,
+            "analyze_ops": 60,
+            "kind": "vacuum_ops"
+          }
+        },
+        {
+          "id": "io.vacuum_ops_pressure",
+          "category": "io",
+          "severity": "warning",
+          "message": "taxes.taxes.t_repl_agglock_value: vacuum_ops=33, analyze_ops=61",
+          "details": {
+            "vacuum_ops": 33,
+            "analyze_ops": 61,
+            "kind": "vacuum_ops"
+          }
+        },
+        {
+          "id": "io.vacuum_ops_pressure",
+          "category": "io",
+          "severity": "warning",
+          "message": "postgres.pgse_profile.last_stat_tables_srv2: vacuum_ops=31, analyze_ops=60",
+          "details": {
+            "vacuum_ops": 31,
+            "analyze_ops": 60,
+            "kind": "vacuum_ops"
+          }
+        },
+        {
+          "id": "io.vacuum_ops_pressure",
+          "category": "io",
+          "severity": "warning",
+          "message": "postgres.pgse_profile.last_stat_indexes_srv3: vacuum_ops=30, analyze_ops=60",
+          "details": {
+            "vacuum_ops": 30,
+            "analyze_ops": 60,
+            "kind": "vacuum_ops"
+          }
+        },
+        {
+          "id": "io.vacuum_ops_pressure",
+          "category": "io",
+          "severity": "warning",
+          "message": "postgres.pgse_profile.last_stat_indexes_srv2: vacuum_ops=30, analyze_ops=60",
+          "details": {
+            "vacuum_ops": 30,
+            "analyze_ops": 60,
+            "kind": "vacuum_ops"
+          }
+        },
+        {
+          "id": "io.vacuum_ops_pressure",
+          "category": "io",
+          "severity": "warning",
+          "message": "postgres.pgse_profile.last_stat_tables_srv3: vacuum_ops=30, analyze_ops=60",
+          "details": {
+            "vacuum_ops": 30,
+            "analyze_ops": 60,
+            "kind": "vacuum_ops"
+          }
+        },
+        {
+          "id": "io.vacuum_ops_pressure",
+          "category": "io",
+          "severity": "warning",
+          "message": "postgres.pgse_profile.last_stat_statements_srv2: vacuum_ops=30, analyze_ops=60",
+          "details": {
+            "vacuum_ops": 30,
+            "analyze_ops": 60,
+            "kind": "vacuum_ops"
+          }
+        },
+        {
+          "id": "io.unused_index",
+          "category": "io",
+          "severity": "warning",
+          "message": "Unused index taxes.taxes.t_value.i_value_type: size=798 MB",
+          "details": {}
+        },
+        {
+          "id": "io.unused_index",
+          "category": "io",
+          "severity": "warning",
+          "message": "Unused index taxes.taxes.t_value.i_value_level: size=934 MB",
+          "details": {}
+        },
+        {
+          "id": "io.unused_index",
+          "category": "io",
+          "severity": "warning",
+          "message": "Unused index taxes.taxes.t_value.i_value_rquid: size=872 MB",
+          "details": {}
+        },
+        {
+          "id": "io.hot_index_reads",
+          "category": "io",
+          "severity": "warning",
+          "message": "Hot index reads taxes.taxes.t_value.i_value_inn_1: idx_blks_read=947341, hit_pct=99.86%",
+          "details": {
+            "idx_blks_read": 947341,
+            "kind": "hot_index"
+          }
+        },
+        {
+          "id": "io.hot_index_reads",
+          "category": "io",
+          "severity": "warning",
+          "message": "Hot index reads taxes.taxes.t_value.pk_t_value: idx_blks_read=673818, hit_pct=99.78%",
+          "details": {
+            "idx_blks_read": 673818,
+            "kind": "hot_index"
+          }
+        },
+        {
+          "id": "io.hot_index_reads",
+          "category": "io",
+          "severity": "warning",
+          "message": "Hot index reads taxes.taxes.t_repl_agglock_value.pk_t_repl_agglockid_value: idx_blks_read=671657, hit_pct=99.93%",
+          "details": {
+            "idx_blks_read": 671657,
+            "kind": "hot_index"
+          }
+        },
+        {
+          "id": "io.hot_index_reads",
+          "category": "io",
+          "severity": "warning",
+          "message": "Hot index reads taxes.taxes.t_value.i_value_level: idx_blks_read=119777, hit_pct=99.96%",
+          "details": {
+            "idx_blks_read": 119777,
+            "kind": "hot_index"
+          }
+        },
+        {
+          "id": "io.hot_index_reads",
+          "category": "io",
+          "severity": "warning",
+          "message": "Hot index reads taxes.taxes.t_value.i_value_metrictype: idx_blks_read=119599, hit_pct=99.97%",
+          "details": {
+            "idx_blks_read": 119599,
+            "kind": "hot_index"
+          }
+        },
+        {
+          "id": "io.hot_index_reads",
+          "category": "io",
+          "severity": "warning",
+          "message": "Hot index reads taxes.taxes.t_value.i_value_rquid: idx_blks_read=111715, hit_pct=99.96%",
+          "details": {
+            "idx_blks_read": 111715,
+            "kind": "hot_index"
+          }
+        },
+        {
+          "id": "io.hot_index_reads",
+          "category": "io",
+          "severity": "warning",
+          "message": "Hot index reads taxes.taxes.t_value.i_value_type: idx_blks_read=102201, hit_pct=99.96%",
+          "details": {
+            "idx_blks_read": 102201,
+            "kind": "hot_index"
+          }
+        },
+        {
+          "id": "db.statement_dominance",
+          "category": "io",
+          "severity": "warning",
+          "message": "taxes: dominates statement time 99.4% (total_exec_time=35128.85)",
+          "details": {
+            "dominance_pct": 99.36279,
+            "kind": "db_dominance"
+          }
+        }
+      ],
+      "summary": {
+        "total": 56,
+        "critical": 3,
+        "warning": 53
+      }
+    },
+    {
+      "type": "run_comparison",
+      "contract": {
+        "schema": "run_comparison_v1",
+        "schema_version": "1.0"
+      },
+      "run_a": {
+        "run_id": "before",
+        "path": "resources/_test_modified.html",
+        "filename": "_test_modified.html",
+        "server": "tvldd-pprb06733.delta.sbrf.ru",
+        "report_start": "2026-03-13 12:30:02+03",
+        "report_end": "2026-03-14 03:30:02+03",
+        "interval_hours": 15.0
+      },
+      "run_b": {
+        "run_id": "after",
+        "path": "resources/_test_removed_defined.html",
+        "filename": "_test_removed_defined.html",
+        "server": "tvldd-pprb06733.delta.sbrf.ru",
+        "report_start": "2026-03-13 12:30:02+03",
+        "report_end": "2026-03-14 03:30:02+03",
+        "interval_hours": 15.0
+      },
+      "run_identity": {
+        "mode": "pair",
+        "runs": [
+          {
+            "role": "before",
+            "run_id": "before",
+            "server": "tvldd-pprb06733.delta.sbrf.ru",
+            "report_start": "2026-03-13 12:30:02+03",
+            "report_end": "2026-03-14 03:30:02+03",
+            "interval_hours": 15.0
+          },
+          {
+            "role": "after",
+            "run_id": "after",
+            "server": "tvldd-pprb06733.delta.sbrf.ru",
+            "report_start": "2026-03-13 12:30:02+03",
+            "report_end": "2026-03-14 03:30:02+03",
+            "interval_hours": 15.0
+          }
+        ]
+      },
+      "workload_match": {
+        "workload_match_score": 1.0,
+        "level": "high",
+        "components": {
+          "interval_similarity": 1.0,
+          "server_similarity": 1.0
+        },
+        "notes": "Higher score means better run comparability for influence interpretation."
+      },
+      "confidence_meta": {
+        "mode": "pair",
+        "changed_params_count": 0,
+        "changed_params_threshold": 10,
+        "workload_match_score": 1.0,
+        "isolated_change": false,
+        "confidence": "medium",
+        "evidence_type": "probable",
+        "proven_criteria": {
+          "requires_isolated_change": true,
+          "requires_changed_params_count": 1,
+          "requires_workload_match_score_at_least": 0.85
+        },
+        "notes": "Confidence baseline for pair comparison without isolated causality proof."
+      },
+      "influence_rows": [],
+      "interval_diff_hours": 0.0,
+      "interval_mismatch": false,
+      "findings": [],
+      "summary": {
+        "total_compared": 94,
+        "significant_count": 0,
+        "min_change_pct": 5.0
+      }
+    },
+    {
+      "type": "settings_diff",
+      "contract": {
+        "schema": "settings_diff_v1",
+        "schema_version": "1.0"
+      },
+      "run_a": {
+        "run_id": "NT",
+        "path": "resources/_test_modified.html",
+        "filename": "_test_modified.html",
+        "meta": {
+          "path": "resources/_test_modified.html",
+          "filename": "_test_modified.html",
+          "server": "",
+          "from": "",
+          "to": "",
+          "version": "PostgreSQL 15.5 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 8.5.0 20210514 (Platform V SberLinux 8.5.0-28), 64-bit"
+        }
+      },
+      "run_b": {
+        "run_id": "PROD",
+        "path": "resources/_test_removed_defined.html",
+        "filename": "_test_removed_defined.html",
+        "meta": {
+          "path": "resources/_test_removed_defined.html",
+          "filename": "_test_removed_defined.html",
+          "server": "",
+          "from": "",
+          "to": "",
+          "version": "PostgreSQL 15.5 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 8.5.0 20210514 (Platform V SberLinux 8.5.0-28), 64-bit"
+        }
+      },
+      "run_identity": {
+        "mode": "pair",
+        "runs": [
+          {
+            "role": "before",
+            "run_id": "NT",
+            "server": "",
+            "report_start": "",
+            "report_end": "",
+            "interval_hours": null
+          },
+          {
+            "role": "after",
+            "run_id": "PROD",
+            "server": "",
+            "report_start": "",
+            "report_end": "",
+            "interval_hours": null
+          }
+        ]
+      },
+      "workload_match": {
+        "workload_match_score": 0.8,
+        "level": "medium",
+        "components": {
+          "interval_similarity": null,
+          "server_similarity": 0.8
+        },
+        "notes": "Higher score means better run comparability for influence interpretation."
+      },
+      "confidence_meta": {
+        "mode": "pair",
+        "changed_params_count": 2,
+        "changed_params_threshold": 10,
+        "workload_match_score": 0.8,
+        "isolated_change": false,
+        "confidence": "medium",
+        "evidence_type": "probable",
+        "proven_criteria": {
+          "requires_isolated_change": true,
+          "requires_changed_params_count": 1,
+          "requires_workload_match_score_at_least": 0.85
+        },
+        "notes": "Confidence baseline for pair comparison without isolated causality proof."
+      },
+      "settings_changes": [
+        {
+          "parameter": "archive_timeout",
+          "status": "ONLY_NT",
+          "old": "180",
+          "new": null
+        },
+        {
+          "parameter": "autovacuum_naptime",
+          "status": "DIFFER",
+          "old": "99",
+          "new": "10"
+        }
+      ],
+      "influence_rows": [],
+      "findings": [
+        {
+          "id": "settings.only_nt.archive_timeout",
+          "category": "settings",
+          "severity": "warning",
+          "message": "archive_timeout",
+          "details": {
+            "status": "ONLY_NT",
+            "value_a": "180",
+            "value_b": null,
+            "issue_level": "critical"
+          }
+        },
+        {
+          "id": "settings.differ.autovacuum_naptime",
+          "category": "settings",
+          "severity": "warning",
+          "message": "autovacuum_naptime",
+          "details": {
+            "status": "DIFFER",
+            "value_a": "99",
+            "value_b": "10",
+            "issue_level": "critical"
+          }
+        }
+      ],
+      "summary": {
+        "differ": 1,
+        "only_a": 1,
+        "only_b": 0,
+        "total_issues": 2,
+        "critical_count": 2,
+        "informational_count": 0,
+        "settings_valid": false
+      }
+    }
+  ],
+  "findings": [
+    {
+      "id": "checkpoints.high_requested_ratio",
+      "category": "checkpoints",
+      "severity": "critical",
+      "message": "Requested checkpoints: 45/64 (70.3%), threshold 30%",
+      "details": {
+        "requested": 45,
+        "timed": 19,
+        "ratio": 0.703125
+      }
+    },
+    {
+      "id": "checkpoints.high_requested_count",
+      "category": "checkpoints",
+      "severity": "warning",
+      "message": "Requested checkpoints: 45 (threshold 10)",
+      "details": {
+        "requested": 45
+      }
+    },
+    {
+      "id": "checkpoints.high_write_time_per_hour",
+      "category": "checkpoints",
+      "severity": "warning",
+      "message": "Checkpoint write time: 905.1s/hour (threshold 60s/hour)",
+      "details": {
+        "write_per_hour": 905.106667
+      }
+    },
+    {
+      "id": "checkpoints.high_write_time",
+      "category": "checkpoints",
+      "severity": "warning",
+      "message": "Checkpoint write time: 13576.6s over 15.0h interval (threshold 300s)",
+      "details": {
+        "write_time": 13576.6
+      }
+    },
+    {
+      "id": "checkpoints.maxwritten_clean",
+      "category": "checkpoints",
+      "severity": "warning",
+      "message": "Bgwriter interrupts (maxwritten_clean): 1821 (threshold 100)",
+      "details": {
+        "maxwritten_clean": 1821
+      }
+    },
+    {
+      "id": "queries.slow_execution",
+      "category": "queries",
+      "severity": "warning",
+      "message": "postgres/postgres: mean=6461.9ms, max=18142.9ms, total=193.9s, calls=30\n  SELECT pgse_profile.take_sample()",
+      "details": {
+        "hexqueryid": "ded394e847c2649a",
+        "mean_exec_time": 6461.87,
+        "max_exec_time": 18142.89,
+        "total_time": 193.86,
+        "calls": 30,
+        "query_text": "SELECT pgse_profile.take_sample()"
+      }
+    },
+    {
+      "id": "queries.slow_execution",
+      "category": "queries",
+      "severity": "warning",
+      "message": "taxes/as_admin: total=18341.2s, calls=86988667\n  insert into taxes.t_value (chgcnt,inn,sys_isdeleted,kpp,sys_lastchangedate,level_entityid,metrictype_entityid,offflag...",
+      "details": {
+        "hexqueryid": "1fe47c7c75cdb884",
+        "mean_exec_time": 0.21,
+        "max_exec_time": 156.33,
+        "total_time": 18341.22,
+        "calls": 86988667,
+        "query_text": "insert into taxes.t_value (chgcnt,inn,sys_isdeleted,kpp,sys_lastchangedate,level_entityid,metrictype_entityid,offflag,sys_ownerid,sys_partitionid,sys_recmodelversion,rquid,sourcedatetime,value_,valuestring,zeroreporting,type,object_id) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,'Value',$17)"
+      }
+    },
+    {
+      "id": "queries.slow_execution",
+      "category": "queries",
+      "severity": "warning",
+      "message": "taxes/as_admin: total=10238.5s, calls=86987557\n  INSERT INTO taxes.T_REPL_AGGLOCK_VALUE (rootid, siversion, guid, version, sys_lastchangedate) VALUES ($1, $2, $3, $4,...",
+      "details": {
+        "hexqueryid": "3bf7b841a0782b39",
+        "mean_exec_time": 0.12,
+        "max_exec_time": 137.58,
+        "total_time": 10238.45,
+        "calls": 86987557,
+        "query_text": "INSERT INTO taxes.T_REPL_AGGLOCK_VALUE (rootid, siversion, guid, version, sys_lastchangedate) VALUES ($1, $2, $3, $4, LOCALTIMESTAMP) ON CONFLICT (rootid) DO NOTHING RETURNING \"sys_lastchangedate\""
+      }
+    },
+    {
+      "id": "queries.slow_execution",
+      "category": "queries",
+      "severity": "warning",
+      "message": "taxes/as_admin: total=3074.6s, calls=86988671\n  select v1_0.object_id from taxes.t_value v1_0 where v1_0.inn is not null and v1_0.inn=$1 and v1_0.kpp is not null and...",
+      "details": {
+        "hexqueryid": "21de29606ada408b",
+        "mean_exec_time": 0.04,
+        "max_exec_time": 79.53,
+        "total_time": 3074.59,
+        "calls": 86988671,
+        "query_text": "select v1_0.object_id from taxes.t_value v1_0 where v1_0.inn is not null and v1_0.inn=$1 and v1_0.kpp is not null and v1_0.kpp=$2 and v1_0.metrictype_entityid is not null and v1_0.metrictype_entityid=$3"
+      }
+    },
+    {
+      "id": "queries.slow_execution",
+      "category": "queries",
+      "severity": "warning",
+      "message": "taxes/as_admin: total=3415.0s, calls=86987567\n  SELECT txtype, changeeventmask, aggtype, ownerid, migrationstatus, silock, siversion, guid, version FROM taxes.T_REPL...",
+      "details": {
+        "hexqueryid": "e0e25b94f626b270",
+        "mean_exec_time": 0.04,
+        "max_exec_time": 76.77,
+        "total_time": 3415.01,
+        "calls": 86987567,
+        "query_text": "SELECT txtype, changeeventmask, aggtype, ownerid, migrationstatus, silock, siversion, guid, version FROM taxes.T_REPL_AGGLOCK_VALUE WHERE rootid = $1 FOR UPDATE"
+      }
+    },
+    {
+      "id": "autovacuum.naptime_high",
+      "category": "autovacuum",
+      "severity": "warning",
+      "message": "autovacuum_naptime=99s exceeds threshold 60s (autovacuum runs too rarely)",
+      "details": {}
+    },
+    {
+      "id": "autovacuum.table_high_mods_pct",
+      "category": "autovacuum",
+      "severity": "warning",
+      "message": "taxes.taxes.t_repl_agglock_auditevent: mods_pct=167.6%, last_autoanalyze=never",
+      "details": {
+        "mods_pct": 167.588326
+      }
+    },
+    {
+      "id": "autovacuum.table_high_dead_pct",
+      "category": "autovacuum",
+      "severity": "warning",
+      "message": "taxes.taxes.t_repl_agglock_auditevent: dead_pct=16.2%, n_dead=633, last_autovacuum=never",
+      "details": {
+        "dead_pct": 16.205837
+      }
+    },
+    {
+      "id": "wal.buffers_full",
+      "category": "wal",
+      "severity": "warning",
+      "message": "wal_buffers_full: 40937 (threshold 1000)",
+      "details": {}
+    },
+    {
+      "id": "cache.high_read_time",
+      "category": "cache",
+      "severity": "warning",
+      "message": "taxes: blk_read_time=214.5s (threshold 60s)",
+      "details": {}
+    },
+    {
+      "id": "cache.low_table_hit_ratio",
+      "category": "cache",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.sample_statements: table hit_pct=91.84% (threshold 95.0%)",
+      "details": {}
+    },
+    {
+      "id": "cache.low_table_hit_ratio",
+      "category": "cache",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.sample_kcache: table hit_pct=89.36% (threshold 95.0%)",
+      "details": {}
+    },
+    {
+      "id": "cache.low_table_hit_ratio",
+      "category": "cache",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.sample_stat_indexes: table hit_pct=94.27% (threshold 95.0%)",
+      "details": {}
+    },
+    {
+      "id": "cache.low_table_hit_ratio",
+      "category": "cache",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.sample_settings: table hit_pct=93.11% (threshold 95.0%)",
+      "details": {}
+    },
+    {
+      "id": "sessions.high_idle_in_transaction",
+      "category": "sessions",
+      "severity": "critical",
+      "message": "taxes: idle_in_transaction_time=1112045.7s (threshold 3600s), idle_in_transaction_session_timeout=0",
+      "details": {
+        "idle_time": 1112045.67
+      }
+    },
+    {
+      "id": "sessions.connection_pressure",
+      "category": "sessions",
+      "severity": "warning",
+      "message": "postgres: connection pressure sessions=2884 (412% of max_connections=700)",
+      "details": {
+        "sessions": 2884,
+        "max_connections": 700,
+        "util_pct": 412.0
+      }
+    },
+    {
+      "id": "sessions.connection_pressure",
+      "category": "sessions",
+      "severity": "warning",
+      "message": "taxes: connection pressure sessions=6912 (987% of max_connections=700)",
+      "details": {
+        "sessions": 6912,
+        "max_connections": 700,
+        "util_pct": 987.428571
+      }
+    },
+    {
+      "id": "sessions.idle_timeout_disabled",
+      "category": "sessions",
+      "severity": "critical",
+      "message": "idle_in_transaction_session_timeout=0 while idle in transaction time is high",
+      "details": {}
+    },
+    {
+      "id": "memory.huge_pages_recommended",
+      "category": "memory",
+      "severity": "warning",
+      "message": "huge_pages=try with shared_buffers=5955MB (≥2048MB): prefer huge_pages=on; shared_memory_size_in_huge_pages=3286",
+      "details": {
+        "huge_pages": "try",
+        "shared_buffers_mb": 5955.0,
+        "shared_memory_size_in_huge_pages": "3286",
+        "min_shared_buffers_mb": 2048.0
+      }
+    },
+    {
+      "id": "memory.statement_timeout_zero",
+      "category": "memory",
+      "severity": "warning",
+      "message": "statement_timeout=0 (queries may run indefinitely)",
+      "details": {}
+    },
+    {
+      "id": "memory.lock_timeout_zero",
+      "category": "memory",
+      "severity": "warning",
+      "message": "lock_timeout=0 (no protection against lock waits)",
+      "details": {}
+    },
+    {
+      "id": "io.wal_heavy_query",
+      "category": "io",
+      "severity": "warning",
+      "message": "taxes/as_admin: wal=66.6GB, shared_blks_dirtied=4099983\n  insert into taxes.t_value (chgcnt,inn,sys_isdeleted,kpp,sys_lastchangedate,level_entityid,metrictype_entityid,offflag...",
+      "details": {
+        "hexqueryid": "1fe47c7c75cdb884",
+        "wal_bytes": 71518897867.0,
+        "io_time": 0.0,
+        "query_text": "insert into taxes.t_value (chgcnt,inn,sys_isdeleted,kpp,sys_lastchangedate,level_entityid,metrictype_entityid,offflag,sys_ownerid,sys_partitionid,sys_recmodelversion,rquid,sourcedatetime,value_,valuestring,zeroreporting,type,object_id) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,'Value',$17)"
+      }
+    },
+    {
+      "id": "io.wal_heavy_query",
+      "category": "io",
+      "severity": "warning",
+      "message": "taxes/as_admin: wal=26.5GB, shared_blks_dirtied=2172215\n  INSERT INTO taxes.T_REPL_AGGLOCK_VALUE (rootid, siversion, guid, version, sys_lastchangedate) VALUES ($1, $2, $3, $4,...",
+      "details": {
+        "hexqueryid": "3bf7b841a0782b39",
+        "wal_bytes": 28492684668.0,
+        "io_time": 0.0,
+        "query_text": "INSERT INTO taxes.T_REPL_AGGLOCK_VALUE (rootid, siversion, guid, version, sys_lastchangedate) VALUES ($1, $2, $3, $4, LOCALTIMESTAMP) ON CONFLICT (rootid) DO NOTHING RETURNING \"sys_lastchangedate\""
+      }
+    },
+    {
+      "id": "io.high_heap_reads",
+      "category": "io",
+      "severity": "warning",
+      "message": "taxes.taxes.t_value: heap_blks_read=2560817",
+      "details": {
+        "heap_blks_read": 2560817
+      }
+    },
+    {
+      "id": "io.high_heap_reads",
+      "category": "io",
+      "severity": "warning",
+      "message": "taxes.taxes.t_repl_agglock_value: heap_blks_read=2033941",
+      "details": {
+        "heap_blks_read": 2033941
+      }
+    },
+    {
+      "id": "io.high_seq_scan",
+      "category": "io",
+      "severity": "warning",
+      "message": "taxes.taxes.t_dspc_sys_versions: seq_scan=44384, idx_scan=0, ratio=44384.0",
+      "details": {
+        "seq_scan": 44384
+      }
+    },
+    {
+      "id": "io.high_seq_scan",
+      "category": "io",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.last_stat_database_srv2: seq_scan=25144, idx_scan=0, ratio=25144.0",
+      "details": {
+        "seq_scan": 25144
+      }
+    },
+    {
+      "id": "io.high_seq_scan",
+      "category": "io",
+      "severity": "warning",
+      "message": "taxes.taxes.t_dspc_sys_config: seq_scan=22192, idx_scan=0, ratio=22192.0",
+      "details": {
+        "seq_scan": 22192
+      }
+    },
+    {
+      "id": "io.high_seq_scan",
+      "category": "io",
+      "severity": "warning",
+      "message": "postgres.pg_catalog.pg_am: seq_scan=9238, idx_scan=0, ratio=9238.0",
+      "details": {
+        "seq_scan": 9238
+      }
+    },
+    {
+      "id": "io.high_seq_scan",
+      "category": "io",
+      "severity": "warning",
+      "message": "taxes.taxes.t_repl_agglock_commonparam: seq_scan=7188, idx_scan=0, ratio=7188.0",
+      "details": {
+        "seq_scan": 7188
+      }
+    },
+    {
+      "id": "io.vacuum_ops_pressure",
+      "category": "io",
+      "severity": "warning",
+      "message": "taxes.taxes.t_dspc_sys_config: vacuum_ops=215, analyze_ops=214",
+      "details": {
+        "vacuum_ops": 215,
+        "analyze_ops": 214,
+        "kind": "vacuum_ops"
+      }
+    },
+    {
+      "id": "io.vacuum_ops_pressure",
+      "category": "io",
+      "severity": "warning",
+      "message": "taxes.taxes.t_repl_agglock_commonparam: vacuum_ops=71, analyze_ops=71",
+      "details": {
+        "vacuum_ops": 71,
+        "analyze_ops": 71,
+        "kind": "vacuum_ops"
+      }
+    },
+    {
+      "id": "io.vacuum_ops_pressure",
+      "category": "io",
+      "severity": "warning",
+      "message": "postgres.pg_catalog.pg_statistic: vacuum_ops=56, analyze_ops=0",
+      "details": {
+        "vacuum_ops": 56,
+        "analyze_ops": 0,
+        "kind": "vacuum_ops"
+      }
+    },
+    {
+      "id": "io.vacuum_ops_pressure",
+      "category": "io",
+      "severity": "warning",
+      "message": "taxes.taxes.t_value: vacuum_ops=33, analyze_ops=60",
+      "details": {
+        "vacuum_ops": 33,
+        "analyze_ops": 60,
+        "kind": "vacuum_ops"
+      }
+    },
+    {
+      "id": "io.vacuum_ops_pressure",
+      "category": "io",
+      "severity": "warning",
+      "message": "taxes.taxes.t_repl_agglock_value: vacuum_ops=33, analyze_ops=61",
+      "details": {
+        "vacuum_ops": 33,
+        "analyze_ops": 61,
+        "kind": "vacuum_ops"
+      }
+    },
+    {
+      "id": "io.vacuum_ops_pressure",
+      "category": "io",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.last_stat_tables_srv2: vacuum_ops=31, analyze_ops=60",
+      "details": {
+        "vacuum_ops": 31,
+        "analyze_ops": 60,
+        "kind": "vacuum_ops"
+      }
+    },
+    {
+      "id": "io.vacuum_ops_pressure",
+      "category": "io",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.last_stat_indexes_srv3: vacuum_ops=30, analyze_ops=60",
+      "details": {
+        "vacuum_ops": 30,
+        "analyze_ops": 60,
+        "kind": "vacuum_ops"
+      }
+    },
+    {
+      "id": "io.vacuum_ops_pressure",
+      "category": "io",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.last_stat_indexes_srv2: vacuum_ops=30, analyze_ops=60",
+      "details": {
+        "vacuum_ops": 30,
+        "analyze_ops": 60,
+        "kind": "vacuum_ops"
+      }
+    },
+    {
+      "id": "io.vacuum_ops_pressure",
+      "category": "io",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.last_stat_tables_srv3: vacuum_ops=30, analyze_ops=60",
+      "details": {
+        "vacuum_ops": 30,
+        "analyze_ops": 60,
+        "kind": "vacuum_ops"
+      }
+    },
+    {
+      "id": "io.vacuum_ops_pressure",
+      "category": "io",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.last_stat_statements_srv2: vacuum_ops=30, analyze_ops=60",
+      "details": {
+        "vacuum_ops": 30,
+        "analyze_ops": 60,
+        "kind": "vacuum_ops"
+      }
+    },
+    {
+      "id": "io.unused_index",
+      "category": "io",
+      "severity": "warning",
+      "message": "Unused index taxes.taxes.t_value.i_value_type: size=798 MB",
+      "details": {}
+    },
+    {
+      "id": "io.unused_index",
+      "category": "io",
+      "severity": "warning",
+      "message": "Unused index taxes.taxes.t_value.i_value_level: size=934 MB",
+      "details": {}
+    },
+    {
+      "id": "io.unused_index",
+      "category": "io",
+      "severity": "warning",
+      "message": "Unused index taxes.taxes.t_value.i_value_rquid: size=872 MB",
+      "details": {}
+    },
+    {
+      "id": "io.hot_index_reads",
+      "category": "io",
+      "severity": "warning",
+      "message": "Hot index reads taxes.taxes.t_value.i_value_inn_1: idx_blks_read=947341, hit_pct=99.86%",
+      "details": {
+        "idx_blks_read": 947341,
+        "kind": "hot_index"
+      }
+    },
+    {
+      "id": "io.hot_index_reads",
+      "category": "io",
+      "severity": "warning",
+      "message": "Hot index reads taxes.taxes.t_value.pk_t_value: idx_blks_read=673818, hit_pct=99.78%",
+      "details": {
+        "idx_blks_read": 673818,
+        "kind": "hot_index"
+      }
+    },
+    {
+      "id": "io.hot_index_reads",
+      "category": "io",
+      "severity": "warning",
+      "message": "Hot index reads taxes.taxes.t_repl_agglock_value.pk_t_repl_agglockid_value: idx_blks_read=671657, hit_pct=99.93%",
+      "details": {
+        "idx_blks_read": 671657,
+        "kind": "hot_index"
+      }
+    },
+    {
+      "id": "io.hot_index_reads",
+      "category": "io",
+      "severity": "warning",
+      "message": "Hot index reads taxes.taxes.t_value.i_value_level: idx_blks_read=119777, hit_pct=99.96%",
+      "details": {
+        "idx_blks_read": 119777,
+        "kind": "hot_index"
+      }
+    },
+    {
+      "id": "io.hot_index_reads",
+      "category": "io",
+      "severity": "warning",
+      "message": "Hot index reads taxes.taxes.t_value.i_value_metrictype: idx_blks_read=119599, hit_pct=99.97%",
+      "details": {
+        "idx_blks_read": 119599,
+        "kind": "hot_index"
+      }
+    },
+    {
+      "id": "io.hot_index_reads",
+      "category": "io",
+      "severity": "warning",
+      "message": "Hot index reads taxes.taxes.t_value.i_value_rquid: idx_blks_read=111715, hit_pct=99.96%",
+      "details": {
+        "idx_blks_read": 111715,
+        "kind": "hot_index"
+      }
+    },
+    {
+      "id": "io.hot_index_reads",
+      "category": "io",
+      "severity": "warning",
+      "message": "Hot index reads taxes.taxes.t_value.i_value_type: idx_blks_read=102201, hit_pct=99.96%",
+      "details": {
+        "idx_blks_read": 102201,
+        "kind": "hot_index"
+      }
+    },
+    {
+      "id": "db.statement_dominance",
+      "category": "io",
+      "severity": "warning",
+      "message": "taxes: dominates statement time 99.4% (total_exec_time=35128.85)",
+      "details": {
+        "dominance_pct": 99.36279,
+        "kind": "db_dominance"
+      }
+    },
+    {
+      "id": "settings.only_nt.archive_timeout",
+      "category": "settings",
+      "severity": "warning",
+      "message": "archive_timeout",
+      "details": {
+        "status": "ONLY_NT",
+        "value_a": "180",
+        "value_b": null,
+        "issue_level": "critical"
+      }
+    },
+    {
+      "id": "settings.differ.autovacuum_naptime",
+      "category": "settings",
+      "severity": "warning",
+      "message": "autovacuum_naptime",
+      "details": {
+        "status": "DIFFER",
+        "value_a": "99",
+        "value_b": "10",
+        "issue_level": "critical"
+      }
+    }
+  ],
+  "summary": {
+    "total_findings": 58,
+    "analysis_count": 3
+  }
+}

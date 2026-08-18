@@ -1,0 +1,541 @@
+{
+  "type": "health_check",
+  "report_meta": {
+    "path": "resources/credithistory_prom1.html",
+    "filename": "credithistory_prom1.html",
+    "server": "pslod-pprb00823.cloud.omega.sbrf.ru",
+    "report_start": "2026-07-06 21:00:02+03",
+    "report_end": "2026-07-07 21:00:02+03",
+    "interval_hours": 24.0,
+    "pgprofile_version": "4.7"
+  },
+  "findings": [
+    {
+      "id": "checkpoints.high_write_time_per_hour",
+      "category": "checkpoints",
+      "severity": "warning",
+      "message": "Checkpoint write time: 480.0s/hour (threshold 60s/hour)",
+      "details": {
+        "write_per_hour": 479.955417
+      }
+    },
+    {
+      "id": "checkpoints.high_write_time",
+      "category": "checkpoints",
+      "severity": "warning",
+      "message": "Checkpoint write time: 11518.9s over 24.0h interval (threshold 300s)",
+      "details": {
+        "write_time": 11518.93
+      }
+    },
+    {
+      "id": "checkpoints.maxwritten_clean",
+      "category": "checkpoints",
+      "severity": "warning",
+      "message": "Bgwriter interrupts (maxwritten_clean): 1028 (threshold 100)",
+      "details": {
+        "maxwritten_clean": 1028
+      }
+    },
+    {
+      "id": "queries.slow_execution",
+      "category": "queries",
+      "severity": "warning",
+      "message": "postgres/postgres: mean=2796.9ms, total=134.2s, calls=48\n  SELECT pgse_profile.take_sample()",
+      "details": {
+        "hexqueryid": "4aeabfa00fd66418",
+        "mean_exec_time": 2796.93,
+        "max_exec_time": 3917.44,
+        "total_time": 134.25,
+        "calls": 48,
+        "query_text": "SELECT pgse_profile.take_sample()"
+      }
+    },
+    {
+      "id": "queries.slow_execution",
+      "category": "queries",
+      "severity": "warning",
+      "message": "credithistory/as_admin: total=82.7s, calls=874845\n  update credithistory.t_value set sys_lastchangedate=$1,metricvalue=$2,rquid=$3,sourcedatetime=$4 where object_id=$5",
+      "details": {
+        "hexqueryid": "131fc809379da2b0",
+        "mean_exec_time": 0.09,
+        "max_exec_time": 47.91,
+        "total_time": 82.72,
+        "calls": 874845,
+        "query_text": "update credithistory.t_value set sys_lastchangedate=$1,metricvalue=$2,rquid=$3,sourcedatetime=$4 where object_id=$5"
+      }
+    },
+    {
+      "id": "queries.slow_execution",
+      "category": "queries",
+      "severity": "warning",
+      "message": "credithistory/as_admin: total=90.5s, calls=876478\n  SELECT txtype, changeeventmask, aggtype, ownerid, migrationstatus, silock, siversion, guid, version FROM credithistor...",
+      "details": {
+        "hexqueryid": "b43d4bc96715dbe4",
+        "mean_exec_time": 0.1,
+        "max_exec_time": 34.41,
+        "total_time": 90.53,
+        "calls": 876478,
+        "query_text": "SELECT txtype, changeeventmask, aggtype, ownerid, migrationstatus, silock, siversion, guid, version FROM credithistory.T_REPL_AGGLOCK_VALUE WHERE rootid = $1 FOR UPDATE"
+      }
+    },
+    {
+      "id": "queries.slow_execution",
+      "category": "queries",
+      "severity": "warning",
+      "message": "credithistory/as_admin: total=65.2s, calls=875008\n  select v1_0.object_id from credithistory.t_value v1_0 where v1_0.ucpid is not null and v1_0.ucpid=$1 and v1_0.metrict...",
+      "details": {
+        "hexqueryid": "790639d3aaede809",
+        "mean_exec_time": 0.07,
+        "max_exec_time": 32.69,
+        "total_time": 65.2,
+        "calls": 875008,
+        "query_text": "select v1_0.object_id from credithistory.t_value v1_0 where v1_0.ucpid is not null and v1_0.ucpid=$1 and v1_0.metrictype_entityid is not null and v1_0.metrictype_entityid=$2"
+      }
+    },
+    {
+      "id": "queries.slow_execution",
+      "category": "queries",
+      "severity": "warning",
+      "message": "postgres/\"sa-o00000003249\": total=78.0s, calls=86139\n  WITH locks AS ( SELECT pid, locktype, mode, relation, page, tuple, virtualxid, transactionid, classid, objid, objsubi...",
+      "details": {
+        "hexqueryid": "a822446855e79f13",
+        "mean_exec_time": 0.91,
+        "max_exec_time": 4.19,
+        "total_time": 78.04,
+        "calls": 86139,
+        "query_text": "WITH locks AS ( SELECT pid, locktype, mode, relation, page, tuple, virtualxid, transactionid, classid, objid, objsubid, granted FROM pg_locks WHERE locktype IN (SELECT locktype FROM pg_locks WHERE granted = 'f') ) SELECT extract(epoch FROM clock_timestamp())::int unix_time, a.pid, host(a.client_addr) client_addr, a.usename, a.datid::int, a.datname, a.state, a.query, a.wait_event_type, a.wait_event, extract(EPOCH FROM a.xact_start)::int xact_start, extract(EPOCH FROM a.state_change)::int state_change, extract(EPOCH FROM a.query_start)::int query_start, l.locktype, l.mode, l.relation, l.page, l.tuple, l.virtualxid, l.transactionid::text, l.classid, l.objid, l.objsubid, l.granted FROM pg_stat_activity a JOIN pg_database d ON (a.datid = d.oid) LEFT JOIN locks l USING (pid) WHERE a.pid &lt;> $1 AND (a.state IN ('active', 'fastpath function call') OR a.pid IN (SELECT pid FROM locks))"
+      }
+    },
+    {
+      "id": "autovacuum.table_high_mods_pct",
+      "category": "autovacuum",
+      "severity": "warning",
+      "message": "credithistory.credithistory.t_repl_agglock_auditevent: mods_pct=100.0%, last_autoanalyze=never",
+      "details": {
+        "mods_pct": 100.0
+      }
+    },
+    {
+      "id": "autovacuum.table_high_dead_pct",
+      "category": "autovacuum",
+      "severity": "warning",
+      "message": "credithistory.credithistory.t_value: dead_pct=13.9%, n_dead=1392350, last_autovacuum=2026-07-06 08:45:17.991906+03",
+      "details": {
+        "dead_pct": 13.894247
+      }
+    },
+    {
+      "id": "autovacuum.table_high_dead_pct",
+      "category": "autovacuum",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.sample_kcache: dead_pct=13.6%, n_dead=13574, last_autovacuum=2026-07-05 15:00:11.233547+03",
+      "details": {
+        "dead_pct": 13.635907
+      }
+    },
+    {
+      "id": "autovacuum.table_high_dead_pct",
+      "category": "autovacuum",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.sample_statements: dead_pct=12.2%, n_dead=12792, last_autovacuum=2026-07-05 21:30:14.77639+03",
+      "details": {
+        "dead_pct": 12.183553
+      }
+    },
+    {
+      "id": "autovacuum.table_high_dead_pct",
+      "category": "autovacuum",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.sample_stat_tables: dead_pct=10.0%, n_dead=25061, last_autovacuum=2026-07-06 06:30:11.04073+03",
+      "details": {
+        "dead_pct": 10.028813
+      }
+    },
+    {
+      "id": "autovacuum.table_high_dead_pct",
+      "category": "autovacuum",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.sample_kcache: stale autovacuum (54h ago), dead_pct=13.6%",
+      "details": {
+        "age_hours": 53.997435
+      }
+    },
+    {
+      "id": "autovacuum.table_high_dead_pct",
+      "category": "autovacuum",
+      "severity": "warning",
+      "message": "credithistory.credithistory.t_value: stale autovacuum (36h ago), dead_pct=13.9%",
+      "details": {
+        "age_hours": 36.245558
+      }
+    },
+    {
+      "id": "autovacuum.table_high_dead_pct",
+      "category": "autovacuum",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.sample_statements: stale autovacuum (47h ago), dead_pct=12.2%",
+      "details": {
+        "age_hours": 47.496451
+      }
+    },
+    {
+      "id": "autovacuum.table_high_dead_pct",
+      "category": "autovacuum",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.sample_stat_tables: stale autovacuum (38h ago), dead_pct=10.0%",
+      "details": {
+        "age_hours": 38.497489
+      }
+    },
+    {
+      "id": "wal.buffers_full",
+      "category": "wal",
+      "severity": "warning",
+      "message": "wal_buffers_full: 7260 (threshold 1000)",
+      "details": {}
+    },
+    {
+      "id": "cache.high_read_time",
+      "category": "cache",
+      "severity": "warning",
+      "message": "credithistory: blk_read_time=117.1s (threshold 60s)",
+      "details": {}
+    },
+    {
+      "id": "cache.low_table_hit_ratio",
+      "category": "cache",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.sample_statements: table hit_pct=92.80% (threshold 95.0%)",
+      "details": {}
+    },
+    {
+      "id": "cache.low_table_hit_ratio",
+      "category": "cache",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.sample_kcache: table hit_pct=92.02% (threshold 95.0%)",
+      "details": {}
+    },
+    {
+      "id": "cache.low_table_hit_ratio",
+      "category": "cache",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.sample_stat_tables_total: table hit_pct=91.82% (threshold 95.0%)",
+      "details": {}
+    },
+    {
+      "id": "cache.low_table_hit_ratio",
+      "category": "cache",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.sample_statements_total: table hit_pct=91.50% (threshold 95.0%)",
+      "details": {}
+    },
+    {
+      "id": "cache.low_table_hit_ratio",
+      "category": "cache",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.last_stat_activity_count_srv2: table hit_pct=94.03% (threshold 95.0%)",
+      "details": {}
+    },
+    {
+      "id": "sessions.high_idle_in_transaction",
+      "category": "sessions",
+      "severity": "critical",
+      "message": "credithistory: idle_in_transaction_time=13277.7s (threshold 3600s), idle_in_transaction_session_timeout=0",
+      "details": {
+        "idle_time": 13277.74
+      }
+    },
+    {
+      "id": "sessions.connection_pressure",
+      "category": "sessions",
+      "severity": "warning",
+      "message": "credithistory: connection pressure sessions=6019 (860% of max_connections=700)",
+      "details": {
+        "sessions": 6019,
+        "max_connections": 700,
+        "util_pct": 859.857143
+      }
+    },
+    {
+      "id": "sessions.connection_pressure",
+      "category": "sessions",
+      "severity": "warning",
+      "message": "postgres: connection pressure sessions=3395 (485% of max_connections=700)",
+      "details": {
+        "sessions": 3395,
+        "max_connections": 700,
+        "util_pct": 485.0
+      }
+    },
+    {
+      "id": "sessions.idle_timeout_disabled",
+      "category": "sessions",
+      "severity": "critical",
+      "message": "idle_in_transaction_session_timeout=0 while idle in transaction time is high",
+      "details": {}
+    },
+    {
+      "id": "memory.huge_pages_recommended",
+      "category": "memory",
+      "severity": "warning",
+      "message": "huge_pages=try with shared_buffers=2988MB (≥2048MB): prefer huge_pages=on; shared_memory_size_in_huge_pages=1768",
+      "details": {
+        "huge_pages": "try",
+        "shared_buffers_mb": 2988.0,
+        "shared_memory_size_in_huge_pages": "1768",
+        "min_shared_buffers_mb": 2048.0
+      }
+    },
+    {
+      "id": "memory.statement_timeout_zero",
+      "category": "memory",
+      "severity": "warning",
+      "message": "statement_timeout=0 (queries may run indefinitely)",
+      "details": {}
+    },
+    {
+      "id": "memory.lock_timeout_zero",
+      "category": "memory",
+      "severity": "warning",
+      "message": "lock_timeout=0 (no protection against lock waits)",
+      "details": {}
+    },
+    {
+      "id": "io.high_heap_reads",
+      "category": "io",
+      "severity": "warning",
+      "message": "credithistory.credithistory.t_value: heap_blks_read=187664",
+      "details": {
+        "heap_blks_read": 187664
+      }
+    },
+    {
+      "id": "io.high_heap_reads",
+      "category": "io",
+      "severity": "warning",
+      "message": "credithistory.credithistory.t_repl_agglock_value: heap_blks_read=165769",
+      "details": {
+        "heap_blks_read": 165769
+      }
+    },
+    {
+      "id": "io.high_seq_scan",
+      "category": "io",
+      "severity": "warning",
+      "message": "credithistory.credithistory.t_dspc_sys_versions: seq_scan=69096, idx_scan=0, ratio=69096.0",
+      "details": {
+        "seq_scan": 69096
+      }
+    },
+    {
+      "id": "io.high_seq_scan",
+      "category": "io",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.last_stat_database_srv2: seq_scan=41616, idx_scan=0, ratio=41616.0",
+      "details": {
+        "seq_scan": 41616
+      }
+    },
+    {
+      "id": "io.high_seq_scan",
+      "category": "io",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.last_stat_database_srv3: seq_scan=41616, idx_scan=0, ratio=41616.0",
+      "details": {
+        "seq_scan": 41616
+      }
+    },
+    {
+      "id": "io.high_seq_scan",
+      "category": "io",
+      "severity": "warning",
+      "message": "postgres.pg_catalog.pg_am: seq_scan=13557, idx_scan=0, ratio=13557.0",
+      "details": {
+        "seq_scan": 13557
+      }
+    },
+    {
+      "id": "io.high_seq_scan",
+      "category": "io",
+      "severity": "warning",
+      "message": "credithistory.credithistory.t_repl_agglock_commonparam: seq_scan=11506, idx_scan=0, ratio=11506.0",
+      "details": {
+        "seq_scan": 11506
+      }
+    },
+    {
+      "id": "io.high_seq_scan",
+      "category": "io",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.roles_list: seq_scan=6090, idx_scan=476, ratio=12.8",
+      "details": {
+        "seq_scan": 6090
+      }
+    },
+    {
+      "id": "io.vacuum_ops_pressure",
+      "category": "io",
+      "severity": "warning",
+      "message": "credithistory.credithistory.t_dspc_sys_config: vacuum_ops=328, analyze_ops=327",
+      "details": {
+        "vacuum_ops": 328,
+        "analyze_ops": 327,
+        "kind": "vacuum_ops"
+      }
+    },
+    {
+      "id": "io.vacuum_ops_pressure",
+      "category": "io",
+      "severity": "warning",
+      "message": "credithistory.credithistory.t_repl_agglock_commonparam: vacuum_ops=104, analyze_ops=113",
+      "details": {
+        "vacuum_ops": 104,
+        "analyze_ops": 113,
+        "kind": "vacuum_ops"
+      }
+    },
+    {
+      "id": "io.vacuum_ops_pressure",
+      "category": "io",
+      "severity": "warning",
+      "message": "postgres.pg_catalog.pg_statistic: vacuum_ops=89, analyze_ops=0",
+      "details": {
+        "vacuum_ops": 89,
+        "analyze_ops": 0,
+        "kind": "vacuum_ops"
+      }
+    },
+    {
+      "id": "io.vacuum_ops_pressure",
+      "category": "io",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.last_stat_indexes_srv3: vacuum_ops=48, analyze_ops=96",
+      "details": {
+        "vacuum_ops": 48,
+        "analyze_ops": 96,
+        "kind": "vacuum_ops"
+      }
+    },
+    {
+      "id": "io.vacuum_ops_pressure",
+      "category": "io",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.last_stat_indexes_srv2: vacuum_ops=48, analyze_ops=96",
+      "details": {
+        "vacuum_ops": 48,
+        "analyze_ops": 96,
+        "kind": "vacuum_ops"
+      }
+    },
+    {
+      "id": "io.vacuum_ops_pressure",
+      "category": "io",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.last_stat_tables_srv2: vacuum_ops=48, analyze_ops=96",
+      "details": {
+        "vacuum_ops": 48,
+        "analyze_ops": 96,
+        "kind": "vacuum_ops"
+      }
+    },
+    {
+      "id": "io.vacuum_ops_pressure",
+      "category": "io",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.last_stat_tables_srv3: vacuum_ops=48, analyze_ops=96",
+      "details": {
+        "vacuum_ops": 48,
+        "analyze_ops": 96,
+        "kind": "vacuum_ops"
+      }
+    },
+    {
+      "id": "io.vacuum_ops_pressure",
+      "category": "io",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.last_stat_statements_srv2: vacuum_ops=48, analyze_ops=96",
+      "details": {
+        "vacuum_ops": 48,
+        "analyze_ops": 96,
+        "kind": "vacuum_ops"
+      }
+    },
+    {
+      "id": "io.vacuum_ops_pressure",
+      "category": "io",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.last_stat_statements_srv3: vacuum_ops=48, analyze_ops=96",
+      "details": {
+        "vacuum_ops": 48,
+        "analyze_ops": 96,
+        "kind": "vacuum_ops"
+      }
+    },
+    {
+      "id": "io.vacuum_ops_pressure",
+      "category": "io",
+      "severity": "warning",
+      "message": "postgres.pgse_profile.last_stat_kcache_srv2: vacuum_ops=48, analyze_ops=96",
+      "details": {
+        "vacuum_ops": 48,
+        "analyze_ops": 96,
+        "kind": "vacuum_ops"
+      }
+    },
+    {
+      "id": "io.unused_index",
+      "category": "io",
+      "severity": "warning",
+      "message": "Unused index credithistory.credithistory.t_value.i_value_rquid: size=845 MB",
+      "details": {}
+    },
+    {
+      "id": "io.unused_index",
+      "category": "io",
+      "severity": "warning",
+      "message": "Unused index credithistory.credithistory.t_value.i_value_sourcedatetime: size=782 MB",
+      "details": {}
+    },
+    {
+      "id": "io.unused_index",
+      "category": "io",
+      "severity": "warning",
+      "message": "Unused index credithistory.credithistory.t_contract.i_contract_rquid: size=236 MB",
+      "details": {}
+    },
+    {
+      "id": "io.unused_index",
+      "category": "io",
+      "severity": "warning",
+      "message": "Unused index credithistory.credithistory.t_contract.i_contract_sourcedatetime: size=218 MB",
+      "details": {}
+    },
+    {
+      "id": "io.unused_index",
+      "category": "io",
+      "severity": "warning",
+      "message": "Unused index credithistory.credithistory.t_value.i_value_type: size=86 MB",
+      "details": {}
+    },
+    {
+      "id": "io.unused_index",
+      "category": "io",
+      "severity": "warning",
+      "message": "Unused index credithistory.credithistory.t_contract.i_contract_type: size=13 MB",
+      "details": {}
+    },
+    {
+      "id": "io.unused_index",
+      "category": "io",
+      "severity": "warning",
+      "message": "Unused index credithistory.credithistory.t_value.i_value_metrictype: size=84 MB",
+      "details": {}
+    }
+  ],
+  "summary": {
+    "total": 56,
+    "critical": 2,
+    "warning": 54
+  }
+}

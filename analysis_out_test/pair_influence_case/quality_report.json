@@ -1,0 +1,142 @@
+{
+  "type": "quality_report",
+  "verdict": "warning",
+  "skipped": false,
+  "publishable": null,
+  "layers": [
+    {
+      "name": "rule_based",
+      "verdict": "warning",
+      "skipped": false
+    },
+    {
+      "name": "statistical",
+      "verdict": "pass",
+      "skipped": true
+    },
+    {
+      "name": "llm",
+      "verdict": "pass",
+      "skipped": true
+    }
+  ],
+  "reasons": [
+    "cache.postgres.blk_write_time Δ=1600.0% looks implausible"
+  ],
+  "counts": {
+    "pass": 7,
+    "warning": 1,
+    "fail": 0
+  },
+  "confidence_trail": [
+    {
+      "parameter": "*",
+      "scope": "run",
+      "source": "influence_table.json",
+      "from": "medium",
+      "to": "medium",
+      "change": "unchanged",
+      "confidence": "medium",
+      "evidence_type": "probable",
+      "reason": "Confidence baseline for pair comparison without isolated causality proof."
+    },
+    {
+      "parameter": "commit_timestamp_buffers",
+      "scope": "row",
+      "source": "influence_table.json",
+      "from": "medium",
+      "to": "low",
+      "change": "downgrade",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "reason": "unattributed; confidence downgraded to low"
+    },
+    {
+      "parameter": "pg_conf_load_time",
+      "scope": "row",
+      "source": "influence_table.json",
+      "from": "medium",
+      "to": "low",
+      "change": "downgrade",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "reason": "unattributed; confidence downgraded to low"
+    },
+    {
+      "parameter": "pg_postmaster_start_time",
+      "scope": "row",
+      "source": "influence_table.json",
+      "from": "medium",
+      "to": "low",
+      "change": "downgrade",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "reason": "unattributed; confidence downgraded to low"
+    },
+    {
+      "parameter": "shared_buffers",
+      "scope": "row",
+      "source": "influence_table.json",
+      "from": "medium",
+      "to": "medium",
+      "change": "unchanged",
+      "confidence": "medium",
+      "evidence_type": "probable",
+      "reason": "Confidence baseline for pair comparison without isolated causality proof."
+    },
+    {
+      "parameter": "shared_memory_size",
+      "scope": "row",
+      "source": "influence_table.json",
+      "from": "medium",
+      "to": "low",
+      "change": "downgrade",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "reason": "unattributed; confidence downgraded to low"
+    },
+    {
+      "parameter": "shared_memory_size_in_huge_pages",
+      "scope": "row",
+      "source": "influence_table.json",
+      "from": "medium",
+      "to": "low",
+      "change": "downgrade",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "reason": "unattributed; confidence downgraded to low"
+    },
+    {
+      "parameter": "subtransaction_buffers",
+      "scope": "row",
+      "source": "influence_table.json",
+      "from": "medium",
+      "to": "low",
+      "change": "downgrade",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "reason": "unattributed; confidence downgraded to low"
+    },
+    {
+      "parameter": "transaction_buffers",
+      "scope": "row",
+      "source": "influence_table.json",
+      "from": "medium",
+      "to": "low",
+      "change": "downgrade",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "reason": "unattributed; confidence downgraded to low"
+    }
+  ],
+  "llm": {
+    "present": false,
+    "publishable": null,
+    "score": null,
+    "verdict": null,
+    "task": null
+  },
+  "sources": [
+    "influence_table.json"
+  ]
+}

@@ -1,0 +1,168 @@
+h1. pg_profile: полный анализ 2 отчётов (tsldd-pprb01138.delta.sbrf.ru)
+
+{warning:title=Краткий вердикт}
+Чеклист (общие): FAIL *7* · SUSPECT *0* · PASS *3*.
+Общие findings: *22*; tuning: *17* (critical/high: 1/7).
+Специфичные (не во всех): *3*. Min stability: 100%.
+{warning}
+
+h2. Чеклист проверок (общие findings)
+
+||Проверка||Статус||
+|[Checkpoints|#sec_checkpoints]|{status:colour=Red|title=FAIL|subtle=false}|
+|[Slow queries|#sec_queries]|{status:colour=Red|title=FAIL|subtle=false}|
+|[Autovacuum|#sec_autovacuum]|{status:colour=Green|title=PASS|subtle=false}|
+|[WAL|#sec_wal]|{status:colour=Red|title=FAIL|subtle=false}|
+|[Cache and disk reads|#sec_cache]|{status:colour=Red|title=FAIL|subtle=false}|
+|[Sessions and transactions|#sec_sessions]|{status:colour=Red|title=FAIL|subtle=false}|
+|[Memory settings|#sec_memory]|{status:colour=Red|title=FAIL|subtle=false}|
+|[I/O patterns|#sec_io]|{status:colour=Red|title=FAIL|subtle=false}|
+|[Tablespaces / disk|#sec_disk]|{status:colour=Green|title=PASS|subtle=false}|
+|[Locks|#sec_locks]|{status:colour=Green|title=PASS|subtle=false}|
+
+{toc:maxLevel=2}
+
+h2. Что сделать сейчас
+
+# Исправить application: COMMIT/ROLLBACK, pool settings
+# Найти источник в pg_stat_activity
+# Установить idle_in_transaction_session_timeout
+# Исправить application connection pooling / missing COMMIT
+# Найти источник зависших транзакций в pg_stat_activity
+# Установить idle_in_transaction_session_timeout (например 60s–300s)
+# Рассмотреть idle_in_transaction_session_timeout: set_nonzero
+# Connection pooler (PgBouncer)
+
+h2. Сводка общих findings
+
+||Severity||ID||Сообщение||Отчёт(ы)||
+|{status:colour=Red|title=CRITICAL|subtle=false}|checkpoints.high_requested_ratio|Requested checkpoints: 39/46 (84.8%), threshold 30%|prod1, prod2|
+|{status:colour=Red|title=CRITICAL|subtle=false}|sessions.high_idle_in_transaction|statecontracts: idle_in_transaction_time=1372155.5s (threshold 3600s), idle_in_transaction_session_timeout=0|prod1, prod2|
+|{status:colour=Red|title=CRITICAL|subtle=false}|sessions.idle_timeout_disabled|idle_in_transaction_session_timeout=0 while idle in transaction time is high|prod1, prod2|
+|{status:colour=Yellow|title=WARNING|subtle=false}|cache.high_read_time|statecontracts: blk_read_time=260.5s (threshold 60s)|prod1, prod2|
+|{status:colour=Yellow|title=WARNING|subtle=false}|cache.low_table_hit_ratio|postgres.pgse_profile.sample_statements: table hit_pct=94.92% (threshold 95.0%)|prod1, prod2|
+|{status:colour=Yellow|title=WARNING|subtle=false}|checkpoints.high_requested_count|Requested checkpoints: 39 (threshold 10)|prod1, prod2|
+|{status:colour=Yellow|title=WARNING|subtle=false}|checkpoints.high_write_time|Checkpoint write time: 38898.3s over 16.5h interval (threshold 300s)|prod1, prod2|
+|{status:colour=Yellow|title=WARNING|subtle=false}|checkpoints.high_write_time_per_hour|Checkpoint write time: 2357.5s/hour (threshold 60s/hour)|prod1, prod2|
+|{status:colour=Yellow|title=WARNING|subtle=false}|checkpoints.maxwritten_clean|Bgwriter interrupts (maxwritten_clean): 80728 (threshold 100)|prod1, prod2|
+|{status:colour=Yellow|title=WARNING|subtle=false}|db.statement_dominance|statecontracts: dominates statement time 98.6% (total_exec_time=56520.08)|prod1, prod2|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.high_heap_reads|statecontracts.statecontracts.t_contracts: heap_blks_read=4806511|prod1, prod2|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.high_seq_scan|postgres.pg_catalog.pg_db_role_setting: seq_scan=3003316, idx_scan=121956, ratio=24.6|prod1, prod2|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.table_growth|statecontracts.statecontracts.t_value: table growth=21 GB (≥100MB)|prod1, prod2|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.unused_index|Unused index statecontracts.statecontracts.t_value.i_value_metrictype: size=1537 MB|prod1, prod2|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.vacuum_ops_pressure|statecontracts.statecontracts.t_dspc_sys_config: vacuum_ops=151, analyze_ops=150|prod1, prod2|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.wal_heavy_query|statecontracts/as_admin: wal=105.9GB, shared_blks_dirtied=5802883   insert into statecontracts.t_value (chgcnt,date_,inn,sys_isdeleted,kpp,sys_lastchangedate,le|prod1, prod2|
+|{status:colour=Yellow|title=WARNING|subtle=false}|memory.lock_timeout_zero|lock_timeout=0 (no protection against lock waits)|prod1, prod2|
+|{status:colour=Yellow|title=WARNING|subtle=false}|memory.statement_timeout_zero|statement_timeout=0 (queries may run indefinitely)|prod1, prod2|
+|{status:colour=Yellow|title=WARNING|subtle=false}|queries.slow_execution|statecontracts/as_admin: max=35536.1ms, calls=1   select $3, t0.OBJECT_ID c2 from statecontracts.T_CONTRACTS t0 where t0.RQUID &lt;> $1 limit $2|prod1, prod2|
+|{status:colour=Yellow|title=WARNING|subtle=false}|sessions.connection_pressure|postgres: connection pressure sessions=3241 (589% of max_connections=550)|prod1, prod2|
+|{status:colour=Yellow|title=WARNING|subtle=false}|wal.backend_writes_high|Backend buffers written (21842039) exceed checkpoint buffers written (11698150)|prod1, prod2|
+|{status:colour=Yellow|title=WARNING|subtle=false}|wal.buffers_full|wal_buffers_full: 664448 (threshold 1000)|prod1, prod2|
+
+h2. Общие проблемы (во всех отчётах) — рекомендации по GUC
+
+||Критичность||Проблема||Стабильность||Безопасность||Влияние||GUC (текущие)||Finding ID||
+|{status:colour=Red|title=CRITICAL|subtle=false}|Idle in transaction / нет таймаута|2/2 (100%)|{status:colour=Yellow|title=CAUTIOUS|subtle=false}|{status:colour=Yellow|title=MEDIUM|subtle=false}|idle_in_transaction_session_timeout: prod1=0, prod2=0|sessions.high_idle_in_transaction, sessions.idle_timeout_disabled|
+|{status:colour=Yellow|title=WARNING|subtle=false}|Память / cache hit|2/2 (100%)|{status:colour=Yellow|title=RESTART|subtle=false}|{status:colour=Red|title=HIGH|subtle=false}|shared_buffers: prod1=504320, prod2=537600; effective_cache_size: prod1=1512960, prod2=1512960; work_mem: prod1=16384, prod2=16384|cache.low_table_hit_ratio|
+|{status:colour=Yellow|title=WARNING|subtle=false}|Длительная запись checkpoint / bgwriter|2/2 (100%)|{status:colour=Yellow|title=RESTART|subtle=false}|{status:colour=Red|title=HIGH|subtle=false}|checkpoint_completion_target: prod1=0.7, prod2=0.7; shared_buffers: prod1=504320, prod2=537600|checkpoints.high_write_time, checkpoints.high_write_time_per_hour, checkpoints.maxwritten_clean|
+|{status:colour=Yellow|title=WARNING|subtle=false}|Медленные / spill SQL (не GUC-only)|2/2 (100%)|{status:colour=Red|title=RISKY|subtle=false}|{status:colour=Red|title=HIGH|subtle=false}|work_mem: prod1=16384, prod2=16384|queries.slow_execution|
+|{status:colour=Yellow|title=WARNING|subtle=false}|Частые requested checkpoints / давление WAL|2/2 (100%)|{status:colour=Yellow|title=CAUTIOUS|subtle=false}|{status:colour=Yellow|title=MEDIUM|subtle=false}|max_wal_size: prod1=12288, prod2=12288; checkpoint_completion_target: prod1=0.7, prod2=0.7|checkpoints.high_requested_ratio, checkpoints.high_requested_count|
+|{status:colour=Yellow|title=WARNING|subtle=false}|Давление на соединения|2/2 (100%)|{status:colour=Yellow|title=CAUTIOUS|subtle=false}|{status:colour=Red|title=HIGH|subtle=false}|max_connections: prod1=550, prod2=550|sessions.connection_pressure|
+|{status:colour=Yellow|title=WARNING|subtle=false}|Переполнение wal_buffers|2/2 (100%)|{status:colour=Yellow|title=CAUTIOUS|subtle=false}|{status:colour=Yellow|title=MEDIUM|subtle=false}|wal_buffers: prod1=2048, prod2=2048|wal.buffers_full|
+|{status:colour=Yellow|title=WARNING|subtle=false}|Рост tablespace / объектов|2/2 (100%)|{status:colour=Green|title=SAFE|subtle=false}|{status:colour=Green|title=LOW|subtle=false}|—|io.table_growth|
+|{status:colour=Yellow|title=WARNING|subtle=false}|Высокая доля backend writes|2/2 (100%)|{status:colour=Yellow|title=RESTART|subtle=false}|{status:colour=Red|title=HIGH|subtle=false}|checkpoint_completion_target: prod1=0.7, prod2=0.7; shared_buffers: prod1=504320, prod2=537600|wal.backend_writes_high|
+|{status:colour=Yellow|title=WARNING|subtle=false}|Высокий seq scan|2/2 (100%)|{status:colour=Yellow|title=CAUTIOUS|subtle=false}|{status:colour=Yellow|title=MEDIUM|subtle=false}|random_page_cost: prod1=2, prod2=2; effective_io_concurrency: prod1=300, prod2=300|io.high_seq_scan|
+|{status:colour=Yellow|title=WARNING|subtle=false}|Cache or I/O read finding|2/2 (100%)|{status:colour=Green|title=SAFE|subtle=false}|{status:colour=Green|title=LOW|subtle=false}|—|cache.high_read_time|
+|{status:colour=Yellow|title=WARNING|subtle=false}|One database dominates statement load|2/2 (100%)|{status:colour=Green|title=SAFE|subtle=false}|{status:colour=Green|title=LOW|subtle=false}|—|db.statement_dominance|
+|{status:colour=Yellow|title=WARNING|subtle=false}|I/O pattern finding|2/2 (100%)|{status:colour=Green|title=SAFE|subtle=false}|{status:colour=Green|title=LOW|subtle=false}|—|io.high_heap_reads|
+|{status:colour=Yellow|title=WARNING|subtle=false}|High vacuum/analyze operation count|2/2 (100%)|{status:colour=Green|title=SAFE|subtle=false}|{status:colour=Green|title=LOW|subtle=false}|—|io.vacuum_ops_pressure|
+|{status:colour=Yellow|title=WARNING|subtle=false}|WAL-heavy SQL query|2/2 (100%)|{status:colour=Green|title=SAFE|subtle=false}|{status:colour=Green|title=LOW|subtle=false}|—|io.wal_heavy_query|
+|{status:colour=Yellow|title=WARNING|subtle=false}|Отключены statement/lock timeout|2/2 (100%)|{status:colour=Green|title=SAFE|subtle=false}|{status:colour=Green|title=LOW|subtle=false}|statement_timeout: prod1=0, prod2=0; lock_timeout: prod1=0, prod2=0|memory.lock_timeout_zero, memory.statement_timeout_zero|
+|{status:colour=Yellow|title=WARNING|subtle=false}|Неиспользуемые индексы|2/2 (100%)|{status:colour=Green|title=SAFE|subtle=false}|{status:colour=Green|title=LOW|subtle=false}|—|io.unused_index|
+
+{expand:Детали GUC}
+||GUC||Направление||Безопасность||Влияние||Текущие значения||Postgres Pro||
+|idle_in_transaction_session_timeout|set_nonzero|{status:colour=Yellow|title=CAUTIOUS|subtle=false}|{status:colour=Yellow|title=MEDIUM|subtle=false}|prod1=0, prod2=0|Postgres Pro / PostgreSQL: 60s–300s типично для OLTP. Защита от утечки snapshots и bloat.|
+|shared_buffers|increase|{status:colour=Yellow|title=RESTART|subtle=false}|{status:colour=Red|title=HIGH|subtle=false}|prod1=504320, prod2=537600|Postgres Pro: shared_buffers ~25% RAM (политика банка). Требует restart.|
+|effective_cache_size|review_increase|{status:colour=Green|title=SAFE|subtle=false}|{status:colour=Green|title=LOW|subtle=false}|prod1=1512960, prod2=1512960|Подсказка планировщику (~50–75% RAM). Не выделяет память — безопасно для reload.|
+|work_mem|review_decrease_or_role_level|{status:colour=Red|title=RISKY|subtle=false}|{status:colour=Red|title=HIGH|subtle=false}|prod1=16384, prod2=16384|work_mem × параллельные sorts = риск OOM. Postgres Pro: задавать на уровне роли для тяжёлых запросов.|
+|checkpoint_completion_target|review_increase|{status:colour=Green|title=SAFE|subtle=false}|{status:colour=Green|title=LOW|subtle=false}|prod1=0.7, prod2=0.7|Растягивание checkpoint (0.7–0.9) снижает latency spikes.|
+|shared_buffers|review_increase|{status:colour=Yellow|title=RESTART|subtle=false}|{status:colour=Red|title=HIGH|subtle=false}|prod1=504320, prod2=537600|maxwritten_clean часто связан с давлением на buffer pool.|
+|work_mem|review_increase_role_level|{status:colour=Red|title=RISKY|subtle=false}|{status:colour=Red|title=HIGH|subtle=false}|prod1=16384, prod2=16384|temp_blks_written — кандидат на role-level work_mem, не глобальное увеличение.|
+|max_wal_size|increase|{status:colour=Yellow|title=CAUTIOUS|subtle=false}|{status:colour=Yellow|title=MEDIUM|subtle=false}|prod1=12288, prod2=12288|Postgres Pro / PostgreSQL: увеличение max_wal_size снижает частоту requested checkpoints.|
+|checkpoint_completion_target|review_increase|{status:colour=Green|title=SAFE|subtle=false}|{status:colour=Green|title=LOW|subtle=false}|prod1=0.7, prod2=0.7|Значение 0.7–0.9 растягивает checkpoint во времени (PostgreSQL docs).|
+|max_connections|review_decrease_with_pooler|{status:colour=Yellow|title=CAUTIOUS|subtle=false}|{status:colour=Red|title=HIGH|subtle=false}|prod1=550, prod2=550|После PgBouncer снижайте max_connections до разумного пика backends.|
+|wal_buffers|increase|{status:colour=Yellow|title=CAUTIOUS|subtle=false}|{status:colour=Yellow|title=MEDIUM|subtle=false}|prod1=2048, prod2=2048|Postgres Pro: при высоком wal_buffers_full увеличьте wal_buffers (единицы 8kB).|
+|checkpoint_completion_target|review_increase|{status:colour=Green|title=SAFE|subtle=false}|{status:colour=Green|title=LOW|subtle=false}|prod1=0.7, prod2=0.7|Сглаживание checkpoint снижает пики dirty и долю backend writes.|
+|shared_buffers|review_increase|{status:colour=Yellow|title=RESTART|subtle=false}|{status:colour=Red|title=HIGH|subtle=false}|prod1=504320, prod2=537600|При maxwritten_clean / backend writes смотрите размер buffer pool.|
+|random_page_cost|review_decrease_ssd|{status:colour=Yellow|title=CAUTIOUS|subtle=false}|{status:colour=Yellow|title=MEDIUM|subtle=false}|prod1=2, prod2=2|На SSD random_page_cost 1.1–2 (PostgreSQL docs). Влияет на выбор index vs seq scan.|
+|effective_io_concurrency|increase|{status:colour=Yellow|title=CAUTIOUS|subtle=false}|{status:colour=Green|title=LOW|subtle=false}|prod1=300, prod2=300|SSD: 200+ (PostgreSQL 15+). Улучшает prefetch.|
+|statement_timeout|set_nonzero|{status:colour=Green|title=SAFE|subtle=false}|{status:colour=Green|title=LOW|subtle=false}|prod1=0, prod2=0|Рекомендуется role-level timeout (30s–300s OLTP). Postgres Pro Enterprise — через ALTER ROLE.|
+|lock_timeout|set_nonzero|{status:colour=Green|title=SAFE|subtle=false}|{status:colour=Green|title=LOW|subtle=false}|prod1=0, prod2=0|lock_timeout 5–30s для OLTP предотвращает каскадные ожидания.|
+
+{expand}
+
+{expand:Проблемы отдельных отчётов}
+{note}Ниже — findings, которые есть не во всех загруженных отчётах (специфичны для одного или части файлов).{note}
+
+h3. Только в одном отчёте
+
+h4. prod1
+
+||Severity||Finding||Сообщение||
+|{status:colour=Yellow|title=WARNING|subtle=false}|autovacuum.table_high_dead_pct|postgres.pgse_profile.sample_stat_tables: dead_pct=16.5%, n_dead=112895, last_autovacuum=never|
+|{status:colour=Yellow|title=WARNING|subtle=false}|disk.tablespace_growth|Tablespace statecontracts: size_delta=135 GB (size=135 GB, threshold 500MB)|
+
+h4. prod2
+
+||Severity||Finding||Сообщение||
+|{status:colour=Yellow|title=WARNING|subtle=false}|autovacuum.table_many_dead_tuples|postgres.pgse_profile.sample_stat_tables: n_dead=14902, last_autovacuum=2026-08-12 11:00:20.624183+03|
+
+{expand}
+
+{expand:Справочно: параметры и отчёты}
+||Параметр||Значение||
+|Дата формирования|2026-08-13 17:53|
+|Отчётов|2|
+|Общие findings|22|
+|Специфичные findings|3|
+
+h3. Отчёты
+
+||Метка||Файл||Интервал||Длительность||Findings||
+|prod1|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|2026-08-11 16:30:02+03 .. 2026-08-12 09:00:02+03|16.5 ч|75|
+|prod2|pgprofile_srv=10_3_81_94_from=2026_08_12_16_00_to=2026_08_13_08.html|2026-08-12 16:00:02+03 .. 2026-08-13 08:30:02+03|16.5 ч|66|
+
+{expand}
+
+h2. EXPLAIN (ANALYZE, BUFFERS) — скопировать в psql
+
+{info}Ниже готовые команды для вставки в psql/клиент. На prod осторожно: ANALYZE выполняет запрос. При необходимости замените литералы/параметры на актуальные значения.{info}
+
+{expand:SQL · hex=d5e326dff67d955a}
+{code:language=sql|title=prod1 · hex=d5e326dff67d955a}
+EXPLAIN (ANALYZE, BUFFERS)
+insert into statecontracts.t_value (chgcnt,date_,inn,sys_isdeleted,kpp,sys_lastchangedate,level_entityid,metrictype_entityid,offflag,sys_ownerid,sys_partitionid,sys_recmodelversion,rquid,sourcedatetime,value_,type,object_id) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,'Value',$16);
+{code}
+
+{expand}
+
+{expand:SQL · hex=31df6528995548cf}
+{code:language=sql|title=prod1 · hex=31df6528995548cf}
+EXPLAIN (ANALYZE, BUFFERS)
+INSERT INTO statecontracts.T_REPL_AGGLOCK_VALUE (rootid, siversion, guid, version, sys_lastchangedate) VALUES ($1, $2, $3, $4, LOCALTIMESTAMP) ON CONFLICT (rootid) DO NOTHING RETURNING "sys_lastchangedate";
+{code}
+
+{expand}
+
+{expand:SQL · hex=37b83dead5b5b9e9}
+{code:language=sql|title=prod1 · hex=37b83dead5b5b9e9}
+EXPLAIN (ANALYZE, BUFFERS)
+insert into statecontracts.t_participant (aggregateroot_id,chgcnt,inn,sys_isdeleted,sys_lastchangedate,name,offflag,sys_ownerid,parentcontract_id,sys_partitionid,sys_recmodelversion,role,rquid,type,object_id) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$15,$14);
+{code}
+
+{expand}
+
+----
+
+_Ниже — вывод ИИ (Confluence Wiki Markup). Вставьте ответ gigacli или используйте merge_confluence.py._

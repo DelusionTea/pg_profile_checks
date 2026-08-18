@@ -1,0 +1,69 @@
+# Провайдеры LLM для headless-анализа отчётов pg_profile.
+#
+# Токены здесь не хранятся: провайдер шлюза читает их только из переменной окружения,
+# указанной в auth.token_env.
+#
+# Переопределения через окружение (побеждают значения из этого файла):
+#   PGPROFILE_LLM_PROVIDER  - какой провайдер использовать
+#   PGPROFILE_LLM_BASE_URL  - адрес эндпоинта
+#   PGPROFILE_LLM_MODEL     - имя модели
+#   PGPROFILE_LLM_TIMEOUT   - таймаут в секундах
+# Токен шлюза (нельзя класть в файл): PGPROFILE_LLM_TOKEN при старте процесса.
+#
+# Старт UI:
+#   .venv/bin/python ui/server.py
+#   .venv/bin/python ui/server.py --llm-provider qwen_local
+#   .venv/bin/python ui/server.py --skip-llm-probe
+#
+# Посмотреть, что видит приложение: python run_llm.py --list-providers
+
+default_provider: dry_run
+
+# UI (ui/server.py) at startup probes default_provider.
+# Headless Qwen and the «Качество» tab show only when a live Qwen answers.
+# dry_run = skip probe, hide those blocks.
+ui:
+  probe_on_startup: true
+  probe_timeout_sec: 5
+
+providers:
+  # Не обращается к модели: нужен для проверки пайплайна без доступа к Qwen.
+  dry_run:
+    type: dry_run
+    model: dry-run
+
+  # Локальный headless Qwen с OpenAI-совместимым API (vLLM, llama.cpp, LM Studio).
+  # Проверить руками: curl http://127.0.0.1:8000/v1/models
+  qwen_local:
+    type: qwen_local
+    base_url: http://127.0.0.1:8000/v1
+    path: /chat/completions
+    model: qwen2.5-32b-instruct
+    timeout_sec: 180
+    max_retries: 2
+    retry_backoff_sec: 0.5
+    temperature: 0.2
+    max_tokens: 3072
+
+  # Внутренний шлюз банка. Схему запроса/ответа настраиваем без правки кода:
+  #   request_style: chat    - тело {"messages": [...]}, как у OpenAI
+  #   request_style: prompt  - тело {"prompt": "..."}
+  #   response_path          - где в JSON-ответе лежит текст
+  qwen_gateway:
+    type: qwen_gateway
+    base_url: https://llm-gateway.internal.example/api/v1
+    path: /chat/completions
+    model: qwen2.5-72b-instruct
+    timeout_sec: 240
+    max_retries: 3
+    retry_backoff_sec: 1.0
+    temperature: 0.2
+    max_tokens: 3072
+    request_style: chat
+    response_path: choices.0.message.content
+    auth:
+      header: Authorization
+      scheme: Bearer
+      token_env: PGPROFILE_LLM_TOKEN
+    headers:
+      X-Client-Id: pg-profile-checks

@@ -1,0 +1,49 @@
+{
+  "type": "llm_quality",
+  "layer": "llm",
+  "task": "summary",
+  "verdict": "warning",
+  "score": 90,
+  "publishable": false,
+  "parsed": true,
+  "dry_run": true,
+  "reasons": [
+    "influence table has attributed rows, but the answer cites no claims",
+    "dry-run answer is not publishable"
+  ],
+  "checks": [
+    {
+      "id": "llm.structure",
+      "status": "pass",
+      "message": "answer JSON has the required fields"
+    },
+    {
+      "id": "llm.verdict_enum",
+      "status": "pass",
+      "message": "verdict is an allowed value"
+    },
+    {
+      "id": "llm.summary",
+      "status": "pass",
+      "message": "summary is present"
+    },
+    {
+      "id": "llm.claims_present",
+      "status": "warning",
+      "message": "influence table has attributed rows, but the answer cites no claims"
+    },
+    {
+      "id": "llm.publish",
+      "status": "warning",
+      "message": "dry-run answer is not publishable"
+    }
+  ],
+  "counts": {
+    "pass": 3,
+    "warning": 2,
+    "fail": 0
+  },
+  "answer_verdict": "need-validation",
+  "unsupported_subjects": [],
+  "overclaims": []
+}

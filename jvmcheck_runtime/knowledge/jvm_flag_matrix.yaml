@@ -3,45 +3,54 @@ flags:
     jdk: [8, 11, 17, 21]
     conflicts: []
     notes: "Default in modern JDKs, but keep explicit for policy consistency."
+    purpose_ru: "Включает сборщик G1."
 
   - name: -XX:MaxGCPauseMillis
     jdk: [8, 11, 17, 21]
     conflicts: []
     notes: "Primary latency target for G1."
+    purpose_ru: "Целевая пауза G1 в мс. Ниже — короче стопы, обычно больше работы GC."
 
   - name: -XX:InitiatingHeapOccupancyPercent
     jdk: [8, 11, 17, 21]
     conflicts: []
     notes: "Controls when concurrent GC cycle starts."
+    purpose_ru: "С какой доли заполнения heap G1 начинает concurrent cycle. Ниже — цикл раньше, меньше риск длинной mixed-паузы."
 
   - name: -XX:G1ReservePercent
     jdk: [8, 11, 17, 21]
     conflicts: []
     notes: "Reserve for allocation spikes to reduce evacuation failures."
+    purpose_ru: "Доля heap в резерве под всплеск аллокаций, чтобы реже были evacuation failure."
 
   - name: -XX:+ParallelRefProcEnabled
     jdk: [8, 11, 17, 21]
     conflicts: []
     notes: "Reduces reference processing pause component for G1."
+    purpose_ru: "Параллельная обработка reference-очередей, укорачивает эту часть паузы G1."
 
   - name: -XX:+UseContainerSupport
     jdk: [8, 11, 17, 21]
     conflicts: []
     notes: "Container-aware ergonomics; explicit declaration helps drift control."
+    purpose_ru: "JVM смотрит cgroup/limit контейнера, а не память ноды."
 
   - name: -XX:MaxRAMPercentage
     jdk: [8, 11, 17, 21]
     conflicts:
       - -Xmx
     notes: "Prefer one source of truth with InitialRAMPercentage."
+    purpose_ru: "Доля memory limit контейнера под Java heap. При росте limit хип вырастет сам."
 
   - name: -XX:InitialRAMPercentage
     jdk: [8, 11, 17, 21]
     conflicts:
       - -Xms
     notes: "Should usually be below MaxRAMPercentage."
+    purpose_ru: "Стартовый heap как доля memory limit. Должна быть ниже MaxRAMPercentage."
 
   - name: -XX:+ExitOnOutOfMemoryError
     jdk: [8, 11, 17, 21]
     conflicts: []
     notes: "Fast-fail for orchestrator restarts on OOM."
+    purpose_ru: "Процесс завершается при Java OOME, чтобы оркестратор перезапустил контейнер."

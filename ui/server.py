@@ -37,27 +37,57 @@ from urllib.parse import parse_qs, urlparse
 # Defaults (overridden by CLI in main)
 SESSION_TTL_SECONDS = 24 * 3600
 CLEANUP_INTERVAL_SECONDS = 3600
+LLM_CONFIG_PATH: Path | None = None
+LLM_PROVIDER_OVERRIDE: str | None = None
+LLM_STATUS: dict[str, Any] = {
+    "available": False,
+    "skipped": True,
+    "failed": False,
+    "provider": "",
+    "provider_type": "",
+    "reason": "Qwen probe has not run yet",
+    "model": "",
+    "url": "",
+    "latency_ms": None,
+    "trace_id": "",
+    "answer_preview": "",
+}
 
 # Ensure project root is on sys.path when run as `python ui/server.py`
 _ROOT = Path(__file__).resolve().parent.parent
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
+from pgprofile_llm import describe_providers, load_llm_config, probe_llm_connection  # noqa: E402
+from pgprofile_llm_policy import describe_policy  # noqa: E402
+from pgprofile_llm_tasks import list_tasks  # noqa: E402
 from ui.analysis_runner import (  # noqa: E402
     AnalyzeRequest,
-    JvmAnalyzeRequest,
     ReportMeta,
     build_zip,
-    list_jvm_containers,
-    load_jvm_last_input,
-    list_jvm_problems,
-    list_jvm_systems,
     list_symptoms,
     list_thresholds,
     run_analysis,
-    run_jvm_analysis,
     suggest_label,
     suggest_scenario,
+)
+from ui.models import JvmTreeAnswers  # noqa: E402
+from ui.jvm_runner import (  # noqa: E402
+    JvmAnalyzeRequest,
+    create_jvm_system,
+    list_jvm_containers,
+    list_jvm_playbook,
+    list_jvm_problems,
+    list_jvm_systems,
+    load_jvm_last_input,
+    run_jvm_analysis,
+)
+from ui.llm_runner import (  # noqa: E402
+    LLMJobConflict,
+    LLMJobError,
+    job_status,
+    read_answer,
+    start_llm_job,
 )
 
 WEB_ROOT = Path(__file__).resolve().parent / "web"
@@ -97,6 +127,21 @@ def _parse_multipart(content_type: str, body: bytes) -> tuple[dict[str, list[str
                 text = payload.decode("latin-1", errors="replace")
             fields.setdefault(name, []).append(text)
     return fields, files
+
+
+def _quality_view(output_dir: Path) -> dict[str, Any]:
+    json_path = output_dir / "quality_report.json"
+    md_path = output_dir / "quality_report.md"
+    report: dict[str, Any] = {}
+    if json_path.is_file():
+        try:
+            loaded = json.loads(json_path.read_text(encoding="utf-8"))
+            if isinstance(loaded, dict):
+                report = loaded
+        except json.JSONDecodeError:
+            report = {}
+    text = md_path.read_text(encoding="utf-8") if md_path.is_file() else ""
+    return {"quality_text": text, "quality": report}
 
 
 def _json_response(handler: BaseHTTPRequestHandler, code: int, payload: Any) -> None:
@@ -259,6 +304,12 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/jvm/problems":
             _json_response(self, 200, {"problems": list_jvm_problems()})
             return
+        if path == "/api/jvm/playbook":
+            try:
+                _json_response(self, 200, {"playbook": list_jvm_playbook()})
+            except Exception as exc:
+                _json_response(self, 500, {"error": str(exc)})
+            return
         if path == "/api/jvm/containers":
             qs = parse_qs(parsed.query)
             system_name = str((qs.get("system") or [""])[0]).strip()
@@ -279,11 +330,35 @@ class Handler(BaseHTTPRequestHandler):
                 return
             _json_response(self, 200, {"values": values})
             return
+        if path == "/api/llm/status":
+            _json_response(self, 200, dict(LLM_STATUS))
+            return
+        if path == "/api/llm/providers":
+            try:
+                rows = describe_providers(load_llm_config(LLM_CONFIG_PATH))
+                if LLM_PROVIDER_OVERRIDE:
+                    for row in rows:
+                        row["is_default"] = row.get("provider") == LLM_PROVIDER_OVERRIDE
+                _json_response(self, 200, {"providers": rows})
+            except Exception as exc:
+                _json_response(self, 500, {"error": str(exc)})
+            return
+        if path == "/api/llm/tasks":
+            _json_response(self, 200, {"tasks": list_tasks()})
+            return
+        if path == "/api/llm/policy":
+            try:
+                _json_response(self, 200, {"policy": describe_policy()})
+            except Exception as exc:
+                _json_response(self, 500, {"error": str(exc)})
+            return
 
-        # /api/sessions/{id}/wiki|prompt|brief|zip|meta
+        # /api/sessions/{id}/wiki|prompt|brief|zip|meta|llm|quality
+        # /api/sessions/{id}/llm/answer
         parts = path.strip("/").split("/")
-        if len(parts) == 4 and parts[0] == "api" and parts[1] == "sessions":
+        if len(parts) in {4, 5} and parts[0] == "api" and parts[1] == "sessions":
             session_id, kind = parts[2], parts[3]
+            extra = parts[4] if len(parts) == 5 else ""
             try:
                 sdir = _session_dir(session_id)
             except ValueError:
@@ -292,10 +367,41 @@ class Handler(BaseHTTPRequestHandler):
             out = sdir / "out"
             meta_path = sdir / "meta.json"
             if kind == "meta":
+                if extra:
+                    _json_response(self, 404, {"error": "not found"})
+                    return
                 if not meta_path.is_file():
                     _json_response(self, 404, {"error": "session not found"})
                     return
                 _json_response(self, 200, json.loads(meta_path.read_text(encoding="utf-8")))
+                return
+            if kind == "llm":
+                if not out.is_dir():
+                    _json_response(self, 404, {"error": "session output not found"})
+                    return
+                if extra == "answer":
+                    answer = read_answer(out)
+                    if answer is None:
+                        _json_response(self, 404, {"error": "LLM answer not ready"})
+                        return
+                    _json_response(self, 200, answer)
+                    return
+                if extra:
+                    _json_response(self, 404, {"error": "not found"})
+                    return
+                _json_response(self, 200, job_status(out))
+                return
+            if kind == "quality":
+                if extra:
+                    _json_response(self, 404, {"error": "not found"})
+                    return
+                if not out.is_dir():
+                    _json_response(self, 404, {"error": "session output not found"})
+                    return
+                _json_response(self, 200, _quality_view(out))
+                return
+            if extra:
+                _json_response(self, 404, {"error": "not found"})
                 return
             if not out.is_dir():
                 _json_response(self, 404, {"error": "session output not found"})
@@ -329,6 +435,18 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:
         parsed = urlparse(self.path)
+        parts = parsed.path.strip("/").split("/")
+        if (
+            len(parts) == 4
+            and parts[0] == "api"
+            and parts[1] == "sessions"
+            and parts[3] == "llm"
+        ):
+            self._handle_llm_start(parts[2])
+            return
+        if parsed.path == "/api/jvm/systems":
+            self._handle_create_jvm_system()
+            return
         if parsed.path != "/api/analyze":
             _json_response(self, 404, {"error": "not found"})
             return
@@ -348,7 +466,6 @@ class Handler(BaseHTTPRequestHandler):
                 _json_response(self, 400, {"error": "нет загруженных файлов"})
                 return
             if mode == "jvm":
-                selected_problems = [str(x).strip() for x in (meta.get("selected_problems") or []) if str(x).strip()]
                 session_id = str(uuid.uuid4())
                 sdir = SESSIONS_ROOT / session_id
                 uploads = sdir / "uploads"
@@ -361,11 +478,13 @@ class Handler(BaseHTTPRequestHandler):
                     dest = uploads / f"{i:02d}_{safe_name}"
                     dest.write_bytes(data)
                     upload_paths.append(dest)
+                tree_raw = meta.get("tree") if isinstance(meta.get("tree"), dict) else {}
                 req = JvmAnalyzeRequest(
                     system_name=str(meta.get("system_name") or "").strip(),
                     pod_name=(str(meta.get("pod_name") or "").strip() or None),
                     container_name=(str(meta.get("container_name") or "").strip() or None),
-                    selected_problems=selected_problems,
+                    selected_problems=[],
+                    tree=_parse_jvm_tree(tree_raw),
                     threshold_profile=str(meta.get("threshold_profile") or "normal"),
                     jdk_version=_opt_int(meta.get("jdk_version")),
                     spring_boot_version=(str(meta.get("spring_boot_version") or "").strip() or None),
@@ -391,18 +510,6 @@ class Handler(BaseHTTPRequestHandler):
                 if not req.container_name:
                     _json_response(self, 400, {"error": "выберите контейнер"})
                     return
-                if req.gc_pause_p95_ms is None or req.heap_used_mib is None or req.container_memory_usage_percent is None:
-                    _json_response(
-                        self,
-                        400,
-                        {
-                            "error": (
-                                "Обязательные JVM поля: gc_pause_p95_ms, "
-                                "heap_used_mib, container_memory_usage_percent"
-                            )
-                        },
-                    )
-                    return
                 result = run_jvm_analysis(req, upload_paths, out)
                 if result.error:
                     _json_response(self, 400, {"error": result.error, "exit_code": result.exit_code})
@@ -424,6 +531,7 @@ class Handler(BaseHTTPRequestHandler):
                 wiki_text = result.wiki_path.read_text(encoding="utf-8") if result.wiki_path else ""
                 prompt_text = result.prompt_path.read_text(encoding="utf-8") if result.prompt_path else ""
                 brief_text = result.brief_path.read_text(encoding="utf-8") if result.brief_path else ""
+                quality_view = _quality_view(result.output_dir)
                 summary = result.summary or {}
                 findings_ui = summary.pop("findings_ui", None) or []
                 meta_out["summary"] = summary
@@ -435,6 +543,7 @@ class Handler(BaseHTTPRequestHandler):
                         "wiki_text": wiki_text,
                         "prompt_text": prompt_text,
                         "brief_text": brief_text,
+                        "quality_text": quality_view.get("quality_text") or "",
                         "findings_ui": findings_ui,
                     },
                 )
@@ -535,6 +644,7 @@ class Handler(BaseHTTPRequestHandler):
                 result.prompt_path.read_text(encoding="utf-8") if result.prompt_path else ""
             )
             brief_text = result.brief_path.read_text(encoding="utf-8") if result.brief_path else ""
+            quality_view = _quality_view(result.output_dir)
             summary = result.summary or {}
             findings_ui = summary.pop("findings_ui", None) or []
             meta_out["summary"] = summary
@@ -546,12 +656,82 @@ class Handler(BaseHTTPRequestHandler):
                     "wiki_text": wiki_text,
                     "prompt_text": prompt_text,
                     "brief_text": brief_text,
+                    "quality_text": quality_view.get("quality_text") or "",
                     "findings_ui": findings_ui,
                 },
             )
         except Exception as exc:
             traceback.print_exc()
             _json_response(self, 500, {"error": str(exc)})
+
+    def _handle_create_jvm_system(self) -> None:
+        try:
+            length = int(self.headers.get("Content-Length", "0"))
+            body = self.rfile.read(length)
+            ctype = self.headers.get("Content-Type", "")
+            fields, files = _parse_multipart(ctype, body)
+            name = str((fields.get("system_name") or [""])[0]).strip()
+            blobs = [
+                (fname, data)
+                for field, fname, data in files
+                if field in ("jvm_file", "file")
+            ]
+            if not blobs:
+                _json_response(self, 400, {"error": "нет файлов resources / jvm-config"})
+                return
+            tmp = Path(tempfile.mkdtemp(prefix="jvm-new-system-"))
+            upload_paths: list[Path] = []
+            try:
+                for i, (fname, data) in enumerate(blobs):
+                    dest = tmp / f"{i:02d}_{Path(fname).name}"
+                    dest.write_bytes(data)
+                    upload_paths.append(dest)
+                created = create_jvm_system(name, upload_paths)
+            finally:
+                shutil.rmtree(tmp, ignore_errors=True)
+            _json_response(self, 200, created)
+        except ValueError as exc:
+            _json_response(self, 400, {"error": str(exc)})
+        except Exception as exc:
+            traceback.print_exc()
+            _json_response(self, 500, {"error": str(exc)})
+
+    def _handle_llm_start(self, session_id: str) -> None:
+        try:
+            sdir = _session_dir(session_id)
+        except ValueError:
+            _json_response(self, 400, {"error": "invalid session id"})
+            return
+        out = sdir / "out"
+        if not out.is_dir() or not (sdir / "meta.json").is_file():
+            _json_response(self, 404, {"error": "session not found"})
+            return
+        try:
+            payload = _read_json_body(self)
+        except (json.JSONDecodeError, UnicodeDecodeError, ValueError) as exc:
+            _json_response(self, 400, {"error": f"invalid JSON: {exc}"})
+            return
+        task = str(payload.get("task") or "summary").strip()
+        provider_name = str(payload.get("provider") or "").strip() or LLM_PROVIDER_OVERRIDE
+        extra = str(payload.get("extra_instructions") or "")
+        try:
+            job = start_llm_job(
+                out,
+                task=task,
+                provider_name=provider_name,
+                extra_instructions=extra,
+            )
+        except LLMJobConflict as exc:
+            _json_response(self, 409, {"error": str(exc), **job_status(out)})
+            return
+        except LLMJobError as exc:
+            _json_response(self, 400, {"error": str(exc)})
+            return
+        except Exception as exc:
+            traceback.print_exc()
+            _json_response(self, 500, {"error": str(exc)})
+            return
+        _json_response(self, 202, job)
 
     def _serve_static(self, rel: str) -> None:
         # prevent path traversal
@@ -579,6 +759,46 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(data)
 
 
+def _read_json_body(handler: BaseHTTPRequestHandler) -> dict[str, Any]:
+    length = int(handler.headers.get("Content-Length", "0") or 0)
+    raw = handler.rfile.read(length) if length else b"{}"
+    if not raw.strip():
+        return {}
+    payload = json.loads(raw.decode("utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError("JSON object expected")
+    return payload
+
+
+def _parse_jvm_tree(raw: dict[str, Any]) -> JvmTreeAnswers:
+    def _opt_choice(value: Any) -> str | None:
+        if value in (None, ""):
+            return None
+        return str(value).strip() or None
+
+    return JvmTreeAnswers(
+        pods_per_shoulder=_opt_int(raw.get("pods_per_shoulder")),
+        restart_kind=_opt_choice(raw.get("restart_kind")),
+        memory_cause_closed=_opt_choice(raw.get("memory_cause_closed")),
+        heap_growing=_opt_choice(raw.get("heap_growing")),
+        heap_growth_percent=_opt_float(raw.get("heap_growth_percent")),
+        heap_growth_hours=_opt_float(raw.get("heap_growth_hours")),
+        growth_of=_opt_choice(raw.get("growth_of")),
+        gc_ran_in_window=_opt_choice(raw.get("gc_ran_in_window")),
+        heap_used_before_gc_mib=_opt_int(raw.get("heap_used_before_gc_mib")),
+        heap_used_after_gc_mib=_opt_int(raw.get("heap_used_after_gc_mib")),
+        oldgen_returned_after_gc=_opt_choice(raw.get("oldgen_returned_after_gc")),
+        cpu_throttled=_opt_choice(raw.get("cpu_throttled")),
+        cpu_pct_limits_shoulder_1=_opt_float(raw.get("cpu_pct_limits_shoulder_1")),
+        cpu_pct_limits_shoulder_2=_opt_float(raw.get("cpu_pct_limits_shoulder_2")),
+        user_latency_grew=_opt_choice(raw.get("user_latency_grew")),
+        user_latency_p95_ms=_opt_float(raw.get("user_latency_p95_ms")),
+        pauses_coincide_throttle=_opt_choice(raw.get("pauses_coincide_throttle")),
+        post_gc_floor_rising=_opt_choice(raw.get("post_gc_floor_rising")),
+        gc_cpu_spike_sla=_opt_choice(raw.get("gc_cpu_spike_sla")),
+    )
+
+
 def _opt_int(value: Any) -> int | None:
     if value in (None, ""):
         return None
@@ -593,6 +813,7 @@ def _opt_float(value: Any) -> float | None:
 
 def main(argv: list[str] | None = None) -> int:
     global SESSION_TTL_SECONDS, CLEANUP_INTERVAL_SECONDS
+    global LLM_CONFIG_PATH, LLM_PROVIDER_OVERRIDE, LLM_STATUS
 
     parser = argparse.ArgumentParser(description="pg_profile_checks standalone UI")
     parser.add_argument("--host", default="127.0.0.1")
@@ -608,6 +829,22 @@ def main(argv: list[str] | None = None) -> int:
         type=float,
         default=1.0,
         help="How often to scan for expired sessions while server runs (default: 1; 0 = only at start/analyze)",
+    )
+    parser.add_argument(
+        "--llm-config",
+        type=Path,
+        default=None,
+        help="llm_providers.yaml (default: repo llm_providers.yaml)",
+    )
+    parser.add_argument(
+        "--llm-provider",
+        default=None,
+        help="Override default_provider from yaml for this process",
+    )
+    parser.add_argument(
+        "--skip-llm-probe",
+        action="store_true",
+        help="Do not contact Qwen at startup (hides Headless Qwen and the Quality tab)",
     )
     args = parser.parse_args(argv)
 
@@ -630,6 +867,49 @@ def main(argv: list[str] | None = None) -> int:
         if CLEANUP_INTERVAL_SECONDS > 0:
             _start_cleanup_thread(CLEANUP_INTERVAL_SECONDS)
             print(f"session cleanup: every {args.cleanup_interval_hours:g}h")
+
+    LLM_CONFIG_PATH = args.llm_config
+    LLM_PROVIDER_OVERRIDE = (args.llm_provider or "").strip() or None
+    try:
+        llm_config = load_llm_config(LLM_CONFIG_PATH)
+    except Exception as exc:  # noqa: BLE001 - startup must still serve PG analysis
+        LLM_STATUS = {
+            "available": False,
+            "skipped": False,
+            "failed": True,
+            "provider": LLM_PROVIDER_OVERRIDE or "",
+            "provider_type": "",
+            "reason": str(exc),
+            "model": "",
+            "url": "",
+            "latency_ms": None,
+            "trace_id": "",
+            "answer_preview": "",
+        }
+        print(f"llm: Qwen hidden ({exc})")
+    else:
+        ui_cfg = llm_config.get("ui") if isinstance(llm_config.get("ui"), dict) else {}
+        probe_timeout = ui_cfg.get("probe_timeout_sec", 5)
+        try:
+            probe_timeout = float(probe_timeout)
+        except (TypeError, ValueError):
+            probe_timeout = 5.0
+        skip_probe = bool(args.skip_llm_probe) or ui_cfg.get("probe_on_startup") is False
+        status = probe_llm_connection(
+            llm_config,
+            provider_name=LLM_PROVIDER_OVERRIDE,
+            skip=skip_probe,
+            live_only=True,
+            timeout_sec=probe_timeout,
+        )
+        LLM_STATUS = status.to_dict()
+        if status.available:
+            print(
+                f"llm: Qwen ready ({status.provider} {status.url or status.model}, "
+                f"{status.latency_ms} ms)"
+            )
+        else:
+            print(f"llm: Qwen hidden ({status.reason})")
 
     httpd = ThreadingHTTPServer((args.host, args.port), Handler)
     print(f"pg_profile UI: http://{args.host}:{args.port}/")

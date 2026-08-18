@@ -1,0 +1,74 @@
+{
+  "findings": [
+    {
+      "code": "memory.request_pressure",
+      "severity": "warning",
+      "message": "Working set significantly exceeds memory request.",
+      "evidence": {
+        "memory_request_ratio": "1.270"
+      },
+      "threshold": "working_set/request >= 1.15",
+      "details": {
+        "container_memory_working_set_mib": "5200",
+        "container_memory_request_mib": "4096"
+      }
+    }
+  ],
+  "recommendations": [
+    {
+      "title": "Raise container memory request to match actual usage",
+      "rationale": "Working set is above memory request. Raise request toward observed usage (still below limit). This is not a G1 change.",
+      "suggested_java_tool_options": [],
+      "confidence": "low",
+      "evidence_score": 30,
+      "risk_score": 30,
+      "expected_gain": "better scheduling predictability",
+      "verification_window": "30-60m after deploy",
+      "rollback_plan": [
+        "Rollback to previous JVM option set if SLA worsens."
+      ],
+      "rule_ids": [
+        "memory.request_pressure"
+      ],
+      "blocking_conditions": [],
+      "requires_platform_escalation": false,
+      "notes": [
+        "Increase memory request closer to baseline working set, keeping it below limit.",
+        "Do not change JAVA_TOOL_OPTIONS for this finding."
+      ]
+    }
+  ],
+  "memory_plan": null,
+  "lifecycle_status": "tuning_attempted",
+  "tuning_target_snapshot": {
+    "title": "Ресурсы и JVM настройки контейнера (актуально для настройки)",
+    "pod_name": "counteragent-demo",
+    "container_name": "application",
+    "resources": {
+      "requests": {
+        "cpu_millicores": 2000,
+        "memory_mib": 4096,
+        "ephemeral_storage_mib": null
+      },
+      "limits": {
+        "cpu_millicores": 4000,
+        "memory_mib": 8192,
+        "ephemeral_storage_mib": null
+      }
+    },
+    "java_tool_options": [
+      "-XX:+UseContainerSupport",
+      "-XX:+UseG1GC",
+      "-XX:MaxRAMPercentage=70.0",
+      "-XX:InitialRAMPercentage=45.0",
+      "-XX:MaxGCPauseMillis=250",
+      "-XX:+ExitOnOutOfMemoryError"
+    ]
+  },
+  "tree": {
+    "copyable_allowed": false,
+    "pause_copyable_allowed": false,
+    "ha_exceeded": false,
+    "block_reasons": []
+  }
+}

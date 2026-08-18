@@ -1,0 +1,15 @@
+{
+  "status": "success",
+  "provider": "qwen_local",
+  "model": "qwen-e2e",
+  "trace_id": "ba6eb9c2c68b4121ab8deb6583742b17",
+  "latency_ms": 6,
+  "attempts": 1,
+  "usage": {
+    "prompt_tokens": 8,
+    "completion_tokens": 8
+  },
+  "finish_reason": "stop",
+  "text": "{\"verdict\": \"need-validation\", \"summary\": \"shared_buffers вырос вместе с cache.postgres.blks_read; связь probable, изолированного изменения нет.\", \"claims\": [{\"statement\": \"Рост shared_buffers совпал с ростом cache.postgres.blks_read.\", \"subject\": \"shared_buffers\", \"evidence_type\": \"probable\"}], \"recommendations\": [{\"parameter\": \"shared_buffers\", \"action\": \"повторить на изолированном прогоне, не меняя остальные GUC\"}], \"risks\": [\"в паре сменились сразу несколько параметров\"], \"missing_data\": []}",
+  "task": "summary"
+}

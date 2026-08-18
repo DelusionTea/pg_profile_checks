@@ -1,0 +1,330 @@
+h1. pg_profile: pslod-pprb00823.cloud.omega.sbrf.ru (2026-07-07)
+
+{warning:title=Краткий вердикт}
+Чеклист: FAIL *8* · SUSPECT *0* · PASS *2*.
+Находок: *176* (высокий приоритет: *26*).
+Сначала чеклист и действия, затем детали findings / EXPLAIN в Expand.
+{warning}
+
+h2. Чеклист проверок
+
+||Проверка||Статус||
+|[Checkpoints|#sec_checkpoints]|{status:colour=Red|title=FAIL|subtle=false}|
+|[Slow queries|#sec_queries]|{status:colour=Red|title=FAIL|subtle=false}|
+|[Autovacuum|#sec_autovacuum]|{status:colour=Red|title=FAIL|subtle=false}|
+|[WAL|#sec_wal]|{status:colour=Red|title=FAIL|subtle=false}|
+|[Cache and disk reads|#sec_cache]|{status:colour=Red|title=FAIL|subtle=false}|
+|[Sessions and transactions|#sec_sessions]|{status:colour=Red|title=FAIL|subtle=false}|
+|[Memory settings|#sec_memory]|{status:colour=Red|title=FAIL|subtle=false}|
+|[I/O patterns|#sec_io]|{status:colour=Red|title=FAIL|subtle=false}|
+|[Tablespaces / disk|#sec_disk]|{status:colour=Green|title=PASS|subtle=false}|
+|[Locks|#sec_locks]|{status:colour=Green|title=PASS|subtle=false}|
+
+{toc:maxLevel=2}
+
+h2. Что сделать сейчас
+
+# Установить idle_in_transaction_session_timeout
+# Исправить application connection pooling / missing COMMIT
+# Найти источник зависших транзакций в pg_stat_activity
+# Установить idle_in_transaction_session_timeout (например 60s–300s)
+# Поднять checkpoint_completion_target (0.7–0.9) для сглаживания записи
+# Согласовать max_wal_size и checkpoint_timeout с объёмом WAL
+# Проверить latency диска (iostat) в окнах checkpoint
+# Проверить производительность диска (IOPS, latency)
+
+h2. Сводка findings
+
+{anchor:sec_checkpoints}
+h3. Checkpoints
+
+||Severity||ID||Сообщение||Отчёт(ы)||
+|{status:colour=Yellow|title=WARNING|subtle=false}|checkpoints.high_write_time|Checkpoint write time: 11518.9s over 24.0h interval (threshold 300s)|credithistory_prom1.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|checkpoints.high_write_time_per_hour|Checkpoint write time: 480.0s/hour (threshold 60s/hour)|credithistory_prom1.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|checkpoints.maxwritten_clean|Bgwriter interrupts (maxwritten_clean): 1028 (threshold 100)|credithistory_prom1.html|
+
+{anchor:sec_queries}
+h3. Slow queries
+
+||Severity||ID||Сообщение||Отчёт(ы)||
+|{status:colour=Yellow|title=WARNING|subtle=false}|queries.slow_execution|postgres/postgres: mean=2796.9ms, total=134.2s, calls=48   SELECT pgse_profile.take_sample()|credithistory_prom1.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|queries.slow_execution|credithistory/as_admin: total=82.7s, calls=874845   update credithistory.t_value set sys_lastchangedate=$1,metricvalue=$2,rquid=$3,sourcedatetime=$4 where objec|credithistory_prom1.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|queries.slow_execution|credithistory/as_admin: total=90.5s, calls=876478   SELECT txtype, changeeventmask, aggtype, ownerid, migrationstatus, silock, siversion, guid, version FROM cre|credithistory_prom1.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|queries.slow_execution|credithistory/as_admin: total=65.2s, calls=875008   select v1_0.object_id from credithistory.t_value v1_0 where v1_0.ucpid is not null and v1_0.ucpid=$1 and v1_|credithistory_prom1.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|queries.slow_execution|postgres/"sa-o00000003249": total=78.0s, calls=86139   WITH locks AS ( SELECT pid, locktype, mode, relation, page, tuple, virtualxid, transactionid, classid, ob|credithistory_prom1.html|
+
+{anchor:sec_autovacuum}
+h3. Autovacuum
+
+||Severity||ID||Сообщение||Отчёт(ы)||
+|{status:colour=Yellow|title=WARNING|subtle=false}|autovacuum.table_high_dead_pct|credithistory.credithistory.t_value: dead_pct=13.9%, n_dead=1392350, last_autovacuum=2026-07-06 08:45:17.991906+03|credithistory_prom1.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|autovacuum.table_high_dead_pct|postgres.pgse_profile.sample_kcache: dead_pct=13.6%, n_dead=13574, last_autovacuum=2026-07-05 15:00:11.233547+03|credithistory_prom1.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|autovacuum.table_high_dead_pct|postgres.pgse_profile.sample_statements: dead_pct=12.2%, n_dead=12792, last_autovacuum=2026-07-05 21:30:14.77639+03|credithistory_prom1.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|autovacuum.table_high_dead_pct|postgres.pgse_profile.sample_stat_tables: dead_pct=10.0%, n_dead=25061, last_autovacuum=2026-07-06 06:30:11.04073+03|credithistory_prom1.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|autovacuum.table_high_dead_pct|postgres.pgse_profile.sample_kcache: stale autovacuum (54h ago), dead_pct=13.6%|credithistory_prom1.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|autovacuum.table_high_dead_pct|credithistory.credithistory.t_value: stale autovacuum (36h ago), dead_pct=13.9%|credithistory_prom1.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|autovacuum.table_high_dead_pct|postgres.pgse_profile.sample_statements: stale autovacuum (47h ago), dead_pct=12.2%|credithistory_prom1.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|autovacuum.table_high_dead_pct|postgres.pgse_profile.sample_stat_tables: stale autovacuum (38h ago), dead_pct=10.0%|credithistory_prom1.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|autovacuum.table_high_mods_pct|credithistory.credithistory.t_repl_agglock_auditevent: mods_pct=100.0%, last_autoanalyze=never|credithistory_prom1.html|
+
+{anchor:sec_wal}
+h3. WAL
+
+||Severity||ID||Сообщение||Отчёт(ы)||
+|{status:colour=Yellow|title=WARNING|subtle=false}|wal.buffers_full|wal_buffers_full: 7260 (threshold 1000)|credithistory_prom1.html|
+
+{anchor:sec_cache}
+h3. Cache and disk reads
+
+||Severity||ID||Сообщение||Отчёт(ы)||
+|{status:colour=Yellow|title=WARNING|subtle=false}|cache.high_read_time|credithistory: blk_read_time=117.1s (threshold 60s)|credithistory_prom1.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|cache.low_table_hit_ratio|postgres.pgse_profile.sample_statements: table hit_pct=92.80% (threshold 95.0%)|credithistory_prom1.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|cache.low_table_hit_ratio|postgres.pgse_profile.sample_kcache: table hit_pct=92.02% (threshold 95.0%)|credithistory_prom1.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|cache.low_table_hit_ratio|postgres.pgse_profile.sample_stat_tables_total: table hit_pct=91.82% (threshold 95.0%)|credithistory_prom1.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|cache.low_table_hit_ratio|postgres.pgse_profile.sample_statements_total: table hit_pct=91.50% (threshold 95.0%)|credithistory_prom1.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|cache.low_table_hit_ratio|postgres.pgse_profile.last_stat_activity_count_srv2: table hit_pct=94.03% (threshold 95.0%)|credithistory_prom1.html|
+
+{anchor:sec_sessions}
+h3. Sessions and transactions
+
+||Severity||ID||Сообщение||Отчёт(ы)||
+|{status:colour=Red|title=CRITICAL|subtle=false}|sessions.high_idle_in_transaction|credithistory: idle_in_transaction_time=13277.7s (threshold 3600s), idle_in_transaction_session_timeout=0|credithistory_prom1.html|
+|{status:colour=Red|title=CRITICAL|subtle=false}|sessions.idle_timeout_disabled|idle_in_transaction_session_timeout=0 while idle in transaction time is high|credithistory_prom1.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|sessions.connection_pressure|credithistory: connection pressure sessions=6019 (860% of max_connections=700)|credithistory_prom1.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|sessions.connection_pressure|postgres: connection pressure sessions=3395 (485% of max_connections=700)|credithistory_prom1.html|
+
+{anchor:sec_memory}
+h3. Memory settings
+
+||Severity||ID||Сообщение||Отчёт(ы)||
+|{status:colour=Yellow|title=WARNING|subtle=false}|memory.huge_pages_recommended|huge_pages=try with shared_buffers=2988MB (≥2048MB): prefer huge_pages=on; shared_memory_size_in_huge_pages=1768|credithistory_prom1.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|memory.lock_timeout_zero|lock_timeout=0 (no protection against lock waits)|credithistory_prom1.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|memory.statement_timeout_zero|statement_timeout=0 (queries may run indefinitely)|credithistory_prom1.html|
+
+{anchor:sec_io}
+h3. I/O patterns
+
+||Severity||ID||Сообщение||Отчёт(ы)||
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.high_heap_reads|credithistory.credithistory.t_value: heap_blks_read=187664|credithistory_prom1.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.high_heap_reads|credithistory.credithistory.t_repl_agglock_value: heap_blks_read=165769|credithistory_prom1.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.high_seq_scan|credithistory.credithistory.t_dspc_sys_versions: seq_scan=69096, idx_scan=0, ratio=69096.0|credithistory_prom1.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.high_seq_scan|postgres.pgse_profile.last_stat_database_srv2: seq_scan=41616, idx_scan=0, ratio=41616.0|credithistory_prom1.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.high_seq_scan|postgres.pgse_profile.last_stat_database_srv3: seq_scan=41616, idx_scan=0, ratio=41616.0|credithistory_prom1.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.high_seq_scan|postgres.pg_catalog.pg_am: seq_scan=13557, idx_scan=0, ratio=13557.0|credithistory_prom1.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.high_seq_scan|credithistory.credithistory.t_repl_agglock_commonparam: seq_scan=11506, idx_scan=0, ratio=11506.0|credithistory_prom1.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.high_seq_scan|postgres.pgse_profile.roles_list: seq_scan=6090, idx_scan=476, ratio=12.8|credithistory_prom1.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.unused_index|Unused index credithistory.credithistory.t_value.i_value_rquid: size=845 MB|credithistory_prom1.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.unused_index|Unused index credithistory.credithistory.t_value.i_value_sourcedatetime: size=782 MB|credithistory_prom1.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.unused_index|Unused index credithistory.credithistory.t_contract.i_contract_rquid: size=236 MB|credithistory_prom1.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.unused_index|Unused index credithistory.credithistory.t_contract.i_contract_sourcedatetime: size=218 MB|credithistory_prom1.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.unused_index|Unused index credithistory.credithistory.t_value.i_value_type: size=86 MB|credithistory_prom1.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.unused_index|Unused index credithistory.credithistory.t_contract.i_contract_type: size=13 MB|credithistory_prom1.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.unused_index|Unused index credithistory.credithistory.t_value.i_value_metrictype: size=84 MB|credithistory_prom1.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.vacuum_ops_pressure|credithistory.credithistory.t_dspc_sys_config: vacuum_ops=328, analyze_ops=327|credithistory_prom1.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.vacuum_ops_pressure|credithistory.credithistory.t_repl_agglock_commonparam: vacuum_ops=104, analyze_ops=113|credithistory_prom1.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.vacuum_ops_pressure|postgres.pg_catalog.pg_statistic: vacuum_ops=89, analyze_ops=0|credithistory_prom1.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.vacuum_ops_pressure|postgres.pgse_profile.last_stat_indexes_srv3: vacuum_ops=48, analyze_ops=96|credithistory_prom1.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.vacuum_ops_pressure|postgres.pgse_profile.last_stat_indexes_srv2: vacuum_ops=48, analyze_ops=96|credithistory_prom1.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.vacuum_ops_pressure|postgres.pgse_profile.last_stat_tables_srv2: vacuum_ops=48, analyze_ops=96|credithistory_prom1.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.vacuum_ops_pressure|postgres.pgse_profile.last_stat_tables_srv3: vacuum_ops=48, analyze_ops=96|credithistory_prom1.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.vacuum_ops_pressure|postgres.pgse_profile.last_stat_statements_srv2: vacuum_ops=48, analyze_ops=96|credithistory_prom1.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.vacuum_ops_pressure|postgres.pgse_profile.last_stat_statements_srv3: vacuum_ops=48, analyze_ops=96|credithistory_prom1.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|io.vacuum_ops_pressure|postgres.pgse_profile.last_stat_kcache_srv2: vacuum_ops=48, analyze_ops=96|credithistory_prom1.html|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.cache.Total.blk_read_time|Total.blk_read_time|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.cache.Total.blk_write_time|Total.blk_write_time|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.cache.Total.blks_read|Total.blks_read|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.cache.credithistory.blk_read_time|credithistory.blk_read_time|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.cache.credithistory.blk_write_time|credithistory.blk_write_time|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.cache.credithistory.blks_hit_pct|credithistory.blks_hit_pct|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.cache.credithistory.blks_read|credithistory.blks_read|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.cache.postgres.blk_read_time|postgres.blk_read_time|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.cache.postgres.blk_write_time|postgres.blk_write_time|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.cache.taxes.blk_read_time|taxes.blk_read_time|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.cache.taxes.blk_write_time|taxes.blk_write_time|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.cache.taxes.blks_hit_pct|taxes.blks_hit_pct|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.cache.taxes.blks_read|taxes.blks_read|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.cluster.buffers_backend|buffers_backend|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.cluster.buffers_checkpoint|buffers_checkpoint|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.cluster.checkpoint_sync_time|checkpoint_sync_time|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.cluster.checkpoint_write_time|checkpoint_write_time|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.cluster.checkpoints_req|checkpoints_req|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.cluster.checkpoints_timed|checkpoints_timed|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.cluster.maxwritten_clean|maxwritten_clean|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.cluster.wal_size|wal_size|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.dml.Total.COMMIT|Total.COMMIT|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.dml.Total.DELETE|Total.DELETE|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.dml.Total.FETCH|Total.FETCH|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.dml.Total.INSERT|Total.INSERT|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.dml.Total.ROLLBACK|Total.ROLLBACK|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.dml.Total.UPDATE|Total.UPDATE|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.dml.credithistory.COMMIT|credithistory.COMMIT|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.dml.credithistory.DELETE|credithistory.DELETE|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.dml.credithistory.FETCH|credithistory.FETCH|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.dml.credithistory.INSERT|credithistory.INSERT|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.dml.credithistory.UPDATE|credithistory.UPDATE|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.dml.postgres.COMMIT|postgres.COMMIT|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.dml.postgres.DELETE|postgres.DELETE|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.dml.postgres.FETCH|postgres.FETCH|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.dml.postgres.INSERT|postgres.INSERT|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.dml.postgres.ROLLBACK|postgres.ROLLBACK|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.dml.postgres.UPDATE|postgres.UPDATE|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.dml.taxes.COMMIT|taxes.COMMIT|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.dml.taxes.DELETE|taxes.DELETE|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.dml.taxes.FETCH|taxes.FETCH|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.dml.taxes.INSERT|taxes.INSERT|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.dml.taxes.ROLLBACK|taxes.ROLLBACK|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.dml.taxes.UPDATE|taxes.UPDATE|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.queries.credithistory_as_admin|credithistory/as_admin|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.queries.credithistory_as_admin|credithistory/as_admin|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.queries.credithistory_as_admin|credithistory/as_admin|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.queries.credithistory_as_admin|credithistory/as_admin|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.queries.credithistory_as_admin|credithistory/as_admin|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.queries.credithistory_as_admin|credithistory/as_admin|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.queries.postgres_"sa-o00000003249"|postgres/"sa-o00000003249"|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.queries.postgres_"sa-o00000003249"|postgres/"sa-o00000003249"|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.queries.postgres_postgres|postgres/postgres|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.queries.postgres_postgres|postgres/postgres|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.queries.taxes_as_admin|taxes/as_admin|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.queries.taxes_as_admin|taxes/as_admin|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.queries.taxes_as_admin|taxes/as_admin|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.queries.taxes_as_admin|taxes/as_admin|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.queries.taxes_as_admin|taxes/as_admin|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.sessions.Total.active_time|Total.active_time|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.sessions.Total.idle_in_transaction_time|Total.idle_in_transaction_time|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.sessions.Total.session_time|Total.session_time|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.sessions.credithistory.active_time|credithistory.active_time|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.sessions.credithistory.idle_in_transaction_time|credithistory.idle_in_transaction_time|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.sessions.credithistory.session_time|credithistory.session_time|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.sessions.credithistory.sessions|credithistory.sessions|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.sessions.postgres.active_time|postgres.active_time|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.sessions.postgres.idle_in_transaction_time|postgres.idle_in_transaction_time|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.sessions.postgres.session_time|postgres.session_time|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.sessions.postgres.sessions|postgres.sessions|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.sessions.taxes.active_time|taxes.active_time|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.sessions.taxes.idle_in_transaction_time|taxes.idle_in_transaction_time|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.sessions.taxes.session_time|taxes.session_time|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.sessions.taxes.sessions|taxes.sessions|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.tables.credithistory.credithistory.t_contract.idx_scan|credithistory.credithistory.t_contract.idx_scan|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.tables.credithistory.credithistory.t_repl_agglock_contract.idx_scan|credithistory.credithistory.t_repl_agglock_contract.idx_scan|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.tables.credithistory.credithistory.t_repl_agglock_contract.n_tup_upd|credithistory.credithistory.t_repl_agglock_contract.n_tup_upd|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.tables.credithistory.credithistory.t_repl_agglock_value.idx_scan|credithistory.credithistory.t_repl_agglock_value.idx_scan|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.tables.credithistory.credithistory.t_repl_agglock_value.n_tup_upd|credithistory.credithistory.t_repl_agglock_value.n_tup_upd|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.tables.credithistory.credithistory.t_value.idx_scan|credithistory.credithistory.t_value.idx_scan|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.tables.credithistory.credithistory.t_value.n_tup_upd|credithistory.credithistory.t_value.n_tup_upd|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.tables.credithistory.pg_catalog.pg_class.idx_scan|credithistory.pg_catalog.pg_class.idx_scan|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.tables.postgres.pgse_profile.last_stat_tables_srv3.idx_scan|postgres.pgse_profile.last_stat_tables_srv3.idx_scan|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.tables.taxes.pg_catalog.pg_class.idx_scan|taxes.pg_catalog.pg_class.idx_scan|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.tables.taxes.pg_catalog.pg_statistic.idx_scan|taxes.pg_catalog.pg_statistic.idx_scan|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.tables.taxes.taxes.t_repl_agglock_value.idx_scan|taxes.taxes.t_repl_agglock_value.idx_scan|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.tables.taxes.taxes.t_repl_agglock_value.n_tup_ins|taxes.taxes.t_repl_agglock_value.n_tup_ins|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.tables.taxes.taxes.t_value.idx_scan|taxes.taxes.t_value.idx_scan|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.tables.taxes.taxes.t_value.n_tup_ins|taxes.taxes.t_value.n_tup_ins|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.wal.wal_buffers_full|wal_buffers_full|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.wal.wal_bytes|wal_bytes|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.wal.wal_records|wal_records|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.wal.wal_sync|wal_sync|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|run_compare.wal.wal_write|wal_write|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|settings.differ.archive_command|archive_command|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|settings.differ.authentication_max_workers|authentication_max_workers|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|settings.differ.autovacuum_work_mem|autovacuum_work_mem|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|settings.differ.cluster_name|cluster_name|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|settings.differ.commit_timestamp_buffers|commit_timestamp_buffers|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|settings.differ.effective_cache_size|effective_cache_size|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|settings.differ.force_failover_timeout|force_failover_timeout|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|settings.differ.maintenance_work_mem|maintenance_work_mem|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|settings.differ.max_parallel_workers|max_parallel_workers|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|settings.differ.max_prepared_transactions|max_prepared_transactions|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|settings.differ.primary_slot_name|primary_slot_name|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|settings.differ.shared_buffers|shared_buffers|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|settings.differ.shared_memory_size|shared_memory_size|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|settings.differ.shared_memory_size_in_huge_pages|shared_memory_size_in_huge_pages|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|settings.differ.subtransaction_buffers|subtransaction_buffers|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|settings.differ.synchronous_standby_names|synchronous_standby_names|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|settings.differ.transaction_buffers|transaction_buffers|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|settings.differ.version|version|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|settings.only_nt.archive_mode|archive_mode|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|settings.only_nt.disk_retry_count|disk_retry_count|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|settings.only_nt.max_worker_processes|max_worker_processes|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|settings.only_nt.performance_insights.directory|performance_insights.directory|—|
+|{status:colour=Yellow|title=WARNING|subtle=false}|settings.only_prod.sec_admin_default_auth|sec_admin_default_auth|—|
+|{status:colour=Blue|title=INFO|subtle=false}|settings.differ.pg_conf_load_time|pg_conf_load_time|—|
+|{status:colour=Blue|title=INFO|subtle=false}|settings.differ.pg_postmaster_start_time|pg_postmaster_start_time|—|
+|{status:colour=Blue|title=INFO|subtle=false}|settings.differ.pg_stat_kcache.linux_hz|pg_stat_kcache.linux_hz|—|
+
+{anchor:sec_disk}
+h3. Tablespaces / disk
+
+_Нет findings — PASS._
+
+{anchor:sec_locks}
+h3. Locks
+
+_Нет findings — PASS._
+
+{expand:Справочно: параметры анализа}
+||Параметр||Значение||
+|Дата формирования|2026-08-13 12:34|
+|Инструмент|pg_profile_checks / analyze_pgprofile.py|
+|Сервер|pslod-pprb00823.cloud.omega.sbrf.ru|
+|Интервал|2026-07-06 21:00:02+03 — 2026-07-07 21:00:02+03|
+|Длительность|24.0 ч|
+|Файл отчёта|credithistory_prom1.html|
+|Прогон A|before|
+|Прогон B|after|
+|Длительность A|24.0 ч|
+|Длительность B|15.0 ч|
+|Разница интервалов|9.0 ч — сравнивайте /час|
+|Среда A|before|
+|Среда B|after|
+|Всего находок|176|
+|Высокий приоритет|26|
+
+{expand}
+
+h2. EXPLAIN (ANALYZE, BUFFERS) — скопировать в psql
+
+{info}Ниже готовые команды для вставки в psql/клиент. На prod осторожно: ANALYZE выполняет запрос. При необходимости замените литералы/параметры на актуальные значения.{info}
+
+{expand:SQL · hex=4aeabfa00fd66418}
+{code:language=sql|title=queries.slow_execution · hex=4aeabfa00fd66418}
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT pgse_profile.take_sample();
+{code}
+
+{expand}
+
+{expand:SQL · hex=131fc809379da2b0}
+{code:language=sql|title=queries.slow_execution · hex=131fc809379da2b0}
+EXPLAIN (ANALYZE, BUFFERS)
+update credithistory.t_value set sys_lastchangedate=$1,metricvalue=$2,rquid=$3,sourcedatetime=$4 where object_id=$5;
+{code}
+
+{expand}
+
+{expand:SQL · hex=b43d4bc96715dbe4}
+{code:language=sql|title=queries.slow_execution · hex=b43d4bc96715dbe4}
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT txtype, changeeventmask, aggtype, ownerid, migrationstatus, silock, siversion, guid, version FROM credithistory.T_REPL_AGGLOCK_VALUE WHERE rootid = $1 FOR UPDATE;
+{code}
+
+{expand}
+
+{expand:SQL · hex=790639d3aaede809}
+{code:language=sql|title=queries.slow_execution · hex=790639d3aaede809}
+EXPLAIN (ANALYZE, BUFFERS)
+select v1_0.object_id from credithistory.t_value v1_0 where v1_0.ucpid is not null and v1_0.ucpid=$1 and v1_0.metrictype_entityid is not null and v1_0.metrictype_entityid=$2;
+{code}
+
+{expand}
+
+{expand:SQL · hex=a822446855e79f13}
+{code:language=sql|title=queries.slow_execution · hex=a822446855e79f13}
+EXPLAIN (ANALYZE, BUFFERS)
+WITH locks AS ( SELECT pid, locktype, mode, relation, page, tuple, virtualxid, transactionid, classid, objid, objsubid, granted FROM pg_locks WHERE locktype IN (SELECT locktype FROM pg_locks WHERE granted = 'f') ) SELECT extract(epoch FROM clock_timestamp())::int unix_time, a.pid, host(a.client_addr) client_addr, a.usename, a.datid::int, a.datname, a.state, a.query, a.wait_event_type, a.wait_event, extract(EPOCH FROM a.xact_start)::int xact_start, extract(EPOCH FROM a.state_change)::int state_change, extract(EPOCH FROM a.query_start)::int query_start, l.locktype, l.mode, l.relation, l.page, l.tuple, l.virtualxid, l.transactionid::text, l.classid, l.objid, l.objsubid, l.granted FROM pg_stat_activity a JOIN pg_database d ON (a.datid = d.oid) LEFT JOIN locks l USING (pid) WHERE a.pid &lt;> $1 AND (a.state IN ('active', 'fastpath function call') OR a.pid IN (SELECT pid FROM locks));
+{code}
+
+{expand}
+
+----
+
+_Ниже — вывод ИИ (Confluence Wiki Markup). Вставьте ответ gigacli или используйте merge_confluence.py._

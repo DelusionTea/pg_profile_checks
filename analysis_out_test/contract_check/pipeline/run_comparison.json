@@ -1,0 +1,72 @@
+{
+  "type": "run_comparison",
+  "contract": {
+    "schema": "run_comparison_v1",
+    "schema_version": "1.0"
+  },
+  "run_a": {
+    "run_id": "before",
+    "path": "resources/_test_modified.html",
+    "filename": "_test_modified.html",
+    "server": "tvldd-pprb06733.delta.sbrf.ru",
+    "report_start": "2026-03-13 12:30:02+03",
+    "report_end": "2026-03-14 03:30:02+03",
+    "interval_hours": 15.0
+  },
+  "run_b": {
+    "run_id": "after",
+    "path": "resources/_test_removed_defined.html",
+    "filename": "_test_removed_defined.html",
+    "server": "tvldd-pprb06733.delta.sbrf.ru",
+    "report_start": "2026-03-13 12:30:02+03",
+    "report_end": "2026-03-14 03:30:02+03",
+    "interval_hours": 15.0
+  },
+  "run_identity": {
+    "mode": "pair",
+    "runs": [
+      {
+        "role": "before",
+        "run_id": "before",
+        "server": "tvldd-pprb06733.delta.sbrf.ru",
+        "report_start": "2026-03-13 12:30:02+03",
+        "report_end": "2026-03-14 03:30:02+03",
+        "interval_hours": 15.0
+      },
+      {
+        "role": "after",
+        "run_id": "after",
+        "server": "tvldd-pprb06733.delta.sbrf.ru",
+        "report_start": "2026-03-13 12:30:02+03",
+        "report_end": "2026-03-14 03:30:02+03",
+        "interval_hours": 15.0
+      }
+    ]
+  },
+  "workload_match": {
+    "workload_match_score": 1.0,
+    "level": "high",
+    "components": {
+      "interval_similarity": 1.0,
+      "server_similarity": 1.0
+    },
+    "notes": "Higher score means better run comparability for influence interpretation."
+  },
+  "confidence_meta": {
+    "mode": "pair",
+    "changed_params_count": 0,
+    "changed_params_threshold": 10,
+    "confidence": "medium",
+    "evidence_type": "probable",
+    "notes": "Confidence baseline for pair comparison without isolated causality proof."
+  },
+  "influence_rows": [],
+  "interval_diff_hours": 0.0,
+  "interval_mismatch": false,
+  "findings": [],
+  "summary": {
+    "total_compared": 94,
+    "significant_count": 0,
+    "min_change_pct": 5.0
+  }
+}

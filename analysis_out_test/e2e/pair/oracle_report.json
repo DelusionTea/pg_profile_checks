@@ -1,0 +1,90 @@
+{
+  "type": "oracle_report",
+  "layer": "hybrid",
+  "layers": [
+    {
+      "name": "rule_based",
+      "verdict": "warning",
+      "skipped": false
+    },
+    {
+      "name": "statistical",
+      "verdict": "pass",
+      "skipped": true
+    },
+    {
+      "name": "llm",
+      "verdict": "pass",
+      "skipped": true
+    }
+  ],
+  "verdict": "warning",
+  "skipped": false,
+  "sources": [
+    "influence_table.json"
+  ],
+  "counts": {
+    "pass": 7,
+    "warning": 1,
+    "fail": 0
+  },
+  "reasons": [
+    "cache.postgres.blk_write_time Δ=1600.0% looks implausible"
+  ],
+  "confidence_adjustments": [],
+  "checks": [
+    {
+      "id": "completeness.contract",
+      "status": "pass",
+      "message": "influence payload matches the JSON contract",
+      "layer": "rule_based"
+    },
+    {
+      "id": "completeness.rows",
+      "status": "pass",
+      "message": "rows is present",
+      "where": "rows",
+      "layer": "rule_based"
+    },
+    {
+      "id": "completeness.workload_match",
+      "status": "pass",
+      "message": "workload_match is present",
+      "where": "workload_match",
+      "layer": "rule_based"
+    },
+    {
+      "id": "completeness.confidence_meta",
+      "status": "pass",
+      "message": "confidence_meta is present",
+      "where": "confidence_meta",
+      "layer": "rule_based"
+    },
+    {
+      "id": "sanity.summary_delta_magnitude",
+      "status": "warning",
+      "message": "cache.postgres.blk_write_time Δ=1600.0% looks implausible",
+      "where": "functional_summary.top_degraded[0]",
+      "layer": "rule_based"
+    },
+    {
+      "id": "completeness.rows",
+      "status": "pass",
+      "message": "8 influence row(s) have the required fields",
+      "where": "rows",
+      "layer": "rule_based"
+    },
+    {
+      "id": "statistical.series_present",
+      "status": "pass",
+      "message": "no series influence table; statistical oracle skipped",
+      "layer": "statistical"
+    },
+    {
+      "id": "llm.answer_present",
+      "status": "pass",
+      "message": "no LLM answer in this run; llm oracle skipped",
+      "layer": "llm"
+    }
+  ]
+}

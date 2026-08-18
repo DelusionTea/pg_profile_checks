@@ -28,9 +28,16 @@ from pgprofile_findings import (
     run_comparison_to_dict,
     settings_diff_to_dict,
 )
+from pgprofile_influence import (
+    build_influence_payload,
+    build_influence_summary_markdown,
+    build_influence_summary_wiki,
+    influence_rows_to_csv,
+)
 from pgprofile_health import load_report_data, load_thresholds, run_checks
 from pgprofile_parser import PgProfileParseError, load_settings, parse_report_meta
 from pgprofile_nt_prod import nt_prod_validation_to_dict, validate_nt_prod
+from pgprofile_oracle import write_oracle_report
 from pgprofile_stable_prod import analyze_stable_prod, stable_prod_to_dict
 from pgprofile_nt_runs import (
     analyze_nt_runs,
@@ -40,12 +47,17 @@ from pgprofile_nt_runs import (
     parse_symptom_list,
 )
 from pgprofile_symptoms import QueryTarget, investigate_symptom, symptom_investigation_to_dict
+from pgprofile_session import (
+    DEFAULT_CONFIG,
+    DEFAULT_PLAYBOOK,
+    DEFAULT_TUNING,
+    AnalysisSession,
+    coerce_analysis_session,
+    session_from_namespace,
+)
+from pgprofile_contracts import validate_contract_payload
 
 from compare_settings import diff_settings
-
-DEFAULT_CONFIG = Path(__file__).resolve().parent / "thresholds.yaml"
-DEFAULT_TUNING = Path(__file__).resolve().parent / "knowledge" / "prod_tuning.yaml"
-DEFAULT_PLAYBOOK = Path(__file__).resolve().parent / "knowledge" / "symptom_playbook.yaml"
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -186,15 +198,36 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Exit 1 if any analysis has findings/issues",
     )
+    parser.add_argument(
+        "--exit-code-quality",
+        action="store_true",
+        help="Exit 1 if oracle/quality verdict is fail (does not change --exit-code)",
+    )
     return parser
 
 
 def _save_json(path: Path, data: dict[str, Any]) -> None:
+    validate_contract_payload(data)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
-def validate_args(args: argparse.Namespace) -> str | None:
+def quality_fail_exit(output_dir: Path) -> bool:
+    """True when --exit-code-quality should return 1 (oracle or quality is fail)."""
+    for name in ("quality_report.json", "oracle_report.json"):
+        path = output_dir / name
+        if not path.is_file():
+            continue
+        try:
+            verdict = json.loads(path.read_text(encoding="utf-8")).get("verdict")
+        except json.JSONDecodeError:
+            return True
+        if verdict == "fail":
+            return True
+    return False
+
+
+def validate_args(args: argparse.Namespace | AnalysisSession) -> str | None:
     """Return an error message if args are invalid, else None."""
     if (
         not args.report
@@ -237,8 +270,9 @@ def validate_args(args: argparse.Namespace) -> str | None:
     return None
 
 
-def run_pipeline(args: argparse.Namespace) -> int:
-    """Execute the analysis pipeline for a parsed Namespace. Writes to args.output_dir."""
+def run_pipeline(args: argparse.Namespace | AnalysisSession) -> int:
+    """Execute the analysis pipeline for a session. Writes to args.output_dir."""
+    args = coerce_analysis_session(args)
     err = validate_args(args)
     if err:
         print(f"error: {err}", file=sys.stderr)
@@ -251,6 +285,8 @@ def run_pipeline(args: argparse.Namespace) -> int:
     stable_prod_analysis = None
     symptom_investigation = None
     nt_runs_analysis = None
+    run_cmp_payload: dict[str, Any] | None = None
+    settings_payload: dict[str, Any] | None = None
 
     try:
         if args.report:
@@ -275,9 +311,10 @@ def run_pipeline(args: argparse.Namespace) -> int:
                 run_cmp = run_comparison_to_dict(
                     run_a, run_b, result, min_change_pct=args.min_change_pct
                 )
-                analyses.append(run_cmp)
-                _save_json(args.output_dir / "run_comparison.json", run_cmp)
-                if run_cmp.get("findings"):
+                run_cmp_payload = run_cmp
+                analyses.append(run_cmp_payload)
+                _save_json(args.output_dir / "run_comparison.json", run_cmp_payload)
+                if run_cmp_payload.get("findings"):
                     has_issues = True
 
         if args.report and args.compare_settings:
@@ -295,14 +332,40 @@ def run_pipeline(args: argparse.Namespace) -> int:
                 meta_b=parse_report_meta(path_b),
                 diffs=diffs,
             )
-            analyses.append(settings)
-            _save_json(args.output_dir / "settings_diff.json", settings)
-            if settings.get("findings"):
-                critical = settings.get("summary", {}).get("critical_count")
+            settings_payload = settings
+            analyses.append(settings_payload)
+            _save_json(args.output_dir / "settings_diff.json", settings_payload)
+            if settings_payload.get("findings"):
+                critical = settings_payload.get("summary", {}).get("critical_count")
                 if critical is None:
                     has_issues = True
                 elif critical > 0:
                     has_issues = True
+
+        if run_cmp_payload and settings_payload:
+            influence = build_influence_payload(
+                settings_diff=settings_payload,
+                run_comparison=run_cmp_payload,
+            )
+            influence_rows = influence.get("rows") or []
+            run_cmp_payload["functional_summary"] = influence.get("functional_summary") or {}
+            run_cmp_payload["influence_rows"] = influence_rows
+            settings_payload["influence_rows"] = influence_rows
+            _save_json(args.output_dir / "run_comparison.json", run_cmp_payload)
+            _save_json(args.output_dir / "settings_diff.json", settings_payload)
+            _save_json(args.output_dir / "influence_table.json", influence)
+            (args.output_dir / "influence_table.csv").write_text(
+                influence_rows_to_csv(influence_rows),
+                encoding="utf-8",
+            )
+            (args.output_dir / "influence_summary.md").write_text(
+                build_influence_summary_markdown(influence),
+                encoding="utf-8",
+            )
+            (args.output_dir / "influence_summary.wiki").write_text(
+                build_influence_summary_wiki(influence),
+                encoding="utf-8",
+            )
 
         if args.report and args.compare_prod:
             nt_prod = validate_nt_prod(
@@ -381,6 +444,21 @@ def run_pipeline(args: argparse.Namespace) -> int:
             nt_dict = nt_runs_to_dict(nt_runs_analysis)
             analyses.append(nt_dict)
             _save_json(args.output_dir / "nt_runs.json", nt_dict)
+            influence_series = nt_dict.get("influence_series")
+            if isinstance(influence_series, dict):
+                _save_json(args.output_dir / "influence_table_series.json", influence_series)
+                (args.output_dir / "influence_table_series.csv").write_text(
+                    influence_rows_to_csv(influence_series.get("rows") or []),
+                    encoding="utf-8",
+                )
+                (args.output_dir / "influence_summary_series.md").write_text(
+                    build_influence_summary_markdown(influence_series),
+                    encoding="utf-8",
+                )
+                (args.output_dir / "influence_summary_series.wiki").write_text(
+                    build_influence_summary_wiki(influence_series),
+                    encoding="utf-8",
+                )
             (args.output_dir / "nt_runs_brief.md").write_text(
                 build_nt_runs_brief(nt_runs_analysis), encoding="utf-8"
             )
@@ -501,6 +579,8 @@ def run_pipeline(args: argparse.Namespace) -> int:
             confluence_prompt, encoding="utf-8"
         )
 
+    oracle_report = write_oracle_report(args.output_dir)
+
     print(f"Analysis written to {args.output_dir}/")
     if args.report:
         print(f"  health_check.json")
@@ -508,6 +588,11 @@ def run_pipeline(args: argparse.Namespace) -> int:
         print(f"  run_comparison.json")
     if args.compare_settings:
         print(f"  settings_diff.json")
+    if args.compare_run and args.compare_settings:
+        print(f"  influence_table.json")
+        print(f"  influence_table.csv")
+        print(f"  influence_summary.md  (краткое резюме влияния)")
+        print(f"  influence_summary.wiki  (то же в разметке Confluence)")
     if stable_prod_analysis is not None:
         print(
             f"  stable_prod.json  ({len(stable_prod_analysis.recommendations)} recommendations)"
@@ -517,6 +602,10 @@ def run_pipeline(args: argparse.Namespace) -> int:
         print(f"  stable_prod_brief.md")
     if nt_runs_analysis is not None:
         print(f"  nt_runs.json  (symptoms: {', '.join(nt_runs_analysis.symptoms)})")
+        print(f"  influence_table_series.json")
+        print(f"  influence_table_series.csv")
+        print(f"  influence_summary_series.md  (краткое резюме влияния по серии)")
+        print(f"  influence_summary_series.wiki  (то же в разметке Confluence)")
         print(f"  nt_runs_brief.md")
         print(f"  nt_runs_confluence.wiki  (симптомы + влияние GUC)")
     if symptom_investigation is not None:
@@ -530,6 +619,13 @@ def run_pipeline(args: argparse.Namespace) -> int:
         print(f"  symptom_brief.md")
     print(f"  findings.json  ({len(combined_findings)} findings)")
     print(f"  advisor.json")
+    if oracle_report.is_file():
+        verdict = json.loads(oracle_report.read_text(encoding="utf-8")).get("verdict", "?")
+        print(f"  oracle_report.json  (verdict: {verdict})")
+        print(f"  oracle_report.md")
+        if (args.output_dir / "quality_report.json").is_file():
+            print(f"  quality_report.json")
+            print(f"  quality_report.md")
     if brief:
         print(f"  brief.md")
         print(f"  summary_prompt.txt  (ready for DeepSeek)")
@@ -544,12 +640,14 @@ def run_pipeline(args: argparse.Namespace) -> int:
 
     if args.exit_code and has_issues:
         return 1
+    if getattr(args, "exit_code_quality", False) and quality_fail_exit(args.output_dir):
+        return 1
     return 0
 
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
-    return run_pipeline(args)
+    return run_pipeline(session_from_namespace(args))
 
 
 if __name__ == "__main__":

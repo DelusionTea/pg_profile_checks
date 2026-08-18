@@ -1,0 +1,23 @@
+Подготовь инженерную сводку по JVM-анализу на русском языке.
+Обязательно учитывай выбранные проблемы и введённые пользователем метрики как входные факты.
+Не предлагай шаги, противоречащие guardrails (например, не уменьшай heap budget при высокой утилизации heap/oldgen).
+Если данных недостаточно, явно выдели это как ограничение точности и предложи, какие метрики собрать.
+Отдельно укажи, когда уместен scale-out по pod'ам, а когда сначала нужен JVM/memory tuning.
+Структурируй ответ как: Риски -> Рекомендованные изменения -> План проверки -> Условия эскалации.
+
+DATA:
+
+# JVM Analysis Brief
+
+- System: `DEMO_CounterAgent`
+- Container: `application`
+- Selected problems: ``
+- Threshold profile: `normal`
+- Findings: `2`
+
+## [HIGH] gc.long_pause_p95
+- Message: GC p95 pause exceeds threshold.
+- Threshold: gc_pause_p95_ms > 250.0
+
+## [WARNING] platform.cpu_throttle_gc_coincide
+- Message: Долгие паузы GC совпадают с CPU throttle: нехватка CPU, не настройка G1.

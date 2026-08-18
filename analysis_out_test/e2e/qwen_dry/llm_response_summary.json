@@ -1,0 +1,14 @@
+{
+  "status": "success",
+  "provider": "dry_run",
+  "model": "dry-run",
+  "trace_id": "ec0fefdb66014bb299465cd6e5ec2b6a",
+  "latency_ms": 0,
+  "attempts": 1,
+  "usage": {
+    "prompt_chars": 29825
+  },
+  "finish_reason": "dry_run",
+  "text": "{\n  \"verdict\": \"need-validation\",\n  \"summary\": \"dry-run: модель не вызывалась. Задача summary, промпт 29825 символов.\",\n  \"claims\": [],\n  \"recommendations\": [],\n  \"risks\": [\n    \"ответ сформирован провайдером dry-run без модели\"\n  ],\n  \"missing_data\": [\n    \"реальный ответ Qwen\"\n  ]\n}\n",
+  "task": "summary"
+}

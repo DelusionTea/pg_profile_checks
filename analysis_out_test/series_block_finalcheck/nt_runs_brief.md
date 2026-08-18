@@ -1,0 +1,76 @@
+# NT Multi-Run Analysis Brief
+
+symptoms: high_cpu, high_wal
+reports: nt_before, nt_after, nt_old
+
+## Reports
+- nt_before: counter_nt_before_settings.html ( .. )
+- nt_after: counter_nt_with_settings.html ( .. )
+- nt_old: counter_nt_old_version.html ( .. )
+
+## Symptom: Высокая утилизация CPU БД (high_cpu)
+### Confirmed causes
+- [cpu.dominant_queries] Доминирующие SQL по CPU (pg_stat_kcache)
+  - [nt_before] Топ CPU: sum_cpu_time=34754.0s, user_time_pct=14.1%
+  - [nt_before] hex=aabf68fb55a475ea: update counteragent.t_feedbackwaitinglist set sys_lastchangedate=$1,refreshdate=…
+  - [nt_before] #2: sum_cpu_time=32346.3s hex=b62bf356da94bd81
+### Suspected causes
+- [cpu.high_call_volume] Высокий объём вызовов (CPU × calls)
+  - [nt_before] Высокий объём: calls=126,454,697, total_exec_time=661064.2s, mean=5.23ms hex=aabf68fb55a475ea
+  - [nt_before] Высокий объём: calls=328,542, total_exec_time=335069.3s, mean=1019.87ms hex=947d3792bf3c6b66
+- [cpu.checkpoint_bgwriter] Checkpoint / bgwriter / IO wait в kernel CPU
+  - [nt_before] checkpoints_req=309, checkpoint_write_time=56617.2s
+  - [nt_after] checkpoints_req=125, checkpoint_write_time=52294.3s
+- [cpu.autovacuum_pressure] Autovacuum / analyze во время нагрузки
+  - [nt_before] Bloat: counteragent.t_feedback dead_pct=100.0%
+  - [nt_after] Bloat: counteragent.t_feedback dead_pct=100.0%
+
+## Symptom: Высокая генерация WAL (high_wal)
+### Confirmed causes
+- [wal.high_generation_rate] Высокая скорость генерации WAL (wal_bytes)
+  - [nt_before] WAL generation ≈ 145821.2 MB/h
+  - [nt_after] WAL generation ≈ 88272.4 MB/h
+  - [nt_old] WAL generation ≈ 30381.2 MB/h
+- [wal.buffers_full] Переполнение wal_buffers
+  - [nt_before] wal_buffers_full=19453
+  - [nt_after] wal_buffers_full=39986
+  - [nt_old] wal_buffers_full=132212
+### Suspected causes
+- [wal.wal_heavy_queries] WAL-heavy SQL
+  - [nt_before] WAL-heavy SQL: wal_bytes=1348 GB hex=aabf68fb55a475ea
+  - [nt_after] WAL-heavy SQL: wal_bytes=783 GB hex=aabf68fb55a475ea
+- [wal.high_dml_tables] Write-heavy таблицы (DML volume)
+  - [nt_before] DML table counteragent.t_feedbackwaitinglist: ins=3291458 upd=126531975 del=2071909
+  - [nt_after] DML table counteragent.t_feedbackwaitinglist: ins=2640704 upd=89998684 del=2013773
+- [wal.checkpoint_pressure] Checkpoint pressure (requested checkpoints)
+  - [nt_before] checkpoints_req=309
+  - [nt_after] checkpoints_req=125
+
+## Settings change impact (pairwise)
+### nt_before → nt_after
+Между прогонами nt_before → nt_after изменены настройки; ниже — вероятное влияние на метрики (корреляция, не доказательство причинности):
+- huge_pages: — → on (changed); уверенность: possible
+  • В этом сравнении: blk_read_time -32.3% — направление согласуется с ожидаемым эффектом настройки
+- max_wal_size: 16384 (128.0 MB) → 24576 (192.0 MB) (increased); уверенность: possible
+  • Увеличение max_wal_size снижает частоту requested checkpoints при высокой WAL generation.
+  • В этом сравнении: checkpoints_req -59.5%, checkpoint_write_time -7.6%, wal_buffers_full +105.6%, wal_bytes -36.1% — направление согласуется с ожидаемым эффектом настройки
+- shared_buffers: 1048576 (8192.0 MB) → 1258240 (9830.0 MB) (increased); уверенность: likely
+  • Увеличение shared_buffers повышает cache hit и снижает физические чтения (CPU/IO).
+  • В этом сравнении: blks_read -9.7%, blk_read_time -32.3%, blk_write_time -29.9% — направление согласуется с ожидаемым эффектом настройки
+- wal_buffers: 2048 (16.0 MB) → 3072 (24.0 MB) (increased); уверенность: possible
+  • Увеличение wal_buffers снижает ожидание освобождения WAL buffer (wal_buffers_full).
+  • В этом сравнении: wal_buffers_full +105.6%, wal_bytes -36.1%, wal_sync +13.0%, wal_write +13.8% — направление согласуется с ожидаемым эффектом настройки
+
+### nt_after → nt_old
+Между прогонами nt_after → nt_old изменены настройки; ниже — вероятное влияние на метрики (корреляция, не доказательство причинности):
+- huge_pages: on → — (changed); уверенность: possible
+  • В этом сравнении: blk_read_time -93.6%, blks_hit_pct +16.6% — направление согласуется с ожидаемым эффектом настройки
+- max_wal_size: 24576 (192.0 MB) → 16384 (128.0 MB) (decreased); уверенность: possible
+  • Уменьшение max_wal_size усиливает requested checkpoints и IO-пики checkpoint.
+  • В этом сравнении: checkpoints_req -46.4%, checkpoint_write_time +27.0%, wal_buffers_full +230.6%, wal_bytes -62.0% — направление согласуется с ожидаемым эффектом настройки
+- shared_buffers: 1258240 (9830.0 MB) → 1048576 (8192.0 MB) (decreased); уверенность: weak
+  • Уменьшение shared_buffers снижает cache hit и увеличивает чтения с диска.
+  • В этом сравнении: blks_hit_pct +16.6%, blks_read -90.1%, blk_read_time -93.6%, blk_write_time -86.7% — эффект настройки не подтверждается метриками (возможна доминирующая нагрузка приложения)
+- wal_buffers: 3072 (24.0 MB) → 2048 (16.0 MB) (decreased); уверенность: possible
+  • Уменьшение wal_buffers может повысить wal_buffers_full и latency commit.
+  • В этом сравнении: wal_buffers_full +230.6%, wal_bytes -62.0%, wal_write +9.7% — направление согласуется с ожидаемым эффектом настройки

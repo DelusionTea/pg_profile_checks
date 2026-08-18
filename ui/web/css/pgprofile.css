@@ -50,6 +50,14 @@
   gap: 0.75rem 1rem;
 }
 
+#jvm-tree-questions {
+  max-width: 36rem;
+}
+
+#jvm-tree-questions .field-grid {
+  grid-template-columns: 1fr;
+}
+
 @media (max-width: 720px) {
   .field-grid {
     grid-template-columns: 1fr;
@@ -68,6 +76,7 @@
 
 .field select,
 .field input[type="text"],
+.field input[type="number"],
 .field textarea {
   width: 100%;
   box-sizing: border-box;

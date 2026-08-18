@@ -881,6 +881,12 @@ def test_ui_contract(results: list[tuple[bool, str]]) -> None:
     check("Обязательные поля: `GC p95`" not in html, "HTML dropped always-required metric copy", results)
     check('id="jvm-system-name"' in html, "HTML has system selector", results)
     check('id="jvm-pods-per-shoulder"' in html, "HTML asks pods per shoulder", results)
+    check('id="jvm-tree-questions"' in html, "HTML wraps tree questions in a stack", results)
+    check(
+        "#jvm-tree-questions .field-grid" in (ROOT / "ui" / "web" / "css" / "pgprofile.css").read_text(encoding="utf-8"),
+        "CSS stacks tree questions in one column",
+        results,
+    )
     check('id="jvm-new-system-name"' in html, "HTML has new-system name field", results)
     check('id="jvm-create-system-btn"' in html, "HTML has load-new-system button", results)
     check("добавить новую систему" in js, "JS offers add-new-system option", results)

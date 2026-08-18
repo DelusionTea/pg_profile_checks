@@ -2,18 +2,18 @@
   "containers": {
     "app::application": {
       "gc_pause_p95_ms": 200.0,
-      "heap_used_mib": 300,
+      "heap_used_mib": 600,
       "heap_used_percent": null,
       "old_gen_used_mib": null,
       "old_gen_capacity_mib": null,
-      "old_gen_used_percent": 30.0,
-      "container_memory_usage_percent": 15.0,
+      "old_gen_used_percent": 10.0,
+      "container_memory_usage_percent": 75.0,
       "tree": {
         "pods_per_shoulder": 2,
         "restart_kind": "none",
         "memory_cause_closed": "unknown",
         "heap_growing": "yes",
-        "heap_growth_percent": 5.0,
+        "heap_growth_percent": 15.0,
         "heap_growth_hours": 2.0,
         "growth_of": "container_rss",
         "gc_ran_in_window": "no",
@@ -29,7 +29,7 @@
         "post_gc_floor_rising": "unknown",
         "gc_cpu_spike_sla": "unknown"
       },
-      "updated_at": "2026-08-18T16:12:10Z"
+      "updated_at": "2026-08-18T16:49:13Z"
     },
     "app::istioProxy": {
       "gc_pause_p95_ms": 250,

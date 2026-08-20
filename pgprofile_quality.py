@@ -136,6 +136,10 @@ def build_quality_report(
 
 def format_quality_markdown(report: dict[str, Any]) -> str:
     verdict = str(report.get("verdict") or "pass").upper()
+    layers = report.get("layers") or []
+    all_skipped = bool(layers) and all(layer.get("skipped") for layer in layers)
+    if report.get("skipped") or all_skipped:
+        verdict = "НЕ ПРОВЕРЯЛОСЬ"
     lines = [f"# Качество: {verdict}", ""]
     pub = report.get("publishable")
     if pub is True:
@@ -148,7 +152,6 @@ def format_quality_markdown(report: dict[str, Any]) -> str:
 
     lines.append("## Слои")
     lines.append("")
-    layers = report.get("layers") or []
     if not layers:
         lines.append("- нет слоёв")
     for layer in layers:
@@ -161,8 +164,11 @@ def format_quality_markdown(report: dict[str, Any]) -> str:
     lines.append("## Почему")
     lines.append("")
     reasons = report.get("reasons") or []
-    if report.get("skipped") and not reasons:
-        lines.append("Таблица влияния не строилась — проверки направления пропущены.")
+    if (report.get("skipped") or all_skipped) and not reasons:
+        lines.append(
+            "Проверки не выполнялись: таблица влияния не строилась. "
+            "Это не оценка состояния БД — смотрите находки и план действий."
+        )
     elif not reasons:
         lines.append("Замечаний нет.")
     else:

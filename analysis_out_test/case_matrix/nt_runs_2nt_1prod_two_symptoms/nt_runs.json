@@ -797,8 +797,8 @@
         "only_nt": 0,
         "only_prod": 1,
         "same": 113,
-        "critical_count": 9,
-        "informational_count": 2
+        "critical_count": 4,
+        "informational_count": 7
       },
       "settings_issues_critical": [
         {
@@ -806,12 +806,6 @@
           "status": "DIFFER",
           "nt_value": "0.5",
           "prod_value": "0.7"
-        },
-        {
-          "name": "commit_timestamp_buffers",
-          "status": "DIFFER",
-          "nt_value": "976",
-          "prod_value": "1024"
         },
         {
           "name": "huge_pages",
@@ -830,6 +824,26 @@
           "status": "DIFFER",
           "nt_value": "504320",
           "prod_value": "537600"
+        }
+      ],
+      "settings_issues_informational": [
+        {
+          "name": "commit_timestamp_buffers",
+          "status": "DIFFER",
+          "nt_value": "976",
+          "prod_value": "1024"
+        },
+        {
+          "name": "pg_conf_load_time",
+          "status": "DIFFER",
+          "nt_value": "2026-07-29 18:13:55.220776+03",
+          "prod_value": "2026-08-12 13:51:51.80184+03"
+        },
+        {
+          "name": "pg_postmaster_start_time",
+          "status": "DIFFER",
+          "nt_value": "2026-06-10 15:13:32.405098+03",
+          "prod_value": "2026-08-12 13:50:49.898345+03"
         },
         {
           "name": "shared_memory_size",
@@ -854,20 +868,6 @@
           "status": "DIFFER",
           "nt_value": "976",
           "prod_value": "1024"
-        }
-      ],
-      "settings_issues_informational": [
-        {
-          "name": "pg_conf_load_time",
-          "status": "DIFFER",
-          "nt_value": "2026-07-29 18:13:55.220776+03",
-          "prod_value": "2026-08-12 13:51:51.80184+03"
-        },
-        {
-          "name": "pg_postmaster_start_time",
-          "status": "DIFFER",
-          "nt_value": "2026-06-10 15:13:32.405098+03",
-          "prod_value": "2026-08-12 13:50:49.898345+03"
         }
       ],
       "run_nt": {
@@ -896,7 +896,8 @@
           "delta": 37237.0,
           "delta_pct": 32.899817,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "dml",
@@ -908,7 +909,8 @@
           "delta": 478242.0,
           "delta_pct": 5.052141,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "dml",
@@ -920,7 +922,8 @@
           "delta": 270.0,
           "delta_pct": 10.0,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "dml",
@@ -932,7 +935,8 @@
           "delta": 12608870.0,
           "delta_pct": 9.244677,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "dml",
@@ -944,7 +948,8 @@
           "delta": 13008.0,
           "delta_pct": 9.815877,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "dml",
@@ -956,7 +961,8 @@
           "delta": 5666.0,
           "delta_pct": 11.910868,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "dml",
@@ -968,7 +974,8 @@
           "delta": 37243.0,
           "delta_pct": 34.321233,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "dml",
@@ -980,7 +987,8 @@
           "delta": -70364.0,
           "delta_pct": -22.76467,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "dml",
@@ -992,7 +1000,8 @@
           "delta": 90.0,
           "delta_pct": 10.0,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "dml",
@@ -1004,7 +1013,8 @@
           "delta": 10850525.0,
           "delta_pct": 8.331339,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "dml",
@@ -1016,7 +1026,8 @@
           "delta": 548606.0,
           "delta_pct": 5.991089,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "dml",
@@ -1028,7 +1039,8 @@
           "delta": 180.0,
           "delta_pct": 10.0,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "dml",
@@ -1040,7 +1052,8 @@
           "delta": 1758345.0,
           "delta_pct": 28.576446,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "cluster",
@@ -1052,7 +1065,8 @@
           "delta": -4284556.0,
           "delta_pct": -25.513018,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "cluster",
@@ -1064,7 +1078,8 @@
           "delta": -26.0,
           "delta_pct": -46.428571,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "cluster",
@@ -1076,19 +1091,8 @@
           "delta": 12.0,
           "delta_pct": 600.0,
           "unit": "count",
-          "extra": ""
-        },
-        {
-          "section": "tables",
-          "key": "postgres.pg_catalog.pg_db_role_setting.seq_scan",
-          "value_a": 2859668.0,
-          "value_b": 1818750.0,
-          "per_hour_a": 190644.533333,
-          "per_hour_b": 110227.272727,
-          "delta": -1040918.0,
-          "delta_pct": -36.39996,
-          "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "tables",
@@ -1100,7 +1104,21 @@
           "delta": -1040918.0,
           "delta_pct": -36.39996,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
+        },
+        {
+          "section": "tables",
+          "key": "postgres.pg_catalog.pg_db_role_setting.seq_scan",
+          "value_a": 2859668.0,
+          "value_b": 1818750.0,
+          "per_hour_a": 190644.533333,
+          "per_hour_b": 110227.272727,
+          "delta": -1040918.0,
+          "delta_pct": -36.39996,
+          "unit": "count",
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "tables",
@@ -1112,7 +1130,8 @@
           "delta": -190331.0,
           "delta_pct": -81.715883,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "tables",
@@ -1124,7 +1143,8 @@
           "delta": -168718.0,
           "delta_pct": -83.214797,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "tables",
@@ -1136,7 +1156,8 @@
           "delta": -168460.0,
           "delta_pct": -72.325883,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "tables",
@@ -1148,7 +1169,8 @@
           "delta": -158808.0,
           "delta_pct": -30.140236,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "tables",
@@ -1160,7 +1182,8 @@
           "delta": -148674.0,
           "delta_pct": -73.32873,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "tables",
@@ -1172,7 +1195,8 @@
           "delta": 87164.0,
           "delta_pct": 14.471161,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "tables",
@@ -1184,7 +1208,8 @@
           "delta": 66209.0,
           "delta_pct": 12.684105,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "tables",
@@ -1196,7 +1221,8 @@
           "delta": 59567.0,
           "delta_pct": 5.35542,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "tables",
@@ -1208,7 +1234,8 @@
           "delta": 41355.0,
           "delta_pct": 9.626486,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "tables",
@@ -1220,7 +1247,8 @@
           "delta": -28784.0,
           "delta_pct": -100.0,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "tables",
@@ -1232,7 +1260,8 @@
           "delta": 23289.0,
           "delta_pct": 620.213049,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "tables",
@@ -1244,7 +1273,8 @@
           "delta": 19505.0,
           "delta_pct": 9.579071,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "tables",
@@ -1256,7 +1286,8 @@
           "delta": 16317.0,
           "delta_pct": 7.945404,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         }
       ],
       "metric_diffs_warning": [
@@ -1270,7 +1301,8 @@
           "delta": -251557.0,
           "delta_pct": -26.985159,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "cluster",
@@ -1282,7 +1314,8 @@
           "delta": -0.82,
           "delta_pct": -17.012448,
           "unit": "sec",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "cluster",
@@ -1294,7 +1327,8 @@
           "delta": 14131.47,
           "delta_pct": 56.10625,
           "unit": "sec",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "cluster",
@@ -1306,7 +1340,8 @@
           "delta": 27277.0,
           "delta_pct": 76.116196,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "sessions",
@@ -1318,7 +1353,8 @@
           "delta": 824.0,
           "delta_pct": 9.150472,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "sessions",
@@ -1330,7 +1366,8 @@
           "delta": 19072.02,
           "delta_pct": 21.277598,
           "unit": "sec",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "sessions",
@@ -1342,7 +1379,8 @@
           "delta": 472065.5,
           "delta_pct": 6.019605,
           "unit": "sec",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "sessions",
@@ -1354,7 +1392,8 @@
           "delta": 276.0,
           "delta_pct": 9.439124,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "sessions",
@@ -1366,7 +1405,8 @@
           "delta": 4.5,
           "delta_pct": 18.233387,
           "unit": "sec",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "sessions",
@@ -1378,7 +1418,8 @@
           "delta": -37.68,
           "delta_pct": -6.11222,
           "unit": "sec",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "sessions",
@@ -1390,7 +1431,8 @@
           "delta": -50168.04,
           "delta_pct": -10.156596,
           "unit": "sec",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "sessions",
@@ -1402,7 +1444,8 @@
           "delta": 548.0,
           "delta_pct": 9.011676,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "sessions",
@@ -1414,7 +1457,8 @@
           "delta": 19109.69,
           "delta_pct": 21.467266,
           "unit": "sec",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "sessions",
@@ -1426,7 +1470,8 @@
           "delta": 522233.54,
           "delta_pct": 7.106969,
           "unit": "sec",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "cache",
@@ -1438,7 +1483,8 @@
           "delta": 23712.0,
           "delta_pct": 23.935317,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "cache",
@@ -1450,7 +1496,8 @@
           "delta": 10.5,
           "delta_pct": 57.471264,
           "unit": "sec",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "cache",
@@ -1462,7 +1509,8 @@
           "delta": 0.14,
           "delta_pct": 466.666667,
           "unit": "sec",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         }
       ],
       "query_comparisons_info": [
@@ -1481,7 +1529,8 @@
               "delta": -2.1,
               "delta_pct": -5.608974,
               "unit": "sec",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -1493,7 +1542,8 @@
               "delta": -1469295935.0,
               "delta_pct": -68.337844,
               "unit": "bytes",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -1512,7 +1562,8 @@
               "delta": -1163909963.0,
               "delta_pct": -100.0,
               "unit": "bytes",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -1531,7 +1582,8 @@
               "delta": 3.0,
               "delta_pct": 10.0,
               "unit": "count",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -1543,7 +1595,8 @@
               "delta": 51.63,
               "delta_pct": 32.594697,
               "unit": "sec",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -1555,7 +1608,8 @@
               "delta": 65611664.0,
               "delta_pct": 17.239511,
               "unit": "bytes",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -1567,7 +1621,8 @@
               "delta": 9725.0,
               "delta_pct": 14.192315,
               "unit": "count",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -1586,7 +1641,8 @@
               "delta": 1.0,
               "delta_pct": null,
               "unit": "count",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -1598,7 +1654,8 @@
               "delta": 0.02,
               "delta_pct": null,
               "unit": "sec",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -1610,7 +1667,8 @@
               "delta": 127755.0,
               "delta_pct": null,
               "unit": "bytes",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -1622,7 +1680,8 @@
               "delta": 34.0,
               "delta_pct": null,
               "unit": "count",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -1641,7 +1700,8 @@
               "delta": 120437.0,
               "delta_pct": 452.192686,
               "unit": "count",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -1653,7 +1713,8 @@
               "delta": 5.07,
               "delta_pct": 354.545455,
               "unit": "sec",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -1665,7 +1726,8 @@
               "delta": -325.0,
               "delta_pct": -93.123209,
               "unit": "count",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -1684,7 +1746,8 @@
               "delta": 717.0,
               "delta_pct": 9.96941,
               "unit": "count",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -1696,7 +1759,8 @@
               "delta": 0.33,
               "delta_pct": 91.666667,
               "unit": "sec",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -1708,7 +1772,8 @@
               "delta": 73868.0,
               "delta_pct": 11.367736,
               "unit": "bytes",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -1727,7 +1792,8 @@
               "delta": 360.0,
               "delta_pct": 10.013908,
               "unit": "count",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -1739,7 +1805,8 @@
               "delta": 0.03,
               "delta_pct": 25.0,
               "unit": "sec",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -1751,7 +1818,8 @@
               "delta": -58450.0,
               "delta_pct": -12.693442,
               "unit": "bytes",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -1770,7 +1838,8 @@
               "delta": 360.0,
               "delta_pct": 10.013908,
               "unit": "count",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -1782,7 +1851,8 @@
               "delta": 0.06,
               "delta_pct": 50.0,
               "unit": "sec",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -1794,7 +1864,8 @@
               "delta": 53641.0,
               "delta_pct": 10.014525,
               "unit": "bytes",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -1813,7 +1884,8 @@
               "delta": -1.0,
               "delta_pct": -100.0,
               "unit": "count",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -1825,7 +1897,8 @@
               "delta": -0.01,
               "delta_pct": -100.0,
               "unit": "sec",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -1837,7 +1910,8 @@
               "delta": -52562.0,
               "delta_pct": -100.0,
               "unit": "bytes",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -1849,7 +1923,8 @@
               "delta": -6.0,
               "delta_pct": -100.0,
               "unit": "count",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -1868,7 +1943,8 @@
               "delta": -0.02,
               "delta_pct": -8.695652,
               "unit": "sec",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -1880,7 +1956,8 @@
               "delta": -50972.0,
               "delta_pct": -33.766802,
               "unit": "bytes",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -1892,7 +1969,8 @@
               "delta": 2.0,
               "delta_pct": null,
               "unit": "count",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -1911,7 +1989,8 @@
               "delta": 50369.0,
               "delta_pct": 474.284369,
               "unit": "count",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -1923,7 +2002,8 @@
               "delta": 2.34,
               "delta_pct": 360.0,
               "unit": "sec",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -1935,7 +2015,8 @@
               "delta": -246.0,
               "delta_pct": -98.4,
               "unit": "count",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -1954,7 +2035,8 @@
               "delta": 49816.0,
               "delta_pct": 458.415386,
               "unit": "count",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -1966,7 +2048,8 @@
               "delta": 2.13,
               "delta_pct": 355.0,
               "unit": "sec",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -1978,7 +2061,8 @@
               "delta": -171.0,
               "delta_pct": -95.530726,
               "unit": "count",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -1997,7 +2081,8 @@
               "delta": 1528.0,
               "delta_pct": 10.00786,
               "unit": "count",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -2009,7 +2094,8 @@
               "delta": -45041.0,
               "delta_pct": -13.300987,
               "unit": "bytes",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -2028,7 +2114,8 @@
               "delta": 43198.0,
               "delta_pct": 10.000671,
               "unit": "count",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -2040,7 +2127,8 @@
               "delta": 0.57,
               "delta_pct": 34.337349,
               "unit": "sec",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -2059,7 +2147,8 @@
               "delta": -39113.0,
               "delta_pct": -36.27351,
               "unit": "count",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -2071,7 +2160,8 @@
               "delta": -61.51,
               "delta_pct": -28.189734,
               "unit": "sec",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         }
@@ -2092,7 +2182,8 @@
               "delta": -2105.87,
               "delta_pct": -5.624187,
               "unit": "ms",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -2104,7 +2195,8 @@
               "delta": -2105.87,
               "delta_pct": -5.624187,
               "unit": "ms",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -2123,7 +2215,8 @@
               "delta": 1084.57,
               "delta_pct": 20.541254,
               "unit": "ms",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -2135,7 +2228,8 @@
               "delta": 2463.79,
               "delta_pct": 28.395538,
               "unit": "ms",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -2154,7 +2248,8 @@
               "delta": 21.61,
               "delta_pct": null,
               "unit": "ms",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -2166,7 +2261,8 @@
               "delta": 21.61,
               "delta_pct": null,
               "unit": "ms",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -2185,7 +2281,8 @@
               "delta": -0.01,
               "delta_pct": -20.0,
               "unit": "ms",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -2197,7 +2294,8 @@
               "delta": 2.1,
               "delta_pct": 34.035656,
               "unit": "ms",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -2216,7 +2314,8 @@
               "delta": 0.04,
               "delta_pct": 80.0,
               "unit": "ms",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -2228,7 +2327,8 @@
               "delta": 57.01,
               "delta_pct": 232.314588,
               "unit": "ms",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -2247,7 +2347,8 @@
               "delta": 0.01,
               "delta_pct": 33.333333,
               "unit": "ms",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -2259,7 +2360,8 @@
               "delta": 2.33,
               "delta_pct": 111.483254,
               "unit": "ms",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -2278,7 +2380,8 @@
               "delta": 0.01,
               "delta_pct": 33.333333,
               "unit": "ms",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -2290,7 +2393,8 @@
               "delta": 5.92,
               "delta_pct": 356.626506,
               "unit": "ms",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -2309,7 +2413,8 @@
               "delta": -13.33,
               "delta_pct": -100.0,
               "unit": "ms",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -2321,7 +2426,8 @@
               "delta": -13.33,
               "delta_pct": -100.0,
               "unit": "ms",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -2340,7 +2446,8 @@
               "delta": 1.31,
               "delta_pct": 95.620438,
               "unit": "ms",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -2359,7 +2466,8 @@
               "delta": -0.01,
               "delta_pct": -16.666667,
               "unit": "ms",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -2371,7 +2479,8 @@
               "delta": 6.54,
               "delta_pct": 284.347826,
               "unit": "ms",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -2390,7 +2499,8 @@
               "delta": -0.02,
               "delta_pct": -33.333333,
               "unit": "ms",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -2402,7 +2512,8 @@
               "delta": 3.02,
               "delta_pct": 64.529915,
               "unit": "ms",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -2421,7 +2532,8 @@
               "delta": 14.26,
               "delta_pct": 810.227273,
               "unit": "ms",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -2440,7 +2552,8 @@
               "delta": -2.41,
               "delta_pct": -44.058501,
               "unit": "ms",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -2459,7 +2572,8 @@
               "delta": 0.26,
               "delta_pct": 12.871287,
               "unit": "ms",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -2471,7 +2585,8 @@
               "delta": 15.5,
               "delta_pct": 72.2274,
               "unit": "ms",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         }
@@ -2493,10 +2608,18 @@
         "only_nt": 0,
         "only_prod": 0,
         "same": 116,
-        "critical_count": 6,
-        "informational_count": 2
+        "critical_count": 1,
+        "informational_count": 7
       },
       "settings_issues_critical": [
+        {
+          "name": "shared_buffers",
+          "status": "DIFFER",
+          "nt_value": "504320",
+          "prod_value": "537600"
+        }
+      ],
+      "settings_issues_informational": [
         {
           "name": "commit_timestamp_buffers",
           "status": "DIFFER",
@@ -2504,10 +2627,16 @@
           "prod_value": "1024"
         },
         {
-          "name": "shared_buffers",
+          "name": "pg_conf_load_time",
           "status": "DIFFER",
-          "nt_value": "504320",
-          "prod_value": "537600"
+          "nt_value": "2026-08-10 12:11:58.339478+03",
+          "prod_value": "2026-08-12 13:51:51.80184+03"
+        },
+        {
+          "name": "pg_postmaster_start_time",
+          "status": "DIFFER",
+          "nt_value": "2026-08-10 12:10:53.521971+03",
+          "prod_value": "2026-08-12 13:50:49.898345+03"
         },
         {
           "name": "shared_memory_size",
@@ -2532,20 +2661,6 @@
           "status": "DIFFER",
           "nt_value": "976",
           "prod_value": "1024"
-        }
-      ],
-      "settings_issues_informational": [
-        {
-          "name": "pg_conf_load_time",
-          "status": "DIFFER",
-          "nt_value": "2026-08-10 12:11:58.339478+03",
-          "prod_value": "2026-08-12 13:51:51.80184+03"
-        },
-        {
-          "name": "pg_postmaster_start_time",
-          "status": "DIFFER",
-          "nt_value": "2026-08-10 12:10:53.521971+03",
-          "prod_value": "2026-08-12 13:50:49.898345+03"
         }
       ],
       "run_nt": {
@@ -2574,7 +2689,8 @@
           "delta": 486132.0,
           "delta_pct": 5.139774,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "dml",
@@ -2586,7 +2702,8 @@
           "delta": -8636732.0,
           "delta_pct": -5.478902,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "dml",
@@ -2598,7 +2715,8 @@
           "delta": -101436.0,
           "delta_pct": -29.819646,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "dml",
@@ -2610,7 +2728,8 @@
           "delta": -10712581.0,
           "delta_pct": -7.05701,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "dml",
@@ -2622,7 +2741,8 @@
           "delta": 587568.0,
           "delta_pct": 6.443995,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "dml",
@@ -2634,7 +2754,8 @@
           "delta": 2075849.0,
           "delta_pct": 35.57202,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "cluster",
@@ -2646,7 +2767,8 @@
           "delta": 810901.0,
           "delta_pct": 6.931874,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "cluster",
@@ -2658,7 +2780,8 @@
           "delta": -9.0,
           "delta_pct": -23.076923,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "cluster",
@@ -2670,19 +2793,8 @@
           "delta": 7.0,
           "delta_pct": 100.0,
           "unit": "count",
-          "extra": ""
-        },
-        {
-          "section": "tables",
-          "key": "postgres.pg_catalog.pg_db_role_setting.seq_scan",
-          "value_a": 3003316.0,
-          "value_b": 1818750.0,
-          "per_hour_a": 182019.151515,
-          "per_hour_b": 110227.272727,
-          "delta": -1184566.0,
-          "delta_pct": -39.441937,
-          "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "tables",
@@ -2694,7 +2806,21 @@
           "delta": -1184566.0,
           "delta_pct": -39.441937,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
+        },
+        {
+          "section": "tables",
+          "key": "postgres.pg_catalog.pg_db_role_setting.seq_scan",
+          "value_a": 3003316.0,
+          "value_b": 1818750.0,
+          "per_hour_a": 182019.151515,
+          "per_hour_b": 110227.272727,
+          "delta": -1184566.0,
+          "delta_pct": -39.441937,
+          "unit": "count",
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "tables",
@@ -2706,7 +2832,8 @@
           "delta": -212170.0,
           "delta_pct": -36.564706,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "tables",
@@ -2718,7 +2845,8 @@
           "delta": -198913.0,
           "delta_pct": -82.365631,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "tables",
@@ -2730,7 +2858,8 @@
           "delta": -177042.0,
           "delta_pct": -73.309317,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "tables",
@@ -2742,7 +2871,8 @@
           "delta": -155846.0,
           "delta_pct": -82.076913,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "tables",
@@ -2754,7 +2884,8 @@
           "delta": -135802.0,
           "delta_pct": -71.520661,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "tables",
@@ -2766,7 +2897,8 @@
           "delta": 120516.0,
           "delta_pct": 21.181173,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "tables",
@@ -2778,7 +2910,8 @@
           "delta": 82166.0,
           "delta_pct": 16.237473,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "tables",
@@ -2790,7 +2923,8 @@
           "delta": 69093.0,
           "delta_pct": 6.265524,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "tables",
@@ -2802,7 +2936,8 @@
           "delta": -18055.0,
           "delta_pct": -7.531201,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "tables",
@@ -2814,7 +2949,8 @@
           "delta": -5031.0,
           "delta_pct": -15.530174,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "tables",
@@ -2826,7 +2962,8 @@
           "delta": -2533.0,
           "delta_pct": -34.392396,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "tables",
@@ -2838,7 +2975,8 @@
           "delta": 1327.0,
           "delta_pct": 10.466951,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "tables",
@@ -2850,7 +2988,8 @@
           "delta": -1118.0,
           "delta_pct": -94.266442,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         }
       ],
       "metric_diffs_warning": [
@@ -2864,7 +3003,8 @@
           "delta": 0.48,
           "delta_pct": 13.636364,
           "unit": "sec",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "cluster",
@@ -2876,7 +3016,8 @@
           "delta": -17615.0,
           "delta_pct": -21.820186,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "sessions",
@@ -2888,7 +3029,8 @@
           "delta": 100835.33,
           "delta_pct": 7.348524,
           "unit": "sec",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "sessions",
@@ -2900,7 +3042,8 @@
           "delta": -237.41,
           "delta_pct": -29.087234,
           "unit": "sec",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "sessions",
@@ -2912,7 +3055,8 @@
           "delta": -100374.07,
           "delta_pct": -18.445981,
           "unit": "sec",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "sessions",
@@ -2924,7 +3068,8 @@
           "delta": 100835.36,
           "delta_pct": 7.348683,
           "unit": "sec",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "cache",
@@ -2936,7 +3081,8 @@
           "delta": -10.21,
           "delta_pct": -26.152664,
           "unit": "sec",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "cache",
@@ -2948,7 +3094,8 @@
           "delta": 26014.0,
           "delta_pct": 26.883687,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "cache",
@@ -2960,7 +3107,8 @@
           "delta": 4.78,
           "delta_pct": 19.924969,
           "unit": "sec",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "cache",
@@ -2972,7 +3120,8 @@
           "delta": 0.16,
           "delta_pct": 1600.0,
           "unit": "sec",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "cache",
@@ -2984,7 +3133,8 @@
           "delta": -15.75,
           "delta_pct": -6.046762,
           "unit": "sec",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "cache",
@@ -2996,7 +3146,8 @@
           "delta": -10.37,
           "delta_pct": -26.569306,
           "unit": "sec",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         }
       ],
       "query_comparisons_info": [
@@ -3015,7 +3166,8 @@
               "delta": -1.51,
               "delta_pct": -5.69167,
               "unit": "sec",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -3027,7 +3179,8 @@
               "delta": -642133811.0,
               "delta_pct": -100.0,
               "unit": "bytes",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -3046,7 +3199,8 @@
               "delta": 486735650.0,
               "delta_pct": 250.874427,
               "unit": "bytes",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -3065,7 +3219,8 @@
               "delta": 72670258.0,
               "delta_pct": 19.454984,
               "unit": "bytes",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -3084,7 +3239,8 @@
               "delta": 147071.0,
               "delta_pct": null,
               "unit": "count",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -3096,7 +3252,8 @@
               "delta": 6.5,
               "delta_pct": null,
               "unit": "sec",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -3108,7 +3265,8 @@
               "delta": 24.0,
               "delta_pct": null,
               "unit": "count",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -3127,7 +3285,8 @@
               "delta": 1.0,
               "delta_pct": null,
               "unit": "count",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -3139,7 +3298,8 @@
               "delta": 0.02,
               "delta_pct": null,
               "unit": "sec",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -3151,7 +3311,8 @@
               "delta": 127755.0,
               "delta_pct": null,
               "unit": "bytes",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -3163,7 +3324,8 @@
               "delta": 34.0,
               "delta_pct": null,
               "unit": "count",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -3182,7 +3344,8 @@
               "delta": 1.0,
               "delta_pct": null,
               "unit": "count",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -3194,7 +3357,8 @@
               "delta": 0.01,
               "delta_pct": null,
               "unit": "sec",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -3206,7 +3370,8 @@
               "delta": 77034.0,
               "delta_pct": null,
               "unit": "bytes",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -3218,7 +3383,8 @@
               "delta": 33.0,
               "delta_pct": null,
               "unit": "count",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -3237,7 +3403,8 @@
               "delta": 60989.0,
               "delta_pct": null,
               "unit": "count",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -3249,7 +3416,8 @@
               "delta": 2.99,
               "delta_pct": null,
               "unit": "sec",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -3261,7 +3429,8 @@
               "delta": 4.0,
               "delta_pct": null,
               "unit": "count",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -3280,7 +3449,8 @@
               "delta": 60683.0,
               "delta_pct": null,
               "unit": "count",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -3292,7 +3462,8 @@
               "delta": 2.73,
               "delta_pct": null,
               "unit": "sec",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -3304,7 +3475,8 @@
               "delta": 8.0,
               "delta_pct": null,
               "unit": "count",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -3323,7 +3495,8 @@
               "delta": -49907.0,
               "delta_pct": -42.072297,
               "unit": "count",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -3335,7 +3508,8 @@
               "delta": -114.06,
               "delta_pct": -42.127424,
               "unit": "sec",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -3354,7 +3528,8 @@
               "delta": -2495.0,
               "delta_pct": -42.010439,
               "unit": "count",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -3366,7 +3541,8 @@
               "delta": -2.23,
               "delta_pct": -44.779116,
               "unit": "sec",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -3378,7 +3554,8 @@
               "delta": 37845.0,
               "delta_pct": 2353.544776,
               "unit": "bytes",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -3397,7 +3574,8 @@
               "delta": -37099.0,
               "delta_pct": -100.0,
               "unit": "count",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -3409,7 +3587,8 @@
               "delta": -0.67,
               "delta_pct": -100.0,
               "unit": "sec",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -3428,7 +3607,8 @@
               "delta": 32076.0,
               "delta_pct": 12.265594,
               "unit": "bytes",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -3447,7 +3627,8 @@
               "delta": -29575.0,
               "delta_pct": -100.0,
               "unit": "count",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -3459,7 +3640,8 @@
               "delta": -0.48,
               "delta_pct": -100.0,
               "unit": "sec",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -3478,7 +3660,8 @@
               "delta": -8193.0,
               "delta_pct": -66.099234,
               "unit": "bytes",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -3497,7 +3680,8 @@
               "delta": -1.0,
               "delta_pct": -100.0,
               "unit": "count",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -3509,7 +3693,8 @@
               "delta": -0.0,
               "delta_pct": -100.0,
               "unit": "sec",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -3521,7 +3706,8 @@
               "delta": -7651.0,
               "delta_pct": -100.0,
               "unit": "bytes",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -3533,7 +3719,8 @@
               "delta": -11.0,
               "delta_pct": -100.0,
               "unit": "count",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         }
@@ -3554,7 +3741,8 @@
               "delta": -1506.3,
               "delta_pct": -5.678455,
               "unit": "ms",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -3566,7 +3754,8 @@
               "delta": -1506.3,
               "delta_pct": -5.678455,
               "unit": "ms",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -3585,7 +3774,8 @@
               "delta": -1618.31,
               "delta_pct": -12.683893,
               "unit": "ms",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -3604,7 +3794,8 @@
               "delta": 0.04,
               "delta_pct": null,
               "unit": "ms",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -3616,7 +3807,8 @@
               "delta": 8.27,
               "delta_pct": null,
               "unit": "ms",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -3635,7 +3827,8 @@
               "delta": 21.61,
               "delta_pct": null,
               "unit": "ms",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -3647,7 +3840,8 @@
               "delta": 21.61,
               "delta_pct": null,
               "unit": "ms",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -3666,7 +3860,8 @@
               "delta": 14.97,
               "delta_pct": null,
               "unit": "ms",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -3678,7 +3873,8 @@
               "delta": 14.97,
               "delta_pct": null,
               "unit": "ms",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -3697,7 +3893,8 @@
               "delta": 0.05,
               "delta_pct": null,
               "unit": "ms",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -3709,7 +3906,8 @@
               "delta": 8.84,
               "delta_pct": null,
               "unit": "ms",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -3728,7 +3926,8 @@
               "delta": 0.04,
               "delta_pct": null,
               "unit": "ms",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -3740,7 +3939,8 @@
               "delta": 7.7,
               "delta_pct": null,
               "unit": "ms",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -3759,7 +3959,8 @@
               "delta": -14.43,
               "delta_pct": -28.079393,
               "unit": "ms",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -3778,7 +3979,8 @@
               "delta": -2.92,
               "delta_pct": -33.181818,
               "unit": "ms",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -3797,7 +3999,8 @@
               "delta": -0.02,
               "delta_pct": -100.0,
               "unit": "ms",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -3809,7 +4012,8 @@
               "delta": -0.83,
               "delta_pct": -100.0,
               "unit": "ms",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -3828,7 +4032,8 @@
               "delta": 13.76,
               "delta_pct": 608.849558,
               "unit": "ms",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -3847,7 +4052,8 @@
               "delta": -0.02,
               "delta_pct": -100.0,
               "unit": "ms",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -3859,7 +4065,8 @@
               "delta": -1.22,
               "delta_pct": -100.0,
               "unit": "ms",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -3878,7 +4085,8 @@
               "delta": -0.12,
               "delta_pct": -10.0,
               "unit": "ms",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -3890,7 +4098,8 @@
               "delta": -0.46,
               "delta_pct": -15.03268,
               "unit": "ms",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         },
@@ -3909,7 +4118,8 @@
               "delta": -2.52,
               "delta_pct": -100.0,
               "unit": "ms",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             },
             {
               "section": "queries",
@@ -3921,7 +4131,8 @@
               "delta": -2.52,
               "delta_pct": -100.0,
               "unit": "ms",
-              "extra": ""
+              "extra": "",
+              "item_id": ""
             }
           ]
         }
@@ -3959,7 +4170,8 @@
             "delta": -5095457.0,
             "delta_pct": -30.341647270893024,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -3975,7 +4187,8 @@
             "delta": -1.3000000000000003,
             "delta_pct": -26.970954356846477,
             "unit": "sec",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -3991,7 +4204,8 @@
             "delta": 13711.369999999999,
             "delta_pct": 54.43832488055337,
             "unit": "sec",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -4007,7 +4221,8 @@
             "delta": -17.0,
             "delta_pct": -30.357142857142858,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -4023,7 +4238,8 @@
             "delta": 5.0,
             "delta_pct": 250.0,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -4039,7 +4255,8 @@
             "delta": 44892.0,
             "delta_pct": 125.27067753097444,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -4055,7 +4272,8 @@
             "delta": -267757.0,
             "delta_pct": -28.72297402395396,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -4071,7 +4289,8 @@
             "delta": 36706.0,
             "delta_pct": 32.430665382610464,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -4087,7 +4306,8 @@
             "delta": 270.0,
             "delta_pct": 10.0,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -4103,7 +4323,8 @@
             "delta": 21245602.0,
             "delta_pct": 15.577029291955034,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -4119,7 +4340,8 @@
             "delta": 12154.0,
             "delta_pct": 9.171445819498944,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -4135,7 +4357,8 @@
             "delta": 4583.0,
             "delta_pct": 9.634223249947446,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -4151,7 +4374,8 @@
             "delta": 36724.0,
             "delta_pct": 33.84294969266355,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -4167,7 +4391,8 @@
             "delta": 31072.0,
             "delta_pct": 10.052637879214346,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -4183,7 +4408,8 @@
             "delta": 90.0,
             "delta_pct": 10.0,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -4199,7 +4425,8 @@
             "delta": 21563106.0,
             "delta_pct": 16.556761525343607,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -4215,7 +4442,8 @@
             "delta": 180.0,
             "delta_pct": 10.0,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -4231,23 +4459,8 @@
             "delta": -317504.0,
             "delta_pct": -5.160043015526902,
             "unit": "count",
-            "extra": ""
-          }
-        },
-        {
-          "id": "run_compare.tables.postgres.pg_catalog.pg_db_role_setting.seq_scan",
-          "category": "tables",
-          "severity": "warning",
-          "message": "postgres.pg_catalog.pg_db_role_setting.seq_scan",
-          "details": {
-            "value_a": 2859668.0,
-            "value_b": 3003316.0,
-            "per_hour_a": 190644.53333333333,
-            "per_hour_b": 182019.15151515152,
-            "delta": 143648.0,
-            "delta_pct": 5.0232404600813805,
-            "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -4263,7 +4476,25 @@
             "delta": 143648.0,
             "delta_pct": 5.0232404600813805,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
+          }
+        },
+        {
+          "id": "run_compare.tables.postgres.pg_catalog.pg_db_role_setting.seq_scan",
+          "category": "tables",
+          "severity": "warning",
+          "message": "postgres.pg_catalog.pg_db_role_setting.seq_scan",
+          "details": {
+            "value_a": 2859668.0,
+            "value_b": 3003316.0,
+            "per_hour_a": 190644.53333333333,
+            "per_hour_b": 182019.15151515152,
+            "delta": 143648.0,
+            "delta_pct": 5.0232404600813805,
+            "unit": "count",
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -4279,7 +4510,8 @@
             "delta": 53606.0,
             "delta_pct": 12.478235365319975,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -4295,7 +4527,8 @@
             "delta": 53362.0,
             "delta_pct": 10.127596095631594,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -4311,7 +4544,8 @@
             "delta": 34372.0,
             "delta_pct": 16.737110691260398,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -4327,7 +4561,8 @@
             "delta": -33352.0,
             "delta_pct": -5.537173206005356,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -4343,7 +4578,8 @@
             "delta": -28784.0,
             "delta_pct": -100.0,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -4359,7 +4595,8 @@
             "delta": 23420.0,
             "delta_pct": 623.7017310252996,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -4375,7 +4612,8 @@
             "delta": 21893.0,
             "delta_pct": 10.751837973489964,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -4391,7 +4629,8 @@
             "delta": -12872.0,
             "delta_pct": -6.348705302096177,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -4407,7 +4646,8 @@
             "delta": -12872.0,
             "delta_pct": -6.348705302096177,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -4423,7 +4663,8 @@
             "delta": 12678.0,
             "delta_pct": null,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -4439,7 +4680,8 @@
             "delta": -12354.0,
             "delta_pct": -100.0,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -4455,14 +4697,15 @@
             "delta": 11474.0,
             "delta_pct": null,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
-          "id": "run_compare.tables.postgres.pg_catalog.pg_db_role_setting.idx_scan",
+          "id": "run_compare.tables.statecontracts.pg_catalog.pg_db_role_setting.idx_scan",
           "category": "tables",
           "severity": "warning",
-          "message": "postgres.pg_catalog.pg_db_role_setting.idx_scan",
+          "message": "statecontracts.pg_catalog.pg_db_role_setting.idx_scan",
           "details": {
             "value_a": 133148.0,
             "value_b": 121956.0,
@@ -4471,11 +4714,12 @@
             "delta": -11192.0,
             "delta_pct": -8.405683900621865,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
-          "id": "run_compare.queries.statecontracts_as_admin",
+          "id": "run_compare.queries.statecontracts_as_admin.31df6528995548cf",
           "category": "queries",
           "severity": "warning",
           "message": "statecontracts/as_admin",
@@ -4487,11 +4731,12 @@
             "delta": 2675.5,
             "delta_pct": 21.062103092913357,
             "unit": "sec",
-            "extra": "A: calls=144.99M, total_time=12702.9s, mean_exec_time=0.1ms, max_exec_time=54.7ms, wal_bytes=47.25G, shared_blks_read=1.16K\nB: calls=144.99M, total_time=15378.4s, mean_exec_time=0.1ms, max_exec_time=51.5ms, wal_bytes=47.41G, shared_blks_read=1.77K\n  INSERT INTO statecontracts.T_REPL_AGGLOCK_VALUE (rootid, siversion, guid, version, sys_lastchange..."
+            "extra": "A: calls=144.99M, total_time=12702.9s, mean_exec_time=0.1ms, max_exec_time=54.7ms, wal_bytes=47.25G, shared_blks_read=1.16K\nB: calls=144.99M, total_time=15378.4s, mean_exec_time=0.1ms, max_exec_time=51.5ms, wal_bytes=47.41G, shared_blks_read=1.77K\n  INSERT INTO statecontracts.T_REPL_AGGLOCK_VALUE (rootid, siversion, guid, version, sys_lastchange...",
+            "item_id": "31df6528995548cf"
           }
         },
         {
-          "id": "run_compare.queries.statecontracts_as_admin",
+          "id": "run_compare.queries.statecontracts_as_admin.d5e326dff67d955a",
           "category": "queries",
           "severity": "warning",
           "message": "statecontracts/as_admin",
@@ -4503,11 +4748,12 @@
             "delta": 2212.649999999998,
             "delta_pct": 12.422536349947604,
             "unit": "sec",
-            "extra": "A: calls=144.99M, total_time=17811.6s, mean_exec_time=0.1ms, max_exec_time=54.0ms, wal_bytes=113.58G, shared_blks_read=3.38K\nB: calls=144.99M, total_time=20024.2s, mean_exec_time=0.1ms, max_exec_time=59.6ms, wal_bytes=113.76G, shared_blks_read=4.28K\n  insert into statecontracts.t_value (chgcnt,date_,inn,sys_isdeleted,kpp,sys_lastchangedate,level_e..."
+            "extra": "A: calls=144.99M, total_time=17811.6s, mean_exec_time=0.1ms, max_exec_time=54.0ms, wal_bytes=113.58G, shared_blks_read=3.38K\nB: calls=144.99M, total_time=20024.2s, mean_exec_time=0.1ms, max_exec_time=59.6ms, wal_bytes=113.76G, shared_blks_read=4.28K\n  insert into statecontracts.t_value (chgcnt,date_,inn,sys_isdeleted,kpp,sys_lastchangedate,level_e...",
+            "item_id": "d5e326dff67d955a"
           }
         },
         {
-          "id": "run_compare.queries.statecontracts_as_admin",
+          "id": "run_compare.queries.statecontracts_as_admin.37b83dead5b5b9e9",
           "category": "queries",
           "severity": "warning",
           "message": "statecontracts/as_admin",
@@ -4519,11 +4765,12 @@
             "delta": 1385.1599999999999,
             "delta_pct": 32.11712004155034,
             "unit": "sec",
-            "extra": "A: calls=24.00M, total_time=4312.8s, mean_exec_time=0.2ms, max_exec_time=43.8ms, wal_bytes=31.27G, shared_blks_read=89.88K\nB: calls=24.00M, total_time=5698.0s, mean_exec_time=0.2ms, max_exec_time=80.5ms, wal_bytes=31.31G, shared_blks_read=85.00K\n  insert into statecontracts.t_participant (aggregateroot_id,chgcnt,inn,sys_isdeleted,sys_lastchang..."
+            "extra": "A: calls=24.00M, total_time=4312.8s, mean_exec_time=0.2ms, max_exec_time=43.8ms, wal_bytes=31.27G, shared_blks_read=89.88K\nB: calls=24.00M, total_time=5698.0s, mean_exec_time=0.2ms, max_exec_time=80.5ms, wal_bytes=31.31G, shared_blks_read=85.00K\n  insert into statecontracts.t_participant (aggregateroot_id,chgcnt,inn,sys_isdeleted,sys_lastchang...",
+            "item_id": "37b83dead5b5b9e9"
           }
         },
         {
-          "id": "run_compare.queries.statecontracts_as_admin",
+          "id": "run_compare.queries.statecontracts_as_admin.7e5e1a652457d8db",
           "category": "queries",
           "severity": "warning",
           "message": "statecontracts/as_admin",
@@ -4535,11 +4782,12 @@
             "delta": 872.4099999999999,
             "delta_pct": 19.13968917009644,
             "unit": "sec",
-            "extra": "A: calls=144.99M, total_time=4558.1s, mean_exec_time=0.0ms, max_exec_time=51.2ms\nB: calls=144.99M, total_time=5430.5s, mean_exec_time=0.0ms, max_exec_time=49.7ms\n  SELECT txtype, changeeventmask, aggtype, ownerid, migrationstatus, silock, siversion, guid, versi..."
+            "extra": "A: calls=144.99M, total_time=4558.1s, mean_exec_time=0.0ms, max_exec_time=51.2ms\nB: calls=144.99M, total_time=5430.5s, mean_exec_time=0.0ms, max_exec_time=49.7ms\n  SELECT txtype, changeeventmask, aggtype, ownerid, migrationstatus, silock, siversion, guid, versi...",
+            "item_id": "7e5e1a652457d8db"
           }
         },
         {
-          "id": "run_compare.queries.statecontracts_as_admin",
+          "id": "run_compare.queries.statecontracts_as_admin.3f7ffea106f6e78e",
           "category": "queries",
           "severity": "warning",
           "message": "statecontracts/as_admin",
@@ -4551,11 +4799,12 @@
             "delta": 531.2799999999997,
             "delta_pct": 22.54281301447749,
             "unit": "sec",
-            "extra": "A: calls=12.00M, total_time=2356.8s, mean_exec_time=0.2ms, max_exec_time=38.4ms, wal_bytes=49.33G, shared_blks_read=9.26K\nB: calls=12.00M, total_time=2888.0s, mean_exec_time=0.2ms, max_exec_time=57.8ms, wal_bytes=49.34G, shared_blks_read=10.90K\n  insert into statecontracts.t_contracts (chgcnt,claimed,contractid,customerinn,customername,enddat..."
+            "extra": "A: calls=12.00M, total_time=2356.8s, mean_exec_time=0.2ms, max_exec_time=38.4ms, wal_bytes=49.33G, shared_blks_read=9.26K\nB: calls=12.00M, total_time=2888.0s, mean_exec_time=0.2ms, max_exec_time=57.8ms, wal_bytes=49.34G, shared_blks_read=10.90K\n  insert into statecontracts.t_contracts (chgcnt,claimed,contractid,customerinn,customername,enddat...",
+            "item_id": "3f7ffea106f6e78e"
           }
         },
         {
-          "id": "run_compare.queries.statecontracts_as_admin",
+          "id": "run_compare.queries.statecontracts_as_admin.e2a55c68949e5d1e",
           "category": "queries",
           "severity": "warning",
           "message": "statecontracts/as_admin",
@@ -4567,11 +4816,12 @@
             "delta": 511.4499999999998,
             "delta_pct": 14.872834286179557,
             "unit": "sec",
-            "extra": "A: calls=144.99M, total_time=3438.8s, mean_exec_time=0.0ms, max_exec_time=27.4ms\nB: calls=144.99M, total_time=3950.3s, mean_exec_time=0.0ms, max_exec_time=42.0ms\n  select v1_0.object_id from statecontracts.t_value v1_0 where v1_0.inn is not null and v1_0.inn=$1..."
+            "extra": "A: calls=144.99M, total_time=3438.8s, mean_exec_time=0.0ms, max_exec_time=27.4ms\nB: calls=144.99M, total_time=3950.3s, mean_exec_time=0.0ms, max_exec_time=42.0ms\n  select v1_0.object_id from statecontracts.t_value v1_0 where v1_0.inn is not null and v1_0.inn=$1...",
+            "item_id": "e2a55c68949e5d1e"
           }
         },
         {
-          "id": "run_compare.queries.statecontracts_as_admin",
+          "id": "run_compare.queries.statecontracts_as_admin.5925970c215e2e8a",
           "category": "queries",
           "severity": "warning",
           "message": "statecontracts/as_admin",
@@ -4583,11 +4833,12 @@
             "delta": 387.2700000000001,
             "delta_pct": 39.282055443415466,
             "unit": "sec",
-            "extra": "A: calls=12.00M, total_time=985.9s, mean_exec_time=0.1ms, max_exec_time=36.6ms, wal_bytes=3.89G, shared_blks_read=527\nB: calls=12.00M, total_time=1373.1s, mean_exec_time=0.1ms, max_exec_time=52.0ms, wal_bytes=3.91G, shared_blks_read=854\n  INSERT INTO statecontracts.T_REPL_AGGLOCK_CONTRACTS (rootid, siversion, guid, version, sys_lastch..."
+            "extra": "A: calls=12.00M, total_time=985.9s, mean_exec_time=0.1ms, max_exec_time=36.6ms, wal_bytes=3.89G, shared_blks_read=527\nB: calls=12.00M, total_time=1373.1s, mean_exec_time=0.1ms, max_exec_time=52.0ms, wal_bytes=3.91G, shared_blks_read=854\n  INSERT INTO statecontracts.T_REPL_AGGLOCK_CONTRACTS (rootid, siversion, guid, version, sys_lastch...",
+            "item_id": "5925970c215e2e8a"
           }
         },
         {
-          "id": "run_compare.queries.statecontracts_as_admin",
+          "id": "run_compare.queries.statecontracts_as_admin.1c1fd865d42f5cf",
           "category": "queries",
           "severity": "warning",
           "message": "statecontracts/as_admin",
@@ -4599,11 +4850,12 @@
             "delta": 116.64999999999998,
             "delta_pct": 32.59017126253736,
             "unit": "sec",
-            "extra": "A: calls=12.00M, total_time=357.9s, mean_exec_time=0.0ms, max_exec_time=28.7ms\nB: calls=12.00M, total_time=474.6s, mean_exec_time=0.0ms, max_exec_time=44.0ms\n  SELECT txtype, changeeventmask, aggtype, ownerid, migrationstatus, silock, siversion, guid, versi..."
+            "extra": "A: calls=12.00M, total_time=357.9s, mean_exec_time=0.0ms, max_exec_time=28.7ms\nB: calls=12.00M, total_time=474.6s, mean_exec_time=0.0ms, max_exec_time=44.0ms\n  SELECT txtype, changeeventmask, aggtype, ownerid, migrationstatus, silock, siversion, guid, versi...",
+            "item_id": "1c1fd865d42f5cf"
           }
         },
         {
-          "id": "run_compare.queries.statecontracts_as_admin",
+          "id": "run_compare.queries.statecontracts_as_admin.d1cf715414ffc2ac",
           "category": "queries",
           "severity": "warning",
           "message": "statecontracts/as_admin",
@@ -4615,11 +4867,12 @@
             "delta": 106.5,
             "delta_pct": 17.265137391586286,
             "unit": "sec",
-            "extra": "A: calls=24.00M, total_time=616.9s, mean_exec_time=0.0ms, max_exec_time=25.9ms\nB: calls=24.00M, total_time=723.4s, mean_exec_time=0.0ms, max_exec_time=61.4ms\n  select p1_0.object_id from statecontracts.t_participant p1_0 where p1_0.inn is not null and p1_0...."
+            "extra": "A: calls=24.00M, total_time=616.9s, mean_exec_time=0.0ms, max_exec_time=25.9ms\nB: calls=24.00M, total_time=723.4s, mean_exec_time=0.0ms, max_exec_time=61.4ms\n  select p1_0.object_id from statecontracts.t_participant p1_0 where p1_0.inn is not null and p1_0....",
+            "item_id": "d1cf715414ffc2ac"
           }
         },
         {
-          "id": "run_compare.queries.statecontracts_as_admin",
+          "id": "run_compare.queries.statecontracts_as_admin.5c924a575ee834c2",
           "category": "queries",
           "severity": "warning",
           "message": "statecontracts/as_admin",
@@ -4631,11 +4884,12 @@
             "delta": 82.06,
             "delta_pct": 21.895512033726455,
             "unit": "sec",
-            "extra": "A: calls=12.00M, total_time=374.8s, mean_exec_time=0.0ms, max_exec_time=27.6ms, shared_blks_read=3\nB: calls=12.00M, total_time=456.8s, mean_exec_time=0.0ms, max_exec_time=30.9ms, shared_blks_read=3\n  select c1_0.object_id from statecontracts.t_contracts c1_0 where c1_0.contractid is not null and ..."
+            "extra": "A: calls=12.00M, total_time=374.8s, mean_exec_time=0.0ms, max_exec_time=27.6ms, shared_blks_read=3\nB: calls=12.00M, total_time=456.8s, mean_exec_time=0.0ms, max_exec_time=30.9ms, shared_blks_read=3\n  select c1_0.object_id from statecontracts.t_contracts c1_0 where c1_0.contractid is not null and ...",
+            "item_id": "5c924a575ee834c2"
           }
         },
         {
-          "id": "run_compare.queries.postgres_postgres",
+          "id": "run_compare.queries.postgres_postgres.b59c46b67088420d",
           "category": "queries",
           "severity": "warning",
           "message": "postgres/postgres",
@@ -4647,11 +4901,12 @@
             "delta": 61.859999999999985,
             "delta_pct": 39.05303030303029,
             "unit": "sec",
-            "extra": "A: calls=30, total_time=158.4s, mean_exec_time=5280.0ms, max_exec_time=8676.7ms, wal_bytes=380.59M, shared_blks_read=68.52K\nB: calls=33, total_time=220.3s, mean_exec_time=6674.5ms, max_exec_time=12758.8ms, wal_bytes=373.53M, shared_blks_read=78.17K\n  SELECT pgse_profile.take_sample()"
+            "extra": "A: calls=30, total_time=158.4s, mean_exec_time=5280.0ms, max_exec_time=8676.7ms, wal_bytes=380.59M, shared_blks_read=68.52K\nB: calls=33, total_time=220.3s, mean_exec_time=6674.5ms, max_exec_time=12758.8ms, wal_bytes=373.53M, shared_blks_read=78.17K\n  SELECT pgse_profile.take_sample()",
+            "item_id": "b59c46b67088420d"
           }
         },
         {
-          "id": "run_compare.queries.postgres_\"sa-d00000011757\"",
+          "id": "run_compare.queries.postgres_\"sa-d00000011757\".a822446855e79f13",
           "category": "queries",
           "severity": "warning",
           "message": "postgres/\"sa-d00000011757\"",
@@ -4663,11 +4918,12 @@
             "delta": 52.55000000000001,
             "delta_pct": 24.083409715857016,
             "unit": "sec",
-            "extra": "A: calls=107.83K, total_time=218.2s, mean_exec_time=2.0ms, max_exec_time=21.5ms\nB: calls=118.62K, total_time=270.8s, mean_exec_time=2.3ms, max_exec_time=51.4ms\n  WITH locks AS ( SELECT pid, locktype, mode, relation, page, tuple, virtualxid, transactionid, cla..."
+            "extra": "A: calls=107.83K, total_time=218.2s, mean_exec_time=2.0ms, max_exec_time=21.5ms\nB: calls=118.62K, total_time=270.8s, mean_exec_time=2.3ms, max_exec_time=51.4ms\n  WITH locks AS ( SELECT pid, locktype, mode, relation, page, tuple, virtualxid, transactionid, cla...",
+            "item_id": "a822446855e79f13"
           }
         },
         {
-          "id": "run_compare.queries.postgres_\"sa-d00000011757\"",
+          "id": "run_compare.queries.postgres_\"sa-d00000011757\".566f5112e6ebf965",
           "category": "queries",
           "severity": "warning",
           "message": "postgres/\"sa-d00000011757\"",
@@ -4679,11 +4935,12 @@
             "delta": 24.339999999999996,
             "delta_pct": 46.4503816793893,
             "unit": "sec",
-            "extra": "A: calls=5.40K, total_time=52.4s, mean_exec_time=9.7ms, max_exec_time=43.1ms\nB: calls=5.94K, total_time=76.7s, mean_exec_time=12.9ms, max_exec_time=106.9ms\n  SELECT spcname, pg_tablespace_size(spcname) AS size FROM pg_tablespace ORDER BY size DESC LIMIT 25"
+            "extra": "A: calls=5.40K, total_time=52.4s, mean_exec_time=9.7ms, max_exec_time=43.1ms\nB: calls=5.94K, total_time=76.7s, mean_exec_time=12.9ms, max_exec_time=106.9ms\n  SELECT spcname, pg_tablespace_size(spcname) AS size FROM pg_tablespace ORDER BY size DESC LIMIT 25",
+            "item_id": "566f5112e6ebf965"
           }
         },
         {
-          "id": "run_compare.queries.postgres_\"sa-d00000011757\"",
+          "id": "run_compare.queries.postgres_\"sa-d00000011757\".92a0069b4dfb89ee",
           "category": "queries",
           "severity": "warning",
           "message": "postgres/\"sa-d00000011757\"",
@@ -4695,11 +4952,12 @@
             "delta": 10.999999999999996,
             "delta_pct": 46.21848739495796,
             "unit": "sec",
-            "extra": "A: calls=5.40K, total_time=23.8s, mean_exec_time=4.4ms, max_exec_time=38.4ms\nB: calls=5.94K, total_time=34.8s, mean_exec_time=5.9ms, max_exec_time=88.8ms\n  SELECT t2.rolname, t3.datname, SUM(t1.rows) as rows FROM pg_stat_statements t1 JOIN pg_roles t2 O..."
+            "extra": "A: calls=5.40K, total_time=23.8s, mean_exec_time=4.4ms, max_exec_time=38.4ms\nB: calls=5.94K, total_time=34.8s, mean_exec_time=5.9ms, max_exec_time=88.8ms\n  SELECT t2.rolname, t3.datname, SUM(t1.rows) as rows FROM pg_stat_statements t1 JOIN pg_roles t2 O...",
+            "item_id": "92a0069b4dfb89ee"
           }
         },
         {
-          "id": "run_compare.queries.postgres_\"sa-d00000011757\"",
+          "id": "run_compare.queries.postgres_\"sa-d00000011757\".f026fd092077b2a3",
           "category": "queries",
           "severity": "warning",
           "message": "postgres/\"sa-d00000011757\"",
@@ -4711,7 +4969,8 @@
             "delta": 10.239999999999998,
             "delta_pct": 44.08092983211364,
             "unit": "sec",
-            "extra": "A: calls=5.40K, total_time=23.2s, mean_exec_time=4.3ms, max_exec_time=26.3ms\nB: calls=5.94K, total_time=33.5s, mean_exec_time=5.6ms, max_exec_time=66.8ms\n  SELECT t2.rolname, t3.datname, sum((total_plan_time + total_exec_time) / 1000)::bigint as total_t..."
+            "extra": "A: calls=5.40K, total_time=23.2s, mean_exec_time=4.3ms, max_exec_time=26.3ms\nB: calls=5.94K, total_time=33.5s, mean_exec_time=5.6ms, max_exec_time=66.8ms\n  SELECT t2.rolname, t3.datname, sum((total_plan_time + total_exec_time) / 1000)::bigint as total_t...",
+            "item_id": "f026fd092077b2a3"
           }
         },
         {
@@ -4727,7 +4986,8 @@
             "delta": 711.0,
             "delta_pct": 7.895613548028873,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -4743,7 +5003,8 @@
             "delta": 20746.399999999994,
             "delta_pct": 23.14561160591813,
             "unit": "sec",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -4759,7 +5020,8 @@
             "delta": 407358.04000000004,
             "delta_pct": 5.194479024669031,
             "unit": "sec",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -4775,7 +5037,8 @@
             "delta": 317.0,
             "delta_pct": 10.841313269493844,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -4791,7 +5054,8 @@
             "delta": 4.52,
             "delta_pct": 18.31442463533225,
             "unit": "sec",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -4807,7 +5071,8 @@
             "delta": 199.73000000000002,
             "delta_pct": 32.39898129673788,
             "unit": "sec",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -4823,7 +5088,8 @@
             "delta": 50206.03000000003,
             "delta_pct": 10.164287388849056,
             "unit": "sec",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -4839,7 +5105,8 @@
             "delta": 394.0,
             "delta_pct": 6.479197500411116,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -4855,7 +5122,8 @@
             "delta": 20546.660000000003,
             "delta_pct": 23.081515934844955,
             "unit": "sec",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -4871,7 +5139,8 @@
             "delta": 17.91999999999996,
             "delta_pct": 6.723193516920522,
             "unit": "sec",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -4887,7 +5156,8 @@
             "delta": 10.599999999999998,
             "delta_pct": 37.27144866385372,
             "unit": "sec",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -4903,7 +5173,8 @@
             "delta": 5.719999999999999,
             "delta_pct": 31.308155446086474,
             "unit": "sec",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -4919,7 +5190,8 @@
             "delta": -0.019999999999999997,
             "delta_pct": -66.66666666666666,
             "unit": "sec",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -4935,7 +5207,8 @@
             "delta": 10.61,
             "delta_pct": 37.33286418015482,
             "unit": "sec",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         }
       ],
@@ -5146,7 +5419,12 @@
       "mode": "series",
       "confidence": "medium",
       "evidence_type": "probable",
-      "notes": "Confidence is aggregated from repeated pair evidence."
+      "notes": "Confidence is aggregated from repeated pair evidence.",
+      "statistical": {
+        "stability_threshold": 0.7,
+        "noise_iqr_ratio_threshold": 1.0,
+        "min_pairs_for_proven": 3
+      }
     },
     "functional_summary": {
       "total_pairs": 1,
@@ -5158,21 +5436,1002 @@
     "settings_table": {
       "run_labels": [
         "nt1",
-        "nt2"
+        "nt2",
+        "prod1"
       ],
       "rows": [
         {
           "parameter": "checkpoint_completion_target",
           "values": {
             "nt1": "0.5",
-            "nt2": "0.7"
+            "nt2": "0.7",
+            "prod1": "0.7"
+          }
+        },
+        {
+          "parameter": "commit_timestamp_buffers",
+          "values": {
+            "nt1": "976",
+            "nt2": "976",
+            "prod1": "1024"
+          }
+        },
+        {
+          "parameter": "huge_pages",
+          "values": {
+            "nt1": "—",
+            "nt2": "on",
+            "prod1": "on"
           }
         },
         {
           "parameter": "max_wal_size",
           "values": {
             "nt1": "8192",
-            "nt2": "12288"
+            "nt2": "12288",
+            "prod1": "12288"
+          }
+        },
+        {
+          "parameter": "pg_conf_load_time",
+          "values": {
+            "nt1": "2026-07-29 18:13:55.220776+03",
+            "nt2": "2026-08-10 12:11:58.339478+03",
+            "prod1": "2026-08-12 13:51:51.80184+03"
+          }
+        },
+        {
+          "parameter": "pg_postmaster_start_time",
+          "values": {
+            "nt1": "2026-06-10 15:13:32.405098+03",
+            "nt2": "2026-08-10 12:10:53.521971+03",
+            "prod1": "2026-08-12 13:50:49.898345+03"
+          }
+        },
+        {
+          "parameter": "shared_buffers",
+          "values": {
+            "nt1": "504320",
+            "nt2": "504320",
+            "prod1": "537600"
+          }
+        },
+        {
+          "parameter": "shared_memory_size",
+          "values": {
+            "nt1": "4452",
+            "nt2": "4452",
+            "prod1": "4724"
+          }
+        },
+        {
+          "parameter": "shared_memory_size_in_huge_pages",
+          "values": {
+            "nt1": "2226",
+            "nt2": "2226",
+            "prod1": "2362"
+          }
+        },
+        {
+          "parameter": "subtransaction_buffers",
+          "values": {
+            "nt1": "976",
+            "nt2": "976",
+            "prod1": "1024"
+          }
+        },
+        {
+          "parameter": "transaction_buffers",
+          "values": {
+            "nt1": "976",
+            "nt2": "976",
+            "prod1": "1024"
+          }
+        }
+      ],
+      "equal_rows": [
+        {
+          "parameter": "archive_command",
+          "values": {
+            "nt1": "/opt/pangolin-backup-tools/bin/pg_probackup archive-push -B /pgarclogs/05 --instance pprb_test-5fr75l --wal-file-path=%p --wal-file-name=%f --compress --overwrite -j 4 --batch-size=100",
+            "nt2": "/opt/pangolin-backup-tools/bin/pg_probackup archive-push -B /pgarclogs/05 --instance pprb_test-5fr75l --wal-file-path=%p --wal-file-name=%f --compress --overwrite -j 4 --batch-size=100",
+            "prod1": "/opt/pangolin-backup-tools/bin/pg_probackup archive-push -B /pgarclogs/05 --instance pprb_test-5fr75l --wal-file-path=%p --wal-file-name=%f --compress --overwrite -j 4 --batch-size=100"
+          }
+        },
+        {
+          "parameter": "archive_timeout",
+          "values": {
+            "nt1": "180",
+            "nt2": "180",
+            "prod1": "180"
+          }
+        },
+        {
+          "parameter": "authentication_max_workers",
+          "values": {
+            "nt1": "8",
+            "nt2": "8",
+            "prod1": "8"
+          }
+        },
+        {
+          "parameter": "authentication_port",
+          "values": {
+            "nt1": "5544",
+            "nt2": "5544",
+            "prod1": "5544"
+          }
+        },
+        {
+          "parameter": "autovacuum_naptime",
+          "values": {
+            "nt1": "10",
+            "nt2": "10",
+            "prod1": "10"
+          }
+        },
+        {
+          "parameter": "autovacuum_vacuum_cost_delay",
+          "values": {
+            "nt1": "10",
+            "nt2": "10",
+            "prod1": "10"
+          }
+        },
+        {
+          "parameter": "autovacuum_vacuum_cost_limit",
+          "values": {
+            "nt1": "1000",
+            "nt2": "1000",
+            "prod1": "1000"
+          }
+        },
+        {
+          "parameter": "autovacuum_work_mem",
+          "values": {
+            "nt1": "163840",
+            "nt2": "163840",
+            "prod1": "163840"
+          }
+        },
+        {
+          "parameter": "checkpoint_timeout",
+          "values": {
+            "nt1": "1680",
+            "nt2": "1680",
+            "prod1": "1680"
+          }
+        },
+        {
+          "parameter": "client_encoding",
+          "values": {
+            "nt1": "UTF8",
+            "nt2": "UTF8",
+            "prod1": "UTF8"
+          }
+        },
+        {
+          "parameter": "cluster_name",
+          "values": {
+            "nt1": "pprb_test-5fr75l",
+            "nt2": "pprb_test-5fr75l",
+            "prod1": "pprb_test-5fr75l"
+          }
+        },
+        {
+          "parameter": "data_checksums",
+          "values": {
+            "nt1": "on",
+            "nt2": "on",
+            "prod1": "on"
+          }
+        },
+        {
+          "parameter": "debug_pretty_print",
+          "values": {
+            "nt1": "off",
+            "nt2": "off",
+            "prod1": "off"
+          }
+        },
+        {
+          "parameter": "default_text_search_config",
+          "values": {
+            "nt1": "pg_catalog.english",
+            "nt2": "pg_catalog.english",
+            "prod1": "pg_catalog.english"
+          }
+        },
+        {
+          "parameter": "disk_check_timeout",
+          "values": {
+            "nt1": "5",
+            "nt2": "5",
+            "prod1": "5"
+          }
+        },
+        {
+          "parameter": "disk_operation_timeout",
+          "values": {
+            "nt1": "3",
+            "nt2": "3",
+            "prod1": "3"
+          }
+        },
+        {
+          "parameter": "disk_retry_count",
+          "values": {
+            "nt1": "21",
+            "nt2": "21",
+            "prod1": "21"
+          }
+        },
+        {
+          "parameter": "effective_cache_size",
+          "values": {
+            "nt1": "1512960",
+            "nt2": "1512960",
+            "prod1": "1512960"
+          }
+        },
+        {
+          "parameter": "effective_io_concurrency",
+          "values": {
+            "nt1": "300",
+            "nt2": "300",
+            "prod1": "300"
+          }
+        },
+        {
+          "parameter": "enable_filesystem_checker",
+          "values": {
+            "nt1": "on",
+            "nt2": "on",
+            "prod1": "on"
+          }
+        },
+        {
+          "parameter": "enable_vault_params_cache",
+          "values": {
+            "nt1": "off",
+            "nt2": "off",
+            "prod1": "off"
+          }
+        },
+        {
+          "parameter": "enabled_extra_auth_methods",
+          "values": {
+            "nt1": "cert,md5,reject,scram-sha-256,ldap,2f-scram-sha-256,2f-ldap,gss",
+            "nt2": "cert,md5,reject,scram-sha-256,ldap,2f-scram-sha-256,2f-ldap,gss",
+            "prod1": "cert,md5,reject,scram-sha-256,ldap,2f-scram-sha-256,2f-ldap,gss"
+          }
+        },
+        {
+          "parameter": "enabled_sec_admin_extra_auth_methods",
+          "values": {
+            "nt1": "cert",
+            "nt2": "cert",
+            "prod1": "cert"
+          }
+        },
+        {
+          "parameter": "force_failover_timeout",
+          "values": {
+            "nt1": "95",
+            "nt2": "95",
+            "prod1": "95"
+          }
+        },
+        {
+          "parameter": "hot_standby_feedback",
+          "values": {
+            "nt1": "on",
+            "nt2": "on",
+            "prod1": "on"
+          }
+        },
+        {
+          "parameter": "lc_collate",
+          "values": {
+            "nt1": "en_US.UTF-8",
+            "nt2": "en_US.UTF-8",
+            "prod1": "en_US.UTF-8"
+          }
+        },
+        {
+          "parameter": "lc_ctype",
+          "values": {
+            "nt1": "en_US.UTF-8",
+            "nt2": "en_US.UTF-8",
+            "prod1": "en_US.UTF-8"
+          }
+        },
+        {
+          "parameter": "lc_messages",
+          "values": {
+            "nt1": "en_US.utf8",
+            "nt2": "en_US.utf8",
+            "prod1": "en_US.utf8"
+          }
+        },
+        {
+          "parameter": "lc_monetary",
+          "values": {
+            "nt1": "en_US.utf8",
+            "nt2": "en_US.utf8",
+            "prod1": "en_US.utf8"
+          }
+        },
+        {
+          "parameter": "lc_numeric",
+          "values": {
+            "nt1": "en_US.utf8",
+            "nt2": "en_US.utf8",
+            "prod1": "en_US.utf8"
+          }
+        },
+        {
+          "parameter": "lc_time",
+          "values": {
+            "nt1": "en_US.utf8",
+            "nt2": "en_US.utf8",
+            "prod1": "en_US.utf8"
+          }
+        },
+        {
+          "parameter": "listen_addresses",
+          "values": {
+            "nt1": "0.0.0.0",
+            "nt2": "0.0.0.0",
+            "prod1": "0.0.0.0"
+          }
+        },
+        {
+          "parameter": "log_autovacuum_min_duration",
+          "values": {
+            "nt1": "60000",
+            "nt2": "60000",
+            "prod1": "60000"
+          }
+        },
+        {
+          "parameter": "log_connections",
+          "values": {
+            "nt1": "on",
+            "nt2": "on",
+            "prod1": "on"
+          }
+        },
+        {
+          "parameter": "log_disconnections",
+          "values": {
+            "nt1": "on",
+            "nt2": "on",
+            "prod1": "on"
+          }
+        },
+        {
+          "parameter": "log_file_mode",
+          "values": {
+            "nt1": "420",
+            "nt2": "420",
+            "prod1": "420"
+          }
+        },
+        {
+          "parameter": "log_line_prefix",
+          "values": {
+            "nt1": "%t [%p]: [%l-1] app=%a,user=%u,db=%d,client=%h,type=%b",
+            "nt2": "%t [%p]: [%l-1] app=%a,user=%u,db=%d,client=%h,type=%b",
+            "prod1": "%t [%p]: [%l-1] app=%a,user=%u,db=%d,client=%h,type=%b"
+          }
+        },
+        {
+          "parameter": "log_lock_waits",
+          "values": {
+            "nt1": "on",
+            "nt2": "on",
+            "prod1": "on"
+          }
+        },
+        {
+          "parameter": "log_min_duration_statement",
+          "values": {
+            "nt1": "5000",
+            "nt2": "5000",
+            "prod1": "5000"
+          }
+        },
+        {
+          "parameter": "log_min_error_statement",
+          "values": {
+            "nt1": "warning",
+            "nt2": "warning",
+            "prod1": "warning"
+          }
+        },
+        {
+          "parameter": "log_replication_commands",
+          "values": {
+            "nt1": "on",
+            "nt2": "on",
+            "prod1": "on"
+          }
+        },
+        {
+          "parameter": "log_rotation_size",
+          "values": {
+            "nt1": "102400",
+            "nt2": "102400",
+            "prod1": "102400"
+          }
+        },
+        {
+          "parameter": "log_temp_files",
+          "values": {
+            "nt1": "0",
+            "nt2": "0",
+            "prod1": "0"
+          }
+        },
+        {
+          "parameter": "log_timezone",
+          "values": {
+            "nt1": "Europe/Moscow",
+            "nt2": "Europe/Moscow",
+            "prod1": "Europe/Moscow"
+          }
+        },
+        {
+          "parameter": "log_truncate_on_rotation",
+          "values": {
+            "nt1": "on",
+            "nt2": "on",
+            "prod1": "on"
+          }
+        },
+        {
+          "parameter": "logging_collector",
+          "values": {
+            "nt1": "on",
+            "nt2": "on",
+            "prod1": "on"
+          }
+        },
+        {
+          "parameter": "maintenance_work_mem",
+          "values": {
+            "nt1": "1613824",
+            "nt2": "1613824",
+            "prod1": "1613824"
+          }
+        },
+        {
+          "parameter": "max_connections",
+          "values": {
+            "nt1": "550",
+            "nt2": "550",
+            "prod1": "550"
+          }
+        },
+        {
+          "parameter": "max_parallel_workers",
+          "values": {
+            "nt1": "4",
+            "nt2": "4",
+            "prod1": "4"
+          }
+        },
+        {
+          "parameter": "max_parallel_workers_per_gather",
+          "values": {
+            "nt1": "8",
+            "nt2": "8",
+            "prod1": "8"
+          }
+        },
+        {
+          "parameter": "max_prepared_transactions",
+          "values": {
+            "nt1": "12",
+            "nt2": "12",
+            "prod1": "12"
+          }
+        },
+        {
+          "parameter": "max_stack_depth",
+          "values": {
+            "nt1": "2048",
+            "nt2": "2048",
+            "prod1": "2048"
+          }
+        },
+        {
+          "parameter": "max_worker_processes",
+          "values": {
+            "nt1": "32",
+            "nt2": "32",
+            "prod1": "32"
+          }
+        },
+        {
+          "parameter": "min_wal_size",
+          "values": {
+            "nt1": "2048",
+            "nt2": "2048",
+            "prod1": "2048"
+          }
+        },
+        {
+          "parameter": "password_policies_enable",
+          "values": {
+            "nt1": "on",
+            "nt2": "on",
+            "prod1": "on"
+          }
+        },
+        {
+          "parameter": "password_policy.allow_hashed_password",
+          "values": {
+            "nt1": "on",
+            "nt2": "on",
+            "prod1": "on"
+          }
+        },
+        {
+          "parameter": "password_policy.alpha_numeric",
+          "values": {
+            "nt1": "3",
+            "nt2": "3",
+            "prod1": "3"
+          }
+        },
+        {
+          "parameter": "password_policy.deduplicate_ssl_no_ssl_fail_auth_attepmts",
+          "values": {
+            "nt1": "on",
+            "nt2": "on",
+            "prod1": "on"
+          }
+        },
+        {
+          "parameter": "password_policy.grace_login_limit",
+          "values": {
+            "nt1": "0",
+            "nt2": "0",
+            "prod1": "0"
+          }
+        },
+        {
+          "parameter": "password_policy.grace_login_time_limit",
+          "values": {
+            "nt1": "3 days",
+            "nt2": "3 days",
+            "prod1": "3 days"
+          }
+        },
+        {
+          "parameter": "password_policy.illegal_values",
+          "values": {
+            "nt1": "on",
+            "nt2": "on",
+            "prod1": "on"
+          }
+        },
+        {
+          "parameter": "password_policy.in_history",
+          "values": {
+            "nt1": "4",
+            "nt2": "4",
+            "prod1": "4"
+          }
+        },
+        {
+          "parameter": "password_policy.lockout",
+          "values": {
+            "nt1": "off",
+            "nt2": "off",
+            "prod1": "off"
+          }
+        },
+        {
+          "parameter": "password_policy.max_age",
+          "values": {
+            "nt1": "0",
+            "nt2": "0",
+            "prod1": "0"
+          }
+        },
+        {
+          "parameter": "password_policy.max_failure",
+          "values": {
+            "nt1": "6",
+            "nt2": "6",
+            "prod1": "6"
+          }
+        },
+        {
+          "parameter": "password_policy.min_length",
+          "values": {
+            "nt1": "25",
+            "nt2": "25",
+            "prod1": "25"
+          }
+        },
+        {
+          "parameter": "password_policy.min_special_chars",
+          "values": {
+            "nt1": "1",
+            "nt2": "1",
+            "prod1": "1"
+          }
+        },
+        {
+          "parameter": "password_policy.min_uppercase",
+          "values": {
+            "nt1": "1",
+            "nt2": "1",
+            "prod1": "1"
+          }
+        },
+        {
+          "parameter": "password_policy.reuse_time",
+          "values": {
+            "nt1": "365 days",
+            "nt2": "365 days",
+            "prod1": "365 days"
+          }
+        },
+        {
+          "parameter": "password_policy.use_password_strength_estimator",
+          "values": {
+            "nt1": "on",
+            "nt2": "on",
+            "prod1": "on"
+          }
+        },
+        {
+          "parameter": "performance_insights.enable",
+          "values": {
+            "nt1": "on",
+            "nt2": "on",
+            "prod1": "on"
+          }
+        },
+        {
+          "parameter": "performance_insights.masking",
+          "values": {
+            "nt1": "on",
+            "nt2": "on",
+            "prod1": "on"
+          }
+        },
+        {
+          "parameter": "performance_insights.num_samples_in_ram",
+          "values": {
+            "nt1": "12",
+            "nt2": "12",
+            "prod1": "12"
+          }
+        },
+        {
+          "parameter": "performance_insights.sampling_period",
+          "values": {
+            "nt1": "5000",
+            "nt2": "5000",
+            "prod1": "5000"
+          }
+        },
+        {
+          "parameter": "pg_hint_plan.message_level",
+          "values": {
+            "nt1": "debug",
+            "nt2": "debug",
+            "prod1": "debug"
+          }
+        },
+        {
+          "parameter": "pg_hint_plan.parse_messages",
+          "values": {
+            "nt1": "warning",
+            "nt2": "warning",
+            "prod1": "warning"
+          }
+        },
+        {
+          "parameter": "pg_ident_conf",
+          "values": {
+            "nt1": "# PostgreSQL User Name Maps\n# =========================\n#\n# Refer to the PostgreSQL documentation, chapter \"Client\n# Authentication\" for a complete description.  A short synopsis\n# follows.\n#\n# This file controls PostgreSQL user name mapping.  It maps external\n# user names to their corresponding PostgreSQL user names.  Records\n# are of the form:\n#\n# MAPNAME  SYSTEM-USERNAME  PG-USERNAME\n#\n# (The uppercase quantities must be replaced by actual values.)\n#\n# MAPNAME is the (otherwise freely chosen) map name that was used in\n# pg_hba.conf.  SYSTEM-USERNAME is the detected user name of the\n# client.  PG-USERNAME is the requested PostgreSQL user name.  The\n# existence of a record specifies that SYSTEM-USERNAME may connect as\n# PG-USERNAME.\n#\n# If SYSTEM-USERNAME starts with a slash (/), it will be treated as a\n# regular expression.  Optionally this can contain a capture (a\n# parenthesized subexpression).  The substring matching the capture\n# will be substituted for \\1 (backslash-one) if present in\n# PG-USERNAME.\n#\n# Multiple maps may be specified in this file and used by pg_hba.conf.\n#\n# No map names are defined in the default configuration.  If all\n# system user names and PostgreSQL user names are the same, you don't\n# need anything in this file.\n#\n# This file is read on server startup and when the postmaster receives\n# a SIGHUP signal.  If you edit the file on a running system, you have\n# to SIGHUP the postmaster for the changes to take effect.  You can\n# use \"pg_ctl reload\" to do that.\n\n# Put your actual configuration here\n# ----------------------------------\n\n# MAPNAME       SYSTEM-USERNAME         PG-USERNAME",
+            "nt2": "# PostgreSQL User Name Maps\n# =========================\n#\n# Refer to the PostgreSQL documentation, chapter \"Client\n# Authentication\" for a complete description.  A short synopsis\n# follows.\n#\n# This file controls PostgreSQL user name mapping.  It maps external\n# user names to their corresponding PostgreSQL user names.  Records\n# are of the form:\n#\n# MAPNAME  SYSTEM-USERNAME  PG-USERNAME\n#\n# (The uppercase quantities must be replaced by actual values.)\n#\n# MAPNAME is the (otherwise freely chosen) map name that was used in\n# pg_hba.conf.  SYSTEM-USERNAME is the detected user name of the\n# client.  PG-USERNAME is the requested PostgreSQL user name.  The\n# existence of a record specifies that SYSTEM-USERNAME may connect as\n# PG-USERNAME.\n#\n# If SYSTEM-USERNAME starts with a slash (/), it will be treated as a\n# regular expression.  Optionally this can contain a capture (a\n# parenthesized subexpression).  The substring matching the capture\n# will be substituted for \\1 (backslash-one) if present in\n# PG-USERNAME.\n#\n# Multiple maps may be specified in this file and used by pg_hba.conf.\n#\n# No map names are defined in the default configuration.  If all\n# system user names and PostgreSQL user names are the same, you don't\n# need anything in this file.\n#\n# This file is read on server startup and when the postmaster receives\n# a SIGHUP signal.  If you edit the file on a running system, you have\n# to SIGHUP the postmaster for the changes to take effect.  You can\n# use \"pg_ctl reload\" to do that.\n\n# Put your actual configuration here\n# ----------------------------------\n\n# MAPNAME       SYSTEM-USERNAME         PG-USERNAME",
+            "prod1": "# PostgreSQL User Name Maps\n# =========================\n#\n# Refer to the PostgreSQL documentation, chapter \"Client\n# Authentication\" for a complete description.  A short synopsis\n# follows.\n#\n# This file controls PostgreSQL user name mapping.  It maps external\n# user names to their corresponding PostgreSQL user names.  Records\n# are of the form:\n#\n# MAPNAME  SYSTEM-USERNAME  PG-USERNAME\n#\n# (The uppercase quantities must be replaced by actual values.)\n#\n# MAPNAME is the (otherwise freely chosen) map name that was used in\n# pg_hba.conf.  SYSTEM-USERNAME is the detected user name of the\n# client.  PG-USERNAME is the requested PostgreSQL user name.  The\n# existence of a record specifies that SYSTEM-USERNAME may connect as\n# PG-USERNAME.\n#\n# If SYSTEM-USERNAME starts with a slash (/), it will be treated as a\n# regular expression.  Optionally this can contain a capture (a\n# parenthesized subexpression).  The substring matching the capture\n# will be substituted for \\1 (backslash-one) if present in\n# PG-USERNAME.\n#\n# Multiple maps may be specified in this file and used by pg_hba.conf.\n#\n# No map names are defined in the default configuration.  If all\n# system user names and PostgreSQL user names are the same, you don't\n# need anything in this file.\n#\n# This file is read on server startup and when the postmaster receives\n# a SIGHUP signal.  If you edit the file on a running system, you have\n# to SIGHUP the postmaster for the changes to take effect.  You can\n# use \"pg_ctl reload\" to do that.\n\n# Put your actual configuration here\n# ----------------------------------\n\n# MAPNAME       SYSTEM-USERNAME         PG-USERNAME"
+          }
+        },
+        {
+          "parameter": "pg_stat_kcache.linux_hz",
+          "values": {
+            "nt1": "1000000",
+            "nt2": "1000000",
+            "prod1": "1000000"
+          }
+        },
+        {
+          "parameter": "pgaudit.log",
+          "values": {
+            "nt1": "ddl, role, connection, protection, pg_background",
+            "nt2": "ddl, role, connection, protection, pg_background",
+            "prod1": "ddl, role, connection, protection, pg_background"
+          }
+        },
+        {
+          "parameter": "plan_cache_mode",
+          "values": {
+            "nt1": "force_custom_plan",
+            "nt2": "force_custom_plan",
+            "prod1": "force_custom_plan"
+          }
+        },
+        {
+          "parameter": "port",
+          "values": {
+            "nt1": "5433",
+            "nt2": "5433",
+            "prod1": "5433"
+          }
+        },
+        {
+          "parameter": "primary_slot_name",
+          "values": {
+            "nt1": "tsldd_pprb01138_delta_sbrf_ru",
+            "nt2": "tsldd_pprb01138_delta_sbrf_ru",
+            "prod1": "tsldd_pprb01138_delta_sbrf_ru"
+          }
+        },
+        {
+          "parameter": "psql_encrypt_password",
+          "values": {
+            "nt1": "on",
+            "nt2": "on",
+            "prod1": "on"
+          }
+        },
+        {
+          "parameter": "random_page_cost",
+          "values": {
+            "nt1": "2",
+            "nt2": "2",
+            "prod1": "2"
+          }
+        },
+        {
+          "parameter": "search_path",
+          "values": {
+            "nt1": "ext",
+            "nt2": "ext",
+            "prod1": "ext"
+          }
+        },
+        {
+          "parameter": "sec_admin_default_auth",
+          "values": {
+            "nt1": "",
+            "nt2": "",
+            "prod1": ""
+          }
+        },
+        {
+          "parameter": "server_encoding",
+          "values": {
+            "nt1": "UTF8",
+            "nt2": "UTF8",
+            "prod1": "UTF8"
+          }
+        },
+        {
+          "parameter": "server_se_version",
+          "values": {
+            "nt1": "Platform V Pangolin DB 6.6.1",
+            "nt2": "Platform V Pangolin DB 6.6.1",
+            "prod1": "Platform V Pangolin DB 6.6.1"
+          }
+        },
+        {
+          "parameter": "server_se_version_num",
+          "values": {
+            "nt1": "600060001",
+            "nt2": "600060001",
+            "prod1": "600060001"
+          }
+        },
+        {
+          "parameter": "ssl",
+          "values": {
+            "nt1": "on",
+            "nt2": "on",
+            "prod1": "on"
+          }
+        },
+        {
+          "parameter": "ssl_ca_file",
+          "values": {
+            "nt1": "/home/postgres/ssl/root.crt",
+            "nt2": "/home/postgres/ssl/root.crt",
+            "prod1": "/home/postgres/ssl/root.crt"
+          }
+        },
+        {
+          "parameter": "ssl_ca_path",
+          "values": {
+            "nt1": "/home/postgres/ssl/generate",
+            "nt2": "/home/postgres/ssl/generate",
+            "prod1": "/home/postgres/ssl/generate"
+          }
+        },
+        {
+          "parameter": "ssl_cert_file",
+          "values": {
+            "nt1": "/home/postgres/ssl/server.crt",
+            "nt2": "/home/postgres/ssl/server.crt",
+            "prod1": "/home/postgres/ssl/server.crt"
+          }
+        },
+        {
+          "parameter": "ssl_key_file",
+          "values": {
+            "nt1": "/home/postgres/ssl/server.key",
+            "nt2": "/home/postgres/ssl/server.key",
+            "prod1": "/home/postgres/ssl/server.key"
+          }
+        },
+        {
+          "parameter": "superuser_reserved_connections",
+          "values": {
+            "nt1": "10",
+            "nt2": "10",
+            "prod1": "10"
+          }
+        },
+        {
+          "parameter": "synchronous_standby_names",
+          "values": {
+            "nt1": "\"tsldd-pprb01136.delta.sbrf.ru\"",
+            "nt2": "\"tsldd-pprb01136.delta.sbrf.ru\"",
+            "prod1": "\"tsldd-pprb01136.delta.sbrf.ru\""
+          }
+        },
+        {
+          "parameter": "syslog_facility",
+          "values": {
+            "nt1": "local3",
+            "nt2": "local3",
+            "prod1": "local3"
+          }
+        },
+        {
+          "parameter": "syslog_ident",
+          "values": {
+            "nt1": "postgresql_se",
+            "nt2": "postgresql_se",
+            "prod1": "postgresql_se"
+          }
+        },
+        {
+          "parameter": "syslog_split_messages",
+          "values": {
+            "nt1": "off",
+            "nt2": "off",
+            "prod1": "off"
+          }
+        },
+        {
+          "parameter": "tcp_keepalives_idle",
+          "values": {
+            "nt1": "600",
+            "nt2": "600",
+            "prod1": "600"
+          }
+        },
+        {
+          "parameter": "timezone",
+          "values": {
+            "nt1": "Europe/Moscow",
+            "nt2": "Europe/Moscow",
+            "prod1": "Europe/Moscow"
+          }
+        },
+        {
+          "parameter": "timezone_abbreviations",
+          "values": {
+            "nt1": "Default",
+            "nt2": "Default",
+            "prod1": "Default"
+          }
+        },
+        {
+          "parameter": "track_io_timing",
+          "values": {
+            "nt1": "on",
+            "nt2": "on",
+            "prod1": "on"
+          }
+        },
+        {
+          "parameter": "vacuum_cost_page_dirty",
+          "values": {
+            "nt1": "10",
+            "nt2": "10",
+            "prod1": "10"
+          }
+        },
+        {
+          "parameter": "vacuum_cost_page_hit",
+          "values": {
+            "nt1": "0",
+            "nt2": "0",
+            "prod1": "0"
+          }
+        },
+        {
+          "parameter": "vacuum_cost_page_miss",
+          "values": {
+            "nt1": "1",
+            "nt2": "1",
+            "prod1": "1"
+          }
+        },
+        {
+          "parameter": "version",
+          "values": {
+            "nt1": "PostgreSQL 15.5 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 8.5.0 20210514 (Platform V SberLinux 8.5.0-28), 64-bit",
+            "nt2": "PostgreSQL 15.5 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 8.5.0 20210514 (Platform V SberLinux 8.5.0-28), 64-bit",
+            "prod1": "PostgreSQL 15.5 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 8.5.0 20210514 (Platform V SberLinux 8.5.0-28), 64-bit"
+          }
+        },
+        {
+          "parameter": "wal_buffers",
+          "values": {
+            "nt1": "2048",
+            "nt2": "2048",
+            "prod1": "2048"
+          }
+        },
+        {
+          "parameter": "wal_keep_size",
+          "values": {
+            "nt1": "8192",
+            "nt2": "8192",
+            "prod1": "8192"
+          }
+        },
+        {
+          "parameter": "wal_log_hints",
+          "values": {
+            "nt1": "on",
+            "nt2": "on",
+            "prod1": "on"
+          }
+        },
+        {
+          "parameter": "wal_receiver_status_interval",
+          "values": {
+            "nt1": "1",
+            "nt2": "1",
+            "prod1": "1"
+          }
+        },
+        {
+          "parameter": "wal_sync_method",
+          "values": {
+            "nt1": "fsync",
+            "nt2": "fsync",
+            "prod1": "fsync"
+          }
+        },
+        {
+          "parameter": "work_mem",
+          "values": {
+            "nt1": "16384",
+            "nt2": "16384",
+            "prod1": "16384"
           }
         }
       ]
@@ -5495,9 +6754,51 @@
           "trend": "становится хуже"
         },
         {
-          "metric": "queries.postgres/\"sa-d00000011757\"",
+          "metric": "queries.postgres/\"sa-d00000011757\" · hex=566f5112e6ebf965",
+          "values": {
+            "nt1": 52.4,
+            "nt2": 76.74
+          },
+          "deltas": {
+            "nt1->nt2": {
+              "delta": 24.339999999999996,
+              "delta_pct": 46.4503816793893
+            }
+          },
+          "trend": "рост, влияние не оценивается"
+        },
+        {
+          "metric": "queries.postgres/\"sa-d00000011757\" · hex=92a0069b4dfb89ee",
+          "values": {
+            "nt1": 23.8,
+            "nt2": 34.8
+          },
+          "deltas": {
+            "nt1->nt2": {
+              "delta": 10.999999999999996,
+              "delta_pct": 46.21848739495796
+            }
+          },
+          "trend": "рост, влияние не оценивается"
+        },
+        {
+          "metric": "queries.postgres/\"sa-d00000011757\" · hex=a822446855e79f13",
           "values": {
             "nt1": 218.2,
+            "nt2": 270.75
+          },
+          "deltas": {
+            "nt1->nt2": {
+              "delta": 52.55000000000001,
+              "delta_pct": 24.083409715857016
+            }
+          },
+          "trend": "рост, влияние не оценивается"
+        },
+        {
+          "metric": "queries.postgres/\"sa-d00000011757\" · hex=f026fd092077b2a3",
+          "values": {
+            "nt1": 23.23,
             "nt2": 33.47
           },
           "deltas": {
@@ -5509,7 +6810,7 @@
           "trend": "рост, влияние не оценивается"
         },
         {
-          "metric": "queries.postgres/postgres",
+          "metric": "queries.postgres/postgres · hex=b59c46b67088420d",
           "values": {
             "nt1": 158.4,
             "nt2": 220.26
@@ -5523,15 +6824,141 @@
           "trend": "рост, влияние не оценивается"
         },
         {
-          "metric": "queries.statecontracts/as_admin",
+          "metric": "queries.statecontracts/as_admin · hex=1c1fd865d42f5cf",
+          "values": {
+            "nt1": 357.93,
+            "nt2": 474.58
+          },
+          "deltas": {
+            "nt1->nt2": {
+              "delta": 116.64999999999998,
+              "delta_pct": 32.59017126253736
+            }
+          },
+          "trend": "рост, влияние не оценивается"
+        },
+        {
+          "metric": "queries.statecontracts/as_admin · hex=31df6528995548cf",
           "values": {
             "nt1": 12702.91,
+            "nt2": 15378.41
+          },
+          "deltas": {
+            "nt1->nt2": {
+              "delta": 2675.5,
+              "delta_pct": 21.062103092913357
+            }
+          },
+          "trend": "рост, влияние не оценивается"
+        },
+        {
+          "metric": "queries.statecontracts/as_admin · hex=37b83dead5b5b9e9",
+          "values": {
+            "nt1": 4312.84,
+            "nt2": 5698.0
+          },
+          "deltas": {
+            "nt1->nt2": {
+              "delta": 1385.1599999999999,
+              "delta_pct": 32.11712004155034
+            }
+          },
+          "trend": "рост, влияние не оценивается"
+        },
+        {
+          "metric": "queries.statecontracts/as_admin · hex=3f7ffea106f6e78e",
+          "values": {
+            "nt1": 2356.76,
+            "nt2": 2888.04
+          },
+          "deltas": {
+            "nt1->nt2": {
+              "delta": 531.2799999999997,
+              "delta_pct": 22.54281301447749
+            }
+          },
+          "trend": "рост, влияние не оценивается"
+        },
+        {
+          "metric": "queries.statecontracts/as_admin · hex=5925970c215e2e8a",
+          "values": {
+            "nt1": 985.87,
+            "nt2": 1373.14
+          },
+          "deltas": {
+            "nt1->nt2": {
+              "delta": 387.2700000000001,
+              "delta_pct": 39.282055443415466
+            }
+          },
+          "trend": "рост, влияние не оценивается"
+        },
+        {
+          "metric": "queries.statecontracts/as_admin · hex=5c924a575ee834c2",
+          "values": {
+            "nt1": 374.78,
             "nt2": 456.84
           },
           "deltas": {
             "nt1->nt2": {
               "delta": 82.06,
               "delta_pct": 21.895512033726455
+            }
+          },
+          "trend": "рост, влияние не оценивается"
+        },
+        {
+          "metric": "queries.statecontracts/as_admin · hex=7e5e1a652457d8db",
+          "values": {
+            "nt1": 4558.12,
+            "nt2": 5430.53
+          },
+          "deltas": {
+            "nt1->nt2": {
+              "delta": 872.4099999999999,
+              "delta_pct": 19.13968917009644
+            }
+          },
+          "trend": "рост, влияние не оценивается"
+        },
+        {
+          "metric": "queries.statecontracts/as_admin · hex=d1cf715414ffc2ac",
+          "values": {
+            "nt1": 616.85,
+            "nt2": 723.35
+          },
+          "deltas": {
+            "nt1->nt2": {
+              "delta": 106.5,
+              "delta_pct": 17.265137391586286
+            }
+          },
+          "trend": "рост, влияние не оценивается"
+        },
+        {
+          "metric": "queries.statecontracts/as_admin · hex=d5e326dff67d955a",
+          "values": {
+            "nt1": 17811.58,
+            "nt2": 20024.23
+          },
+          "deltas": {
+            "nt1->nt2": {
+              "delta": 2212.649999999998,
+              "delta_pct": 12.422536349947604
+            }
+          },
+          "trend": "рост, влияние не оценивается"
+        },
+        {
+          "metric": "queries.statecontracts/as_admin · hex=e2a55c68949e5d1e",
+          "values": {
+            "nt1": 3438.82,
+            "nt2": 3950.27
+          },
+          "deltas": {
+            "nt1->nt2": {
+              "delta": 511.4499999999998,
+              "delta_pct": 14.872834286179557
             }
           },
           "trend": "рост, влияние не оценивается"
@@ -5691,20 +7118,6 @@
           "trend": "снижение, влияние не оценивается"
         },
         {
-          "metric": "tables.postgres.pg_catalog.pg_db_role_setting.idx_scan",
-          "values": {
-            "nt1": 133148.0,
-            "nt2": 121956.0
-          },
-          "deltas": {
-            "nt1->nt2": {
-              "delta": -11192.0,
-              "delta_pct": -8.405683900621865
-            }
-          },
-          "trend": "снижение, влияние не оценивается"
-        },
-        {
           "metric": "tables.postgres.pg_catalog.pg_db_role_setting.seq_scan",
           "values": {
             "nt1": 2859668.0,
@@ -5845,6 +7258,20 @@
           "trend": "снижение, влияние не оценивается"
         },
         {
+          "metric": "tables.statecontracts.pg_catalog.pg_db_role_setting.idx_scan",
+          "values": {
+            "nt1": 133148.0,
+            "nt2": 121956.0
+          },
+          "deltas": {
+            "nt1->nt2": {
+              "delta": -11192.0,
+              "delta_pct": -8.405683900621865
+            }
+          },
+          "trend": "снижение, влияние не оценивается"
+        },
+        {
           "metric": "tables.statecontracts.pg_catalog.pg_db_role_setting.seq_scan",
           "values": {
             "nt1": 2859668.0,
@@ -5890,10 +7317,34 @@
     },
     "rows": [
       {
+        "parameter": "checkpoint_completion_target",
+        "old": "0.5",
+        "new": "0.7",
+        "delta_pct": 54.44,
+        "affected_metric": "checkpoint_write_time",
+        "direction": "increased",
+        "impact": "degraded",
+        "confidence": "low",
+        "evidence_type": "probable",
+        "evidence_count": 1,
+        "workload_match_score": null,
+        "notes": "pairs=1; stability=1.000; effects=nt1->nt2:degraded; other correlated metrics voted against the dominant metric",
+        "metric_direction": "up",
+        "stability_score": 1.0,
+        "delta_iqr_pct": 0.0,
+        "pair_effects": [
+          "nt1->nt2:degraded"
+        ],
+        "noise_ratio": 0.0,
+        "confidence_reasons": [
+          "only one pair; statistical proof is not available"
+        ]
+      },
+      {
         "parameter": "max_wal_size",
         "old": "8192 (64.0 MB)",
         "new": "12288 (96.0 MB)",
-        "delta_pct": -28.72,
+        "delta_pct": -30.36,
         "affected_metric": "checkpoints_req",
         "direction": "increased",
         "impact": "improved",
@@ -5902,24 +7353,16 @@
         "evidence_count": 1,
         "workload_match_score": null,
         "notes": "pairs=1; stability=1.000; effects=nt1->nt2:improved",
+        "metric_direction": "down",
         "stability_score": 1.0,
-        "delta_iqr_pct": 42.4
-      },
-      {
-        "parameter": "checkpoint_completion_target",
-        "old": "0.5",
-        "new": "0.7",
-        "delta_pct": -26.97,
-        "affected_metric": "checkpoint_write_time",
-        "direction": "increased",
-        "impact": "improved",
-        "confidence": "low",
-        "evidence_type": "probable",
-        "evidence_count": 1,
-        "workload_match_score": null,
-        "notes": "pairs=1; stability=1.000; effects=nt1->nt2:improved",
-        "stability_score": 1.0,
-        "delta_iqr_pct": 42.4
+        "delta_iqr_pct": 0.0,
+        "pair_effects": [
+          "nt1->nt2:improved"
+        ],
+        "noise_ratio": 0.0,
+        "confidence_reasons": [
+          "only one pair; statistical proof is not available"
+        ]
       },
       {
         "parameter": "huge_pages",
@@ -5928,14 +7371,22 @@
         "delta_pct": 6.72,
         "affected_metric": "blk_read_time",
         "direction": "changed",
-        "impact": "neutral",
+        "impact": "degraded",
         "confidence": "low",
         "evidence_type": "probable",
         "evidence_count": 1,
         "workload_match_score": null,
-        "notes": "pairs=1; stability=0.000; effects=nt1->nt2:neutral",
-        "stability_score": 0.0,
-        "delta_iqr_pct": 0.0
+        "notes": "pairs=1; stability=1.000; effects=nt1->nt2:degraded",
+        "metric_direction": "up",
+        "stability_score": 1.0,
+        "delta_iqr_pct": 0.0,
+        "pair_effects": [
+          "nt1->nt2:degraded"
+        ],
+        "noise_ratio": 0.0,
+        "confidence_reasons": [
+          "only one pair; statistical proof is not available"
+        ]
       }
     ]
   }

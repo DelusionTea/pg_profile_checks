@@ -1,0 +1,104 @@
+{
+  "type": "oracle_report",
+  "layer": "hybrid",
+  "layers": [
+    {
+      "name": "rule_based",
+      "verdict": "pass",
+      "skipped": false
+    },
+    {
+      "name": "statistical",
+      "verdict": "pass",
+      "skipped": false
+    },
+    {
+      "name": "llm",
+      "verdict": "pass",
+      "skipped": true
+    }
+  ],
+  "verdict": "pass",
+  "skipped": false,
+  "sources": [
+    "influence_table_series.json",
+    "influence_table_series.json"
+  ],
+  "counts": {
+    "pass": 10,
+    "warning": 0,
+    "fail": 0
+  },
+  "reasons": [],
+  "confidence_adjustments": [],
+  "checks": [
+    {
+      "id": "completeness.contract",
+      "status": "pass",
+      "message": "influence payload matches the JSON contract",
+      "layer": "rule_based"
+    },
+    {
+      "id": "completeness.rows",
+      "status": "pass",
+      "message": "rows is present",
+      "where": "rows",
+      "layer": "rule_based"
+    },
+    {
+      "id": "completeness.workload_match",
+      "status": "pass",
+      "message": "workload_match is present",
+      "where": "workload_match",
+      "layer": "rule_based"
+    },
+    {
+      "id": "completeness.confidence_meta",
+      "status": "pass",
+      "message": "confidence_meta is present",
+      "where": "confidence_meta",
+      "layer": "rule_based"
+    },
+    {
+      "id": "completeness.rows",
+      "status": "pass",
+      "message": "3 influence row(s) have the required fields",
+      "where": "rows",
+      "layer": "rule_based"
+    },
+    {
+      "id": "statistical.confidence_recalc",
+      "status": "pass",
+      "message": "confidence low/probable matches statistical recommendation",
+      "where": "rows[0].checkpoint_completion_target",
+      "layer": "statistical"
+    },
+    {
+      "id": "statistical.confidence_recalc",
+      "status": "pass",
+      "message": "confidence low/probable matches statistical recommendation",
+      "where": "rows[1].max_wal_size",
+      "layer": "statistical"
+    },
+    {
+      "id": "statistical.confidence_recalc",
+      "status": "pass",
+      "message": "confidence low/probable matches statistical recommendation",
+      "where": "rows[2].huge_pages",
+      "layer": "statistical"
+    },
+    {
+      "id": "statistical.rows",
+      "status": "pass",
+      "message": "3 series row(s) scored for stability and noise",
+      "where": "rows",
+      "layer": "statistical"
+    },
+    {
+      "id": "llm.answer_present",
+      "status": "pass",
+      "message": "no LLM answer in this run; llm oracle skipped",
+      "layer": "llm"
+    }
+  ]
+}

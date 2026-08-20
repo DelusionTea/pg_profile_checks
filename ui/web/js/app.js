@@ -5,7 +5,7 @@
   const apiBase = typeof API_BASE === "string" ? API_BASE : "";
   let jvmPlaybook = { shoulders: 2, ha_cpu_sum_pct_limit: 80, gc_pause_p95_ms: 250 };
 
-  /** @type {{ id: string, file: File, env: string, label: string, order: number }[]} */
+  /** @type {{ id: string, file: File, env: string, label: string, labelEdited: boolean, period: { unknown: boolean, key?: number, text?: string } | null, periodLoading: boolean }[]} */
   let reports = [];
   /** @type {{ id: string, file: File }[]} */
   let jvmFiles = [];
@@ -43,8 +43,11 @@
     health: "Пороги thresholds.yaml по одному отчёту + рекомендации.",
     stable_prod: "Общие проблемы на нескольких PROD (или всех) отчётах + GUC tuning.",
     nt_prod: "Gate НТ vs ПРОМ: settings + метрики.",
+    dml_etalon: "Эталон DML с ПРОМ: max сырых insert/update/delete по прикладным таблицам.",
     compare_runs: "Два отчёта: health первого + diff метрик и Defined settings.",
   };
+
+  const SCENARIO_NEEDS_ENV = ["nt_runs", "nt_prod", "stable_prod"];
 
   const els = {
     modeToggleButtons: document.querySelectorAll(".mode-toggle"),
@@ -130,6 +133,7 @@
     scenario: document.getElementById("scenario"),
     scenarioHelp: document.getElementById("scenario-help"),
     autoPreview: document.getElementById("auto-scenario-preview"),
+    scenarioPanel: document.getElementById("scenario-panel"),
     symptomList: document.getElementById("symptom-list"),
     slowFields: document.getElementById("slow-query-fields"),
     runBtn: document.getElementById("run-btn"),
@@ -144,6 +148,9 @@
     statusBar: document.getElementById("status-bar"),
     compareInsights: document.getElementById("compare-insights"),
     findingsCards: document.getElementById("findings-cards"),
+    dmlEtalonPanel: document.getElementById("dml-etalon-panel"),
+    dmlEtalonNote: document.getElementById("dml-etalon-note"),
+    dmlEtalonBody: document.getElementById("dml-etalon-body"),
     checkFlow: document.getElementById("check-flow"),
     wikiText: document.getElementById("wiki-text"),
     wikiPreview: document.getElementById("wiki-preview"),
@@ -176,6 +183,21 @@
 
   function isAdvancedMode() {
     return !!(els.advancedSettings && els.advancedSettings.open);
+  }
+
+  function selectedScenario() {
+    return (els.scenario && els.scenario.value) || "auto";
+  }
+
+  function effectiveScenario() {
+    const sc = selectedScenario();
+    return sc === "auto" ? suggestAutoScenario() : sc;
+  }
+
+  // Метки среды нужны сценариям, которые делят отчёты на НТ и ПРОМ.
+  function usesReportColumns() {
+    if (isAdvancedMode()) return true;
+    return SCENARIO_NEEDS_ENV.includes(effectiveScenario());
   }
 
   function isJvmMode() {
@@ -434,6 +456,72 @@
     return "NT";
   }
 
+  const REPORT_STAMP_RE = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})/;
+
+  /** Parse "2026-08-11 16:30:02+03" into a display string and a sort key. */
+  function parseReportStamp(raw) {
+    const m = REPORT_STAMP_RE.exec(String(raw || "").trim());
+    if (!m) return null;
+    return {
+      text: m[1] + "-" + m[2] + "-" + m[3] + " " + m[4] + ":" + m[5],
+      key: Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]),
+    };
+  }
+
+  /**
+   * Read the interval a pg_profile report covers from the report data itself.
+   * The filename is unreliable: uploads get renamed and some reports have no
+   * dates in the name at all.
+   */
+  async function readReportPeriod(file) {
+    try {
+      const text = await file.text();
+      const start = parseReportStamp(
+        (/"report_start1"\s*:\s*"([^"]+)"/.exec(text) || [])[1]
+      );
+      const end = parseReportStamp(
+        (/"report_end1"\s*:\s*"([^"]+)"/.exec(text) || [])[1]
+      );
+      if (!start && !end) return { unknown: true };
+      return {
+        unknown: false,
+        key: (start || end).key,
+        text: (start ? start.text : "?") + " .. " + (end ? end.text : "?"),
+      };
+    } catch (e) {
+      return { unknown: true };
+    }
+  }
+
+  /** Reports without a readable period sort last, then by filename. */
+  function periodSortKey(r) {
+    if (!r.period || r.period.unknown) return Number.POSITIVE_INFINITY;
+    return r.period.key;
+  }
+
+  function sortedReports() {
+    return reports.slice().sort((a, b) => {
+      const diff = periodSortKey(a) - periodSortKey(b);
+      if (diff) return diff;
+      return a.file.name.localeCompare(b.file.name);
+    });
+  }
+
+  async function hydrateReportPeriods() {
+    const pending = reports.filter((r) => !r.period && !r.periodLoading);
+    if (!pending.length) return;
+    pending.forEach((r) => {
+      r.periodLoading = true;
+    });
+    await Promise.all(
+      pending.map(async (r) => {
+        r.period = await readReportPeriod(r.file);
+        r.periodLoading = false;
+      })
+    );
+    renderReports();
+  }
+
   function showError(msg) {
     els.errorBanner.textContent = msg || "";
     els.errorBanner.classList.toggle("visible", !!msg);
@@ -490,6 +578,7 @@
       if (els.dropzone) els.dropzone.hidden = true;
       if (els.reportsTable) els.reportsTable.hidden = true;
       if (els.simpleModeNote) els.simpleModeNote.hidden = true;
+      if (els.scenarioPanel) els.scenarioPanel.hidden = true;
       if (els.advancedSettings) els.advancedSettings.hidden = true;
       if (els.jvmFields) els.jvmFields.hidden = false;
       if (els.jvmAdvancedSettings) els.jvmAdvancedSettings.hidden = false;
@@ -552,45 +641,46 @@
     }
     if (els.simpleAnalysisHint) {
       els.simpleAnalysisHint.textContent =
-        "Полный health-check одного отчёта: checkpoints, WAL, cache, sessions, memory, IO, autovacuum, locks и др. Результат — Confluence wiki с чеклистом PASS / FAIL / SUSPECT.";
+        "Разбор идёт по сценарию из шага 00: health-check по каждому отчёту (checkpoints, WAL, cache, sessions, memory, IO, autovacuum, locks и др.), затем общие и специфичные findings. Результат — Confluence wiki с чеклистом PASS / FAIL / SUSPECT.";
     }
-    const adv = isAdvancedMode();
+    const columns = usesReportColumns();
     if (els.reportsTable) els.reportsTable.hidden = false;
+    if (els.scenarioPanel) els.scenarioPanel.hidden = false;
     if (els.advancedSettings) els.advancedSettings.hidden = false;
     if (els.jvmAdvancedSettings) els.jvmAdvancedSettings.hidden = true;
     if (els.jvmFields) els.jvmFields.hidden = true;
     if (els.jvmFillLastValuesBtn) els.jvmFillLastValuesBtn.disabled = true;
     if (els.jvmHistoryHint) els.jvmHistoryHint.textContent = "";
     if (els.dropzoneTitle) {
-      els.dropzoneTitle.textContent = "Перетащите HTML отчёт pg_profile";
+      els.dropzoneTitle.textContent = "Перетащите HTML отчёты pg_profile";
     }
     if (els.fileInput) {
       els.fileInput.setAttribute("accept", ".html,text/html");
     }
-    if (els.reportsHeadSimple) els.reportsHeadSimple.hidden = adv;
-    if (els.reportsHeadAdvanced) els.reportsHeadAdvanced.hidden = !adv;
+    if (els.reportsHeadSimple) els.reportsHeadSimple.hidden = columns;
+    if (els.reportsHeadAdvanced) els.reportsHeadAdvanced.hidden = !columns;
     if (els.dropzoneHint) {
-      els.dropzoneHint.textContent = adv
-        ? "или нажмите, чтобы выбрать файлы · можно несколько"
-        : "или нажмите, чтобы выбрать файл · полный health-check одного отчёта";
+      els.dropzoneHint.textContent =
+        "или нажмите, чтобы выбрать файлы · можно несколько";
     }
     if (els.simpleModeNote) {
-      els.simpleModeNote.hidden = adv;
-      if (!adv && reports.length > 1) {
+      els.simpleModeNote.hidden = false;
+      if (effectiveScenario() === "health" && reports.length > 1) {
         els.simpleModeNote.textContent =
-          "Будет проанализирован только первый файл («" +
-          reports.slice().sort((a, b) => a.order - b.order)[0].file.name +
-          "»). Откройте расширенные настройки для мульти-отчётов.";
-      } else if (!adv) {
+          "Сценарий «Health-check одного отчёта» возьмёт только самый ранний по периоду отчёт («" +
+          sortedReports()[0].file.name +
+          "»). Для нескольких отчётов выберите другой сценарий в шаге 00.";
+      } else if (columns) {
         els.simpleModeNote.textContent =
-          "По умолчанию анализируется только первый файл (все категории health-check). Мульти-отчёты и симптомы — в расширенных настройках.";
+          "В анализ идут все загруженные отчёты. Проверьте метки среды: НТ и ПРОМ разводятся по ним.";
+      } else {
+        els.simpleModeNote.textContent =
+          "В анализ идут все загруженные отчёты. Симптомы, метки среды и заголовок Confluence — в расширенных настройках.";
       }
     }
     if (els.reportsEmpty) {
-      els.reportsEmpty.querySelector("td").colSpan = adv ? 5 : 2;
-      els.reportsEmpty.querySelector("td").textContent = adv
-        ? "файлы ещё не добавлены"
-        : "файл ещё не добавлен";
+      els.reportsEmpty.querySelector("td").colSpan = columns ? 5 : 3;
+      els.reportsEmpty.querySelector("td").textContent = "файлы ещё не добавлены";
     }
   }
 
@@ -610,10 +700,14 @@
       els.scenarioHelp.textContent = SCENARIO_HELP[sc] || SCENARIO_HELP.auto;
     }
     if (els.autoPreview) {
-      if (isAdvancedMode() && sc === "auto" && reports.length) {
-        const sug = suggestAutoScenario();
+      if (sc === "auto" && reports.length) {
         els.autoPreview.hidden = false;
-        els.autoPreview.textContent = "Авто выберет: " + sug;
+        els.autoPreview.textContent =
+          "Авто выберет: " +
+          effectiveScenario() +
+          " (отчётов: " +
+          reports.length +
+          ")";
       } else {
         els.autoPreview.hidden = true;
       }
@@ -624,7 +718,7 @@
 
   function renderReports() {
     const body = els.reportsBody;
-    const adv = isAdvancedMode();
+    const columns = usesReportColumns();
     body.querySelectorAll("tr[data-id]").forEach((tr) => tr.remove());
     if (!reports.length) {
       els.reportsEmpty.style.display = "";
@@ -632,21 +726,28 @@
       return;
     }
     els.reportsEmpty.style.display = "none";
-    const sorted = reports.slice().sort((a, b) => a.order - b.order);
+    const sorted = sortedReports();
+    // Health-check берёт один отчёт: остальные помечаем как пропуск.
+    const onlyFirst = effectiveScenario() === "health" && sorted.length > 1;
     sorted.forEach((r, idx) => {
+      if (!r.labelEdited) r.label = suggestLabel(r.file.name, r.env, idx);
       const tr = document.createElement("tr");
       tr.dataset.id = r.id;
-      if (!adv) {
-        const used = idx === 0;
+      if (!columns) {
+        const pill = !onlyFirst
+          ? ""
+          : idx === 0
+          ? '<span class="status-pill">анализ</span> '
+          : '<span class="status-pill">пропуск</span> ';
         tr.innerHTML =
           '<td class="filename-cell"></td>' +
+          '<td class="period-cell"></td>' +
           '<td class="col-actions">' +
-          (used
-            ? '<span class="status-pill">анализ</span> '
-            : '<span class="status-pill">пропуск</span> ') +
+          pill +
           '<button type="button" class="icon-btn btn-del" title="Удалить">×</button>' +
           "</td>";
         tr.querySelector(".filename-cell").textContent = r.file.name;
+        tr.querySelector(".period-cell").textContent = periodText(r);
         tr.querySelector(".btn-del").addEventListener("click", () => {
           reports = reports.filter((x) => x.id !== r.id);
           renderReports();
@@ -656,114 +757,65 @@
       }
       tr.innerHTML =
         '<td class="filename-cell"></td>' +
+        '<td class="period-cell"></td>' +
         '<td><select class="env-select"><option value="NT">НТ</option><option value="PROD">ПРОМ</option></select></td>' +
         '<td><input class="label-input" type="text"></td>' +
-        '<td><input class="order-input" type="text" inputmode="numeric" style="width:4rem"></td>' +
         '<td class="col-actions">' +
-        '<button type="button" class="icon-btn btn-up" title="Выше">↑</button> ' +
-        '<button type="button" class="icon-btn btn-down" title="Ниже">↓</button> ' +
         '<button type="button" class="icon-btn btn-del" title="Удалить">×</button>' +
         "</td>";
       tr.querySelector(".filename-cell").textContent = r.file.name;
+      tr.querySelector(".period-cell").textContent = periodText(r);
       const envSelect = tr.querySelector(".env-select");
       envSelect.value = r.env;
       envSelect.addEventListener("change", () => {
         r.env = envSelect.value;
-        updateScenarioHints();
+        renderReports();
       });
       const labelInput = tr.querySelector(".label-input");
       labelInput.value = r.label;
       labelInput.addEventListener("change", () => {
-        r.label = labelInput.value.trim() || r.label;
-      });
-      const orderInput = tr.querySelector(".order-input");
-      orderInput.value = String(r.order);
-      orderInput.addEventListener("change", () => {
-        const n = parseInt(orderInput.value, 10);
-        if (!Number.isNaN(n)) r.order = n;
-        renderReports();
+        const value = labelInput.value.trim();
+        if (value) {
+          r.label = value;
+          r.labelEdited = true;
+        }
       });
       tr.querySelector(".btn-del").addEventListener("click", () => {
         reports = reports.filter((x) => x.id !== r.id);
         renderReports();
-      });
-      tr.querySelector(".btn-up").addEventListener("click", () => {
-        const list = reports.slice().sort((a, b) => a.order - b.order);
-        const i = list.findIndex((x) => x.id === r.id);
-        if (i > 0) {
-          const prev = list[i - 1];
-          const tmp = r.order;
-          r.order = prev.order;
-          prev.order = tmp;
-          renderReports();
-        }
-      });
-      tr.querySelector(".btn-down").addEventListener("click", () => {
-        const list = reports.slice().sort((a, b) => a.order - b.order);
-        const i = list.findIndex((x) => x.id === r.id);
-        if (i >= 0 && i < list.length - 1) {
-          const next = list[i + 1];
-          const tmp = r.order;
-          r.order = next.order;
-          next.order = tmp;
-          renderReports();
-        }
       });
       body.appendChild(tr);
     });
     updateScenarioHints();
   }
 
+  function periodText(r) {
+    if (r.periodLoading || !r.period) return "читаем…";
+    if (r.period.unknown) return "период не найден";
+    return r.period.text;
+  }
+
   function addFiles(fileList) {
     const incoming = Array.from(fileList || []).filter((f) =>
       /\.html?$/i.test(f.name)
     );
-    if (!isAdvancedMode() && incoming.length) {
-      // Simple mode: keep a single report (last selected wins if replacing).
-      if (!reports.length) {
-        const file = incoming[0];
-        const env = suggestEnv(file.name);
-        reports = [
-          {
-            id: uid(),
-            file,
-            env,
-            label: suggestLabel(file.name, env, 0),
-            order: 0,
-          },
-        ];
-        if (incoming.length > 1) {
-          showToast("простой режим: взят первый файл");
-        }
-      } else {
-        incoming.forEach((file) => {
-          const env = suggestEnv(file.name);
-          const order = reports.length;
-          reports.push({
-            id: uid(),
-            file,
-            env,
-            label: suggestLabel(file.name, env, order),
-            order,
-          });
-        });
-        showToast("будет использован только первый файл");
-      }
-    } else {
-      incoming.forEach((file) => {
-        const env = suggestEnv(file.name);
-        const order = reports.length;
-        reports.push({
-          id: uid(),
-          file,
-          env,
-          label: suggestLabel(file.name, env, order),
-          order,
-        });
-      });
-    }
+    incoming.forEach((file) => reports.push(newReport(file)));
     renderReports();
+    hydrateReportPeriods();
     showError("");
+  }
+
+  function newReport(file) {
+    const env = suggestEnv(file.name);
+    return {
+      id: uid(),
+      file,
+      env,
+      label: suggestLabel(file.name, env, reports.length),
+      labelEdited: false,
+      period: null,
+      periodLoading: false,
+    };
   }
 
   const JVM_NEW_SYSTEM = "__new__";
@@ -1231,6 +1283,48 @@
             : "") +
           thr +
           "</article>"
+        );
+      })
+      .join("");
+  }
+
+  function renderDmlEtalon(summary) {
+    const panel = els.dmlEtalonPanel;
+    const body = els.dmlEtalonBody;
+    const note = els.dmlEtalonNote;
+    if (!panel || !body) return;
+    const etalon = summary && summary.dml_etalon;
+    const tables = (etalon && etalon.tables) || [];
+    if (!etalon) {
+      panel.hidden = true;
+      body.innerHTML = "";
+      if (note) note.textContent = "";
+      return;
+    }
+    panel.hidden = false;
+    if (note) {
+      note.textContent = etalon.single_report
+        ? "Эталон по одному отчёту: max по нескольким проливкам не считался."
+        : "Эталон по " +
+          (etalon.report_count || 0) +
+          " отчётам: по каждой операции взято максимальное сырое значение.";
+    }
+    if (!tables.length) {
+      body.innerHTML = '<tr><td colspan="4" class="empty-row">нет прикладных таблиц с DML</td></tr>';
+      return;
+    }
+    body.innerHTML = tables
+      .map(function (row) {
+        return (
+          "<tr><td>" +
+          escapeHtml(row.relname || "") +
+          "</td><td>" +
+          escapeHtml(String(row.insert == null ? 0 : row.insert)) +
+          "</td><td>" +
+          escapeHtml(String(row.update == null ? 0 : row.update)) +
+          "</td><td>" +
+          escapeHtml(String(row.delete == null ? 0 : row.delete)) +
+          "</td></tr>"
         );
       })
       .join("");
@@ -2056,7 +2150,7 @@
   function bindLlmPanel(data) {
     if (!els.llmPanel) return;
     const isJvm = (data.mode || data.scenario) === "jvm";
-    if (isJvm || !llmUiAvailable) {
+    if (isJvm || !llmUiAvailable || data.scenario === "dml_etalon") {
       resetLlmPanel();
       els.llmPanel.hidden = true;
       return;
@@ -2066,7 +2160,42 @@
     loadLlmCatalog();
   }
 
+  /** Last result per mode: PG output must not stay on screen after switching to JVM. */
+  const lastResultByMode = { pg_profile: null, jvm: null };
+
+  function hideResult() {
+    stopLlmPoll();
+    sessionId = null;
+    lastWikiText = "";
+    lastCompareSummary = null;
+    severityFilter = null;
+    els.resultPanel.classList.remove("visible");
+    els.wikiText.value = "";
+    els.promptText.value = "";
+    els.briefText.value = "";
+    if (els.qualityText) els.qualityText.value = "";
+    if (els.statusBar) els.statusBar.innerHTML = "";
+    renderCompareInsights({});
+    renderFindingsCards([], null);
+    renderDmlEtalon({});
+    if (els.checkFlow) els.checkFlow.hidden = true;
+    if (els.downloadWiki) els.downloadWiki.removeAttribute("href");
+    if (els.downloadZip) els.downloadZip.removeAttribute("href");
+    resetLlmPanel();
+    if (els.llmPanel) els.llmPanel.hidden = true;
+  }
+
+  function syncResultPanelForMode() {
+    const cached = lastResultByMode[currentMode];
+    if (cached) {
+      showResult(cached);
+    } else {
+      hideResult();
+    }
+  }
+
   function showResult(data) {
+    lastResultByMode[currentMode] = data;
     sessionId = data.session_id;
     els.resultPanel.classList.add("visible");
     lastWikiText = data.wiki_text || "";
@@ -2183,6 +2312,13 @@
           "</strong></span>"
       );
     }
+    if (summary.dml_etalon) {
+      pills.push(
+        '<span class="status-pill">таблиц <strong>' +
+          (summary.dml_etalon.table_count || 0) +
+          "</strong></span>"
+      );
+    }
     if (data.wiki) {
       pills.push(
         '<span class="status-pill">wiki <strong>' +
@@ -2206,7 +2342,12 @@
 
     renderCompareInsights(summary);
     renderFindingsCards(data.findings_ui || [], severityFilter);
-    bindCheckFlow(sessionId);
+    renderDmlEtalon(summary);
+    if (data.scenario === "dml_etalon") {
+      if (els.checkFlow) els.checkFlow.hidden = true;
+    } else {
+      bindCheckFlow(sessionId);
+    }
 
     els.downloadWiki.href = apiBase + "/api/sessions/" + sessionId + "/wiki";
     els.downloadWiki.download = data.wiki || "confluence.wiki";
@@ -2282,10 +2423,11 @@
     }
     const adv = isAdvancedMode();
     const symptoms = adv ? selectedSymptoms() : [];
-    const scenario = adv ? els.scenario.value : "health";
-    if (adv && scenario === "nt_runs" && symptoms.length === 0) {
+    const scenario = selectedScenario();
+    if (scenario === "nt_runs" && symptoms.length === 0) {
       showError(
-        "Для сценария «Несколько прогонов НТ» выберите хотя бы один симптом (например, high_cpu или high_wal)."
+        "Для сценария «Несколько прогонов НТ» выберите хотя бы один симптом " +
+          "(например, high_cpu или high_wal) в расширенных настройках."
       );
       return;
     }
@@ -2294,8 +2436,9 @@
     els.runSpinner.classList.add("visible");
     els.runHint.textContent = "анализ…";
 
-    let sorted = reports.slice().sort((a, b) => a.order - b.order);
-    if (!adv) {
+    await hydrateReportPeriods();
+    let sorted = sortedReports();
+    if (scenario === "health") {
       sorted = sorted.slice(0, 1);
     }
     const meta = {
@@ -2313,11 +2456,11 @@
       query_text: adv && symptoms.includes("slow_query")
         ? els.queryText.value.trim() || null
         : null,
-      reports: sorted.map((r) => ({
+      reports: sorted.map((r, idx) => ({
         filename: r.file.name,
         env: r.env,
         label: r.label,
-        order: r.order,
+        order: idx,
       })),
     };
 
@@ -2470,7 +2613,8 @@
   document.querySelectorAll(".wiki-mode").forEach((btn) => {
     btn.addEventListener("click", () => setWikiMode(btn.getAttribute("data-mode")));
   });
-  els.scenario.addEventListener("change", updateScenarioHints);
+  // renderReports сам зовёт updateScenarioHints: разметка строк зависит от сценария.
+  els.scenario.addEventListener("change", renderReports);
   if (els.modeToggleButtons) {
     els.modeToggleButtons.forEach((btn) => {
       btn.addEventListener("click", () => {
@@ -2479,8 +2623,11 @@
           jvmFiles = [];
         }
         if (els.jvmReviewConfirm) els.jvmReviewConfirm.checked = false;
+        showError("");
+        if (els.runHint) els.runHint.textContent = "";
         updateModeUi();
         updateScenarioHints();
+        syncResultPanelForMode();
       });
     });
   }

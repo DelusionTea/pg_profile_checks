@@ -102,5 +102,5 @@ reports: nt1, nt2
 - critical_nt_only: none
 
 ## NT vs PROD divergence summary
-- nt1 vs prod1: settings_valid=false, performance_warnings=42, critical_settings=9
-- nt2 vs prod1: settings_valid=false, performance_warnings=36, critical_settings=6
+- nt1 vs prod1: settings_valid=false, performance_warnings=42, critical_settings=4
+- nt2 vs prod1: settings_valid=false, performance_warnings=36, critical_settings=1

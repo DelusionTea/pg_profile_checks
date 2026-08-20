@@ -30,35 +30,63 @@
   <div id="error-banner" class="alert alert-error error-banner"></div>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
+  <section id="scenario-panel" class="panel section">
+    <div class="panel-head">
+      <span>00 · СЦЕНАРИЙ</span>
+    </div>
+    <div class="panel-body">
+      <div class="field-grid">
+        <div class="field">
+          <label for="scenario">Что анализируем</label>
+          <select id="scenario">
+            <option value="auto" selected>Авто по числу файлов и меткам</option>
+            <option value="full_multi">Полный анализ (все findings)</option>
+            <option value="symptom">Расследование проблемы</option>
+            <option value="nt_runs">Несколько прогонов НТ</option>
+            <option value="health">Health-check одного отчёта</option>
+            <option value="stable_prod">Стабильные / общие проблемы</option>
+            <option value="nt_prod">НТ vs ПРОМ (gate)</option>
+            <option value="dml_etalon">Эталон DML с ПРОМ</option>
+            <option value="compare_runs">Сравнение двух отчётов (diff)</option>
+          </select>
+          <p id="scenario-help" class="field-help">Выберите сценарий или оставьте «Авто».</p>
+        </div>
+      </div>
+      <p id="auto-scenario-preview" class="auto-scenario-preview" hidden></p>
+    </div>
+  </section>
+
   <section id="report-panel" class="panel section">
     <div class="panel-head">
-      <span>01 · ОТЧЁТ</span>
+      <span>01 · ОТЧЁТЫ</span>
     </div>
     <div class="panel-body">
       <div id="dropzone" class="dropzone" tabindex="0">
-        <p class="dropzone-title">Перетащите HTML отчёт pg_profile</p>
-        <p id="dropzone-hint" class="dropzone-hint">или нажмите, чтобы выбрать файл · полный health-check одного отчёта</p>
+        <p class="dropzone-title">Перетащите HTML отчёты pg_profile</p>
+        <p id="dropzone-hint" class="dropzone-hint">или нажмите, чтобы выбрать файлы · можно несколько</p>
         <input id="file-input" class="hidden-file" type="file" accept=".html,text/html" multiple>
       </div>
 
-      <p id="simple-mode-note" class="field-help">По умолчанию анализируется только первый файл (все категории health-check). Мульти-отчёты и симптомы — в расширенных настройках.</p>
+      <p id="simple-mode-note" class="field-help">Можно загрузить сразу несколько отчётов — в анализ идут все. Симптомы, метки среды и заголовок Confluence — в расширенных настройках.</p>
+      <p class="field-help">Отчёты всегда выстраиваются по периоду из самого отчёта — от раннего к позднему, независимо от порядка загрузки.</p>
       <table class="reports-table" id="reports-table">
         <thead>
           <tr id="reports-head-simple">
             <th>Файл</th>
+            <th>Период отчёта</th>
             <th></th>
           </tr>
           <tr id="reports-head-advanced" hidden>
             <th>Файл</th>
+            <th>Период отчёта</th>
             <th>Среда</th>
             <th>Label</th>
-            <th>Порядок</th>
             <th></th>
           </tr>
         </thead>
         <tbody id="reports-body">
           <tr id="reports-empty">
-            <td colspan="2" class="empty-row">файл ещё не добавлен</td>
+            <td colspan="3" class="empty-row">файл ещё не добавлен</td>
           </tr>
         </tbody>
       </table>
@@ -360,25 +388,10 @@
         <div class="advanced-body">
           <div class="field-grid">
             <div class="field">
-              <label for="scenario">Сценарий</label>
-              <select id="scenario">
-                <option value="auto">Авто по меткам</option>
-                <option value="full_multi">Полный анализ (все findings)</option>
-                <option value="symptom">Расследование проблемы</option>
-                <option value="nt_runs">Несколько прогонов НТ</option>
-                <option value="health" selected>Health-check одного отчёта</option>
-                <option value="stable_prod">Стабильные / общие проблемы</option>
-                <option value="nt_prod">НТ vs ПРОМ (gate)</option>
-                <option value="compare_runs">Сравнение двух отчётов (diff)</option>
-              </select>
-              <p id="scenario-help" class="field-help">Выберите сценарий или оставьте «Авто».</p>
-            </div>
-            <div class="field">
               <label for="confluence-title">Заголовок Confluence (опционально)</label>
               <input id="confluence-title" type="text" placeholder="например: counteragent · high_cpu">
             </div>
           </div>
-          <p id="auto-scenario-preview" class="auto-scenario-preview" hidden></p>
 
           <p class="section-title" style="margin-top: 1.25rem;">Проблемы (можно несколько)</p>
           <p class="dropzone-hint" style="margin: -0.35rem 0 0.75rem;">Не отмечено — полный анализ. Несколько отчётов: общие findings + специфичные. Отметьте симптомы — точечное расследование.</p>
@@ -429,6 +442,22 @@
       </div>
 
       <div id="findings-cards" class="findings-cards" hidden></div>
+
+      <div id="dml-etalon-panel" class="dml-etalon-wrap" hidden>
+        <p class="section-title">Эталон DML</p>
+        <p id="dml-etalon-note" class="field-help"></p>
+        <table class="reports-table" id="dml-etalon-table">
+          <thead>
+            <tr>
+              <th>имя таблицы бд</th>
+              <th>insert</th>
+              <th>update</th>
+              <th>delete</th>
+            </tr>
+          </thead>
+          <tbody id="dml-etalon-body"></tbody>
+        </table>
+      </div>
 
       <div id="llm-panel" class="llm-panel js-qwen-ui" hidden>
         <p class="section-title">Headless Qwen</p>

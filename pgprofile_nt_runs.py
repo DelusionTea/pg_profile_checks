@@ -9,7 +9,7 @@ from typing import Any
 import yaml
 
 from compare_settings import DiffRow, DiffStatus, diff_settings
-from pgprofile_classify import split_settings_rows
+from pgprofile_classify import split_settings_rows, tunable_changed_names
 from pgprofile_compare import compare_runs, load_run
 from pgprofile_findings import run_comparison_to_dict
 from pgprofile_health import parse_setting_int
@@ -694,6 +694,8 @@ def build_nt_runs_brief(analysis: NtRunsAnalysis) -> str:
 def build_nt_runs_confluence_wiki(analysis: NtRunsAnalysis, *, page_title: str | None = None) -> str:
     from pgprofile_confluence import (
         _checklist_from_symptom_causes,
+        _is_metric_pointer,
+        _symptom_now_actions,
         _wiki_escape,
         _wiki_actions_section,
         _wiki_anchor,
@@ -877,7 +879,12 @@ def build_nt_runs_confluence_wiki(analysis: NtRunsAnalysis, *, page_title: str |
 
     improved_pairs = int(functional.get("improved_pairs") or 0)
     degraded_pairs = int(functional.get("degraded_pairs") or 0)
-    changed_params_count = len(changed_settings_rows)
+    changed_param_names = [str(row.get("parameter") or "") for row in changed_settings_rows]
+    tunable_changed = tunable_changed_names(changed_param_names)
+    non_tunable_changed = [
+        name for name in changed_param_names if name and name not in set(tunable_changed)
+    ]
+    changed_params_count = len(tunable_changed)
     blocker_many_changes = changed_params_count > 10
     workload_score = workload_match.get("workload_match_score")
     blocker_low_workload = isinstance(workload_score, (int, float)) and float(workload_score) < 0.6
@@ -912,6 +919,21 @@ def build_nt_runs_confluence_wiki(analysis: NtRunsAnalysis, *, page_title: str |
     else:
         decision = "GO"
 
+    why_bits: list[str] = []
+    if hypothesis_status == "REJECTED":
+        why_bits.append(
+            f"гипотеза отклонена: ухудшений {degraded_votes}, улучшений {improved_votes}"
+        )
+    elif hypothesis_status == "INCONCLUSIVE":
+        why_bits.append("нельзя подтвердить влияние настроек на выбранные симптомы")
+    if blocker_metric_regression:
+        why_bits.append(f"{blocker_degradations} критичных деградаций метрик (≥20%)")
+    if blocker_many_changes:
+        why_bits.append(f"слишком много одновременных GUC ({changed_params_count})")
+    if blocker_low_workload:
+        why_bits.append("прогоны плохо сопоставимы по нагрузке")
+    why_text = "; ".join(why_bits) if why_bits else "блокеров нет — см. таблицу влияния ниже"
+
     if not isinstance(workload_score, (int, float)):
         _workload_status = "НЕТ ДАННЫХ"
         _workload_comment = "Сопоставимость прогонов не рассчитана, оценивайте выводы осторожнее."
@@ -924,8 +946,14 @@ def build_nt_runs_confluence_wiki(analysis: NtRunsAnalysis, *, page_title: str |
 
     actions: list[str] = []
     for inv in analysis.symptom_investigations:
-        for step in inv.action_plan[:8]:
+        for step in _symptom_now_actions(inv, limit=6):
             if step not in actions:
+                actions.append(step)
+    if not actions:
+        for inv in analysis.symptom_investigations:
+            for step in inv.action_plan[:8]:
+                if _is_metric_pointer(step) or step in actions:
+                    continue
                 actions.append(step)
 
     min_change_pct = next(
@@ -984,6 +1012,7 @@ def build_nt_runs_confluence_wiki(analysis: NtRunsAnalysis, *, page_title: str |
             "",
             "||Параметр||Значение||",
             f"|Решение|{_decision_badge(decision)}|",
+            f"|Почему|{_wiki_escape(why_text)}|",
             f"|Статус гипотезы|{_hypothesis_badge(hypothesis_status)}|",
             f"|Симптомы|{_wiki_escape(symptom_titles)}|",
             f"|Прогонов НТ|{len(analysis.report_labels)}|",
@@ -991,9 +1020,14 @@ def build_nt_runs_confluence_wiki(analysis: NtRunsAnalysis, *, page_title: str |
             f"|Изменено параметров|{changed_params_count}|",
             f"|Связанных метрик (по выбранным проблемам)|{len(related_metric_rows)}|",
             f"|Улучшений / ухудшений (голоса)|{improved_votes} / {degraded_votes}|",
-            "",
         ]
     )
+    if non_tunable_changed:
+        lines.append(
+            "|Справочно: изменились метаданные и производные|"
+            f"{_wiki_escape(', '.join(non_tunable_changed))}|"
+        )
+    lines.append("")
 
     lines.extend(
         [
@@ -1016,13 +1050,20 @@ def build_nt_runs_confluence_wiki(analysis: NtRunsAnalysis, *, page_title: str |
         expand_body = ["||Параметр||" + "||".join(_wiki_escape(label) for label in run_labels) + "||"]
         for row in equal_settings_rows:
             values = row.get("values", {})
-            cells = [_wiki_escape(str((values or {}).get(label) or "—")) for label in run_labels]
+            cells = []
+            for label in run_labels:
+                text = str((values or {}).get(label) or "—")
+                if len(text) > 160:
+                    text = "совпадает (длинный текст)"
+                cells.append(_wiki_escape(text))
             expand_body.append(f"|{_wiki_escape(str(row.get('parameter') or ''))}|{'|'.join(cells)}|")
         expand_body.append("")
         lines.extend(_wiki_expand("Одинаковые настройки (без изменений)", expand_body))
 
     lines.append("h3. Связь настроек и метрик по парам")
     lines.append("")
+    lines.extend(_LINK_LEGEND_LINES)
+    lines.extend(_VERDICT_LEGEND_LINES)
     snapshot_by_label: dict[str, dict[str, Any]] = {label: {} for label in run_labels}
     for row in list(changed_settings_rows) + list(equal_settings_rows):
         param = str(row.get("parameter") or "")
@@ -1055,8 +1096,9 @@ def build_nt_runs_confluence_wiki(analysis: NtRunsAnalysis, *, page_title: str |
         for guc in impact_by_guc:
             if guc not in pair_changed_params:
                 pair_changed_params.append(guc)
+        pair_changed_params = tunable_changed_names(pair_changed_params)
         if not pair_changed_params:
-            lines.append("_Отличий в настройках между прогонами пары нет._")
+            lines.append("_Отличий в настраиваемых GUC между прогонами пары нет (метаданные отброшены)._")
             lines.append("")
             continue
         lines.append("||Параметр||Было||Стало||Направление||Связь||")
@@ -1074,7 +1116,6 @@ def build_nt_runs_confluence_wiki(analysis: NtRunsAnalysis, *, page_title: str |
                 f"{link_cell}|"
             )
         lines.append("")
-        lines.extend(_LINK_LEGEND_LINES)
         if settings_only:
             lines.append(
                 "_Метрики между НТ и PROD не сопоставляются напрямую: разная нагрузка. "
@@ -1096,12 +1137,12 @@ def build_nt_runs_confluence_wiki(analysis: NtRunsAnalysis, *, page_title: str |
             gi = impact_by_guc.get(param)
             correlated = (gi.correlated_metrics or []) if gi else []
             if not correlated:
-                reason = (
-                    "Нет достаточных метрик для связи."
-                    if gi
-                    else "Параметр не связан с выбранными проблемами."
+                if not gi:
+                    continue
+                lines.append(
+                    f"|{_wiki_escape(str(param))}|—|—|—|—|—|"
+                    "Нет достаточных метрик для связи.|"
                 )
-                lines.append(f"|{_wiki_escape(str(param))}|—|—|—|—|—|{_wiki_escape(reason)}|")
                 continue
             for row in correlated[:6]:
                 improved = row.get("improved")
@@ -1120,7 +1161,6 @@ def build_nt_runs_confluence_wiki(analysis: NtRunsAnalysis, *, page_title: str |
                     f"{_wiki_escape(verdict)}|"
                 )
         lines.append("")
-        lines.extend(_VERDICT_LEGEND_LINES)
 
     lines.extend(["h2. Изменения метрик между прогонами", ""])
     if analysis.prod_labels:
@@ -1171,7 +1211,7 @@ def build_nt_runs_confluence_wiki(analysis: NtRunsAnalysis, *, page_title: str |
             f"improved_pairs={improved_pairs}, degraded_pairs={degraded_pairs}|",
             f"|Низкая сопоставимость прогонов|{_workload_status}|{_wiki_escape(_workload_comment)}|",
             f"|Слишком много одновременных изменений|{'BLOCKER' if blocker_many_changes else 'OK'}|"
-            f"changed_params_count={changed_params_count}|",
+            f"настраиваемых GUC изменено: {changed_params_count} (порог 10)|",
             f"|Порог ухудшений >=10%|{'WARN' if warning_degradations > 0 else 'OK'}|"
             f"warning_degradations={warning_degradations}|",
             "",

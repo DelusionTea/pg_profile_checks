@@ -9,29 +9,122 @@ h1. pg_profile: полный анализ 3 отчётов (tsldd-pprb01138.delt
 h2. Чеклист проверок (общие findings)
 
 ||Проверка||Статус||
-|[Checkpoints|#sec_checkpoints]|{status:colour=Red|title=FAIL|subtle=false}|
-|[Slow queries|#sec_queries]|{status:colour=Red|title=FAIL|subtle=false}|
+|[Контрольные точки|#sec_checkpoints]|{status:colour=Red|title=FAIL|subtle=false}|
+|[Медленные запросы|#sec_queries]|{status:colour=Red|title=FAIL|subtle=false}|
 |[Autovacuum|#sec_autovacuum]|{status:colour=Green|title=PASS|subtle=false}|
 |[WAL|#sec_wal]|{status:colour=Red|title=FAIL|subtle=false}|
-|[Cache and disk reads|#sec_cache]|{status:colour=Red|title=FAIL|subtle=false}|
-|[Sessions and transactions|#sec_sessions]|{status:colour=Red|title=FAIL|subtle=false}|
-|[Memory settings|#sec_memory]|{status:colour=Red|title=FAIL|subtle=false}|
-|[I/O patterns|#sec_io]|{status:colour=Red|title=FAIL|subtle=false}|
-|[Tablespaces / disk|#sec_disk]|{status:colour=Green|title=PASS|subtle=false}|
-|[Locks|#sec_locks]|{status:colour=Green|title=PASS|subtle=false}|
+|[Кэш и чтение с диска|#sec_cache]|{status:colour=Red|title=FAIL|subtle=false}|
+|[Сессии и транзакции|#sec_sessions]|{status:colour=Red|title=FAIL|subtle=false}|
+|[Настройки памяти|#sec_memory]|{status:colour=Red|title=FAIL|subtle=false}|
+|[Ввод-вывод|#sec_io]|{status:colour=Red|title=FAIL|subtle=false}|
+|[Табличные пространства / диск|#sec_disk]|{status:colour=Green|title=PASS|subtle=false}|
+|[Блокировки|#sec_locks]|{status:colour=Green|title=PASS|subtle=false}|
 
 {toc:maxLevel=2}
 
 h2. Что сделать сейчас
 
-# Исправить application: COMMIT/ROLLBACK, pool settings
-# Найти источник в pg_stat_activity
-# Установить idle_in_transaction_session_timeout
-# Исправить application connection pooling / missing COMMIT
+# Idle in transaction / нет таймаута → idle_in_transaction_session_timeout: set_nonzero (CAUTIOUS)
+# Давление на соединения → max_connections: review_decrease_with_pooler (CAUTIOUS)
+# Длительная запись checkpoint / bgwriter → checkpoint_completion_target: review_increase (SAFE)
+# Медленные / spill SQL (не GUC-only) → Индексы, статистика ANALYZE
+# Память / cache hit → shared_buffers: increase (RESTART)
+# Переполнение wal_buffers → wal_buffers: increase (CAUTIOUS)
+
+h2. План действий: подтвердить → изменить → убедиться
+
+{info}Шаги идут от самой критичной устойчивой проблемы. Меняйте по одному пункту за раз, иначе следующий отчёт нельзя будет приписать конкретному изменению.{info}
+
+{warning:title=Противоречивые рекомендации по одному GUC}
+*work_mem*: Медленные / spill SQL (не GUC-only) → review_increase_role_level; Память / cache hit → review_decrease_or_role_level. Разные проблемы тянут параметр в противоположные стороны — выберите одну проблему и меняйте под неё, иначе результат прогона нечитаем.
+{warning}
+
+h3. 1. Idle in transaction / нет таймаута — CRITICAL, стабильность 3/3 (100%)
+
+*Подтвердить:*
 # Найти источник зависших транзакций в pg_stat_activity
+
+*Изменить:*
+# idle_in_transaction_session_timeout: set_nonzero — сейчас nt1=0, nt2=0, prod1=0 (CAUTIOUS — сначала НТ и мониторинг; влияние MEDIUM)
+# Исправить application: COMMIT/ROLLBACK, pool settings
+# Исправить application connection pooling / missing COMMIT
 # Установить idle_in_transaction_session_timeout (например 60s–300s)
-# Рассмотреть idle_in_transaction_session_timeout: set_nonzero
+
+*Убедиться:* снять новый отчёт pg_profile за сравнимый интервал и проверить, что finding sessions.high_idle_in_transaction, sessions.idle_timeout_disabled больше не воспроизводится (сейчас: statecontracts: idle_in_transaction_time=1416504.9s (threshold 3600s), idle_in_transaction_session_timeout=0).
+
+h3. 2. Давление на соединения — HIGH, стабильность 3/3 (100%)
+
+*Подтвердить:*
+# Найти утечки idle/idle in transaction в приложении
+# Найти утечки соединений в приложении
+
+*Изменить:*
+# max_connections: review_decrease_with_pooler — сейчас nt1=550, nt2=550, prod1=550 (CAUTIOUS — сначала НТ и мониторинг; влияние HIGH)
+# Внедрить/проверить connection pooler
+# Внедрить/проверить PgBouncer (transaction pooling где возможно)
+# Снизить max_connections после появления pooler
+
+*Убедиться:* снять новый отчёт pg_profile за сравнимый интервал и проверить, что finding sessions.connection_pressure больше не воспроизводится (сейчас: postgres: connection pressure sessions=2924 (532% of max_connections=550)).
+
+h3. 3. Длительная запись checkpoint / bgwriter — HIGH, стабильность 3/3 (100%)
+
+*Подтвердить:*
+# Проверить производительность диска (IOPS, latency)
+# Оценить checkpoint_completion_target
+# Проверить latency диска (iostat) в окнах checkpoint
+
+*Изменить:*
+# checkpoint_completion_target: review_increase — сейчас nt1=0.5, nt2=0.7, prod1=0.7 (SAFE — применяется reload; влияние LOW)
+# shared_buffers: review_increase — сейчас nt1=504320, nt2=504320, prod1=537600 (RESTART — нужно плановое окно; влияние HIGH)
+# Снизить write-нагрузку или распределить её во времени
+# Поднять checkpoint_completion_target (0.7–0.9) для сглаживания записи
+# Согласовать max_wal_size и checkpoint_timeout с объёмом WAL
+
+*Убедиться:* снять новый отчёт pg_profile за сравнимый интервал и проверить, что finding checkpoints.high_write_time, checkpoints.high_write_time_per_hour, checkpoints.maxwritten_clean больше не воспроизводится (сейчас: Checkpoint write time: 25187.0s over 15.0h interval (threshold 300s)).
+
+h3. 4. Медленные / spill SQL (не GUC-only) — HIGH, стабильность 3/3 (100%)
+
+*Подтвердить:*
+# EXPLAIN (ANALYZE, BUFFERS) топ SQL
+# Выполнить EXPLAIN (ANALYZE, BUFFERS) для топ-запросов
+# Проверить индексы и статистику (ANALYZE)
+
+*Изменить:*
+# work_mem: review_increase_role_level — сейчас nt1=16384, nt2=16384, prod1=16384 (RISKY — может ухудшить нагрузку; влияние HIGH)
+# Индексы, статистика ANALYZE
+
+*Осторожно:* Не менять GUC без анализа планов.
+
+*Убедиться:* снять новый отчёт pg_profile за сравнимый интервал и проверить, что finding queries.slow_execution больше не воспроизводится (сейчас: statecontracts/as_admin: max=37443.1ms, calls=1   select $3, t0.OBJECT_ID c2 from statecontracts.T_CONTRACTS t0 where t0.RQUID &lt;> $1 limit $2).
+
+h3. 5. Память / cache hit — HIGH, стабильность 3/3 (100%)
+
+*Подтвердить:*
+# Найти top I/O tables в pg_profile и проверить индексы/partitioning
+# Оценить shared_buffers и effective_cache_size
+# EXPLAIN (ANALYZE, BUFFERS) для запросов к этим таблицам
+
+*Изменить:*
+# shared_buffers: increase — сейчас nt1=504320, nt2=504320, prod1=537600 (RESTART — нужно плановое окно; влияние HIGH)
+# effective_cache_size: review_increase — сейчас nt1=1512960, nt2=1512960, prod1=1512960 (SAFE — применяется reload; влияние LOW)
+# work_mem: review_decrease_or_role_level — сейчас nt1=16384, nt2=16384, prod1=16384 (RISKY — может ухудшить нагрузку; влияние HIGH)
 # Connection pooler (PgBouncer)
+# Таблицы с высоким physical read
+
+*Убедиться:* снять новый отчёт pg_profile за сравнимый интервал и проверить, что finding cache.low_table_hit_ratio больше не воспроизводится (сейчас: postgres.pgse_profile.sample_statements: table hit_pct=82.71% (threshold 95.0%)).
+
+h3. 6. Переполнение wal_buffers — HIGH, стабильность 3/3 (100%)
+
+*Подтвердить:*
+# Проверить пики WAL generation и batch DML
+
+*Изменить:*
+# wal_buffers: increase — сейчас nt1=2048, nt2=2048, prod1=2048 (CAUTIOUS — сначала НТ и мониторинг; влияние MEDIUM)
+# Увеличить wal_buffers (единицы 8kB в pg_profile settings)
+
+*Убедиться:* снять новый отчёт pg_profile за сравнимый интервал и проверить, что finding wal.buffers_full больше не воспроизводится (сейчас: wal_buffers_full: 932205 (threshold 1000)).
+
+_Остальные проблемы (10) с рекомендациями — в таблице «Общие проблемы» ниже._
 
 h2. Сводка общих findings
 
@@ -126,7 +219,7 @@ h4. nt2
 
 {expand:Справочно: параметры и отчёты}
 ||Параметр||Значение||
-|Дата формирования|2026-08-13 17:53|
+|Дата формирования|2026-08-20 11:31|
 |Отчётов|3|
 |Общие findings|21|
 |Специфичные findings|5|

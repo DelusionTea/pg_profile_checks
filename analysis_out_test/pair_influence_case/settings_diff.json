@@ -62,7 +62,7 @@
   },
   "confidence_meta": {
     "mode": "pair",
-    "changed_params_count": 8,
+    "changed_params_count": 1,
     "changed_params_threshold": 10,
     "workload_match_score": 1.0,
     "isolated_change": false,
@@ -273,6 +273,18 @@
   ],
   "findings": [
     {
+      "id": "settings.differ.shared_buffers",
+      "category": "settings",
+      "severity": "warning",
+      "message": "shared_buffers",
+      "details": {
+        "status": "DIFFER",
+        "value_a": "504320",
+        "value_b": "537600",
+        "issue_level": "critical"
+      }
+    },
+    {
       "id": "settings.differ.commit_timestamp_buffers",
       "category": "settings",
       "severity": "warning",
@@ -285,15 +297,27 @@
       }
     },
     {
-      "id": "settings.differ.shared_buffers",
+      "id": "settings.differ.pg_conf_load_time",
       "category": "settings",
-      "severity": "warning",
-      "message": "shared_buffers",
+      "severity": "info",
+      "message": "pg_conf_load_time",
       "details": {
         "status": "DIFFER",
-        "value_a": "504320",
-        "value_b": "537600",
-        "issue_level": "critical"
+        "value_a": "2026-08-10 12:11:58.339478+03",
+        "value_b": "2026-08-12 13:51:51.80184+03",
+        "issue_level": "informational"
+      }
+    },
+    {
+      "id": "settings.differ.pg_postmaster_start_time",
+      "category": "settings",
+      "severity": "info",
+      "message": "pg_postmaster_start_time",
+      "details": {
+        "status": "DIFFER",
+        "value_a": "2026-08-10 12:10:53.521971+03",
+        "value_b": "2026-08-12 13:50:49.898345+03",
+        "issue_level": "informational"
       }
     },
     {
@@ -343,30 +367,6 @@
         "value_b": "1024",
         "issue_level": "critical"
       }
-    },
-    {
-      "id": "settings.differ.pg_conf_load_time",
-      "category": "settings",
-      "severity": "info",
-      "message": "pg_conf_load_time",
-      "details": {
-        "status": "DIFFER",
-        "value_a": "2026-08-10 12:11:58.339478+03",
-        "value_b": "2026-08-12 13:51:51.80184+03",
-        "issue_level": "informational"
-      }
-    },
-    {
-      "id": "settings.differ.pg_postmaster_start_time",
-      "category": "settings",
-      "severity": "info",
-      "message": "pg_postmaster_start_time",
-      "details": {
-        "status": "DIFFER",
-        "value_a": "2026-08-10 12:10:53.521971+03",
-        "value_b": "2026-08-12 13:50:49.898345+03",
-        "issue_level": "informational"
-      }
     }
   ],
   "summary": {
@@ -374,8 +374,8 @@
     "only_a": 0,
     "only_b": 0,
     "total_issues": 8,
-    "critical_count": 6,
-    "informational_count": 2,
+    "critical_count": 1,
+    "informational_count": 7,
     "settings_valid": false
   }
 }

@@ -2,8 +2,8 @@
   "status": "success",
   "provider": "qwen_gateway",
   "model": "qwen-e2e",
-  "trace_id": "e2f54be62b164e3a830bba970622ef82",
-  "latency_ms": 0,
+  "trace_id": "a6fe65b6cd884d129b5dfe2acc87c713",
+  "latency_ms": 1,
   "attempts": 1,
   "usage": {
     "prompt_tokens": 8,

@@ -17,7 +17,7 @@ class ReportMeta:
 
 @dataclass
 class AnalyzeRequest:
-    scenario: str  # health | full_multi | symptom | nt_runs | stable_prod | nt_prod
+    scenario: str  # health | full_multi | symptom | nt_runs | stable_prod | nt_prod | dml_etalon
     reports: list[ReportMeta]
     symptoms: list[str] = field(default_factory=list)
     query_hex: str | None = None

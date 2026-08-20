@@ -982,7 +982,8 @@
             "delta": 810901.0,
             "delta_pct": 6.931873843300009,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -998,7 +999,8 @@
             "delta": 0.48,
             "delta_pct": 13.636363636363637,
             "unit": "sec",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -1014,7 +1016,8 @@
             "delta": -9.0,
             "delta_pct": -23.076923076923077,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -1030,7 +1033,8 @@
             "delta": 7.0,
             "delta_pct": 100.0,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -1046,7 +1050,8 @@
             "delta": -17615.0,
             "delta_pct": -21.820186304627885,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -1062,7 +1067,8 @@
             "delta": 486132.0,
             "delta_pct": 5.139774478031633,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -1078,7 +1084,8 @@
             "delta": -8636732.0,
             "delta_pct": -5.478901732661125,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -1094,7 +1101,8 @@
             "delta": -101436.0,
             "delta_pct": -29.819646348095777,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -1110,7 +1118,8 @@
             "delta": -10712581.0,
             "delta_pct": -7.057009826208292,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -1126,7 +1135,8 @@
             "delta": 587568.0,
             "delta_pct": 6.443994568588027,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -1142,7 +1152,8 @@
             "delta": 2075849.0,
             "delta_pct": 35.57202033099122,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -1158,7 +1169,8 @@
             "delta": -1184566.0,
             "delta_pct": -39.44193684580644,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -1174,7 +1186,8 @@
             "delta": -1184566.0,
             "delta_pct": -39.44193684580644,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -1190,7 +1203,8 @@
             "delta": -212170.0,
             "delta_pct": -36.56470645005075,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -1206,7 +1220,8 @@
             "delta": -198913.0,
             "delta_pct": -82.36563146997929,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -1222,7 +1237,8 @@
             "delta": -177042.0,
             "delta_pct": -73.30931677018634,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -1238,7 +1254,8 @@
             "delta": -155846.0,
             "delta_pct": -82.07691254384395,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -1254,7 +1271,8 @@
             "delta": -135802.0,
             "delta_pct": -71.52066063472334,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -1270,7 +1288,8 @@
             "delta": 120516.0,
             "delta_pct": 21.181172525427215,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -1286,7 +1305,8 @@
             "delta": 82166.0,
             "delta_pct": 16.23747349449733,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -1302,7 +1322,8 @@
             "delta": 69093.0,
             "delta_pct": 6.265523704850333,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -1318,7 +1339,8 @@
             "delta": -18055.0,
             "delta_pct": -7.531200987753195,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -1334,7 +1356,8 @@
             "delta": -5031.0,
             "delta_pct": -15.530174409631115,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -1350,7 +1373,8 @@
             "delta": -2533.0,
             "delta_pct": -34.392396469789546,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -1366,7 +1390,8 @@
             "delta": 1327.0,
             "delta_pct": 10.466950623126676,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -1382,11 +1407,12 @@
             "delta": -1118.0,
             "delta_pct": -94.2664418212479,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
-          "id": "run_compare.queries.statecontracts_as_admin",
+          "id": "run_compare.queries.statecontracts_as_admin.3f7ffea106f6e78e",
           "category": "queries",
           "severity": "warning",
           "message": "statecontracts/as_admin",
@@ -1398,11 +1424,12 @@
             "delta": 150.22000000000025,
             "delta_pct": 5.201451503441789,
             "unit": "sec",
-            "extra": "A: calls=12.00M, total_time=2888.0s, mean_exec_time=0.2ms, max_exec_time=57.8ms, wal_bytes=49.34G, shared_blks_read=10.90K\nB: calls=12.00M, total_time=3038.3s, mean_exec_time=0.2ms, max_exec_time=69.3ms, wal_bytes=49.34G, shared_blks_read=11.55K\n  insert into statecontracts.t_contracts (chgcnt,claimed,contractid,customerinn,customername,enddat..."
+            "extra": "A: calls=12.00M, total_time=2888.0s, mean_exec_time=0.2ms, max_exec_time=57.8ms, wal_bytes=49.34G, shared_blks_read=10.90K\nB: calls=12.00M, total_time=3038.3s, mean_exec_time=0.2ms, max_exec_time=69.3ms, wal_bytes=49.34G, shared_blks_read=11.55K\n  insert into statecontracts.t_contracts (chgcnt,claimed,contractid,customerinn,customername,enddat...",
+            "item_id": "3f7ffea106f6e78e"
           }
         },
         {
-          "id": "run_compare.queries.postgres_\"sa-d00000011757\"",
+          "id": "run_compare.queries.postgres_\"sa-d00000011757\".a822446855e79f13",
           "category": "queries",
           "severity": "warning",
           "message": "postgres/\"sa-d00000011757\"",
@@ -1414,11 +1441,12 @@
             "delta": -114.06,
             "delta_pct": -42.12742382271468,
             "unit": "sec",
-            "extra": "A: calls=118.62K, total_time=270.8s, mean_exec_time=2.3ms, max_exec_time=51.4ms\nB: calls=68.72K, total_time=156.7s, mean_exec_time=2.3ms, max_exec_time=37.0ms\n  WITH locks AS ( SELECT pid, locktype, mode, relation, page, tuple, virtualxid, transactionid, cla..."
+            "extra": "A: calls=118.62K, total_time=270.8s, mean_exec_time=2.3ms, max_exec_time=51.4ms\nB: calls=68.72K, total_time=156.7s, mean_exec_time=2.3ms, max_exec_time=37.0ms\n  WITH locks AS ( SELECT pid, locktype, mode, relation, page, tuple, virtualxid, transactionid, cla...",
+            "item_id": "a822446855e79f13"
           }
         },
         {
-          "id": "run_compare.queries.postgres_\"sa-d00000011757\"",
+          "id": "run_compare.queries.postgres_\"sa-d00000011757\".566f5112e6ebf965",
           "category": "queries",
           "severity": "warning",
           "message": "postgres/\"sa-d00000011757\"",
@@ -1430,11 +1458,12 @@
             "delta": -33.199999999999996,
             "delta_pct": -43.262965858743804,
             "unit": "sec",
-            "extra": "A: calls=5.94K, total_time=76.7s, mean_exec_time=12.9ms, max_exec_time=106.9ms\nB: calls=3.44K, total_time=43.5s, mean_exec_time=12.6ms, max_exec_time=89.2ms\n  SELECT spcname, pg_tablespace_size(spcname) AS size FROM pg_tablespace ORDER BY size DESC LIMIT 25"
+            "extra": "A: calls=5.94K, total_time=76.7s, mean_exec_time=12.9ms, max_exec_time=106.9ms\nB: calls=3.44K, total_time=43.5s, mean_exec_time=12.6ms, max_exec_time=89.2ms\n  SELECT spcname, pg_tablespace_size(spcname) AS size FROM pg_tablespace ORDER BY size DESC LIMIT 25",
+            "item_id": "566f5112e6ebf965"
           }
         },
         {
-          "id": "run_compare.queries.postgres_\"sa-d00000011757\"",
+          "id": "run_compare.queries.postgres_\"sa-d00000011757\".b54ae2623f4c379e",
           "category": "queries",
           "severity": "warning",
           "message": "postgres/\"sa-d00000011757\"",
@@ -1446,11 +1475,12 @@
             "delta": -24.06,
             "delta_pct": -100.0,
             "unit": "sec",
-            "extra": "A: calls=5.94K, total_time=24.1s, mean_exec_time=4.0ms, max_exec_time=16.5ms\nB: \n  SELECT (SELECT setting::BIGINT FROM pg_settings WHERE name = 'autovacuum_freeze_max_age') autovac..."
+            "extra": "A: calls=5.94K, total_time=24.1s, mean_exec_time=4.0ms, max_exec_time=16.5ms\nB: \n  SELECT (SELECT setting::BIGINT FROM pg_settings WHERE name = 'autovacuum_freeze_max_age') autovac...",
+            "item_id": "b54ae2623f4c379e"
           }
         },
         {
-          "id": "run_compare.queries.postgres_\"sa-d00000011757\"",
+          "id": "run_compare.queries.postgres_\"sa-d00000011757\".92a0069b4dfb89ee",
           "category": "queries",
           "severity": "warning",
           "message": "postgres/\"sa-d00000011757\"",
@@ -1462,11 +1492,12 @@
             "delta": -14.249999999999996,
             "delta_pct": -40.948275862068954,
             "unit": "sec",
-            "extra": "A: calls=5.94K, total_time=34.8s, mean_exec_time=5.9ms, max_exec_time=88.8ms\nB: calls=3.44K, total_time=20.6s, mean_exec_time=6.0ms, max_exec_time=60.3ms\n  SELECT t2.rolname, t3.datname, SUM(t1.rows) as rows FROM pg_stat_statements t1 JOIN pg_roles t2 O..."
+            "extra": "A: calls=5.94K, total_time=34.8s, mean_exec_time=5.9ms, max_exec_time=88.8ms\nB: calls=3.44K, total_time=20.6s, mean_exec_time=6.0ms, max_exec_time=60.3ms\n  SELECT t2.rolname, t3.datname, SUM(t1.rows) as rows FROM pg_stat_statements t1 JOIN pg_roles t2 O...",
+            "item_id": "92a0069b4dfb89ee"
           }
         },
         {
-          "id": "run_compare.queries.postgres_\"sa-d00000011757\"",
+          "id": "run_compare.queries.postgres_\"sa-d00000011757\".f026fd092077b2a3",
           "category": "queries",
           "severity": "warning",
           "message": "postgres/\"sa-d00000011757\"",
@@ -1478,11 +1509,12 @@
             "delta": -13.879999999999999,
             "delta_pct": -41.469973110247984,
             "unit": "sec",
-            "extra": "A: calls=5.94K, total_time=33.5s, mean_exec_time=5.6ms, max_exec_time=66.8ms\nB: calls=3.44K, total_time=19.6s, mean_exec_time=5.7ms, max_exec_time=71.3ms\n  SELECT t2.rolname, t3.datname, sum((total_plan_time + total_exec_time) / 1000)::bigint as total_t..."
+            "extra": "A: calls=5.94K, total_time=33.5s, mean_exec_time=5.6ms, max_exec_time=66.8ms\nB: calls=3.44K, total_time=19.6s, mean_exec_time=5.7ms, max_exec_time=71.3ms\n  SELECT t2.rolname, t3.datname, sum((total_plan_time + total_exec_time) / 1000)::bigint as total_t...",
+            "item_id": "f026fd092077b2a3"
           }
         },
         {
-          "id": "run_compare.queries.postgres_\"sa-d00000011757\"",
+          "id": "run_compare.queries.postgres_\"sa-d00000011757\".a115d1fdf67204c1",
           "category": "queries",
           "severity": "warning",
           "message": "postgres/\"sa-d00000011757\"",
@@ -1494,11 +1526,12 @@
             "delta": -12.469999999999999,
             "delta_pct": -43.28358208955224,
             "unit": "sec",
-            "extra": "A: calls=5.94K, total_time=28.8s, mean_exec_time=4.8ms, max_exec_time=49.3ms\nB: calls=3.44K, total_time=16.3s, mean_exec_time=4.7ms, max_exec_time=63.4ms\n  SELECT t2.rolname, t3.datname, (sum(t1.shared_blks_dirtied + t1.local_blks_dirtied)) * current_se..."
+            "extra": "A: calls=5.94K, total_time=28.8s, mean_exec_time=4.8ms, max_exec_time=49.3ms\nB: calls=3.44K, total_time=16.3s, mean_exec_time=4.7ms, max_exec_time=63.4ms\n  SELECT t2.rolname, t3.datname, (sum(t1.shared_blks_dirtied + t1.local_blks_dirtied)) * current_se...",
+            "item_id": "a115d1fdf67204c1"
           }
         },
         {
-          "id": "run_compare.queries.statecontracts_as_admin",
+          "id": "run_compare.queries.statecontracts_as_admin.18c9f43b592661b0",
           "category": "queries",
           "severity": "warning",
           "message": "statecontracts/as_admin",
@@ -1510,11 +1543,12 @@
             "delta": 6.5,
             "delta_pct": null,
             "unit": "sec",
-            "extra": "A: \nB: calls=147.07K, total_time=6.5s, mean_exec_time=0.0ms, max_exec_time=8.3ms, shared_blks_read=24\n  select $5, t0.OBJECT_ID c2, t0.LEVEL_ENTITYID c3 from statecontracts.T_VALUE t0 where ((t0.INN = ..."
+            "extra": "A: \nB: calls=147.07K, total_time=6.5s, mean_exec_time=0.0ms, max_exec_time=8.3ms, shared_blks_read=24\n  select $5, t0.OBJECT_ID c2, t0.LEVEL_ENTITYID c3 from statecontracts.T_VALUE t0 where ((t0.INN = ...",
+            "item_id": "18c9f43b592661b0"
           }
         },
         {
-          "id": "run_compare.queries.postgres_\"sa-d00000011757\"",
+          "id": "run_compare.queries.postgres_\"sa-d00000011757\".77f69ae84abf9a2e",
           "category": "queries",
           "severity": "warning",
           "message": "postgres/\"sa-d00000011757\"",
@@ -1526,11 +1560,12 @@
             "delta": -4.71,
             "delta_pct": -46.40394088669951,
             "unit": "sec",
-            "extra": "A: calls=5.94K, total_time=10.2s, mean_exec_time=1.7ms, max_exec_time=28.2ms\nB: calls=3.44K, total_time=5.4s, mean_exec_time=1.6ms, max_exec_time=29.7ms\n  SELECT relname, COALESCE(ROUND(100*heap_blks_hit/NULLIF((heap_blks_hit + heap_blks_read),0),2),0)..."
+            "extra": "A: calls=5.94K, total_time=10.2s, mean_exec_time=1.7ms, max_exec_time=28.2ms\nB: calls=3.44K, total_time=5.4s, mean_exec_time=1.6ms, max_exec_time=29.7ms\n  SELECT relname, COALESCE(ROUND(100*heap_blks_hit/NULLIF((heap_blks_hit + heap_blks_read),0),2),0)...",
+            "item_id": "77f69ae84abf9a2e"
           }
         },
         {
-          "id": "run_compare.queries.statecontracts_as_admin",
+          "id": "run_compare.queries.statecontracts_as_admin.2176e6cce936ede6",
           "category": "queries",
           "severity": "warning",
           "message": "statecontracts/as_admin",
@@ -1542,11 +1577,12 @@
             "delta": 2.99,
             "delta_pct": null,
             "unit": "sec",
-            "extra": "A: \nB: calls=60.99K, total_time=3.0s, mean_exec_time=0.1ms, max_exec_time=8.8ms, shared_blks_read=4\n  select $5, t0.OBJECT_ID c2, t0.VALUE_ c3, t0.METRICTYPE_ENTITYID c4 from statecontracts.T_VALUE t..."
+            "extra": "A: \nB: calls=60.99K, total_time=3.0s, mean_exec_time=0.1ms, max_exec_time=8.8ms, shared_blks_read=4\n  select $5, t0.OBJECT_ID c2, t0.VALUE_ c3, t0.METRICTYPE_ENTITYID c4 from statecontracts.T_VALUE t...",
+            "item_id": "2176e6cce936ede6"
           }
         },
         {
-          "id": "run_compare.queries.statecontracts_as_admin",
+          "id": "run_compare.queries.statecontracts_as_admin.5bb553f0544cc788",
           "category": "queries",
           "severity": "warning",
           "message": "statecontracts/as_admin",
@@ -1558,11 +1594,12 @@
             "delta": 2.73,
             "delta_pct": null,
             "unit": "sec",
-            "extra": "A: \nB: calls=60.68K, total_time=2.7s, mean_exec_time=0.0ms, max_exec_time=7.7ms, shared_blks_read=8\n  select $5, t0.OBJECT_ID c2, t0.DATE_ c3, t0.LEVEL_ENTITYID c4 from statecontracts.T_VALUE t0 wher..."
+            "extra": "A: \nB: calls=60.68K, total_time=2.7s, mean_exec_time=0.0ms, max_exec_time=7.7ms, shared_blks_read=8\n  select $5, t0.OBJECT_ID c2, t0.DATE_ c3, t0.LEVEL_ENTITYID c4 from statecontracts.T_VALUE t0 wher...",
+            "item_id": "5bb553f0544cc788"
           }
         },
         {
-          "id": "run_compare.queries.postgres_\"sa-d00000011757\"",
+          "id": "run_compare.queries.postgres_\"sa-d00000011757\".dc3a71c450718a3e",
           "category": "queries",
           "severity": "warning",
           "message": "postgres/\"sa-d00000011757\"",
@@ -1574,11 +1611,12 @@
             "delta": -2.2300000000000004,
             "delta_pct": -44.77911646586346,
             "unit": "sec",
-            "extra": "A: calls=5.94K, total_time=5.0s, mean_exec_time=0.8ms, max_exec_time=8.8ms, wal_bytes=1.61K\nB: calls=3.44K, total_time=2.8s, mean_exec_time=0.8ms, max_exec_time=5.9ms, wal_bytes=39.45K\n  SELECT schemaname, relname, vacuum_count, autovacuum_count FROM pg_stat_user_tables ORDER BY vacu..."
+            "extra": "A: calls=5.94K, total_time=5.0s, mean_exec_time=0.8ms, max_exec_time=8.8ms, wal_bytes=1.61K\nB: calls=3.44K, total_time=2.8s, mean_exec_time=0.8ms, max_exec_time=5.9ms, wal_bytes=39.45K\n  SELECT schemaname, relname, vacuum_count, autovacuum_count FROM pg_stat_user_tables ORDER BY vacu...",
+            "item_id": "dc3a71c450718a3e"
           }
         },
         {
-          "id": "run_compare.queries.statecontracts_as_admin",
+          "id": "run_compare.queries.statecontracts_as_admin.334718932049516b",
           "category": "queries",
           "severity": "warning",
           "message": "statecontracts/as_admin",
@@ -1590,11 +1628,12 @@
             "delta": -2.0599999999999987,
             "delta_pct": -7.529239766081868,
             "unit": "sec",
-            "extra": "A: calls=7.74M, total_time=27.4s, mean_exec_time=0.0ms, max_exec_time=18.9ms\nB: calls=8.03M, total_time=25.3s, mean_exec_time=0.0ms, max_exec_time=16.5ms\n  COMMIT"
+            "extra": "A: calls=7.74M, total_time=27.4s, mean_exec_time=0.0ms, max_exec_time=18.9ms\nB: calls=8.03M, total_time=25.3s, mean_exec_time=0.0ms, max_exec_time=16.5ms\n  COMMIT",
+            "item_id": "334718932049516b"
           }
         },
         {
-          "id": "run_compare.queries.statecontracts_as_admin",
+          "id": "run_compare.queries.statecontracts_as_admin.fdb204dabb95ab50",
           "category": "queries",
           "severity": "warning",
           "message": "statecontracts/as_admin",
@@ -1606,11 +1645,12 @@
             "delta": 1.52,
             "delta_pct": null,
             "unit": "sec",
-            "extra": "A: \nB: calls=1.01K, total_time=1.5s, mean_exec_time=1.5ms, max_exec_time=11.8ms, shared_blks_read=2.32K\n  with ct0(c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10) as (select t0.OBJECT_ID c0, t0.STARTDATE c1..."
+            "extra": "A: \nB: calls=1.01K, total_time=1.5s, mean_exec_time=1.5ms, max_exec_time=11.8ms, shared_blks_read=2.32K\n  with ct0(c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10) as (select t0.OBJECT_ID c0, t0.STARTDATE c1...",
+            "item_id": "fdb204dabb95ab50"
           }
         },
         {
-          "id": "run_compare.queries.statecontracts_as_admin",
+          "id": "run_compare.queries.statecontracts_as_admin.1bd9e392e5d44395",
           "category": "queries",
           "severity": "warning",
           "message": "statecontracts/as_admin",
@@ -1622,7 +1662,8 @@
             "delta": -1.5100000000000016,
             "delta_pct": -5.691669807764801,
             "unit": "sec",
-            "extra": "A: calls=1, total_time=26.5s, mean_exec_time=26526.6ms, max_exec_time=26526.6ms, wal_bytes=642.13M, shared_blks_read=1.13M\nB: calls=1, total_time=25.0s, mean_exec_time=25020.3ms, max_exec_time=25020.3ms, shared_blks_read=1.12M\n  select $3, t0.OBJECT_ID c2 from statecontracts.T_PARTICIPANT t0 where t0.RQUID &lt;> $1 limit $2"
+            "extra": "A: calls=1, total_time=26.5s, mean_exec_time=26526.6ms, max_exec_time=26526.6ms, wal_bytes=642.13M, shared_blks_read=1.13M\nB: calls=1, total_time=25.0s, mean_exec_time=25020.3ms, max_exec_time=25020.3ms, shared_blks_read=1.12M\n  select $3, t0.OBJECT_ID c2 from statecontracts.T_PARTICIPANT t0 where t0.RQUID &lt;> $1 limit $2",
+            "item_id": "1bd9e392e5d44395"
           }
         },
         {
@@ -1638,7 +1679,8 @@
             "delta": 100835.33000000007,
             "delta_pct": 7.348524422072535,
             "unit": "sec",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -1654,7 +1696,8 @@
             "delta": -237.41000000000008,
             "delta_pct": -29.08723352119579,
             "unit": "sec",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -1670,7 +1713,8 @@
             "delta": -100374.07000000007,
             "delta_pct": -18.445981112279732,
             "unit": "sec",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -1686,7 +1730,8 @@
             "delta": 100835.35999999987,
             "delta_pct": 7.348683041409174,
             "unit": "sec",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -1702,7 +1747,8 @@
             "delta": -10.21,
             "delta_pct": -26.152663934426233,
             "unit": "sec",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -1718,7 +1764,8 @@
             "delta": 26014.0,
             "delta_pct": 26.883687283625278,
             "unit": "count",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -1734,7 +1781,8 @@
             "delta": 4.780000000000001,
             "delta_pct": 19.924968736973746,
             "unit": "sec",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -1750,7 +1798,8 @@
             "delta": 0.16,
             "delta_pct": 1600.0,
             "unit": "sec",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -1766,7 +1815,8 @@
             "delta": -15.750000000000028,
             "delta_pct": -6.046761623219575,
             "unit": "sec",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         },
         {
@@ -1782,7 +1832,8 @@
             "delta": -10.370000000000001,
             "delta_pct": -26.56930566231104,
             "unit": "sec",
-            "extra": ""
+            "extra": "",
+            "item_id": ""
           }
         }
       ],
@@ -1964,7 +2015,7 @@
       },
       "confidence_meta": {
         "mode": "pair",
-        "changed_params_count": 8,
+        "changed_params_count": 1,
         "changed_params_threshold": 10,
         "workload_match_score": 1.0,
         "isolated_change": false,
@@ -2175,6 +2226,18 @@
       ],
       "findings": [
         {
+          "id": "settings.differ.shared_buffers",
+          "category": "settings",
+          "severity": "warning",
+          "message": "shared_buffers",
+          "details": {
+            "status": "DIFFER",
+            "value_a": "504320",
+            "value_b": "537600",
+            "issue_level": "critical"
+          }
+        },
+        {
           "id": "settings.differ.commit_timestamp_buffers",
           "category": "settings",
           "severity": "warning",
@@ -2187,15 +2250,27 @@
           }
         },
         {
-          "id": "settings.differ.shared_buffers",
+          "id": "settings.differ.pg_conf_load_time",
           "category": "settings",
-          "severity": "warning",
-          "message": "shared_buffers",
+          "severity": "info",
+          "message": "pg_conf_load_time",
           "details": {
             "status": "DIFFER",
-            "value_a": "504320",
-            "value_b": "537600",
-            "issue_level": "critical"
+            "value_a": "2026-08-10 12:11:58.339478+03",
+            "value_b": "2026-08-12 13:51:51.80184+03",
+            "issue_level": "informational"
+          }
+        },
+        {
+          "id": "settings.differ.pg_postmaster_start_time",
+          "category": "settings",
+          "severity": "info",
+          "message": "pg_postmaster_start_time",
+          "details": {
+            "status": "DIFFER",
+            "value_a": "2026-08-10 12:10:53.521971+03",
+            "value_b": "2026-08-12 13:50:49.898345+03",
+            "issue_level": "informational"
           }
         },
         {
@@ -2245,30 +2320,6 @@
             "value_b": "1024",
             "issue_level": "critical"
           }
-        },
-        {
-          "id": "settings.differ.pg_conf_load_time",
-          "category": "settings",
-          "severity": "info",
-          "message": "pg_conf_load_time",
-          "details": {
-            "status": "DIFFER",
-            "value_a": "2026-08-10 12:11:58.339478+03",
-            "value_b": "2026-08-12 13:51:51.80184+03",
-            "issue_level": "informational"
-          }
-        },
-        {
-          "id": "settings.differ.pg_postmaster_start_time",
-          "category": "settings",
-          "severity": "info",
-          "message": "pg_postmaster_start_time",
-          "details": {
-            "status": "DIFFER",
-            "value_a": "2026-08-10 12:10:53.521971+03",
-            "value_b": "2026-08-12 13:50:49.898345+03",
-            "issue_level": "informational"
-          }
         }
       ],
       "summary": {
@@ -2276,8 +2327,8 @@
         "only_a": 0,
         "only_b": 0,
         "total_issues": 8,
-        "critical_count": 6,
-        "informational_count": 2,
+        "critical_count": 1,
+        "informational_count": 7,
         "settings_valid": false
       }
     }
@@ -3027,7 +3078,8 @@
         "delta": 810901.0,
         "delta_pct": 6.931873843300009,
         "unit": "count",
-        "extra": ""
+        "extra": "",
+        "item_id": ""
       }
     },
     {
@@ -3043,7 +3095,8 @@
         "delta": 0.48,
         "delta_pct": 13.636363636363637,
         "unit": "sec",
-        "extra": ""
+        "extra": "",
+        "item_id": ""
       }
     },
     {
@@ -3059,7 +3112,8 @@
         "delta": -9.0,
         "delta_pct": -23.076923076923077,
         "unit": "count",
-        "extra": ""
+        "extra": "",
+        "item_id": ""
       }
     },
     {
@@ -3075,7 +3129,8 @@
         "delta": 7.0,
         "delta_pct": 100.0,
         "unit": "count",
-        "extra": ""
+        "extra": "",
+        "item_id": ""
       }
     },
     {
@@ -3091,7 +3146,8 @@
         "delta": -17615.0,
         "delta_pct": -21.820186304627885,
         "unit": "count",
-        "extra": ""
+        "extra": "",
+        "item_id": ""
       }
     },
     {
@@ -3107,7 +3163,8 @@
         "delta": 486132.0,
         "delta_pct": 5.139774478031633,
         "unit": "count",
-        "extra": ""
+        "extra": "",
+        "item_id": ""
       }
     },
     {
@@ -3123,7 +3180,8 @@
         "delta": -8636732.0,
         "delta_pct": -5.478901732661125,
         "unit": "count",
-        "extra": ""
+        "extra": "",
+        "item_id": ""
       }
     },
     {
@@ -3139,7 +3197,8 @@
         "delta": -101436.0,
         "delta_pct": -29.819646348095777,
         "unit": "count",
-        "extra": ""
+        "extra": "",
+        "item_id": ""
       }
     },
     {
@@ -3155,7 +3214,8 @@
         "delta": -10712581.0,
         "delta_pct": -7.057009826208292,
         "unit": "count",
-        "extra": ""
+        "extra": "",
+        "item_id": ""
       }
     },
     {
@@ -3171,7 +3231,8 @@
         "delta": 587568.0,
         "delta_pct": 6.443994568588027,
         "unit": "count",
-        "extra": ""
+        "extra": "",
+        "item_id": ""
       }
     },
     {
@@ -3187,7 +3248,8 @@
         "delta": 2075849.0,
         "delta_pct": 35.57202033099122,
         "unit": "count",
-        "extra": ""
+        "extra": "",
+        "item_id": ""
       }
     },
     {
@@ -3203,7 +3265,8 @@
         "delta": -1184566.0,
         "delta_pct": -39.44193684580644,
         "unit": "count",
-        "extra": ""
+        "extra": "",
+        "item_id": ""
       }
     },
     {
@@ -3219,7 +3282,8 @@
         "delta": -1184566.0,
         "delta_pct": -39.44193684580644,
         "unit": "count",
-        "extra": ""
+        "extra": "",
+        "item_id": ""
       }
     },
     {
@@ -3235,7 +3299,8 @@
         "delta": -212170.0,
         "delta_pct": -36.56470645005075,
         "unit": "count",
-        "extra": ""
+        "extra": "",
+        "item_id": ""
       }
     },
     {
@@ -3251,7 +3316,8 @@
         "delta": -198913.0,
         "delta_pct": -82.36563146997929,
         "unit": "count",
-        "extra": ""
+        "extra": "",
+        "item_id": ""
       }
     },
     {
@@ -3267,7 +3333,8 @@
         "delta": -177042.0,
         "delta_pct": -73.30931677018634,
         "unit": "count",
-        "extra": ""
+        "extra": "",
+        "item_id": ""
       }
     },
     {
@@ -3283,7 +3350,8 @@
         "delta": -155846.0,
         "delta_pct": -82.07691254384395,
         "unit": "count",
-        "extra": ""
+        "extra": "",
+        "item_id": ""
       }
     },
     {
@@ -3299,7 +3367,8 @@
         "delta": -135802.0,
         "delta_pct": -71.52066063472334,
         "unit": "count",
-        "extra": ""
+        "extra": "",
+        "item_id": ""
       }
     },
     {
@@ -3315,7 +3384,8 @@
         "delta": 120516.0,
         "delta_pct": 21.181172525427215,
         "unit": "count",
-        "extra": ""
+        "extra": "",
+        "item_id": ""
       }
     },
     {
@@ -3331,7 +3401,8 @@
         "delta": 82166.0,
         "delta_pct": 16.23747349449733,
         "unit": "count",
-        "extra": ""
+        "extra": "",
+        "item_id": ""
       }
     },
     {
@@ -3347,7 +3418,8 @@
         "delta": 69093.0,
         "delta_pct": 6.265523704850333,
         "unit": "count",
-        "extra": ""
+        "extra": "",
+        "item_id": ""
       }
     },
     {
@@ -3363,7 +3435,8 @@
         "delta": -18055.0,
         "delta_pct": -7.531200987753195,
         "unit": "count",
-        "extra": ""
+        "extra": "",
+        "item_id": ""
       }
     },
     {
@@ -3379,7 +3452,8 @@
         "delta": -5031.0,
         "delta_pct": -15.530174409631115,
         "unit": "count",
-        "extra": ""
+        "extra": "",
+        "item_id": ""
       }
     },
     {
@@ -3395,7 +3469,8 @@
         "delta": -2533.0,
         "delta_pct": -34.392396469789546,
         "unit": "count",
-        "extra": ""
+        "extra": "",
+        "item_id": ""
       }
     },
     {
@@ -3411,7 +3486,8 @@
         "delta": 1327.0,
         "delta_pct": 10.466950623126676,
         "unit": "count",
-        "extra": ""
+        "extra": "",
+        "item_id": ""
       }
     },
     {
@@ -3427,11 +3503,12 @@
         "delta": -1118.0,
         "delta_pct": -94.2664418212479,
         "unit": "count",
-        "extra": ""
+        "extra": "",
+        "item_id": ""
       }
     },
     {
-      "id": "run_compare.queries.statecontracts_as_admin",
+      "id": "run_compare.queries.statecontracts_as_admin.3f7ffea106f6e78e",
       "category": "queries",
       "severity": "warning",
       "message": "statecontracts/as_admin",
@@ -3443,11 +3520,12 @@
         "delta": 150.22000000000025,
         "delta_pct": 5.201451503441789,
         "unit": "sec",
-        "extra": "A: calls=12.00M, total_time=2888.0s, mean_exec_time=0.2ms, max_exec_time=57.8ms, wal_bytes=49.34G, shared_blks_read=10.90K\nB: calls=12.00M, total_time=3038.3s, mean_exec_time=0.2ms, max_exec_time=69.3ms, wal_bytes=49.34G, shared_blks_read=11.55K\n  insert into statecontracts.t_contracts (chgcnt,claimed,contractid,customerinn,customername,enddat..."
+        "extra": "A: calls=12.00M, total_time=2888.0s, mean_exec_time=0.2ms, max_exec_time=57.8ms, wal_bytes=49.34G, shared_blks_read=10.90K\nB: calls=12.00M, total_time=3038.3s, mean_exec_time=0.2ms, max_exec_time=69.3ms, wal_bytes=49.34G, shared_blks_read=11.55K\n  insert into statecontracts.t_contracts (chgcnt,claimed,contractid,customerinn,customername,enddat...",
+        "item_id": "3f7ffea106f6e78e"
       }
     },
     {
-      "id": "run_compare.queries.postgres_\"sa-d00000011757\"",
+      "id": "run_compare.queries.postgres_\"sa-d00000011757\".a822446855e79f13",
       "category": "queries",
       "severity": "warning",
       "message": "postgres/\"sa-d00000011757\"",
@@ -3459,11 +3537,12 @@
         "delta": -114.06,
         "delta_pct": -42.12742382271468,
         "unit": "sec",
-        "extra": "A: calls=118.62K, total_time=270.8s, mean_exec_time=2.3ms, max_exec_time=51.4ms\nB: calls=68.72K, total_time=156.7s, mean_exec_time=2.3ms, max_exec_time=37.0ms\n  WITH locks AS ( SELECT pid, locktype, mode, relation, page, tuple, virtualxid, transactionid, cla..."
+        "extra": "A: calls=118.62K, total_time=270.8s, mean_exec_time=2.3ms, max_exec_time=51.4ms\nB: calls=68.72K, total_time=156.7s, mean_exec_time=2.3ms, max_exec_time=37.0ms\n  WITH locks AS ( SELECT pid, locktype, mode, relation, page, tuple, virtualxid, transactionid, cla...",
+        "item_id": "a822446855e79f13"
       }
     },
     {
-      "id": "run_compare.queries.postgres_\"sa-d00000011757\"",
+      "id": "run_compare.queries.postgres_\"sa-d00000011757\".566f5112e6ebf965",
       "category": "queries",
       "severity": "warning",
       "message": "postgres/\"sa-d00000011757\"",
@@ -3475,11 +3554,12 @@
         "delta": -33.199999999999996,
         "delta_pct": -43.262965858743804,
         "unit": "sec",
-        "extra": "A: calls=5.94K, total_time=76.7s, mean_exec_time=12.9ms, max_exec_time=106.9ms\nB: calls=3.44K, total_time=43.5s, mean_exec_time=12.6ms, max_exec_time=89.2ms\n  SELECT spcname, pg_tablespace_size(spcname) AS size FROM pg_tablespace ORDER BY size DESC LIMIT 25"
+        "extra": "A: calls=5.94K, total_time=76.7s, mean_exec_time=12.9ms, max_exec_time=106.9ms\nB: calls=3.44K, total_time=43.5s, mean_exec_time=12.6ms, max_exec_time=89.2ms\n  SELECT spcname, pg_tablespace_size(spcname) AS size FROM pg_tablespace ORDER BY size DESC LIMIT 25",
+        "item_id": "566f5112e6ebf965"
       }
     },
     {
-      "id": "run_compare.queries.postgres_\"sa-d00000011757\"",
+      "id": "run_compare.queries.postgres_\"sa-d00000011757\".b54ae2623f4c379e",
       "category": "queries",
       "severity": "warning",
       "message": "postgres/\"sa-d00000011757\"",
@@ -3491,11 +3571,12 @@
         "delta": -24.06,
         "delta_pct": -100.0,
         "unit": "sec",
-        "extra": "A: calls=5.94K, total_time=24.1s, mean_exec_time=4.0ms, max_exec_time=16.5ms\nB: \n  SELECT (SELECT setting::BIGINT FROM pg_settings WHERE name = 'autovacuum_freeze_max_age') autovac..."
+        "extra": "A: calls=5.94K, total_time=24.1s, mean_exec_time=4.0ms, max_exec_time=16.5ms\nB: \n  SELECT (SELECT setting::BIGINT FROM pg_settings WHERE name = 'autovacuum_freeze_max_age') autovac...",
+        "item_id": "b54ae2623f4c379e"
       }
     },
     {
-      "id": "run_compare.queries.postgres_\"sa-d00000011757\"",
+      "id": "run_compare.queries.postgres_\"sa-d00000011757\".92a0069b4dfb89ee",
       "category": "queries",
       "severity": "warning",
       "message": "postgres/\"sa-d00000011757\"",
@@ -3507,11 +3588,12 @@
         "delta": -14.249999999999996,
         "delta_pct": -40.948275862068954,
         "unit": "sec",
-        "extra": "A: calls=5.94K, total_time=34.8s, mean_exec_time=5.9ms, max_exec_time=88.8ms\nB: calls=3.44K, total_time=20.6s, mean_exec_time=6.0ms, max_exec_time=60.3ms\n  SELECT t2.rolname, t3.datname, SUM(t1.rows) as rows FROM pg_stat_statements t1 JOIN pg_roles t2 O..."
+        "extra": "A: calls=5.94K, total_time=34.8s, mean_exec_time=5.9ms, max_exec_time=88.8ms\nB: calls=3.44K, total_time=20.6s, mean_exec_time=6.0ms, max_exec_time=60.3ms\n  SELECT t2.rolname, t3.datname, SUM(t1.rows) as rows FROM pg_stat_statements t1 JOIN pg_roles t2 O...",
+        "item_id": "92a0069b4dfb89ee"
       }
     },
     {
-      "id": "run_compare.queries.postgres_\"sa-d00000011757\"",
+      "id": "run_compare.queries.postgres_\"sa-d00000011757\".f026fd092077b2a3",
       "category": "queries",
       "severity": "warning",
       "message": "postgres/\"sa-d00000011757\"",
@@ -3523,11 +3605,12 @@
         "delta": -13.879999999999999,
         "delta_pct": -41.469973110247984,
         "unit": "sec",
-        "extra": "A: calls=5.94K, total_time=33.5s, mean_exec_time=5.6ms, max_exec_time=66.8ms\nB: calls=3.44K, total_time=19.6s, mean_exec_time=5.7ms, max_exec_time=71.3ms\n  SELECT t2.rolname, t3.datname, sum((total_plan_time + total_exec_time) / 1000)::bigint as total_t..."
+        "extra": "A: calls=5.94K, total_time=33.5s, mean_exec_time=5.6ms, max_exec_time=66.8ms\nB: calls=3.44K, total_time=19.6s, mean_exec_time=5.7ms, max_exec_time=71.3ms\n  SELECT t2.rolname, t3.datname, sum((total_plan_time + total_exec_time) / 1000)::bigint as total_t...",
+        "item_id": "f026fd092077b2a3"
       }
     },
     {
-      "id": "run_compare.queries.postgres_\"sa-d00000011757\"",
+      "id": "run_compare.queries.postgres_\"sa-d00000011757\".a115d1fdf67204c1",
       "category": "queries",
       "severity": "warning",
       "message": "postgres/\"sa-d00000011757\"",
@@ -3539,11 +3622,12 @@
         "delta": -12.469999999999999,
         "delta_pct": -43.28358208955224,
         "unit": "sec",
-        "extra": "A: calls=5.94K, total_time=28.8s, mean_exec_time=4.8ms, max_exec_time=49.3ms\nB: calls=3.44K, total_time=16.3s, mean_exec_time=4.7ms, max_exec_time=63.4ms\n  SELECT t2.rolname, t3.datname, (sum(t1.shared_blks_dirtied + t1.local_blks_dirtied)) * current_se..."
+        "extra": "A: calls=5.94K, total_time=28.8s, mean_exec_time=4.8ms, max_exec_time=49.3ms\nB: calls=3.44K, total_time=16.3s, mean_exec_time=4.7ms, max_exec_time=63.4ms\n  SELECT t2.rolname, t3.datname, (sum(t1.shared_blks_dirtied + t1.local_blks_dirtied)) * current_se...",
+        "item_id": "a115d1fdf67204c1"
       }
     },
     {
-      "id": "run_compare.queries.statecontracts_as_admin",
+      "id": "run_compare.queries.statecontracts_as_admin.18c9f43b592661b0",
       "category": "queries",
       "severity": "warning",
       "message": "statecontracts/as_admin",
@@ -3555,11 +3639,12 @@
         "delta": 6.5,
         "delta_pct": null,
         "unit": "sec",
-        "extra": "A: \nB: calls=147.07K, total_time=6.5s, mean_exec_time=0.0ms, max_exec_time=8.3ms, shared_blks_read=24\n  select $5, t0.OBJECT_ID c2, t0.LEVEL_ENTITYID c3 from statecontracts.T_VALUE t0 where ((t0.INN = ..."
+        "extra": "A: \nB: calls=147.07K, total_time=6.5s, mean_exec_time=0.0ms, max_exec_time=8.3ms, shared_blks_read=24\n  select $5, t0.OBJECT_ID c2, t0.LEVEL_ENTITYID c3 from statecontracts.T_VALUE t0 where ((t0.INN = ...",
+        "item_id": "18c9f43b592661b0"
       }
     },
     {
-      "id": "run_compare.queries.postgres_\"sa-d00000011757\"",
+      "id": "run_compare.queries.postgres_\"sa-d00000011757\".77f69ae84abf9a2e",
       "category": "queries",
       "severity": "warning",
       "message": "postgres/\"sa-d00000011757\"",
@@ -3571,11 +3656,12 @@
         "delta": -4.71,
         "delta_pct": -46.40394088669951,
         "unit": "sec",
-        "extra": "A: calls=5.94K, total_time=10.2s, mean_exec_time=1.7ms, max_exec_time=28.2ms\nB: calls=3.44K, total_time=5.4s, mean_exec_time=1.6ms, max_exec_time=29.7ms\n  SELECT relname, COALESCE(ROUND(100*heap_blks_hit/NULLIF((heap_blks_hit + heap_blks_read),0),2),0)..."
+        "extra": "A: calls=5.94K, total_time=10.2s, mean_exec_time=1.7ms, max_exec_time=28.2ms\nB: calls=3.44K, total_time=5.4s, mean_exec_time=1.6ms, max_exec_time=29.7ms\n  SELECT relname, COALESCE(ROUND(100*heap_blks_hit/NULLIF((heap_blks_hit + heap_blks_read),0),2),0)...",
+        "item_id": "77f69ae84abf9a2e"
       }
     },
     {
-      "id": "run_compare.queries.statecontracts_as_admin",
+      "id": "run_compare.queries.statecontracts_as_admin.2176e6cce936ede6",
       "category": "queries",
       "severity": "warning",
       "message": "statecontracts/as_admin",
@@ -3587,11 +3673,12 @@
         "delta": 2.99,
         "delta_pct": null,
         "unit": "sec",
-        "extra": "A: \nB: calls=60.99K, total_time=3.0s, mean_exec_time=0.1ms, max_exec_time=8.8ms, shared_blks_read=4\n  select $5, t0.OBJECT_ID c2, t0.VALUE_ c3, t0.METRICTYPE_ENTITYID c4 from statecontracts.T_VALUE t..."
+        "extra": "A: \nB: calls=60.99K, total_time=3.0s, mean_exec_time=0.1ms, max_exec_time=8.8ms, shared_blks_read=4\n  select $5, t0.OBJECT_ID c2, t0.VALUE_ c3, t0.METRICTYPE_ENTITYID c4 from statecontracts.T_VALUE t...",
+        "item_id": "2176e6cce936ede6"
       }
     },
     {
-      "id": "run_compare.queries.statecontracts_as_admin",
+      "id": "run_compare.queries.statecontracts_as_admin.5bb553f0544cc788",
       "category": "queries",
       "severity": "warning",
       "message": "statecontracts/as_admin",
@@ -3603,11 +3690,12 @@
         "delta": 2.73,
         "delta_pct": null,
         "unit": "sec",
-        "extra": "A: \nB: calls=60.68K, total_time=2.7s, mean_exec_time=0.0ms, max_exec_time=7.7ms, shared_blks_read=8\n  select $5, t0.OBJECT_ID c2, t0.DATE_ c3, t0.LEVEL_ENTITYID c4 from statecontracts.T_VALUE t0 wher..."
+        "extra": "A: \nB: calls=60.68K, total_time=2.7s, mean_exec_time=0.0ms, max_exec_time=7.7ms, shared_blks_read=8\n  select $5, t0.OBJECT_ID c2, t0.DATE_ c3, t0.LEVEL_ENTITYID c4 from statecontracts.T_VALUE t0 wher...",
+        "item_id": "5bb553f0544cc788"
       }
     },
     {
-      "id": "run_compare.queries.postgres_\"sa-d00000011757\"",
+      "id": "run_compare.queries.postgres_\"sa-d00000011757\".dc3a71c450718a3e",
       "category": "queries",
       "severity": "warning",
       "message": "postgres/\"sa-d00000011757\"",
@@ -3619,11 +3707,12 @@
         "delta": -2.2300000000000004,
         "delta_pct": -44.77911646586346,
         "unit": "sec",
-        "extra": "A: calls=5.94K, total_time=5.0s, mean_exec_time=0.8ms, max_exec_time=8.8ms, wal_bytes=1.61K\nB: calls=3.44K, total_time=2.8s, mean_exec_time=0.8ms, max_exec_time=5.9ms, wal_bytes=39.45K\n  SELECT schemaname, relname, vacuum_count, autovacuum_count FROM pg_stat_user_tables ORDER BY vacu..."
+        "extra": "A: calls=5.94K, total_time=5.0s, mean_exec_time=0.8ms, max_exec_time=8.8ms, wal_bytes=1.61K\nB: calls=3.44K, total_time=2.8s, mean_exec_time=0.8ms, max_exec_time=5.9ms, wal_bytes=39.45K\n  SELECT schemaname, relname, vacuum_count, autovacuum_count FROM pg_stat_user_tables ORDER BY vacu...",
+        "item_id": "dc3a71c450718a3e"
       }
     },
     {
-      "id": "run_compare.queries.statecontracts_as_admin",
+      "id": "run_compare.queries.statecontracts_as_admin.334718932049516b",
       "category": "queries",
       "severity": "warning",
       "message": "statecontracts/as_admin",
@@ -3635,11 +3724,12 @@
         "delta": -2.0599999999999987,
         "delta_pct": -7.529239766081868,
         "unit": "sec",
-        "extra": "A: calls=7.74M, total_time=27.4s, mean_exec_time=0.0ms, max_exec_time=18.9ms\nB: calls=8.03M, total_time=25.3s, mean_exec_time=0.0ms, max_exec_time=16.5ms\n  COMMIT"
+        "extra": "A: calls=7.74M, total_time=27.4s, mean_exec_time=0.0ms, max_exec_time=18.9ms\nB: calls=8.03M, total_time=25.3s, mean_exec_time=0.0ms, max_exec_time=16.5ms\n  COMMIT",
+        "item_id": "334718932049516b"
       }
     },
     {
-      "id": "run_compare.queries.statecontracts_as_admin",
+      "id": "run_compare.queries.statecontracts_as_admin.fdb204dabb95ab50",
       "category": "queries",
       "severity": "warning",
       "message": "statecontracts/as_admin",
@@ -3651,11 +3741,12 @@
         "delta": 1.52,
         "delta_pct": null,
         "unit": "sec",
-        "extra": "A: \nB: calls=1.01K, total_time=1.5s, mean_exec_time=1.5ms, max_exec_time=11.8ms, shared_blks_read=2.32K\n  with ct0(c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10) as (select t0.OBJECT_ID c0, t0.STARTDATE c1..."
+        "extra": "A: \nB: calls=1.01K, total_time=1.5s, mean_exec_time=1.5ms, max_exec_time=11.8ms, shared_blks_read=2.32K\n  with ct0(c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10) as (select t0.OBJECT_ID c0, t0.STARTDATE c1...",
+        "item_id": "fdb204dabb95ab50"
       }
     },
     {
-      "id": "run_compare.queries.statecontracts_as_admin",
+      "id": "run_compare.queries.statecontracts_as_admin.1bd9e392e5d44395",
       "category": "queries",
       "severity": "warning",
       "message": "statecontracts/as_admin",
@@ -3667,7 +3758,8 @@
         "delta": -1.5100000000000016,
         "delta_pct": -5.691669807764801,
         "unit": "sec",
-        "extra": "A: calls=1, total_time=26.5s, mean_exec_time=26526.6ms, max_exec_time=26526.6ms, wal_bytes=642.13M, shared_blks_read=1.13M\nB: calls=1, total_time=25.0s, mean_exec_time=25020.3ms, max_exec_time=25020.3ms, shared_blks_read=1.12M\n  select $3, t0.OBJECT_ID c2 from statecontracts.T_PARTICIPANT t0 where t0.RQUID &lt;> $1 limit $2"
+        "extra": "A: calls=1, total_time=26.5s, mean_exec_time=26526.6ms, max_exec_time=26526.6ms, wal_bytes=642.13M, shared_blks_read=1.13M\nB: calls=1, total_time=25.0s, mean_exec_time=25020.3ms, max_exec_time=25020.3ms, shared_blks_read=1.12M\n  select $3, t0.OBJECT_ID c2 from statecontracts.T_PARTICIPANT t0 where t0.RQUID &lt;> $1 limit $2",
+        "item_id": "1bd9e392e5d44395"
       }
     },
     {
@@ -3683,7 +3775,8 @@
         "delta": 100835.33000000007,
         "delta_pct": 7.348524422072535,
         "unit": "sec",
-        "extra": ""
+        "extra": "",
+        "item_id": ""
       }
     },
     {
@@ -3699,7 +3792,8 @@
         "delta": -237.41000000000008,
         "delta_pct": -29.08723352119579,
         "unit": "sec",
-        "extra": ""
+        "extra": "",
+        "item_id": ""
       }
     },
     {
@@ -3715,7 +3809,8 @@
         "delta": -100374.07000000007,
         "delta_pct": -18.445981112279732,
         "unit": "sec",
-        "extra": ""
+        "extra": "",
+        "item_id": ""
       }
     },
     {
@@ -3731,7 +3826,8 @@
         "delta": 100835.35999999987,
         "delta_pct": 7.348683041409174,
         "unit": "sec",
-        "extra": ""
+        "extra": "",
+        "item_id": ""
       }
     },
     {
@@ -3747,7 +3843,8 @@
         "delta": -10.21,
         "delta_pct": -26.152663934426233,
         "unit": "sec",
-        "extra": ""
+        "extra": "",
+        "item_id": ""
       }
     },
     {
@@ -3763,7 +3860,8 @@
         "delta": 26014.0,
         "delta_pct": 26.883687283625278,
         "unit": "count",
-        "extra": ""
+        "extra": "",
+        "item_id": ""
       }
     },
     {
@@ -3779,7 +3877,8 @@
         "delta": 4.780000000000001,
         "delta_pct": 19.924968736973746,
         "unit": "sec",
-        "extra": ""
+        "extra": "",
+        "item_id": ""
       }
     },
     {
@@ -3795,7 +3894,8 @@
         "delta": 0.16,
         "delta_pct": 1600.0,
         "unit": "sec",
-        "extra": ""
+        "extra": "",
+        "item_id": ""
       }
     },
     {
@@ -3811,7 +3911,8 @@
         "delta": -15.750000000000028,
         "delta_pct": -6.046761623219575,
         "unit": "sec",
-        "extra": ""
+        "extra": "",
+        "item_id": ""
       }
     },
     {
@@ -3827,7 +3928,20 @@
         "delta": -10.370000000000001,
         "delta_pct": -26.56930566231104,
         "unit": "sec",
-        "extra": ""
+        "extra": "",
+        "item_id": ""
+      }
+    },
+    {
+      "id": "settings.differ.shared_buffers",
+      "category": "settings",
+      "severity": "warning",
+      "message": "shared_buffers",
+      "details": {
+        "status": "DIFFER",
+        "value_a": "504320",
+        "value_b": "537600",
+        "issue_level": "critical"
       }
     },
     {
@@ -3843,15 +3957,27 @@
       }
     },
     {
-      "id": "settings.differ.shared_buffers",
+      "id": "settings.differ.pg_conf_load_time",
       "category": "settings",
-      "severity": "warning",
-      "message": "shared_buffers",
+      "severity": "info",
+      "message": "pg_conf_load_time",
       "details": {
         "status": "DIFFER",
-        "value_a": "504320",
-        "value_b": "537600",
-        "issue_level": "critical"
+        "value_a": "2026-08-10 12:11:58.339478+03",
+        "value_b": "2026-08-12 13:51:51.80184+03",
+        "issue_level": "informational"
+      }
+    },
+    {
+      "id": "settings.differ.pg_postmaster_start_time",
+      "category": "settings",
+      "severity": "info",
+      "message": "pg_postmaster_start_time",
+      "details": {
+        "status": "DIFFER",
+        "value_a": "2026-08-10 12:10:53.521971+03",
+        "value_b": "2026-08-12 13:50:49.898345+03",
+        "issue_level": "informational"
       }
     },
     {
@@ -3900,30 +4026,6 @@
         "value_a": "976",
         "value_b": "1024",
         "issue_level": "critical"
-      }
-    },
-    {
-      "id": "settings.differ.pg_conf_load_time",
-      "category": "settings",
-      "severity": "info",
-      "message": "pg_conf_load_time",
-      "details": {
-        "status": "DIFFER",
-        "value_a": "2026-08-10 12:11:58.339478+03",
-        "value_b": "2026-08-12 13:51:51.80184+03",
-        "issue_level": "informational"
-      }
-    },
-    {
-      "id": "settings.differ.pg_postmaster_start_time",
-      "category": "settings",
-      "severity": "info",
-      "message": "pg_postmaster_start_time",
-      "details": {
-        "status": "DIFFER",
-        "value_a": "2026-08-10 12:10:53.521971+03",
-        "value_b": "2026-08-12 13:50:49.898345+03",
-        "issue_level": "informational"
       }
     }
   ],

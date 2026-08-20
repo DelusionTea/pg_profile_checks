@@ -14,10 +14,19 @@ from pgprofile_compare import (
     format_value_cell,
     interval_diff_hours,
 )
-from pgprofile_classify import SETTINGS_INFORMATIONAL, split_settings_rows
+from pgprofile_classify import (
+    SETTINGS_INFORMATIONAL,
+    split_settings_rows,
+    tunable_changed_names,
+)
 from pgprofile_health import CATEGORY_LABELS, CHECKERS
 from pgprofile_nt_prod import NtProdValidation
-from pgprofile_stable_prod import StableFinding, StableProdAnalysis, TuningRecommendation
+from pgprofile_stable_prod import (
+    GucTuningItem,
+    StableFinding,
+    StableProdAnalysis,
+    TuningRecommendation,
+)
 from pgprofile_symptoms import CauseStatus, SymptomInvestigation
 
 CONFLUENCE_PROMPT = Path(__file__).resolve().parent / "prompts" / "analyst_confluence.md"
@@ -81,6 +90,43 @@ WIKI_CATEGORY_LABELS = {
     "locks": "Блокировки",
 }
 
+# Actions from knowledge YAML mix "look at this" with "change this". A plan has to
+# separate them: verification comes before a change on PROD.
+_PLAN_VERIFY_PREFIXES = (
+    "проверить",
+    "проверьте",
+    "оценить",
+    "оцените",
+    "сопоставить",
+    "сравнить",
+    "сравните",
+    "найти",
+    "измерить",
+    "посмотреть",
+    "убедиться",
+    "снять",
+    "собрать",
+    "определить",
+    "проанализировать",
+    "отследить",
+    "мониторить",
+    "explain",
+)
+
+_PLAN_SAFETY_TEXT = {
+    "safe": "SAFE — применяется reload",
+    "cautious": "CAUTIOUS — сначала НТ и мониторинг",
+    "risky": "RISKY — может ухудшить нагрузку",
+    "restart_required": "RESTART — нужно плановое окно",
+}
+
+_PLAN_SAFETY_TAG = {
+    "safe": "SAFE",
+    "cautious": "CAUTIOUS",
+    "risky": "RISKY",
+    "restart_required": "RESTART",
+}
+
 _ACTION_GUC_KEYS = (
     "idle_in_transaction_session_timeout",
     "max_wal_size",
@@ -94,16 +140,6 @@ _ACTION_GUC_KEYS = (
     "max_connections",
     "work_mem",
     "effective_cache_size",
-)
-
-_DERIVED_GUC = frozenset(
-    {
-        "shared_memory_size",
-        "shared_memory_size_in_huge_pages",
-        "commit_timestamp_buffers",
-        "subtransaction_buffers",
-        "transaction_buffers",
-    }
 )
 
 _METRIC_RU = {
@@ -361,10 +397,16 @@ def _is_health_finding_id(fid: str) -> bool:
 
 def _action_dedupe_key(text: str) -> str:
     low = text.lower()
-    if "pooling" in low or "connection pool" in low or "pgbouncer" in low:
-        return "pooling"
     if "pg_stat_activity" in low:
         return "pg_stat_activity"
+    if "commit" in low and ("application" in low or "rollback" in low):
+        return "app_commit"
+    if "application" in low and ("pool" in low or "pooling" in low):
+        return "app_commit"
+    if "pooling" in low or "connection pool" in low or "pgbouncer" in low:
+        return "pooling"
+    if "explain" in low:
+        return "explain"
     for guc in _ACTION_GUC_KEYS:
         if guc in text and low.startswith(
             ("установить", "увеличить", "рассмотреть", "поднять", "проверить")
@@ -374,33 +416,88 @@ def _action_dedupe_key(text: str) -> str:
     return base.casefold()
 
 
-def _collect_actions_from_advisor(reports: list[AdvisorReport], *, limit: int = 8) -> list[str]:
-    seen_text: set[str] = set()
-    ranked: list[tuple[int, str]] = []
+def _is_metric_pointer(text: str) -> bool:
+    """Playbook leftover: «wal_stats: …» or «(опровергнуть …)» — not a user action."""
+    stripped = str(text).strip()
+    low = stripped.lower()
+    if low.startswith(("(подтвердить", "(опровергнуть", "опровергнуть")):
+        return True
+    head = stripped.split(":", 1)[0].strip()
+    return bool(head) and " " not in head and "." in head
+
+
+def _severity_ru(severity: str) -> str:
+    sev = (severity or "warning").lower()
+    if sev in ("critical", "high"):
+        return "критично"
+    if sev in ("warning", "medium"):
+        return "важно"
+    return "к сведению"
+
+
+def _health_now_actions(reports: list[AdvisorReport], *, limit: int = 8) -> list[str]:
+    """One line per finding: область (критичность) → что сделать.
+
+    A flat dump of playbook verbs does not say *which* problem the action belongs to.
+    """
+    ranked: list[tuple[int, str, str, str, str]] = []
+    seen_fid: set[str] = set()
     for report in reports:
         for item in report.advised_findings:
-            fid = str((item.finding or {}).get("id") or "")
-            if not _is_health_finding_id(fid):
+            finding = item.finding or {}
+            fid = str(finding.get("id") or "")
+            if not _is_health_finding_id(fid) or fid in seen_fid:
                 continue
-            sev = str((item.finding or {}).get("severity") or "warning").lower()
-            rank = _SEVERITY_RANK.get(sev, 9)
-            for action in (item.advice or {}).get("actions") or []:
-                text = str(action).strip()
-                if text and text not in seen_text:
-                    seen_text.add(text)
-                    ranked.append((rank, text))
-    ranked.sort(key=lambda x: x[0])
+            message = str(finding.get("message") or "")
+            if _metric_is_noise(fid, message):
+                continue
+            seen_fid.add(fid)
+            sev = str(finding.get("severity") or "warning").lower()
+            cat = WIKI_CATEGORY_LABELS.get(
+                _finding_category(fid), _finding_category(fid)
+            )
+            actions = [str(a).strip() for a in (item.advice or {}).get("actions") or [] if str(a).strip()]
+            fix = [
+                a
+                for a in actions
+                if not _is_verify_action(a)
+                and not _is_caveat_action(a)
+                and not _is_metric_pointer(a)
+            ]
+            ru_fix = [a for a in fix if not re.match(r"^[A-Za-z]", a)]
+            best = next(iter(ru_fix or fix or actions), None)
+            if not best:
+                continue
+            ranked.append((_SEVERITY_RANK.get(sev, 9), fid, cat, sev, best))
+    ranked.sort(key=lambda row: (row[0], row[1]))
     kept: list[str] = []
     seen_key: set[str] = set()
-    for _, text in ranked:
-        key = _action_dedupe_key(text)
+    for _rank, fid, cat, sev, action in ranked:
+        key = _action_dedupe_key(action)
         if key in seen_key:
             continue
         seen_key.add(key)
-        kept.append(text)
+        short = fid.split(".", 1)[-1]
+        kept.append(f"{cat}: {short} ({_severity_ru(sev)}) → {action}")
         if len(kept) >= limit:
             break
     return kept
+
+
+def _collect_actions_from_advisor(reports: list[AdvisorReport], *, limit: int = 8) -> list[str]:
+    return _health_now_actions(reports, limit=limit)
+
+
+def _plural_ru(count: int, one: str, few: str, many: str) -> str:
+    tail_100 = abs(int(count)) % 100
+    tail_10 = tail_100 % 10
+    if 11 <= tail_100 <= 14:
+        return many
+    if tail_10 == 1:
+        return one
+    if 2 <= tail_10 <= 4:
+        return few
+    return many
 
 
 def _reports_have_compare(reports: list[AdvisorReport]) -> bool:
@@ -469,9 +566,8 @@ def _collect_guc_changes(reports: list[AdvisorReport], *, limit: int = 8) -> tup
             a = _fmt_compact(details.get("value_a"))
             b = _fmt_compact(details.get("value_b"))
             rows.append((name, a, b))
-    names = {name for name, _, _ in rows}
-    if "shared_buffers" in names:
-        rows = [row for row in rows if row[0] not in _DERIVED_GUC]
+    tunable = set(tunable_changed_names([name for name, _, _ in rows]))
+    rows = [row for row in rows if row[0] in tunable]
     bullets: list[str] = []
     extra = 0
     for name, a, b in rows:
@@ -528,13 +624,59 @@ def _collect_metric_changes(
 
 
 def _top_health_headline(finding_rows: list[tuple[str, str, str, str]]) -> str:
+    """Russian area names, worst first — not a raw English metric line."""
+    seen: set[str] = set()
+    parts: list[str] = []
     ordered = sorted(
         finding_rows,
         key=lambda r: (_SEVERITY_RANK.get(str(r[0]).lower(), 9), str(r[1])),
     )
-    if not ordered:
-        return ""
-    return str(ordered[0][2] or "").strip()[:160]
+    for severity, fid, message, _reports in ordered:
+        if _metric_is_noise(fid, message):
+            continue
+        cat = WIKI_CATEGORY_LABELS.get(_finding_category(fid), _finding_category(fid))
+        if cat in seen:
+            continue
+        seen.add(cat)
+        parts.append(f"{cat} ({_severity_ru(severity)})")
+        if len(parts) >= 3:
+            break
+    return "; ".join(parts)
+
+
+def _collapse_finding_rows(
+    rows: list[tuple[str, str, str, str]],
+    *,
+    drop_noise: bool = True,
+) -> tuple[list[tuple[str, str, str, str]], int]:
+    """One row per finding id: N cases + one example. Profiler tables are noise."""
+    grouped: dict[str, list[Any]] = {}
+    order: list[str] = []
+    noise = 0
+    for severity, fid, message, reports in rows:
+        if drop_noise and _metric_is_noise(fid, message):
+            noise += 1
+            continue
+        if fid not in grouped:
+            order.append(fid)
+            grouped[fid] = [severity, fid, message, reports, 1]
+            continue
+        item = grouped[fid]
+        item[4] += 1
+        if _SEVERITY_RANK.get(str(severity).lower(), 9) < _SEVERITY_RANK.get(
+            str(item[0]).lower(), 9
+        ):
+            item[0] = severity
+            item[2] = message
+        if reports and reports not in str(item[3]):
+            item[3] = f"{item[3]}, {reports}" if item[3] not in ("", "—") else reports
+    out: list[tuple[str, str, str, str]] = []
+    for fid in order:
+        severity, _fid, message, reports, count = grouped[fid]
+        if count > 1:
+            message = f"{count} случаев, пример: {message}"
+        out.append((str(severity), str(fid), str(message), str(reports)))
+    return out, noise
 
 
 def _health_ok_panel(
@@ -576,9 +718,11 @@ def _health_ok_panel(
     if compare:
         bits = []
         if guc_n:
-            bits.append(f"изменились *{guc_n}* настроек")
+            bits.append(
+                f"изменилось настраиваемых GUC: *{guc_n}*"
+            )
         if metric_n:
-            bits.append(f"*{metric_n}* метрик сдвинулись сильнее порога")
+            bits.append(f"метрик сдвинулось сильнее порога: *{metric_n}*")
         if bits:
             body.append("Между прогонами " + "; ".join(bits) + ".")
     if headline:
@@ -957,7 +1101,8 @@ def build_confluence_stub(
                 )
             )
 
-    checklist = _checklist_from_health_findings(finding_rows)
+    collapsed, noise_n = _collapse_finding_rows(finding_rows)
+    checklist = _checklist_from_health_findings(collapsed)
     fail_n = sum(1 for row in checklist if row[1] == "FAIL")
     suspect_n = sum(1 for row in checklist if row[1] == "SUSPECT")
     pass_n = sum(1 for row in checklist if row[1] == "PASS")
@@ -966,13 +1111,18 @@ def build_confluence_stub(
     metric_bullets, metric_rows, metric_extra = _collect_metric_changes(reports)
     guc_n = len(guc_bullets) + guc_extra
     metric_n = len(metric_bullets) + metric_extra
-    headline = _top_health_headline(finding_rows)
+    headline = _top_health_headline(collapsed)
+    high_visible = sum(
+        1
+        for sev, _fid, _msg, _rep in collapsed
+        if str(sev).lower() in ("critical", "high")
+    )
     verdict_macro, verdict_title, verdict_body = _health_ok_panel(
         fail_n=fail_n,
         suspect_n=suspect_n,
         pass_n=pass_n,
-        high=high,
-        total=len(finding_rows) or total,
+        high=high_visible or high,
+        total=len(collapsed) or total,
         compare=compare,
         guc_n=guc_n,
         metric_n=metric_n,
@@ -995,10 +1145,16 @@ def build_confluence_stub(
     lines.extend(_wiki_toc())
 
     findings_body = _wiki_findings_summary_table(
-        finding_rows, heading="Сводка находок", group_by_category=True
+        collapsed, heading="Сводка находок", group_by_category=True
     )
     if findings_body and findings_body[0].startswith("h2."):
         findings_body = findings_body[2:]
+    if noise_n:
+        findings_body.append(
+            f"_Служебные таблицы pgse_profile / pg_catalog: {noise_n} "
+            "находок, в вердикт и план не входят._"
+        )
+        findings_body.append("")
     lines.extend(_wiki_expand("Сводка находок по областям", findings_body))
     if metric_rows:
         metric_table = [
@@ -1117,6 +1273,23 @@ def _nt_prod_metric_wiki_table(
     return lines
 
 
+def _nt_prod_now_actions(validation: NtProdValidation) -> list[str]:
+    critical, _informational = split_settings_rows(validation.settings.rows)
+    if not validation.settings.valid:
+        actions = [
+            f"Выровнять {row.name}: НТ={row.nt_value or '—'} → как на ПРОМ ({row.prod_value or '—'})"
+            for row in critical[:6]
+        ]
+        actions.append("Повторить прогон и сравнение метрик после выравнивания GUC")
+        return actions
+    if validation.warning_count:
+        return [
+            f"GUC совпадают. Разберите предупреждения по метрикам "
+            f"({validation.warning_count}) — это производительность, не объём нагрузки."
+        ]
+    return ["GUC совпадают, предупреждений по метрикам нет."]
+
+
 def build_nt_prod_confluence_stub(
     validation: NtProdValidation,
     *,
@@ -1138,8 +1311,12 @@ def build_nt_prod_confluence_stub(
         lines.extend(
             [
                 "{warning:title=ПРОГОН НЕВАЛИДЕН}",
-                f"Defined settings GUC расходятся: *{s.critical_count}* критичных отличий.",
-                "Сравнение метрик *не следует* использовать до выравнивания GUC.",
+                f"Расходятся настраиваемые GUC: *{s.critical_count}* "
+                f"{_plural_ru(s.critical_count, 'отличие', 'отличия', 'отличий')}. "
+                "Идентичность стенда и runtime-метаданные сюда не входят — они ниже, "
+                "в справочном разделе.",
+                "Выровняйте эти параметры и повторите прогон: до этого сравнение метрик "
+                "*не следует* использовать.",
                 "{warning}",
                 "",
             ]
@@ -1165,6 +1342,8 @@ def build_nt_prod_confluence_stub(
             ]
         )
 
+    lines.extend(_wiki_actions_section(_nt_prod_now_actions(validation)))
+
     lines.extend(
         [
             "h2. Параметры сравнения",
@@ -1177,8 +1356,8 @@ def build_nt_prod_confluence_stub(
             f"|ПРОМ интервал|{run_prod.ctx.interval_hours:.1f} ч|",
             f"|Порог расхождения|>= {validation.min_change_pct:g}%|",
             f"|GUC валидность|{'OK' if s.valid else 'НЕВАЛИДНО'}|",
-            f"|Справочно: объём WAL/операций|{validation.info_count}|",
-            f"|Предупреждения производительности|{validation.warning_count}|",
+            f"|Метрик в справочных таблицах (объём нагрузки)|{validation.info_count}|",
+            f"|Метрик с предупреждением (производительность)|{validation.warning_count}|",
             "",
         ]
     )
@@ -1214,6 +1393,8 @@ def build_nt_prod_confluence_stub(
             lines.append(f"|{_wiki_escape(row.name)}|{nt_v}|{prod_v}|{status}|")
         lines.append("")
 
+    extra: list[str] = []
+
     grouped_info: dict[str, list[Any]] = {}
     for diff in validation.metric_diffs_info:
         grouped_info.setdefault(diff.section, []).append(diff)
@@ -1237,9 +1418,9 @@ def build_nt_prod_confluence_stub(
             wal_first = [d for d in items if d.key in WAL_HIGHLIGHT]
             wal_rest = [d for d in items if d.key not in WAL_HIGHLIGHT]
             items = wal_first + wal_rest
-        lines.append(f"h2. {heading}")
-        lines.append("")
-        lines.extend(_nt_prod_metric_wiki_table(items, col_nt, col_prod, show_per_hour=show_ph))
+        extra.append(f"h2. {heading}")
+        extra.append("")
+        extra.extend(_nt_prod_metric_wiki_table(items, col_nt, col_prod, show_per_hour=show_ph))
 
     warn_priority = [
         ("wal", "WAL — предупреждения"),
@@ -1252,45 +1433,63 @@ def build_nt_prod_confluence_stub(
         items = grouped_warn.get(section, [])
         if not items:
             continue
-        lines.append(f"h2. {heading}")
-        lines.append("")
-        lines.extend(_nt_prod_metric_wiki_table(items, col_nt, col_prod, show_per_hour=show_ph))
+        extra.append(f"h2. {heading}")
+        extra.append("")
+        extra.extend(_nt_prod_metric_wiki_table(items, col_nt, col_prod, show_per_hour=show_ph))
+
+    def _sql_label(group: Any) -> str:
+        preview = str(getattr(group, "preview", "") or "").strip()
+        base = str(getattr(group, "label", "") or "запрос")
+        if preview:
+            return f"{base}: {preview[:90]}"
+        return base
 
     if validation.query_groups_info and "queries" in validation.sections:
-        lines.extend(["h2. Справочно: SQL — объём и calls", ""])
-        lines.append(f"||Запрос||Параметр||{col_nt}||{col_prod}||Delta||")
+        extra.extend(["h2. Справочно: SQL — объём и calls", ""])
+        extra.append(f"||Запрос||Параметр||{col_nt}||{col_prod}||Delta||")
         row_count = 0
         for group in validation.query_groups_info[:12]:
-            label = _wiki_escape(group.label)
+            label = _wiki_escape(_sql_label(group))
             for diff in group.fields[:4]:
                 if row_count >= 30:
                     break
                 nt_v = _wiki_escape(format_value_cell(diff, "a", show_per_hour=show_ph))
                 prod_v = _wiki_escape(format_value_cell(diff, "b", show_per_hour=show_ph))
                 delta = _wiki_escape(format_delta(diff))
-                lines.append(
+                extra.append(
                     f"|{label}|{_wiki_escape(diff.key)}|{nt_v}|{prod_v}|{delta}|"
                 )
                 row_count += 1
-        lines.append("")
+        extra.append("")
 
     if validation.query_groups_warning and "queries" in validation.sections:
-        lines.extend(["h2. SQL — производительность (mean/max time)", ""])
-        lines.append(f"||Запрос||Параметр||{col_nt}||{col_prod}||Delta||")
+        extra.extend(["h2. SQL — производительность (mean/max time)", ""])
+        extra.append(f"||Запрос||Параметр||{col_nt}||{col_prod}||Delta||")
         row_count = 0
         for group in validation.query_groups_warning[:12]:
-            label = _wiki_escape(group.label)
+            label = _wiki_escape(_sql_label(group))
             for diff in group.fields[:4]:
                 if row_count >= 20:
                     break
                 nt_v = _wiki_escape(format_value_cell(diff, "a", show_per_hour=show_ph))
                 prod_v = _wiki_escape(format_value_cell(diff, "b", show_per_hour=show_ph))
                 delta = _wiki_escape(format_delta(diff))
-                lines.append(
+                extra.append(
                     f"|{label}|{_wiki_escape(diff.key)}|{nt_v}|{prod_v}|{delta}|"
                 )
                 row_count += 1
-        lines.append("")
+        extra.append("")
+
+    if extra:
+        if not s.valid:
+            lines.extend(
+                _wiki_expand(
+                    "Справочные метрики (не интерпретировать до выравнивания GUC)",
+                    extra,
+                )
+            )
+        else:
+            lines.extend(extra)
 
     lines.extend(
         [
@@ -1489,6 +1688,256 @@ def _guc_details_table(recommendations: list[TuningRecommendation]) -> list[str]
     return lines
 
 
+def _significant_words(text: str) -> set[str]:
+    return {w for w in re.split(r"\W+", str(text).lower(), flags=re.UNICODE) if len(w) > 2}
+
+
+def _dedup_actions(items: list[str], *, seen: list[str] | None = None) -> list[str]:
+    """Drop actions that only repeat a longer, more specific one.
+
+    Two knowledge files describe the same finding (`prod_tuning.yaml` operational
+    steps and `recommendations.yaml` actions), so «Установить X» and «Установить X
+    (например 60s–300s)» both arrive. Keep the specific one.
+    """
+    pool = [str(item).strip() for item in items if str(item).strip()]
+    by_key: dict[str, str] = {}
+    key_order: list[str] = []
+    for text in pool:
+        key = _action_dedupe_key(text)
+        if key not in by_key:
+            key_order.append(key)
+            by_key[key] = text
+        elif len(text) > len(by_key[key]):
+            by_key[key] = text
+    pool = [by_key[key] for key in key_order]
+    known = [str(item).strip() for item in (seen or [])]
+    known_keys = {_action_dedupe_key(item) for item in known}
+    kept: list[str] = []
+    kept_keys: set[str] = set()
+    for index, text in enumerate(pool):
+        words = _significant_words(text)
+        if not words:
+            continue
+        key = _action_dedupe_key(text)
+        if key in known_keys or key in kept_keys:
+            continue
+        if any(words <= _significant_words(other) for other in known):
+            continue
+        redundant = False
+        for other_index, other in enumerate(pool):
+            if other_index == index:
+                continue
+            other_words = _significant_words(other)
+            if words <= other_words and (len(other_words) > len(words) or other_index < index):
+                redundant = True
+                break
+        if not redundant:
+            kept.append(text)
+            kept_keys.add(key)
+    return kept
+
+
+def _is_verify_action(text: str) -> bool:
+    lowered = str(text).strip().lower()
+    return lowered.startswith(_PLAN_VERIFY_PREFIXES) or "explain" in lowered
+
+
+def _is_caveat_action(text: str) -> bool:
+    """«Не менять GUC без анализа планов» is a warning, not a change."""
+    return str(text).strip().lower().startswith(("не ", "нельзя", "без "))
+
+
+def _guc_change_line(item: GucTuningItem) -> str:
+    safety = _PLAN_SAFETY_TEXT.get(item.change_safety, item.change_safety)
+    impact = str(item.change_impact or "").upper()
+    note = f"{safety}; влияние {impact}" if impact else safety
+    head = f"{item.guc}: {item.direction}"
+    current = ", ".join(f"{label}={value}" for label, value in (item.current_values or {}).items())
+    if current:
+        head += f" — сейчас {current}"
+    return f"{head} ({note})"
+
+
+def _guc_direction_conflicts(
+    recommendations: list[TuningRecommendation],
+) -> dict[str, list[tuple[str, str]]]:
+    """GUC, который разные проблемы тянут в противоположные стороны.
+
+    Без этого план предлагает и увеличить, и уменьшить один параметр, а рядом
+    просит менять по одному пункту за раз.
+    """
+    by_guc: dict[str, list[tuple[str, str]]] = {}
+    for rec in recommendations:
+        for item in rec.guc_items or []:
+            by_guc.setdefault(item.guc, []).append((rec.title, item.direction))
+    conflicts: dict[str, list[tuple[str, str]]] = {}
+    for guc, entries in by_guc.items():
+        directions = {direction for _title, direction in entries}
+        has_up = any("increase" in d for d in directions)
+        has_down = any("decrease" in d for d in directions)
+        if has_up and has_down:
+            conflicts[guc] = entries
+    return conflicts
+
+
+def _stable_prod_action_plan_wiki(
+    analysis: StableProdAnalysis,
+    *,
+    limit: int = 6,
+) -> list[str]:
+    """Per-problem plan: confirm the problem, change something, verify the effect.
+
+    A flat list of actions is not a plan: the loudest problem eats the whole
+    budget and nothing says how to check the change helped.
+    """
+    ordered = _plan_priority(analysis)
+    if not ordered:
+        return []
+
+    lines = [
+        "h2. План действий: подтвердить → изменить → убедиться",
+        "",
+        "{info}Шаги идут от самой критичной устойчивой проблемы. "
+        "Меняйте по одному пункту за раз, иначе следующий отчёт нельзя будет "
+        "приписать конкретному изменению.{info}",
+        "",
+    ]
+
+    conflicts = _guc_direction_conflicts(ordered[:limit])
+    if conflicts:
+        lines.append("{warning:title=Противоречивые рекомендации по одному GUC}")
+        for guc, entries in sorted(conflicts.items()):
+            pairs = "; ".join(
+                f"{_wiki_escape(title)} → {_wiki_escape(direction)}" for title, direction in entries
+            )
+            lines.append(
+                f"*{_wiki_escape(guc)}*: {pairs}. "
+                "Разные проблемы тянут параметр в противоположные стороны — "
+                "выберите одну проблему и меняйте под неё, иначе результат прогона нечитаем."
+            )
+        lines.append("{warning}")
+        lines.append("")
+
+    used: list[str] = []
+    for index, rec in enumerate(ordered[:limit], 1):
+        severity = str(rec.problem_severity).upper()
+        stability = (
+            f"{rec.occurrence_count}/{rec.total_reports} ({rec.stability_ratio:.0%})"
+        )
+        lines.append(
+            f"h3. {index}. {_wiki_escape(rec.title)} — {severity}, стабильность {stability}"
+        )
+        lines.append("")
+
+        advice = rec.problem_advice or {}
+        raw_actions = [*(rec.operational or []), *(advice.get("actions") or [])]
+        actions = _dedup_actions([str(a) for a in raw_actions], seen=used)
+        used.extend(actions)
+        verify = [a for a in actions if _is_verify_action(a)]
+        caveats = [a for a in actions if _is_caveat_action(a)]
+        fix = [a for a in actions if not _is_verify_action(a) and not _is_caveat_action(a)]
+
+        lines.append("*Подтвердить:*")
+        if verify:
+            lines.extend(f"# {_wiki_escape(a)}" for a in verify[:3])
+        else:
+            sample = (rec.stable_finding.sample_messages or [""])[0]
+            lines.append(
+                f"# Проверить finding {_wiki_escape(rec.finding_rule_id)} в текущих отчётах"
+                + (f": {_wiki_escape(sample[:160])}" if sample else "")
+            )
+        lines.append("")
+
+        lines.append("*Изменить:*")
+        change_lines = [_guc_change_line(g) for g in (rec.guc_items or [])]
+        guc_names = [g.guc for g in (rec.guc_items or [])]
+        fix = [a for a in fix if not any(name in a for name in guc_names)]
+        change_lines.extend(fix[:3])
+        if change_lines:
+            lines.extend(f"# {_wiki_escape(a)}" for a in change_lines)
+        else:
+            lines.append("# GUC не меняем — правка на стороне приложения или схемы данных")
+        lines.append("")
+
+        if caveats:
+            lines.append("*Осторожно:* " + _wiki_escape("; ".join(caveats[:2])) + ".")
+            lines.append("")
+
+        finding_ids = rec.finding_rule_id or rec.stable_finding.rule_id
+        sample = (rec.stable_finding.sample_messages or [""])[0]
+        verify_text = (
+            "*Убедиться:* снять новый отчёт pg_profile за сравнимый интервал и проверить, "
+            f"что finding {_wiki_escape(finding_ids)} больше не воспроизводится"
+        )
+        if sample:
+            verify_text += f" (сейчас: {_wiki_escape(sample[:160])})"
+        lines.append(verify_text + ".")
+        lines.append("")
+
+    remaining = len(ordered) - min(len(ordered), limit)
+    if remaining > 0:
+        lines.append(
+            f"_Остальные проблемы ({remaining}) с рекомендациями — "
+            "в таблице «Общие проблемы» ниже._"
+        )
+        lines.append("")
+    return lines
+
+
+def _plan_priority(analysis: StableProdAnalysis) -> list[TuningRecommendation]:
+    return sorted(
+        analysis.recommendations,
+        key=lambda rec: (
+            _SEVERITY_RANK.get(str(rec.problem_severity).lower(), 9),
+            -rec.stability_ratio,
+            rec.title,
+        ),
+    )
+
+
+def _stable_prod_now_actions(analysis: StableProdAnalysis, *, limit: int = 6) -> list[str]:
+    """One action per problem, prefixed with the problem it belongs to.
+
+    Without the problem name the list reads as disconnected advice («Индексы,
+    статистика ANALYZE»); without one-per-problem the loudest finding fills it.
+    """
+    picked: list[str] = []
+    chosen_actions: list[str] = []
+    used_guc: set[str] = set()
+    for rec in _plan_priority(analysis):
+        # A ranked GUC is the most concrete step, but never lead with a risky one:
+        # for those the knowledge base asks for analysis first.
+        guc = next(
+            (
+                item
+                for item in (rec.guc_items or [])
+                if item.guc not in used_guc and item.change_safety != "risky"
+            ),
+            None,
+        )
+        best = None
+        if guc is not None:
+            tag = _PLAN_SAFETY_TAG.get(guc.change_safety, guc.change_safety)
+            best = f"{guc.guc}: {guc.direction} ({tag})"
+            used_guc.add(guc.guc)
+        else:
+            advice = rec.problem_advice or {}
+            candidates = _dedup_actions(
+                [str(a) for a in [*(rec.operational or []), *(advice.get("actions") or [])]],
+                seen=chosen_actions,
+            )
+            fix = [a for a in candidates if not _is_verify_action(a) and not _is_caveat_action(a)]
+            best = next(iter(fix or candidates), None)
+            if best:
+                chosen_actions.append(best)
+        if not best:
+            continue
+        picked.append(f"{rec.title} → {best}")
+        if len(picked) >= limit:
+            break
+    return picked
+
+
 def build_stable_prod_confluence_stub(
     analysis: StableProdAnalysis,
     *,
@@ -1498,17 +1947,7 @@ def build_stable_prod_confluence_stub(
     critical = sum(1 for r in analysis.recommendations if r.problem_severity == "critical")
     high = sum(1 for r in analysis.recommendations if r.problem_severity == "high")
 
-    actions: list[str] = []
-    for rec in analysis.recommendations:
-        for op in rec.operational or []:
-            if op not in actions:
-                actions.append(op)
-        for g in rec.guc_items or []:
-            text = f"Рассмотреть {g.guc}: {g.direction}"
-            if text not in actions:
-                actions.append(text)
-        if len(actions) >= 8:
-            break
+    actions = _stable_prod_now_actions(analysis)
 
     finding_rows = [
         (
@@ -1524,20 +1963,35 @@ def build_stable_prod_confluence_stub(
     suspect_n = sum(1 for row in checklist if row[1] == "SUSPECT")
     pass_n = sum(1 for row in checklist if row[1] == "PASS")
 
-    verdict_macro = "warning" if critical or high or fail_n else "info"
-    verdict_body = [
-        f"Чеклист (общие): FAIL *{fail_n}* · SUSPECT *{suspect_n}* · PASS *{pass_n}*.",
-        f"Общие findings: *{len(analysis.stable_findings)}*; tuning: *{len(analysis.recommendations)}* "
-        f"(critical/high: {critical}/{high}).",
-        f"Специфичные (не во всех): *{len(analysis.ephemeral_findings)}*. "
-        f"Min stability: {analysis.min_stability_ratio:.0%}.",
-    ]
+    top = _plan_priority(analysis)[:3]
+    top_line = ", ".join(
+        f"{rec.title} ({_severity_ru(rec.problem_severity)})" for rec in top
+    )
+    if critical or high or fail_n:
+        verdict_macro = "warning"
+        verdict_body = [
+            f"Нет. Общих проблем на всех отчётах: *{len(analysis.stable_findings)}* "
+            f"(критичных: *{critical}*, высокий приоритет: *{high}*).",
+        ]
+        if top_line:
+            verdict_body.append(f"Главное: {top_line}.")
+        if analysis.ephemeral_findings:
+            verdict_body.append(
+                f"Только на части отчётов: *{len(analysis.ephemeral_findings)}*."
+            )
+    else:
+        verdict_macro = "info"
+        verdict_body = [
+            "Да: устойчивых критичных проблем на всех отчётах нет.",
+            f"Чеклист: PASS *{pass_n}* · SUSPECT *{suspect_n}* · FAIL *{fail_n}*.",
+        ]
 
     lines: list[str] = [f"h1. {title}", ""]
     lines.extend(_wiki_panel(verdict_macro, "Краткий вердикт", verdict_body))
     lines.extend(_wiki_checklist_table(checklist, heading="Чеклист проверок (общие findings)"))
     lines.extend(_wiki_toc())
     lines.extend(_wiki_actions_section(actions))
+    lines.extend(_stable_prod_action_plan_wiki(analysis))
     lines.extend(_wiki_findings_summary_table(finding_rows, heading="Сводка общих findings"))
     lines.extend(_recommendations_summary_table(analysis.recommendations))
     guc_lines = _guc_details_table(analysis.recommendations)
@@ -1618,6 +2072,45 @@ def write_stable_prod_confluence_outputs(
     )
 
 
+def _symptom_now_actions(inv: SymptomInvestigation, *, limit: int = 8) -> list[str]:
+    """Confirmed/suspected causes → one fix each. Refute steps stay in the expand."""
+    ranked: list[tuple[int, str, str, str]] = []
+    for cause in inv.causes:
+        status_val = (
+            cause.status.value if isinstance(cause.status, CauseStatus) else str(cause.status)
+        )
+        if status_val == CauseStatus.CONFIRMED.value or status_val == "confirmed":
+            rank, status_ru = 0, "подтверждено"
+        elif status_val == CauseStatus.SUSPECTED.value or status_val == "suspected":
+            rank, status_ru = 1, "подозрение"
+        else:
+            continue
+        candidates = [str(a).strip() for a in (cause.confirm_actions or []) if str(a).strip()]
+        fix = [
+            a
+            for a in candidates
+            if not _is_verify_action(a)
+            and not _is_caveat_action(a)
+            and not _is_metric_pointer(a)
+        ]
+        best = next(iter(fix or [a for a in candidates if not _is_metric_pointer(a)] or candidates), None)
+        if not best:
+            continue
+        ranked.append((rank, cause.title, status_ru, best))
+    ranked.sort(key=lambda row: (row[0], row[1]))
+    kept: list[str] = []
+    seen: set[str] = set()
+    for _rank, title, status_ru, action in ranked:
+        key = _action_dedupe_key(action)
+        if key in seen:
+            continue
+        seen.add(key)
+        kept.append(f"{title} ({status_ru}) → {action}")
+        if len(kept) >= limit:
+            break
+    return kept
+
+
 def _symptom_page_title(inv: SymptomInvestigation, page_title: str | None) -> str:
     if page_title:
         return page_title
@@ -1633,36 +2126,30 @@ def build_symptom_confluence_stub(
     confirmed = sum(1 for c in inv.causes if c.status == CauseStatus.CONFIRMED)
     suspected = sum(1 for c in inv.causes if c.status == CauseStatus.SUSPECTED)
 
-    finding_rows = [
-        (
-            "critical" if c.status == CauseStatus.CONFIRMED else "warning" if c.status == CauseStatus.SUSPECTED else "info",
-            c.cause_id,
-            c.title,
-            ", ".join(c.reports_matched) if c.reports_matched else "—",
-        )
-        for c in inv.causes
-        if c.status in (CauseStatus.CONFIRMED, CauseStatus.SUSPECTED) or c.evidence
-    ]
-
     checklist = _checklist_from_symptom_causes(inv.causes)
-    fail_n = sum(1 for row in checklist if row[1] == "FAIL")
-    suspect_n = sum(1 for row in checklist if row[1] == "SUSPECT")
-    pass_n = sum(1 for row in checklist if row[1] == "PASS")
 
+    confirmed_titles = [
+        c.title for c in inv.causes if c.status == CauseStatus.CONFIRMED
+    ]
+    suspected_titles = [
+        c.title for c in inv.causes if c.status == CauseStatus.SUSPECTED
+    ]
     verdict_macro = "warning" if confirmed else ("note" if suspected else "info")
     verdict_body = [
-        f"Симптом: *{_wiki_escape(inv.symptom_title)}* (`{inv.symptom}`).",
-        f"Чеклист гипотез: FAIL *{fail_n}* · SUSPECT *{suspect_n}* · PASS *{pass_n}*.",
-        f"Confirmed / Suspected: *{confirmed}* / *{suspected}*. "
-        "FAIL=confirmed, SUSPECT=suspected, PASS=possible без evidence.",
+        f"Симптом: *{_wiki_escape(inv.symptom_title)}*.",
+        "Подтверждено: "
+        + (", ".join(_wiki_escape(t) for t in confirmed_titles) or "нет")
+        + ".",
+        "Подозрение: "
+        + (", ".join(_wiki_escape(t) for t in suspected_titles) or "нет")
+        + ".",
     ]
 
     lines: list[str] = [f"h1. {title}", ""]
     lines.extend(_wiki_panel(verdict_macro, "Краткий вердикт", verdict_body))
     lines.extend(_wiki_checklist_table(checklist, heading="Чеклист гипотез"))
     lines.extend(_wiki_toc())
-    lines.extend(_wiki_actions_section(inv.action_plan[:8], heading="Что сделать сейчас (verify)"))
-    lines.extend(_wiki_findings_summary_table(finding_rows, heading="Сводка гипотез"))
+    lines.extend(_wiki_actions_section(_symptom_now_actions(inv), heading="Что сделать сейчас"))
 
     hyp_lines = [
         "||Статус||Причина||ID||Отчёты||Evidence (кратко)||",

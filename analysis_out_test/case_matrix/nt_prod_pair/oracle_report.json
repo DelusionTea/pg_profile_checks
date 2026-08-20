@@ -1,0 +1,51 @@
+{
+  "type": "oracle_report",
+  "layer": "hybrid",
+  "layers": [
+    {
+      "name": "rule_based",
+      "verdict": "pass",
+      "skipped": true
+    },
+    {
+      "name": "statistical",
+      "verdict": "pass",
+      "skipped": true
+    },
+    {
+      "name": "llm",
+      "verdict": "pass",
+      "skipped": true
+    }
+  ],
+  "verdict": "pass",
+  "skipped": true,
+  "sources": [],
+  "counts": {
+    "pass": 3,
+    "warning": 0,
+    "fail": 0
+  },
+  "reasons": [],
+  "confidence_adjustments": [],
+  "checks": [
+    {
+      "id": "completeness.influence_present",
+      "status": "pass",
+      "message": "no influence table in this run; rule-based oracle skipped",
+      "layer": "hybrid"
+    },
+    {
+      "id": "statistical.series_present",
+      "status": "pass",
+      "message": "no series influence table; statistical oracle skipped",
+      "layer": "statistical"
+    },
+    {
+      "id": "llm.answer_present",
+      "status": "pass",
+      "message": "no LLM answer in this run; llm oracle skipped",
+      "layer": "llm"
+    }
+  ]
+}

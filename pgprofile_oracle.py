@@ -920,21 +920,22 @@ def replace_llm_layer(output_dir: Path) -> OracleReport:
     return merged
 
 
-def write_oracle_artifacts(output_dir: Path, report: OracleReport) -> Path:
-    """Persist oracle_report.json and oracle_report.md from an already-evaluated report."""
+def render_oracle_markdown(report: OracleReport) -> str:
+    """Human-readable oracle verdict.
+
+    Пропущенные проверки не выдаются за успешные: PASS означает «проверили и
+    замечаний нет», а не «проверять было нечего».
+    """
     payload = report.to_dict()
-    json_path = output_dir / "oracle_report.json"
-    json_path.write_text(
-        json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
-    )
     layer_bits = []
     for item in payload.get("layers") or []:
         name = item.get("name") or "?"
         verdict = item.get("verdict") or "?"
         skipped = " (skipped)" if item.get("skipped") else ""
         layer_bits.append(f"{name}={verdict}{skipped}")
+    headline = "НЕ ПРОВЕРЯЛОСЬ" if report.skipped else report.verdict.upper()
     lines = [
-        f"# Oracle: {report.verdict.upper()}",
+        f"# Oracle: {headline}",
         "",
         f"Слои: {', '.join(layer_bits) or report.layer}. "
         f"Источники: {', '.join(report.sources) or '—'}.",
@@ -942,7 +943,10 @@ def write_oracle_artifacts(output_dir: Path, report: OracleReport) -> Path:
     ]
     reasons = payload.get("reasons") or []
     if report.skipped:
-        lines.append("Таблица влияния не строилась — проверки направления пропущены.")
+        lines.append(
+            "Автопроверка выводов не проверяла ничего: таблица влияния не строилась. "
+            "Это не оценка состояния БД — смотрите находки и план действий."
+        )
     elif not reasons:
         lines.append("Замечаний нет.")
     else:
@@ -957,7 +961,19 @@ def write_oracle_artifacts(output_dir: Path, report: OracleReport) -> Path:
                 f" ({item.get('reason')})"
             )
     lines.append("")
-    (output_dir / "oracle_report.md").write_text("\n".join(lines), encoding="utf-8")
+    return "\n".join(lines)
+
+
+def write_oracle_artifacts(output_dir: Path, report: OracleReport) -> Path:
+    """Persist oracle_report.json and oracle_report.md from an already-evaluated report."""
+    payload = report.to_dict()
+    json_path = output_dir / "oracle_report.json"
+    json_path.write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
+    (output_dir / "oracle_report.md").write_text(
+        render_oracle_markdown(report), encoding="utf-8"
+    )
     return json_path
 
 

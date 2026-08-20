@@ -198,6 +198,8 @@ def metric_diff_to_finding(diff: MetricDiff, min_change_pct: float) -> dict[str,
         return None
 
     rule_id = f"run_compare.{diff.section}.{diff.key.replace('/', '_')}"
+    if diff.item_id:
+        rule_id = f"{rule_id}.{diff.item_id}"
     return {
         "id": rule_id,
         "category": diff.section,
@@ -212,6 +214,7 @@ def metric_diff_to_finding(diff: MetricDiff, min_change_pct: float) -> dict[str,
             "delta_pct": diff.delta_pct,
             "unit": diff.unit,
             "extra": diff.extra,
+            "item_id": diff.item_id,
         },
     }
 
@@ -290,7 +293,11 @@ def settings_diff_to_dict(
     diffs: list[Any],
 ) -> dict[str, Any]:
     from compare_settings import DiffStatus
-    from pgprofile_classify import classify_setting_name, split_settings_rows
+    from pgprofile_classify import (
+        classify_setting_name,
+        split_settings_rows,
+        tunable_changed_names,
+    )
 
     critical, informational = split_settings_rows(diffs)
     findings = []
@@ -338,6 +345,7 @@ def settings_diff_to_dict(
         "interval_hours": None,
     }
     changed_params = [row for row in diffs if row.status != DiffStatus.SAME]
+    tunable_changed = tunable_changed_names([row.name for row in changed_params])
     workload_match = build_workload_match(run_a_meta, run_b_meta)
 
     return {
@@ -361,7 +369,7 @@ def settings_diff_to_dict(
         "run_identity": build_run_identity_pair(run_a_meta, run_b_meta),
         "workload_match": workload_match,
         "confidence_meta": build_confidence_meta(
-            changed_params_count=len(changed_params),
+            changed_params_count=len(tunable_changed),
             workload_match_score=workload_match["workload_match_score"],
             isolated_change=len(changed_params) == 1,
             changed_params_threshold=10,

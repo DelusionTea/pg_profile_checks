@@ -53,6 +53,8 @@ DEFAULT_STEPS = (
     ("llm_ui", ["scripts/check_llm_ui.py"]),
     ("e2e", ["scripts/check_e2e.py"]),
     ("confluence_ux", ["scripts/check_confluence_ux.py"]),
+    ("pg_output", ["scripts/check_pg_output.py"]),
+    ("dml_etalon", ["scripts/check_dml_etalon.py"]),
     ("jvm_tree", ["scripts/check_jvm_diagnostic_tree.py"]),
     ("jvm_tree_cases", ["scripts/check_jvm_tree_cases.py"]),
     ("oracle", ["scripts/check_oracle.py"]),

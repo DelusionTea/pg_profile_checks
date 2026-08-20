@@ -33,7 +33,7 @@
   },
   "confidence_meta": {
     "mode": "pair",
-    "changed_params_count": 8,
+    "changed_params_count": 1,
     "changed_params_threshold": 10,
     "workload_match_score": 1.0,
     "isolated_change": false,

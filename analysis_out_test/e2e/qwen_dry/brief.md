@@ -518,15 +518,6 @@ Source type: `settings_diff`
 Total findings: 8
 
 ## [WARNING] PostgreSQL setting differs between environments
-- **ID:** `settings.differ.commit_timestamp_buffers`
-- **Message:** commit_timestamp_buffers
-- **Recommendation:** Параметр явно задан (Defined) в одной среде и отличается от другой.
-Убедитесь, что расхождение намеренное и соответствует политике банка.
-- **Actions:**
-  - Сверить с guc_guidance.yaml для данного параметра
-  - Документировать обоснование расхождения
-
-## [WARNING] PostgreSQL setting differs between environments
 - **ID:** `settings.differ.shared_buffers`
 - **Message:** shared_buffers
 - **Recommendation:** Параметр явно задан (Defined) в одной среде и отличается от другой.
@@ -537,6 +528,33 @@ Total findings: 8
 - **GUC note:** Основной кэш страниц. Слишком низкий shared_buffers → low cache hit.
 При shared_buffers ≳ 2GB планируйте HugePages (см. huge_pages).
 - **Typical OLTP:** ~25% RAM (policy-dependent)
+
+## [WARNING] PostgreSQL setting differs between environments
+- **ID:** `settings.differ.commit_timestamp_buffers`
+- **Message:** commit_timestamp_buffers
+- **Recommendation:** Параметр явно задан (Defined) в одной среде и отличается от другой.
+Убедитесь, что расхождение намеренное и соответствует политике банка.
+- **Actions:**
+  - Сверить с guc_guidance.yaml для данного параметра
+  - Документировать обоснование расхождения
+
+## [INFO] PostgreSQL setting differs between environments
+- **ID:** `settings.differ.pg_conf_load_time`
+- **Message:** pg_conf_load_time
+- **Recommendation:** Параметр явно задан (Defined) в одной среде и отличается от другой.
+Убедитесь, что расхождение намеренное и соответствует политике банка.
+- **Actions:**
+  - Сверить с guc_guidance.yaml для данного параметра
+  - Документировать обоснование расхождения
+
+## [INFO] PostgreSQL setting differs between environments
+- **ID:** `settings.differ.pg_postmaster_start_time`
+- **Message:** pg_postmaster_start_time
+- **Recommendation:** Параметр явно задан (Defined) в одной среде и отличается от другой.
+Убедитесь, что расхождение намеренное и соответствует политике банка.
+- **Actions:**
+  - Сверить с guc_guidance.yaml для данного параметра
+  - Документировать обоснование расхождения
 
 ## [WARNING] PostgreSQL setting differs between environments
 - **ID:** `settings.differ.shared_memory_size`
@@ -568,24 +586,6 @@ Total findings: 8
 ## [WARNING] PostgreSQL setting differs between environments
 - **ID:** `settings.differ.transaction_buffers`
 - **Message:** transaction_buffers
-- **Recommendation:** Параметр явно задан (Defined) в одной среде и отличается от другой.
-Убедитесь, что расхождение намеренное и соответствует политике банка.
-- **Actions:**
-  - Сверить с guc_guidance.yaml для данного параметра
-  - Документировать обоснование расхождения
-
-## [INFO] PostgreSQL setting differs between environments
-- **ID:** `settings.differ.pg_conf_load_time`
-- **Message:** pg_conf_load_time
-- **Recommendation:** Параметр явно задан (Defined) в одной среде и отличается от другой.
-Убедитесь, что расхождение намеренное и соответствует политике банка.
-- **Actions:**
-  - Сверить с guc_guidance.yaml для данного параметра
-  - Документировать обоснование расхождения
-
-## [INFO] PostgreSQL setting differs between environments
-- **ID:** `settings.differ.pg_postmaster_start_time`
-- **Message:** pg_postmaster_start_time
 - **Recommendation:** Параметр явно задан (Defined) в одной среде и отличается от другой.
 Убедитесь, что расхождение намеренное и соответствует политике банка.
 - **Actions:**

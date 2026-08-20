@@ -2,8 +2,8 @@
   "status": "success",
   "provider": "qwen_local",
   "model": "qwen-e2e",
-  "trace_id": "ba6eb9c2c68b4121ab8deb6583742b17",
-  "latency_ms": 6,
+  "trace_id": "e5354e8291f649de82f7926c659bc490",
+  "latency_ms": 5,
   "attempts": 1,
   "usage": {
     "prompt_tokens": 8,

@@ -2,9 +2,9 @@
   "status": "success",
   "task": "summary",
   "provider": "qwen_gateway",
-  "started_at": "2026-08-18T16:09:44+00:00",
+  "started_at": "2026-08-20T08:31:05+00:00",
   "extra_instructions": "",
-  "trace_id": "e2f54be62b164e3a830bba970622ef82",
+  "trace_id": "a6fe65b6cd884d129b5dfe2acc87c713",
   "char_count": 29825,
   "sources": [
     "brief.md",
@@ -22,8 +22,8 @@
     "unchanged": true
   },
   "model": "qwen-e2e",
-  "finished_at": "2026-08-18T16:09:44+00:00",
-  "latency_ms": 0,
+  "finished_at": "2026-08-20T08:31:05+00:00",
+  "latency_ms": 1,
   "attempts": 1,
   "request_file": "llm_request_summary.json",
   "response_file": "llm_response_summary.json",

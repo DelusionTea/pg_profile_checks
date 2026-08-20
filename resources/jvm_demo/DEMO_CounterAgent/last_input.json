@@ -12,7 +12,7 @@
         "pods_per_shoulder": 2,
         "restart_kind": "none",
         "memory_cause_closed": null,
-        "heap_growing": null,
+        "heap_growing": "no",
         "heap_growth_percent": null,
         "heap_growth_hours": null,
         "growth_of": null,
@@ -20,7 +20,7 @@
         "heap_used_before_gc_mib": null,
         "heap_used_after_gc_mib": null,
         "oldgen_returned_after_gc": null,
-        "cpu_throttled": "no",
+        "cpu_throttled": "yes",
         "cpu_pct_limits_shoulder_1": null,
         "cpu_pct_limits_shoulder_2": null,
         "user_latency_grew": "yes",
@@ -29,7 +29,7 @@
         "post_gc_floor_rising": null,
         "gc_cpu_spike_sla": null
       },
-      "updated_at": "2026-08-18T16:53:22Z"
+      "updated_at": "2026-08-20T08:31:07Z"
     }
   }
 }

@@ -2,7 +2,7 @@
   "status": "success",
   "provider": "dry_run",
   "model": "dry-run",
-  "trace_id": "ec0fefdb66014bb299465cd6e5ec2b6a",
+  "trace_id": "1b6430f91da040dc8330b41ed516c1c4",
   "latency_ms": 0,
   "attempts": 1,
   "usage": {

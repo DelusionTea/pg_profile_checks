@@ -20,6 +20,7 @@ from analyze_pgprofile import (
     run_pipeline,
 )
 from pgprofile_health import load_thresholds
+from pgprofile_parser import parse_report_period
 from pgprofile_session import AnalysisSession
 from ui.models import AnalyzeRequest, AnalyzeResult, ReportMeta
 
@@ -28,6 +29,7 @@ DEFAULT_THRESHOLD_GUIDANCE = (
 )
 
 WIKI_PRIORITY = (
+    "dml_etalon_confluence_stub.wiki",
     "multi_symptom_confluence.wiki",
     "nt_runs_confluence.wiki",
     "symptom_confluence_stub.wiki",
@@ -46,6 +48,7 @@ PROMPT_PRIORITY = (
 )
 
 BRIEF_PRIORITY = (
+    "dml_etalon_brief.md",
     "multi_symptom_brief.md",
     "nt_runs_brief.md",
     "symptom_brief.md",
@@ -289,6 +292,8 @@ def _severity_bucket(sev: str) -> str:
 
 def _build_findings_ui(output_dir: Path) -> list[dict[str, Any]]:
     """Flatten findings for UI cards (severity, id, message, advice, threshold)."""
+    if (output_dir / "dml_etalon.json").is_file():
+        return []
     cards: list[dict[str, Any]] = []
 
     def add(
@@ -360,6 +365,27 @@ def _build_findings_ui(output_dir: Path) -> list[dict[str, Any]]:
                 advice=(c.get("confirm_actions") or [""])[0],
             )
 
+    # One card per finding id. Profiler/catalog rows are noise, not product issues.
+    collapsed: list[dict[str, Any]] = []
+    by_id: dict[str, dict[str, Any]] = {}
+    for card in cards:
+        message = str(card.get("message") or "")
+        if "pgse_profile" in message or "pg_catalog" in message:
+            continue
+        fid = str(card.get("id") or "?")
+        existing = by_id.get(fid)
+        if existing is None:
+            card["_n"] = 1
+            by_id[fid] = card
+            collapsed.append(card)
+            continue
+        existing["_n"] = int(existing.get("_n") or 1) + 1
+    for card in collapsed:
+        extra = int(card.pop("_n", 1))
+        if extra > 1:
+            card["message"] = f"{extra} случаев, пример: {card.get('message') or ''}"
+    cards = collapsed
+
     # severity sort
     rank = {"critical": 0, "high": 1, "warning": 2, "medium": 3, "info": 4, "low": 5}
     cards.sort(key=lambda c: (rank.get(str(c["severity"]).lower(), 9), c["id"]))
@@ -401,6 +427,17 @@ def _build_summary(output_dir: Path) -> dict[str, Any]:
         summary["common_findings"] = sm.get("stable_count", len(data.get("stable_findings") or []))
         summary["specific_findings"] = len(data.get("ephemeral_findings") or [])
         summary["report_count"] = len(data.get("reports") or [])
+
+    dml_path = output_dir / "dml_etalon.json"
+    if dml_path.is_file():
+        data = json.loads(dml_path.read_text(encoding="utf-8"))
+        tables = data.get("tables") or []
+        summary["dml_etalon"] = {
+            "report_count": data.get("report_count", 0),
+            "single_report": bool(data.get("single_report")),
+            "table_count": len(tables),
+            "tables": tables,
+        }
 
     run_cmp_path = output_dir / "run_comparison.json"
     if run_cmp_path.is_file():
@@ -548,12 +585,16 @@ def session_from_request(req: AnalyzeRequest, upload_paths: list[Path], output_d
     if len(upload_paths) != len(req.reports):
         raise ValueError("upload paths count must match reports metadata")
 
+    # Chronological order, not upload order: labels, run-to-run deltas and the
+    # A→B direction of a pair all follow the report period. Uploads are renamed
+    # on disk, so the period is read from the report data itself.
+    periods = [parse_report_period(p) for p in upload_paths]
     ordered = sorted(
-        zip(req.reports, upload_paths),
-        key=lambda pair: (pair[0].order, pair[0].filename),
+        range(len(upload_paths)),
+        key=lambda i: periods[i].order_key(req.reports[i].filename),
     )
-    reports = [m for m, _ in ordered]
-    paths = [p for _, p in ordered]
+    reports = [req.reports[i] for i in ordered]
+    paths = [upload_paths[i] for i in ordered]
 
     nt_items = [(m, p) for m, p in zip(reports, paths) if m.env.upper() == "NT"]
     prod_items = [(m, p) for m, p in zip(reports, paths) if m.env.upper() == "PROD"]
@@ -581,6 +622,8 @@ def session_from_request(req: AnalyzeRequest, upload_paths: list[Path], output_d
         nt_label=[],
         prod_reports=None,
         prod_label=[],
+        dml_etalon_reports=None,
+        dml_etalon_label=[],
         symptoms=None,
         settings_a_id="NT",
         settings_b_id="PROD",
@@ -688,6 +731,15 @@ def session_from_request(req: AnalyzeRequest, upload_paths: list[Path], output_d
                 output_dir,
             )
         ns.report = paths[0]
+        return ns
+
+    if scenario == "dml_etalon":
+        if not paths:
+            raise ValueError("добавьте хотя бы один отчёт")
+        ns.dml_etalon_reports = paths
+        ns.dml_etalon_label = [
+            m.label or suggest_label(m.filename, m.env, i) for i, m in enumerate(reports)
+        ]
         return ns
 
     if scenario == "compare_runs":

@@ -1,8 +1,8 @@
 # NT vs PROD Validation Brief
 
 settings_guc_valid: false
-settings_critical_count: 6
-settings_informational_count: 2
+settings_critical_count: 1
+settings_informational_count: 7
 volume_ops_diffs: 60 (informational — WAL/DML volume, expected with different load)
 performance_warnings: 36 (threshold >= 5%)
 
@@ -14,16 +14,16 @@ performance_warnings: 36 (threshold >= 5%)
   interval: 2026-08-12 16:00:02+03 .. 2026-08-13 08:30:02+03 (16.5 h)
 
 ## Critical GUC differences
-- DIFFER `commit_timestamp_buffers`: NT='976' PROD='1024'
 - DIFFER `shared_buffers`: NT='504320' PROD='537600'
+
+## Informational settings (runtime metadata — not blocking)
+- DIFFER `commit_timestamp_buffers`: NT='976' PROD='1024'
+- DIFFER `pg_conf_load_time`: NT='2026-08-10 12:11:58.339478+03' PROD='2026-08-12 13:51:51.80184+03'
+- DIFFER `pg_postmaster_start_time`: NT='2026-08-10 12:10:53.521971+03' PROD='2026-08-12 13:50:49.898345+03'
 - DIFFER `shared_memory_size`: NT='4452' PROD='4724'
 - DIFFER `shared_memory_size_in_huge_pages`: NT='2226' PROD='2362'
 - DIFFER `subtransaction_buffers`: NT='976' PROD='1024'
 - DIFFER `transaction_buffers`: NT='976' PROD='1024'
-
-## Informational settings (runtime metadata — not blocking)
-- DIFFER `pg_conf_load_time`: NT='2026-08-10 12:11:58.339478+03' PROD='2026-08-12 13:51:51.80184+03'
-- DIFFER `pg_postmaster_start_time`: NT='2026-08-10 12:10:53.521971+03' PROD='2026-08-12 13:50:49.898345+03'
 
 ## Volume / operations (informational)
 - `Total.COMMIT`: NT=9.46M (573.23K/h) PROD=9.94M (602.69K/h) delta=+486.13K (+5.1%)
@@ -35,8 +35,8 @@ performance_warnings: 36 (threshold >= 5%)
 - `buffers_checkpoint`: NT=11.70M (708.98K/h) PROD=12.51M (758.12K/h) delta=+810.90K (+6.9%)
 - `checkpoints_req`: NT=39 (2.36/h) PROD=30 (1.82/h) delta=-9 (-23.1%)
 - `checkpoints_timed`: NT=7 (0.42/h) PROD=14 (0.85/h) delta=+7 (+100.0%)
-- `postgres.pg_catalog.pg_db_role_setting.seq_scan`: NT=3.00M (182.02K/h) PROD=1.82M (110.23K/h) delta=-1.18M (-39.4%)
 - `statecontracts.pg_catalog.pg_db_role_setting.seq_scan`: NT=3.00M (182.02K/h) PROD=1.82M (110.23K/h) delta=-1.18M (-39.4%)
+- `postgres.pg_catalog.pg_db_role_setting.seq_scan`: NT=3.00M (182.02K/h) PROD=1.82M (110.23K/h) delta=-1.18M (-39.4%)
 - `postgres.pg_catalog.pg_index.idx_scan`: NT=580.26K (35.17K/h) PROD=368.09K (22.31K/h) delta=-212.17K (-36.6%)
 - `statecontracts.pg_catalog.pg_database.seq_scan`: NT=241.50K (14.64K/h) PROD=42.59K (2.58K/h) delta=-198.91K (-82.4%)
 - `postgres.pg_catalog.pg_database.seq_scan`: NT=241.50K (14.64K/h) PROD=64.46K (3.91K/h) delta=-177.04K (-73.3%)

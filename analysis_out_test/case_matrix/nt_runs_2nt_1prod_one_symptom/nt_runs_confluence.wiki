@@ -8,9 +8,10 @@ h2. Краткие выводы
 |Симптомы|Высокая генерация WAL|
 |Прогонов НТ|2|
 |Всего отчетов в сравнении|3|
-|Изменено параметров|11|
+|Изменено параметров|4|
 |Связанных метрик (по выбранным проблемам)|33|
 |Улучшений / ухудшений (голоса)|3 / 5|
+|Справочно: изменились метаданные и производные|commit_timestamp_buffers, pg_conf_load_time, pg_postmaster_start_time, shared_memory_size, shared_memory_size_in_huge_pages, subtransaction_buffers, transaction_buffers|
 
 h2. Отличия настроек между прогонами
 
@@ -225,7 +226,6 @@ h3. Series summary (связанные метрики)
 |dml.statecontracts.ROLLBACK|1800|1980|+180.00 (+10.0%)|становится хуже|
 |tables.postgres.pg_catalog.pg_attribute.idx_scan|203621|225514|+21893 (+10.8%)|рост, влияние не оценивается|
 |tables.postgres.pg_catalog.pg_database.idx_scan|202750|189878|-12872 (-6.3%)|снижение, влияние не оценивается|
-|tables.postgres.pg_catalog.pg_db_role_setting.idx_scan|133148|121956|-11192 (-8.4%)|снижение, влияние не оценивается|
 |tables.postgres.pg_catalog.pg_db_role_setting.seq_scan|2859668|3003316|+143648 (+5.0%)|рост, влияние не оценивается|
 |tables.postgres.pg_catalog.pg_index.idx_scan|526897|580259|+53362 (+10.1%)|рост, влияние не оценивается|
 |tables.postgres.pgse_profile.last_stat_tables_srv4.idx_scan|205364|239736|+34372 (+16.7%)|рост, влияние не оценивается|
@@ -236,6 +236,7 @@ h3. Series summary (связанные метрики)
 |tables.postgres.pgse_profile.stmt_list.idx_scan|12354|—|-12354 (-100.0%)|снижение, влияние не оценивается|
 |tables.statecontracts.pg_catalog.pg_attribute.idx_scan|602329|568977|-33352 (-5.5%)|снижение, влияние не оценивается|
 |tables.statecontracts.pg_catalog.pg_database.idx_scan|202750|189878|-12872 (-6.3%)|снижение, влияние не оценивается|
+|tables.statecontracts.pg_catalog.pg_db_role_setting.idx_scan|133148|121956|-11192 (-8.4%)|снижение, влияние не оценивается|
 |tables.statecontracts.pg_catalog.pg_db_role_setting.seq_scan|2859668|3003316|+143648 (+5.0%)|рост, влияние не оценивается|
 |tables.statecontracts.statecontracts.t_dspc_sys_versions.seq_scan|28784|—|-28784 (-100.0%)|снижение, влияние не оценивается|
 |wal.wal_buffers_full|932205|664448|-267757 (-28.7%)|становится лучше|
@@ -255,9 +256,21 @@ h3. Series summary (связанные метрики)
 |cache.postgres.blk_read_time|18.27|23.99|+5.720 (+31.3%)|становится хуже|
 |cache.postgres.blk_write_time|0.030|0.010|-0.020 (-66.7%)|становится лучше|
 |cache.statecontracts.blk_write_time|28.42|39.03|+10.61 (+37.3%)|становится хуже|
-|queries.postgres/"sa-d00000011757"|218.20|33.47|+10.24 (+44.1%)|рост, влияние не оценивается|
-|queries.postgres/postgres|158.40|220.26|+61.86 (+39.1%)|рост, влияние не оценивается|
-|queries.statecontracts/as_admin|12703|456.84|+82.06 (+21.9%)|рост, влияние не оценивается|
+|queries.postgres/"sa-d00000011757" · hex=566f5112e6ebf965|52.40|76.74|+24.34 (+46.5%)|рост, влияние не оценивается|
+|queries.postgres/"sa-d00000011757" · hex=92a0069b4dfb89ee|23.80|34.80|+11.00 (+46.2%)|рост, влияние не оценивается|
+|queries.postgres/"sa-d00000011757" · hex=a822446855e79f13|218.20|270.75|+52.55 (+24.1%)|рост, влияние не оценивается|
+|queries.postgres/"sa-d00000011757" · hex=f026fd092077b2a3|23.23|33.47|+10.24 (+44.1%)|рост, влияние не оценивается|
+|queries.postgres/postgres · hex=b59c46b67088420d|158.40|220.26|+61.86 (+39.1%)|рост, влияние не оценивается|
+|queries.statecontracts/as_admin · hex=1c1fd865d42f5cf|357.93|474.58|+116.65 (+32.6%)|рост, влияние не оценивается|
+|queries.statecontracts/as_admin · hex=31df6528995548cf|12703|15378|+2676 (+21.1%)|рост, влияние не оценивается|
+|queries.statecontracts/as_admin · hex=37b83dead5b5b9e9|4313|5698|+1385 (+32.1%)|рост, влияние не оценивается|
+|queries.statecontracts/as_admin · hex=3f7ffea106f6e78e|2357|2888|+531.28 (+22.5%)|рост, влияние не оценивается|
+|queries.statecontracts/as_admin · hex=5925970c215e2e8a|985.87|1373|+387.27 (+39.3%)|рост, влияние не оценивается|
+|queries.statecontracts/as_admin · hex=5c924a575ee834c2|374.78|456.84|+82.06 (+21.9%)|рост, влияние не оценивается|
+|queries.statecontracts/as_admin · hex=7e5e1a652457d8db|4558|5431|+872.41 (+19.1%)|рост, влияние не оценивается|
+|queries.statecontracts/as_admin · hex=d1cf715414ffc2ac|616.85|723.35|+106.50 (+17.3%)|рост, влияние не оценивается|
+|queries.statecontracts/as_admin · hex=d5e326dff67d955a|17812|20024|+2213 (+12.4%)|рост, влияние не оценивается|
+|queries.statecontracts/as_admin · hex=e2a55c68949e5d1e|3439|3950|+511.45 (+14.9%)|рост, влияние не оценивается|
 |sessions.Total.active_time|89634|110381|+20746 (+23.1%)|становится хуже|
 |sessions.Total.session_time|7842135|8249493|+407358 (+5.2%)|становится хуже|
 |sessions.Total.sessions|9005|9716|+711.00 (+7.9%)|рост, влияние не оценивается|
@@ -301,8 +314,8 @@ h4. nt1 → nt2
 |dml.postgres.FETCH|130237462|151800568|+21563106 (+16.6%)|
 |dml.statecontracts.ROLLBACK|1800|1980|+180.00 (+10.0%)|
 |dml.statecontracts.FETCH|6153127|5835623|-317504 (-5.2%)|
-|tables.postgres.pg_catalog.pg_db_role_setting.seq_scan|2859668|3003316|+143648 (+5.0%)|
 |tables.statecontracts.pg_catalog.pg_db_role_setting.seq_scan|2859668|3003316|+143648 (+5.0%)|
+|tables.postgres.pg_catalog.pg_db_role_setting.seq_scan|2859668|3003316|+143648 (+5.0%)|
 |tables.postgres.pgse_profile.last_stat_tables_srv5.idx_scan|429596|483202|+53606 (+12.5%)|
 |tables.postgres.pg_catalog.pg_index.idx_scan|526897|580259|+53362 (+10.1%)|
 |tables.postgres.pgse_profile.last_stat_tables_srv4.idx_scan|205364|239736|+34372 (+16.7%)|
@@ -315,7 +328,7 @@ h4. nt1 → nt2
 |tables.postgres.pgse_profile.sample_stat_tablespaces.idx_scan|—|12678|+12678|
 |tables.postgres.pgse_profile.stmt_list.idx_scan|12354|—|-12354 (-100.0%)|
 |tables.postgres.pgse_profile.sample_stat_tables.n_tup_del|—|11474|+11474|
-|tables.postgres.pg_catalog.pg_db_role_setting.idx_scan|133148|121956|-11192 (-8.4%)|
+|tables.statecontracts.pg_catalog.pg_db_role_setting.idx_scan|133148|121956|-11192 (-8.4%)|
 |queries.statecontracts/as_admin|12703|15378|+2676 (+21.1%)|
 |queries.statecontracts/as_admin|17812|20024|+2213 (+12.4%)|
 |queries.statecontracts/as_admin|4313|5698|+1385 (+32.1%)|
@@ -352,7 +365,7 @@ h2. Риски и блокеры
 |Деградация целевых метрик >=20%|BLOCKER|Найдено 2 критичных деградаций|
 |Рост критичных симптомов после изменений|OK|improved_pairs=1, degraded_pairs=0|
 |Низкая сопоставимость прогонов|OK|workload_match_score=0.94 (уровень high, минимум по парам; порог 0.60)|
-|Слишком много одновременных изменений|BLOCKER|changed_params_count=11|
+|Слишком много одновременных изменений|OK|настраиваемых GUC изменено: 4 (порог 10)|
 |Порог ухудшений >=10%|WARN|warning_degradations=3|
 
 h2. Следующие действия
@@ -468,5 +481,5 @@ h3. PROD baseline
 
 h2. NT vs PROD: оценка расхождения по прогонам
 ||NT||PROD||Settings valid||Perf warnings||Critical settings||
-|nt1|prod1|no|42|9|
-|nt2|prod1|no|36|6|
+|nt1|prod1|no|42|4|
+|nt2|prod1|no|36|1|

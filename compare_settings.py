@@ -30,6 +30,10 @@ class DiffRow:
     prod_value: str | None = None
 
 
+def _is_blank(value: str | None) -> bool:
+    return value is None or not str(value).strip()
+
+
 def diff_settings(nt: dict[str, str], prod: dict[str, str]) -> list[DiffRow]:
     """Compare two settings dicts and return all non-identical rows."""
     rows: list[DiffRow] = []
@@ -37,6 +41,11 @@ def diff_settings(nt: dict[str, str], prod: dict[str, str]) -> list[DiffRow]:
     for name in sorted(set(nt) | set(prod)):
         in_nt = name in nt
         in_prod = name in prod
+
+        # Пусто с одной стороны и отсутствует с другой — не расхождение.
+        if _is_blank(nt.get(name)) and _is_blank(prod.get(name)):
+            rows.append(DiffRow(name=name, status=DiffStatus.SAME))
+            continue
 
         if in_nt and in_prod:
             if nt[name] == prod[name]:

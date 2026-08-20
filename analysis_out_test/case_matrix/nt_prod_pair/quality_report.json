@@ -1,0 +1,38 @@
+{
+  "type": "quality_report",
+  "verdict": "pass",
+  "skipped": true,
+  "publishable": null,
+  "layers": [
+    {
+      "name": "rule_based",
+      "verdict": "pass",
+      "skipped": true
+    },
+    {
+      "name": "statistical",
+      "verdict": "pass",
+      "skipped": true
+    },
+    {
+      "name": "llm",
+      "verdict": "pass",
+      "skipped": true
+    }
+  ],
+  "reasons": [],
+  "counts": {
+    "pass": 3,
+    "warning": 0,
+    "fail": 0
+  },
+  "confidence_trail": [],
+  "llm": {
+    "present": false,
+    "publishable": null,
+    "score": null,
+    "verdict": null,
+    "task": null
+  },
+  "sources": []
+}

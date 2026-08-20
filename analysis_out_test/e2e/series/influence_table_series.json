@@ -1543,11 +1543,132 @@
         "trend": "становится хуже"
       },
       {
-        "metric": "queries.postgres/\"sa-d00000011757\"",
+        "metric": "queries.postgres/\"sa-d00000011757\" · hex=566f5112e6ebf965",
+        "values": {
+          "nt1": 52.4,
+          "nt2": 76.74,
+          "nt3": 43.54
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 24.339999999999996,
+            "delta_pct": 46.4503816793893
+          },
+          "nt2->nt3": {
+            "delta": -33.199999999999996,
+            "delta_pct": -43.262965858743804
+          }
+        },
+        "trend": "разнонаправленно, влияние не оценивается"
+      },
+      {
+        "metric": "queries.postgres/\"sa-d00000011757\" · hex=77f69ae84abf9a2e",
+        "values": {
+          "nt1": null,
+          "nt2": 10.15,
+          "nt3": 5.44
+        },
+        "deltas": {
+          "nt1->nt2": null,
+          "nt2->nt3": {
+            "delta": -4.71,
+            "delta_pct": -46.40394088669951
+          }
+        },
+        "trend": "снижение, влияние не оценивается"
+      },
+      {
+        "metric": "queries.postgres/\"sa-d00000011757\" · hex=92a0069b4dfb89ee",
+        "values": {
+          "nt1": 23.8,
+          "nt2": 34.8,
+          "nt3": 20.55
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 10.999999999999996,
+            "delta_pct": 46.21848739495796
+          },
+          "nt2->nt3": {
+            "delta": -14.249999999999996,
+            "delta_pct": -40.948275862068954
+          }
+        },
+        "trend": "разнонаправленно, влияние не оценивается"
+      },
+      {
+        "metric": "queries.postgres/\"sa-d00000011757\" · hex=a115d1fdf67204c1",
+        "values": {
+          "nt1": null,
+          "nt2": 28.81,
+          "nt3": 16.34
+        },
+        "deltas": {
+          "nt1->nt2": null,
+          "nt2->nt3": {
+            "delta": -12.469999999999999,
+            "delta_pct": -43.28358208955224
+          }
+        },
+        "trend": "снижение, влияние не оценивается"
+      },
+      {
+        "metric": "queries.postgres/\"sa-d00000011757\" · hex=a822446855e79f13",
         "values": {
           "nt1": 218.2,
-          "nt2": 33.47,
+          "nt2": 270.75,
+          "nt3": 156.69
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 52.55000000000001,
+            "delta_pct": 24.083409715857016
+          },
+          "nt2->nt3": {
+            "delta": -114.06,
+            "delta_pct": -42.12742382271468
+          }
+        },
+        "trend": "разнонаправленно, влияние не оценивается"
+      },
+      {
+        "metric": "queries.postgres/\"sa-d00000011757\" · hex=b54ae2623f4c379e",
+        "values": {
+          "nt1": null,
+          "nt2": 24.06,
+          "nt3": null
+        },
+        "deltas": {
+          "nt1->nt2": null,
+          "nt2->nt3": {
+            "delta": -24.06,
+            "delta_pct": -100.0
+          }
+        },
+        "trend": "снижение, влияние не оценивается"
+      },
+      {
+        "metric": "queries.postgres/\"sa-d00000011757\" · hex=dc3a71c450718a3e",
+        "values": {
+          "nt1": null,
+          "nt2": 4.98,
           "nt3": 2.75
+        },
+        "deltas": {
+          "nt1->nt2": null,
+          "nt2->nt3": {
+            "delta": -2.2300000000000004,
+            "delta_pct": -44.77911646586346
+          }
+        },
+        "trend": "снижение, влияние не оценивается"
+      },
+      {
+        "metric": "queries.postgres/\"sa-d00000011757\" · hex=f026fd092077b2a3",
+        "values": {
+          "nt1": 23.23,
+          "nt2": 33.47,
+          "nt3": 19.59
         },
         "deltas": {
           "nt1->nt2": {
@@ -1555,14 +1676,14 @@
             "delta_pct": 44.08092983211364
           },
           "nt2->nt3": {
-            "delta": -2.2300000000000004,
-            "delta_pct": -44.77911646586346
+            "delta": -13.879999999999999,
+            "delta_pct": -41.469973110247984
           }
         },
         "trend": "разнонаправленно, влияние не оценивается"
       },
       {
-        "metric": "queries.postgres/postgres",
+        "metric": "queries.postgres/postgres · hex=b59c46b67088420d",
         "values": {
           "nt1": 158.4,
           "nt2": 220.26,
@@ -1578,23 +1699,263 @@
         "trend": "рост, влияние не оценивается"
       },
       {
-        "metric": "queries.statecontracts/as_admin",
+        "metric": "queries.statecontracts/as_admin · hex=18c9f43b592661b0",
+        "values": {
+          "nt1": null,
+          "nt2": null,
+          "nt3": 6.5
+        },
+        "deltas": {
+          "nt1->nt2": null,
+          "nt2->nt3": {
+            "delta": 6.5,
+            "delta_pct": null
+          }
+        },
+        "trend": "изменения незначительны"
+      },
+      {
+        "metric": "queries.statecontracts/as_admin · hex=1bd9e392e5d44395",
+        "values": {
+          "nt1": null,
+          "nt2": 26.53,
+          "nt3": 25.02
+        },
+        "deltas": {
+          "nt1->nt2": null,
+          "nt2->nt3": {
+            "delta": -1.5100000000000016,
+            "delta_pct": -5.691669807764801
+          }
+        },
+        "trend": "снижение, влияние не оценивается"
+      },
+      {
+        "metric": "queries.statecontracts/as_admin · hex=1c1fd865d42f5cf",
+        "values": {
+          "nt1": 357.93,
+          "nt2": 474.58,
+          "nt3": null
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 116.64999999999998,
+            "delta_pct": 32.59017126253736
+          },
+          "nt2->nt3": null
+        },
+        "trend": "рост, влияние не оценивается"
+      },
+      {
+        "metric": "queries.statecontracts/as_admin · hex=2176e6cce936ede6",
+        "values": {
+          "nt1": null,
+          "nt2": null,
+          "nt3": 2.99
+        },
+        "deltas": {
+          "nt1->nt2": null,
+          "nt2->nt3": {
+            "delta": 2.99,
+            "delta_pct": null
+          }
+        },
+        "trend": "изменения незначительны"
+      },
+      {
+        "metric": "queries.statecontracts/as_admin · hex=31df6528995548cf",
         "values": {
           "nt1": 12702.91,
+          "nt2": 15378.41,
+          "nt3": null
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 2675.5,
+            "delta_pct": 21.062103092913357
+          },
+          "nt2->nt3": null
+        },
+        "trend": "рост, влияние не оценивается"
+      },
+      {
+        "metric": "queries.statecontracts/as_admin · hex=334718932049516b",
+        "values": {
+          "nt1": null,
+          "nt2": 27.36,
+          "nt3": 25.3
+        },
+        "deltas": {
+          "nt1->nt2": null,
+          "nt2->nt3": {
+            "delta": -2.0599999999999987,
+            "delta_pct": -7.529239766081868
+          }
+        },
+        "trend": "снижение, влияние не оценивается"
+      },
+      {
+        "metric": "queries.statecontracts/as_admin · hex=37b83dead5b5b9e9",
+        "values": {
+          "nt1": 4312.84,
+          "nt2": 5698.0,
+          "nt3": null
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 1385.1599999999999,
+            "delta_pct": 32.11712004155034
+          },
+          "nt2->nt3": null
+        },
+        "trend": "рост, влияние не оценивается"
+      },
+      {
+        "metric": "queries.statecontracts/as_admin · hex=3f7ffea106f6e78e",
+        "values": {
+          "nt1": 2356.76,
+          "nt2": 2888.04,
+          "nt3": 3038.26
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 531.2799999999997,
+            "delta_pct": 22.54281301447749
+          },
+          "nt2->nt3": {
+            "delta": 150.22000000000025,
+            "delta_pct": 5.201451503441789
+          }
+        },
+        "trend": "рост, влияние не оценивается"
+      },
+      {
+        "metric": "queries.statecontracts/as_admin · hex=5925970c215e2e8a",
+        "values": {
+          "nt1": 985.87,
+          "nt2": 1373.14,
+          "nt3": null
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 387.2700000000001,
+            "delta_pct": 39.282055443415466
+          },
+          "nt2->nt3": null
+        },
+        "trend": "рост, влияние не оценивается"
+      },
+      {
+        "metric": "queries.statecontracts/as_admin · hex=5bb553f0544cc788",
+        "values": {
+          "nt1": null,
+          "nt2": null,
+          "nt3": 2.73
+        },
+        "deltas": {
+          "nt1->nt2": null,
+          "nt2->nt3": {
+            "delta": 2.73,
+            "delta_pct": null
+          }
+        },
+        "trend": "изменения незначительны"
+      },
+      {
+        "metric": "queries.statecontracts/as_admin · hex=5c924a575ee834c2",
+        "values": {
+          "nt1": 374.78,
           "nt2": 456.84,
-          "nt3": 25.02
+          "nt3": null
         },
         "deltas": {
           "nt1->nt2": {
             "delta": 82.06,
             "delta_pct": 21.895512033726455
           },
+          "nt2->nt3": null
+        },
+        "trend": "рост, влияние не оценивается"
+      },
+      {
+        "metric": "queries.statecontracts/as_admin · hex=7e5e1a652457d8db",
+        "values": {
+          "nt1": 4558.12,
+          "nt2": 5430.53,
+          "nt3": null
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 872.4099999999999,
+            "delta_pct": 19.13968917009644
+          },
+          "nt2->nt3": null
+        },
+        "trend": "рост, влияние не оценивается"
+      },
+      {
+        "metric": "queries.statecontracts/as_admin · hex=d1cf715414ffc2ac",
+        "values": {
+          "nt1": 616.85,
+          "nt2": 723.35,
+          "nt3": null
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 106.5,
+            "delta_pct": 17.265137391586286
+          },
+          "nt2->nt3": null
+        },
+        "trend": "рост, влияние не оценивается"
+      },
+      {
+        "metric": "queries.statecontracts/as_admin · hex=d5e326dff67d955a",
+        "values": {
+          "nt1": 17811.58,
+          "nt2": 20024.23,
+          "nt3": null
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 2212.649999999998,
+            "delta_pct": 12.422536349947604
+          },
+          "nt2->nt3": null
+        },
+        "trend": "рост, влияние не оценивается"
+      },
+      {
+        "metric": "queries.statecontracts/as_admin · hex=e2a55c68949e5d1e",
+        "values": {
+          "nt1": 3438.82,
+          "nt2": 3950.27,
+          "nt3": null
+        },
+        "deltas": {
+          "nt1->nt2": {
+            "delta": 511.4499999999998,
+            "delta_pct": 14.872834286179557
+          },
+          "nt2->nt3": null
+        },
+        "trend": "рост, влияние не оценивается"
+      },
+      {
+        "metric": "queries.statecontracts/as_admin · hex=fdb204dabb95ab50",
+        "values": {
+          "nt1": null,
+          "nt2": null,
+          "nt3": 1.52
+        },
+        "deltas": {
+          "nt1->nt2": null,
           "nt2->nt3": {
-            "delta": -1.5100000000000016,
-            "delta_pct": -5.691669807764801
+            "delta": 1.52,
+            "delta_pct": null
           }
         },
-        "trend": "разнонаправленно, влияние не оценивается"
+        "trend": "изменения незначительны"
       },
       {
         "metric": "sessions.Total.active_time",

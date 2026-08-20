@@ -35,7 +35,17 @@ from pgprofile_influence import (
     influence_rows_to_csv,
 )
 from pgprofile_health import load_report_data, load_thresholds, run_checks
-from pgprofile_parser import PgProfileParseError, load_settings, parse_report_meta
+from pgprofile_parser import (
+    PgProfileParseError,
+    load_settings,
+    parse_report_meta,
+    parse_report_period,
+    sort_reports_by_date,
+)
+from pgprofile_dml_etalon import (
+    build_dml_etalon,
+    write_dml_etalon_outputs,
+)
 from pgprofile_nt_prod import nt_prod_validation_to_dict, validate_nt_prod
 from pgprofile_oracle import write_oracle_report
 from pgprofile_stable_prod import analyze_stable_prod, stable_prod_to_dict
@@ -181,6 +191,20 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--settings-a-id", type=str, default="NT")
     parser.add_argument("--settings-b-id", type=str, default="PROD")
     parser.add_argument(
+        "--dml-etalon-reports",
+        nargs="+",
+        type=Path,
+        metavar="HTML",
+        help="One or more PROD pg_profile reports; writes dml_etalon_* (max raw INSERT/UPDATE/DELETE)",
+    )
+    parser.add_argument(
+        "--dml-etalon-label",
+        action="append",
+        default=[],
+        metavar="NAME",
+        help="Label for --dml-etalon-reports (repeat per file, same order)",
+    )
+    parser.add_argument(
         "--output-dir",
         type=Path,
         required=True,
@@ -235,10 +259,12 @@ def validate_args(args: argparse.Namespace | AnalysisSession) -> str | None:
         and not args.stable_prod_reports
         and not (args.symptom and args.symptom_reports)
         and not (args.nt_reports and args.symptoms)
+        and not args.dml_etalon_reports
     ):
         return (
             "provide --report, --compare-settings, --stable-prod-reports, "
-            "--symptom with --symptom-reports, and/or --nt-reports with --symptoms"
+            "--symptom with --symptom-reports, --nt-reports with --symptoms, "
+            "and/or --dml-etalon-reports"
         )
 
     if args.nt_reports and not args.symptoms:
@@ -267,7 +293,53 @@ def validate_args(args: argparse.Namespace | AnalysisSession) -> str | None:
         args.stable_prod_reports or []
     ):
         return "--stable-prod-label count must match --stable-prod-reports"
+    if args.dml_etalon_reports is not None and len(args.dml_etalon_reports) < 1:
+        return "--dml-etalon-reports requires at least one HTML file"
+    if args.dml_etalon_label and len(args.dml_etalon_label) != len(
+        args.dml_etalon_reports or []
+    ):
+        return "--dml-etalon-label count must match --dml-etalon-reports"
     return None
+
+
+MULTI_REPORT_GROUPS = (
+    ("--nt-reports", "nt_reports", "nt_label"),
+    ("--prod-reports", "prod_reports", "prod_label"),
+    ("--stable-prod-reports", "stable_prod_reports", "stable_prod_label"),
+    ("--symptom-reports", "symptom_reports", "symptom_label"),
+    ("--dml-etalon-reports", "dml_etalon_reports", "dml_etalon_label"),
+)
+
+
+def order_reports_by_date(args: AnalysisSession) -> None:
+    """Put every multi-report list into report-date order, in place.
+
+    Runs are compared pairwise with their neighbours, so a non-chronological
+    list makes deltas point the wrong way. Labels move together with their own
+    report. The explicit ``--report``/``--compare-run`` pair is left alone: the
+    caller picked which side is the baseline.
+    """
+    for flag, paths_attr, labels_attr in MULTI_REPORT_GROUPS:
+        paths = getattr(args, paths_attr, None) or []
+        if len(paths) < 2:
+            continue
+        labels = list(getattr(args, labels_attr, None) or [])
+        order = sort_reports_by_date(paths, labels)
+        setattr(args, paths_attr, order.paths)
+        if labels:
+            setattr(args, labels_attr, order.labels)
+        if order.changed or order.undated:
+            print(f"note: {flag}: {order.note()}", file=sys.stderr)
+
+    if args.report and args.compare_run:
+        base = parse_report_period(args.report).sort_timestamp()
+        other = parse_report_period(args.compare_run).sort_timestamp()
+        if base is not None and other is not None and other < base:
+            print(
+                "note: --compare-run старше --report: пара не хронологическая, "
+                "знаки изменений будут считаться от более позднего прогона",
+                file=sys.stderr,
+            )
 
 
 def run_pipeline(args: argparse.Namespace | AnalysisSession) -> int:
@@ -278,7 +350,34 @@ def run_pipeline(args: argparse.Namespace | AnalysisSession) -> int:
         print(f"error: {err}", file=sys.stderr)
         return 2
 
+    order_reports_by_date(args)
+
     args.output_dir.mkdir(parents=True, exist_ok=True)
+
+    if args.dml_etalon_reports:
+        try:
+            for path in args.dml_etalon_reports:
+                if not path.exists():
+                    raise FileNotFoundError(f"DML etalon report not found: {path}")
+            etalon = build_dml_etalon(
+                args.dml_etalon_reports,
+                labels=args.dml_etalon_label if args.dml_etalon_label else None,
+                page_title=args.confluence_title,
+            )
+        except (PgProfileParseError, FileNotFoundError, ValueError) as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 2
+        write_dml_etalon_outputs(
+            etalon,
+            args.output_dir,
+            page_title=args.confluence_title,
+        )
+        print(f"Analysis written to {args.output_dir}/")
+        print(f"  dml_etalon.json  ({len(etalon.tables)} tables)")
+        print("  dml_etalon_confluence_stub.wiki")
+        print("  dml_etalon_brief.md")
+        print("  brief.md")
+        return 0
 
     analyses: list[dict[str, Any]] = []
     has_issues = False

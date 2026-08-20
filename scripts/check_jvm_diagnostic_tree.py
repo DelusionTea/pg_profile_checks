@@ -890,6 +890,14 @@ def test_ui_contract(results: list[tuple[bool, str]]) -> None:
     check('id="jvm-new-system-name"' in html, "HTML has new-system name field", results)
     check('id="jvm-create-system-btn"' in html, "HTML has load-new-system button", results)
     check("добавить новую систему" in js, "JS offers add-new-system option", results)
+    check("lastResultByMode" in js, "JS keeps analysis results per mode", results)
+    check(
+        "syncResultPanelForMode();" in js.split("data-mode")[-1]
+        or js.count("syncResultPanelForMode") >= 2,
+        "JS syncs the result panel when the PG/JVM mode changes",
+        results,
+    )
+    check("function hideResult" in js, "JS can clear a stale result panel", results)
     check('"__new__"' in js or "'__new__'" in js, "JS uses __new__ sentinel for add-new-system", results)
     check("/api/jvm/systems" in js, "JS posts new system to /api/jvm/systems", results)
     check('id="jvm-restart-kind"' in html, "HTML asks restart kind", results)

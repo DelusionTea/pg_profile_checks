@@ -1,38 +1,38 @@
 h1. pg_profile: валидация НТ vs ПРОМ
 
 {warning:title=ПРОГОН НЕВАЛИДЕН}
-Defined settings GUC расходятся: *6* критичных отличий.
+Defined settings GUC расходятся: *1* критичных отличий.
 Сравнение метрик *не следует* использовать до выравнивания GUC.
 {warning}
 
 h2. Параметры сравнения
 
 ||Параметр||Значение||
-|Дата формирования|2026-08-13 17:53|
+|Дата формирования|2026-08-20 11:31|
 |НТ отчёт|pgprofile_srv=10_3_81_94_from=2026_08_11_16_30_to=2026_08_12_09.html|
 |ПРОМ отчёт|pgprofile_srv=10_3_81_94_from=2026_08_12_16_00_to=2026_08_13_08.html|
 |НТ интервал|16.5 ч|
 |ПРОМ интервал|16.5 ч|
 |Порог расхождения|>= 5%|
 |GUC валидность|НЕВАЛИДНО|
-|Справочно: объём WAL/операций|60|
-|Предупреждения производительности|36|
+|Метрик в справочных таблицах (объём нагрузки)|60|
+|Метрик с предупреждением (производительность)|36|
 
 h2. Критичные расхождения GUC
 
 ||Параметр||НТ||ПРОМ||Статус||
-|commit_timestamp_buffers|976|1024|DIFFER|
 |shared_buffers|504320|537600|DIFFER|
-|shared_memory_size|4452|4724|DIFFER|
-|shared_memory_size_in_huge_pages|2226|2362|DIFFER|
-|subtransaction_buffers|976|1024|DIFFER|
-|transaction_buffers|976|1024|DIFFER|
 
 h2. Справочно: runtime / метаданные
 
 ||Параметр||НТ||ПРОМ||Статус||
+|commit_timestamp_buffers|976|1024|DIFFER|
 |pg_conf_load_time|2026-08-10 12:11:58.339478+03|2026-08-12 13:51:51.80184+03|DIFFER|
 |pg_postmaster_start_time|2026-08-10 12:10:53.521971+03|2026-08-12 13:50:49.898345+03|DIFFER|
+|shared_memory_size|4452|4724|DIFFER|
+|shared_memory_size_in_huge_pages|2226|2362|DIFFER|
+|subtransaction_buffers|976|1024|DIFFER|
+|transaction_buffers|976|1024|DIFFER|
 
 h2. Справочно: DML операции
 
@@ -54,8 +54,8 @@ h2. Справочно: checkpoints (объём)
 h2. Справочно: DML по таблицам
 
 ||Метрика||nt1||prod1||Delta||
-|postgres.pg_catalog.pg_db_role_setting.seq_scan|3.00M (182.02K/h)|1.82M (110.23K/h)|-1.18M (-39.4%)|
 |statecontracts.pg_catalog.pg_db_role_setting.seq_scan|3.00M (182.02K/h)|1.82M (110.23K/h)|-1.18M (-39.4%)|
+|postgres.pg_catalog.pg_db_role_setting.seq_scan|3.00M (182.02K/h)|1.82M (110.23K/h)|-1.18M (-39.4%)|
 |postgres.pg_catalog.pg_index.idx_scan|580.26K (35.17K/h)|368.09K (22.31K/h)|-212.17K (-36.6%)|
 |statecontracts.pg_catalog.pg_database.seq_scan|241.50K (14.64K/h)|42.59K (2.58K/h)|-198.91K (-82.4%)|
 |postgres.pg_catalog.pg_database.seq_scan|241.50K (14.64K/h)|64.46K (3.91K/h)|-177.04K (-73.3%)|

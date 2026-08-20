@@ -1,0 +1,97 @@
+{
+  "type": "quality_report",
+  "verdict": "pass",
+  "skipped": false,
+  "publishable": null,
+  "layers": [
+    {
+      "name": "rule_based",
+      "verdict": "pass",
+      "skipped": false
+    },
+    {
+      "name": "statistical",
+      "verdict": "pass",
+      "skipped": false
+    },
+    {
+      "name": "llm",
+      "verdict": "pass",
+      "skipped": true
+    }
+  ],
+  "reasons": [],
+  "counts": {
+    "pass": 11,
+    "warning": 0,
+    "fail": 0
+  },
+  "confidence_trail": [
+    {
+      "parameter": "*",
+      "scope": "run",
+      "source": "influence_table_series.json",
+      "from": "medium",
+      "to": "medium",
+      "change": "unchanged",
+      "confidence": "medium",
+      "evidence_type": "probable",
+      "reason": "Confidence is aggregated from repeated pair evidence."
+    },
+    {
+      "parameter": "checkpoint_completion_target",
+      "scope": "row",
+      "source": "influence_table_series.json",
+      "from": "medium",
+      "to": "low",
+      "change": "downgrade",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "reason": "only one pair; statistical proof is not available"
+    },
+    {
+      "parameter": "max_wal_size",
+      "scope": "row",
+      "source": "influence_table_series.json",
+      "from": "medium",
+      "to": "low",
+      "change": "downgrade",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "reason": "only one pair; statistical proof is not available"
+    },
+    {
+      "parameter": "shared_buffers",
+      "scope": "row",
+      "source": "influence_table_series.json",
+      "from": "medium",
+      "to": "low",
+      "change": "downgrade",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "reason": "only one pair; statistical proof is not available"
+    },
+    {
+      "parameter": "huge_pages",
+      "scope": "row",
+      "source": "influence_table_series.json",
+      "from": "medium",
+      "to": "low",
+      "change": "downgrade",
+      "confidence": "low",
+      "evidence_type": "probable",
+      "reason": "only one pair; statistical proof is not available"
+    }
+  ],
+  "llm": {
+    "present": false,
+    "publishable": null,
+    "score": null,
+    "verdict": null,
+    "task": null
+  },
+  "sources": [
+    "influence_table_series.json",
+    "influence_table_series.json"
+  ]
+}

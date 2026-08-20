@@ -6,10 +6,18 @@
     "only_nt": 0,
     "only_prod": 0,
     "same": 116,
-    "critical_count": 6,
-    "informational_count": 2
+    "critical_count": 1,
+    "informational_count": 7
   },
   "settings_issues_critical": [
+    {
+      "name": "shared_buffers",
+      "status": "DIFFER",
+      "nt_value": "504320",
+      "prod_value": "537600"
+    }
+  ],
+  "settings_issues_informational": [
     {
       "name": "commit_timestamp_buffers",
       "status": "DIFFER",
@@ -17,10 +25,16 @@
       "prod_value": "1024"
     },
     {
-      "name": "shared_buffers",
+      "name": "pg_conf_load_time",
       "status": "DIFFER",
-      "nt_value": "504320",
-      "prod_value": "537600"
+      "nt_value": "2026-08-10 12:11:58.339478+03",
+      "prod_value": "2026-08-12 13:51:51.80184+03"
+    },
+    {
+      "name": "pg_postmaster_start_time",
+      "status": "DIFFER",
+      "nt_value": "2026-08-10 12:10:53.521971+03",
+      "prod_value": "2026-08-12 13:50:49.898345+03"
     },
     {
       "name": "shared_memory_size",
@@ -45,20 +59,6 @@
       "status": "DIFFER",
       "nt_value": "976",
       "prod_value": "1024"
-    }
-  ],
-  "settings_issues_informational": [
-    {
-      "name": "pg_conf_load_time",
-      "status": "DIFFER",
-      "nt_value": "2026-08-10 12:11:58.339478+03",
-      "prod_value": "2026-08-12 13:51:51.80184+03"
-    },
-    {
-      "name": "pg_postmaster_start_time",
-      "status": "DIFFER",
-      "nt_value": "2026-08-10 12:10:53.521971+03",
-      "prod_value": "2026-08-12 13:50:49.898345+03"
     }
   ],
   "run_nt": {
@@ -87,7 +87,8 @@
       "delta": 486132.0,
       "delta_pct": 5.139774,
       "unit": "count",
-      "extra": ""
+      "extra": "",
+      "item_id": ""
     },
     {
       "section": "dml",
@@ -99,7 +100,8 @@
       "delta": -8636732.0,
       "delta_pct": -5.478902,
       "unit": "count",
-      "extra": ""
+      "extra": "",
+      "item_id": ""
     },
     {
       "section": "dml",
@@ -111,7 +113,8 @@
       "delta": -101436.0,
       "delta_pct": -29.819646,
       "unit": "count",
-      "extra": ""
+      "extra": "",
+      "item_id": ""
     },
     {
       "section": "dml",
@@ -123,7 +126,8 @@
       "delta": -10712581.0,
       "delta_pct": -7.05701,
       "unit": "count",
-      "extra": ""
+      "extra": "",
+      "item_id": ""
     },
     {
       "section": "dml",
@@ -135,7 +139,8 @@
       "delta": 587568.0,
       "delta_pct": 6.443995,
       "unit": "count",
-      "extra": ""
+      "extra": "",
+      "item_id": ""
     },
     {
       "section": "dml",
@@ -147,7 +152,8 @@
       "delta": 2075849.0,
       "delta_pct": 35.57202,
       "unit": "count",
-      "extra": ""
+      "extra": "",
+      "item_id": ""
     },
     {
       "section": "cluster",
@@ -159,7 +165,8 @@
       "delta": 810901.0,
       "delta_pct": 6.931874,
       "unit": "count",
-      "extra": ""
+      "extra": "",
+      "item_id": ""
     },
     {
       "section": "cluster",
@@ -171,7 +178,8 @@
       "delta": -9.0,
       "delta_pct": -23.076923,
       "unit": "count",
-      "extra": ""
+      "extra": "",
+      "item_id": ""
     },
     {
       "section": "cluster",
@@ -183,19 +191,8 @@
       "delta": 7.0,
       "delta_pct": 100.0,
       "unit": "count",
-      "extra": ""
-    },
-    {
-      "section": "tables",
-      "key": "postgres.pg_catalog.pg_db_role_setting.seq_scan",
-      "value_a": 3003316.0,
-      "value_b": 1818750.0,
-      "per_hour_a": 182019.151515,
-      "per_hour_b": 110227.272727,
-      "delta": -1184566.0,
-      "delta_pct": -39.441937,
-      "unit": "count",
-      "extra": ""
+      "extra": "",
+      "item_id": ""
     },
     {
       "section": "tables",
@@ -207,7 +204,21 @@
       "delta": -1184566.0,
       "delta_pct": -39.441937,
       "unit": "count",
-      "extra": ""
+      "extra": "",
+      "item_id": ""
+    },
+    {
+      "section": "tables",
+      "key": "postgres.pg_catalog.pg_db_role_setting.seq_scan",
+      "value_a": 3003316.0,
+      "value_b": 1818750.0,
+      "per_hour_a": 182019.151515,
+      "per_hour_b": 110227.272727,
+      "delta": -1184566.0,
+      "delta_pct": -39.441937,
+      "unit": "count",
+      "extra": "",
+      "item_id": ""
     },
     {
       "section": "tables",
@@ -219,7 +230,8 @@
       "delta": -212170.0,
       "delta_pct": -36.564706,
       "unit": "count",
-      "extra": ""
+      "extra": "",
+      "item_id": ""
     },
     {
       "section": "tables",
@@ -231,7 +243,8 @@
       "delta": -198913.0,
       "delta_pct": -82.365631,
       "unit": "count",
-      "extra": ""
+      "extra": "",
+      "item_id": ""
     },
     {
       "section": "tables",
@@ -243,7 +256,8 @@
       "delta": -177042.0,
       "delta_pct": -73.309317,
       "unit": "count",
-      "extra": ""
+      "extra": "",
+      "item_id": ""
     },
     {
       "section": "tables",
@@ -255,7 +269,8 @@
       "delta": -155846.0,
       "delta_pct": -82.076913,
       "unit": "count",
-      "extra": ""
+      "extra": "",
+      "item_id": ""
     },
     {
       "section": "tables",
@@ -267,7 +282,8 @@
       "delta": -135802.0,
       "delta_pct": -71.520661,
       "unit": "count",
-      "extra": ""
+      "extra": "",
+      "item_id": ""
     },
     {
       "section": "tables",
@@ -279,7 +295,8 @@
       "delta": 120516.0,
       "delta_pct": 21.181173,
       "unit": "count",
-      "extra": ""
+      "extra": "",
+      "item_id": ""
     },
     {
       "section": "tables",
@@ -291,7 +308,8 @@
       "delta": 82166.0,
       "delta_pct": 16.237473,
       "unit": "count",
-      "extra": ""
+      "extra": "",
+      "item_id": ""
     },
     {
       "section": "tables",
@@ -303,7 +321,8 @@
       "delta": 69093.0,
       "delta_pct": 6.265524,
       "unit": "count",
-      "extra": ""
+      "extra": "",
+      "item_id": ""
     },
     {
       "section": "tables",
@@ -315,7 +334,8 @@
       "delta": -18055.0,
       "delta_pct": -7.531201,
       "unit": "count",
-      "extra": ""
+      "extra": "",
+      "item_id": ""
     },
     {
       "section": "tables",
@@ -327,7 +347,8 @@
       "delta": -5031.0,
       "delta_pct": -15.530174,
       "unit": "count",
-      "extra": ""
+      "extra": "",
+      "item_id": ""
     },
     {
       "section": "tables",
@@ -339,7 +360,8 @@
       "delta": -2533.0,
       "delta_pct": -34.392396,
       "unit": "count",
-      "extra": ""
+      "extra": "",
+      "item_id": ""
     },
     {
       "section": "tables",
@@ -351,7 +373,8 @@
       "delta": 1327.0,
       "delta_pct": 10.466951,
       "unit": "count",
-      "extra": ""
+      "extra": "",
+      "item_id": ""
     },
     {
       "section": "tables",
@@ -363,7 +386,8 @@
       "delta": -1118.0,
       "delta_pct": -94.266442,
       "unit": "count",
-      "extra": ""
+      "extra": "",
+      "item_id": ""
     }
   ],
   "metric_diffs_warning": [
@@ -377,7 +401,8 @@
       "delta": 0.48,
       "delta_pct": 13.636364,
       "unit": "sec",
-      "extra": ""
+      "extra": "",
+      "item_id": ""
     },
     {
       "section": "cluster",
@@ -389,7 +414,8 @@
       "delta": -17615.0,
       "delta_pct": -21.820186,
       "unit": "count",
-      "extra": ""
+      "extra": "",
+      "item_id": ""
     },
     {
       "section": "sessions",
@@ -401,7 +427,8 @@
       "delta": 100835.33,
       "delta_pct": 7.348524,
       "unit": "sec",
-      "extra": ""
+      "extra": "",
+      "item_id": ""
     },
     {
       "section": "sessions",
@@ -413,7 +440,8 @@
       "delta": -237.41,
       "delta_pct": -29.087234,
       "unit": "sec",
-      "extra": ""
+      "extra": "",
+      "item_id": ""
     },
     {
       "section": "sessions",
@@ -425,7 +453,8 @@
       "delta": -100374.07,
       "delta_pct": -18.445981,
       "unit": "sec",
-      "extra": ""
+      "extra": "",
+      "item_id": ""
     },
     {
       "section": "sessions",
@@ -437,7 +466,8 @@
       "delta": 100835.36,
       "delta_pct": 7.348683,
       "unit": "sec",
-      "extra": ""
+      "extra": "",
+      "item_id": ""
     },
     {
       "section": "cache",
@@ -449,7 +479,8 @@
       "delta": -10.21,
       "delta_pct": -26.152664,
       "unit": "sec",
-      "extra": ""
+      "extra": "",
+      "item_id": ""
     },
     {
       "section": "cache",
@@ -461,7 +492,8 @@
       "delta": 26014.0,
       "delta_pct": 26.883687,
       "unit": "count",
-      "extra": ""
+      "extra": "",
+      "item_id": ""
     },
     {
       "section": "cache",
@@ -473,7 +505,8 @@
       "delta": 4.78,
       "delta_pct": 19.924969,
       "unit": "sec",
-      "extra": ""
+      "extra": "",
+      "item_id": ""
     },
     {
       "section": "cache",
@@ -485,7 +518,8 @@
       "delta": 0.16,
       "delta_pct": 1600.0,
       "unit": "sec",
-      "extra": ""
+      "extra": "",
+      "item_id": ""
     },
     {
       "section": "cache",
@@ -497,7 +531,8 @@
       "delta": -15.75,
       "delta_pct": -6.046762,
       "unit": "sec",
-      "extra": ""
+      "extra": "",
+      "item_id": ""
     },
     {
       "section": "cache",
@@ -509,7 +544,8 @@
       "delta": -10.37,
       "delta_pct": -26.569306,
       "unit": "sec",
-      "extra": ""
+      "extra": "",
+      "item_id": ""
     }
   ],
   "query_comparisons_info": [
@@ -528,7 +564,8 @@
           "delta": -1.51,
           "delta_pct": -5.69167,
           "unit": "sec",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "queries",
@@ -540,7 +577,8 @@
           "delta": -642133811.0,
           "delta_pct": -100.0,
           "unit": "bytes",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         }
       ]
     },
@@ -559,7 +597,8 @@
           "delta": 486735650.0,
           "delta_pct": 250.874427,
           "unit": "bytes",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         }
       ]
     },
@@ -578,7 +617,8 @@
           "delta": 72670258.0,
           "delta_pct": 19.454984,
           "unit": "bytes",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         }
       ]
     },
@@ -597,7 +637,8 @@
           "delta": 147071.0,
           "delta_pct": null,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "queries",
@@ -609,7 +650,8 @@
           "delta": 6.5,
           "delta_pct": null,
           "unit": "sec",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "queries",
@@ -621,7 +663,8 @@
           "delta": 24.0,
           "delta_pct": null,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         }
       ]
     },
@@ -640,7 +683,8 @@
           "delta": 1.0,
           "delta_pct": null,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "queries",
@@ -652,7 +696,8 @@
           "delta": 0.02,
           "delta_pct": null,
           "unit": "sec",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "queries",
@@ -664,7 +709,8 @@
           "delta": 127755.0,
           "delta_pct": null,
           "unit": "bytes",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "queries",
@@ -676,7 +722,8 @@
           "delta": 34.0,
           "delta_pct": null,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         }
       ]
     },
@@ -695,7 +742,8 @@
           "delta": 1.0,
           "delta_pct": null,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "queries",
@@ -707,7 +755,8 @@
           "delta": 0.01,
           "delta_pct": null,
           "unit": "sec",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "queries",
@@ -719,7 +768,8 @@
           "delta": 77034.0,
           "delta_pct": null,
           "unit": "bytes",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "queries",
@@ -731,7 +781,8 @@
           "delta": 33.0,
           "delta_pct": null,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         }
       ]
     },
@@ -750,7 +801,8 @@
           "delta": 60989.0,
           "delta_pct": null,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "queries",
@@ -762,7 +814,8 @@
           "delta": 2.99,
           "delta_pct": null,
           "unit": "sec",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "queries",
@@ -774,7 +827,8 @@
           "delta": 4.0,
           "delta_pct": null,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         }
       ]
     },
@@ -793,7 +847,8 @@
           "delta": 60683.0,
           "delta_pct": null,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "queries",
@@ -805,7 +860,8 @@
           "delta": 2.73,
           "delta_pct": null,
           "unit": "sec",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "queries",
@@ -817,7 +873,8 @@
           "delta": 8.0,
           "delta_pct": null,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         }
       ]
     },
@@ -836,7 +893,8 @@
           "delta": -49907.0,
           "delta_pct": -42.072297,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "queries",
@@ -848,7 +906,8 @@
           "delta": -114.06,
           "delta_pct": -42.127424,
           "unit": "sec",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         }
       ]
     },
@@ -867,7 +926,8 @@
           "delta": -2495.0,
           "delta_pct": -42.010439,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "queries",
@@ -879,7 +939,8 @@
           "delta": -2.23,
           "delta_pct": -44.779116,
           "unit": "sec",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "queries",
@@ -891,7 +952,8 @@
           "delta": 37845.0,
           "delta_pct": 2353.544776,
           "unit": "bytes",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         }
       ]
     },
@@ -910,7 +972,8 @@
           "delta": -37099.0,
           "delta_pct": -100.0,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "queries",
@@ -922,7 +985,8 @@
           "delta": -0.67,
           "delta_pct": -100.0,
           "unit": "sec",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         }
       ]
     },
@@ -941,7 +1005,8 @@
           "delta": 32076.0,
           "delta_pct": 12.265594,
           "unit": "bytes",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         }
       ]
     },
@@ -960,7 +1025,8 @@
           "delta": -29575.0,
           "delta_pct": -100.0,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "queries",
@@ -972,7 +1038,8 @@
           "delta": -0.48,
           "delta_pct": -100.0,
           "unit": "sec",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         }
       ]
     },
@@ -991,7 +1058,8 @@
           "delta": -8193.0,
           "delta_pct": -66.099234,
           "unit": "bytes",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         }
       ]
     },
@@ -1010,7 +1078,8 @@
           "delta": -1.0,
           "delta_pct": -100.0,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "queries",
@@ -1022,7 +1091,8 @@
           "delta": -0.0,
           "delta_pct": -100.0,
           "unit": "sec",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "queries",
@@ -1034,7 +1104,8 @@
           "delta": -7651.0,
           "delta_pct": -100.0,
           "unit": "bytes",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "queries",
@@ -1046,7 +1117,8 @@
           "delta": -11.0,
           "delta_pct": -100.0,
           "unit": "count",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         }
       ]
     }
@@ -1067,7 +1139,8 @@
           "delta": -1506.3,
           "delta_pct": -5.678455,
           "unit": "ms",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "queries",
@@ -1079,7 +1152,8 @@
           "delta": -1506.3,
           "delta_pct": -5.678455,
           "unit": "ms",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         }
       ]
     },
@@ -1098,7 +1172,8 @@
           "delta": -1618.31,
           "delta_pct": -12.683893,
           "unit": "ms",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         }
       ]
     },
@@ -1117,7 +1192,8 @@
           "delta": 0.04,
           "delta_pct": null,
           "unit": "ms",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "queries",
@@ -1129,7 +1205,8 @@
           "delta": 8.27,
           "delta_pct": null,
           "unit": "ms",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         }
       ]
     },
@@ -1148,7 +1225,8 @@
           "delta": 21.61,
           "delta_pct": null,
           "unit": "ms",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "queries",
@@ -1160,7 +1238,8 @@
           "delta": 21.61,
           "delta_pct": null,
           "unit": "ms",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         }
       ]
     },
@@ -1179,7 +1258,8 @@
           "delta": 14.97,
           "delta_pct": null,
           "unit": "ms",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "queries",
@@ -1191,7 +1271,8 @@
           "delta": 14.97,
           "delta_pct": null,
           "unit": "ms",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         }
       ]
     },
@@ -1210,7 +1291,8 @@
           "delta": 0.05,
           "delta_pct": null,
           "unit": "ms",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "queries",
@@ -1222,7 +1304,8 @@
           "delta": 8.84,
           "delta_pct": null,
           "unit": "ms",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         }
       ]
     },
@@ -1241,7 +1324,8 @@
           "delta": 0.04,
           "delta_pct": null,
           "unit": "ms",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "queries",
@@ -1253,7 +1337,8 @@
           "delta": 7.7,
           "delta_pct": null,
           "unit": "ms",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         }
       ]
     },
@@ -1272,7 +1357,8 @@
           "delta": -14.43,
           "delta_pct": -28.079393,
           "unit": "ms",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         }
       ]
     },
@@ -1291,7 +1377,8 @@
           "delta": -2.92,
           "delta_pct": -33.181818,
           "unit": "ms",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         }
       ]
     },
@@ -1310,7 +1397,8 @@
           "delta": -0.02,
           "delta_pct": -100.0,
           "unit": "ms",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "queries",
@@ -1322,7 +1410,8 @@
           "delta": -0.83,
           "delta_pct": -100.0,
           "unit": "ms",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         }
       ]
     },
@@ -1341,7 +1430,8 @@
           "delta": 13.76,
           "delta_pct": 608.849558,
           "unit": "ms",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         }
       ]
     },
@@ -1360,7 +1450,8 @@
           "delta": -0.02,
           "delta_pct": -100.0,
           "unit": "ms",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "queries",
@@ -1372,7 +1463,8 @@
           "delta": -1.22,
           "delta_pct": -100.0,
           "unit": "ms",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         }
       ]
     },
@@ -1391,7 +1483,8 @@
           "delta": -0.12,
           "delta_pct": -10.0,
           "unit": "ms",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "queries",
@@ -1403,7 +1496,8 @@
           "delta": -0.46,
           "delta_pct": -15.03268,
           "unit": "ms",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         }
       ]
     },
@@ -1422,7 +1516,8 @@
           "delta": -2.52,
           "delta_pct": -100.0,
           "unit": "ms",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         },
         {
           "section": "queries",
@@ -1434,7 +1529,8 @@
           "delta": -2.52,
           "delta_pct": -100.0,
           "unit": "ms",
-          "extra": ""
+          "extra": "",
+          "item_id": ""
         }
       ]
     }

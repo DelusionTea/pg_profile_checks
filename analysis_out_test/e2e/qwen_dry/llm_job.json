@@ -2,9 +2,9 @@
   "status": "success",
   "task": "summary",
   "provider": "dry_run",
-  "started_at": "2026-08-18T16:09:43+00:00",
+  "started_at": "2026-08-20T08:31:05+00:00",
   "extra_instructions": "",
-  "trace_id": "ec0fefdb66014bb299465cd6e5ec2b6a",
+  "trace_id": "1b6430f91da040dc8330b41ed516c1c4",
   "char_count": 29825,
   "sources": [
     "brief.md",
@@ -22,7 +22,7 @@
     "unchanged": true
   },
   "model": "dry-run",
-  "finished_at": "2026-08-18T16:09:43+00:00",
+  "finished_at": "2026-08-20T08:31:05+00:00",
   "latency_ms": 0,
   "attempts": 1,
   "request_file": "llm_request_summary.json",

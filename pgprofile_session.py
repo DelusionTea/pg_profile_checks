@@ -39,6 +39,8 @@ class AnalysisSession:
     nt_label: list[str] = field(default_factory=list)
     prod_reports: list[Path] | None = None
     prod_label: list[str] = field(default_factory=list)
+    dml_etalon_reports: list[Path] | None = None
+    dml_etalon_label: list[str] = field(default_factory=list)
     symptoms: str | None = None
     settings_a_id: str = "NT"
     settings_b_id: str = "PROD"

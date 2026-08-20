@@ -230,6 +230,9 @@ def _build_series_metrics_table(nt_runs: dict[str, Any]) -> dict[str, Any]:
         for finding in pair.get("compare_findings") or []:
             details = finding.get("details") or {}
             metric = f"{finding.get('category')}.{finding.get('message')}"
+            item_id = str(details.get("item_id") or "")
+            if item_id:
+                metric = f"{metric} · hex={item_id}"
             row = by_metric.setdefault(
                 metric,
                 {
@@ -239,15 +242,18 @@ def _build_series_metrics_table(nt_runs: dict[str, Any]) -> dict[str, Any]:
                     "trend": "изменения незначительны",
                 },
             )
+            # Колонки прогонов и Δ должны описывать один и тот же объект,
+            # иначе в таблице Δ не сходится с разностью колонок.
+            if pair_label not in row["deltas"] or row["deltas"][pair_label] is not None:
+                continue
+            row["deltas"][pair_label] = {
+                "delta": details.get("delta"),
+                "delta_pct": details.get("delta_pct"),
+            }
             if run_a in row["values"] and row["values"][run_a] is None:
                 row["values"][run_a] = details.get("value_a")
             if run_b in row["values"]:
                 row["values"][run_b] = details.get("value_b")
-            if pair_label in row["deltas"]:
-                row["deltas"][pair_label] = {
-                    "delta": details.get("delta"),
-                    "delta_pct": details.get("delta_pct"),
-                }
 
     rows = []
     for row in by_metric.values():

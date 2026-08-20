@@ -96,6 +96,38 @@ def check_health(results: list[tuple[bool, str]]) -> None:
     idle = [a for a in actions if "idle_in_transaction_session_timeout" in a]
     check(len(idle) <= 1, "health: idle-in-transaction action is not repeated", results)
     check(bool(actions), "health: at least one action", results)
+    check(
+        all(" → " in a for a in actions),
+        "health: each action names the problem it belongs to",
+        results,
+    )
+    check(
+        len({a.split(" → ", 1)[0] for a in actions}) == len(actions),
+        "health: one action per problem, no duplicate problem lines",
+        results,
+    )
+    head = wiki.split("h2. ", 1)[0]
+    check(
+        "Requested checkpoints" not in head and "threshold 30%" not in head,
+        "health: verdict does not dump a raw English finding line",
+        results,
+    )
+    check(
+        "Контрольные точки" in head or "Сессии" in head,
+        "health: verdict names problem areas in Russian",
+        results,
+    )
+    actions_block = wiki.split("h2. Что сделать сейчас", 1)[1].split("h2.", 1)[0]
+    check(
+        "pgse_profile" not in actions_block,
+        "health: plan does not send the user to profiler tables",
+        results,
+    )
+    check(
+        wiki.count("|queries.slow_execution|") <= 1,
+        "health: slow SQL findings are collapsed to one row",
+        results,
+    )
 
 
 def check_pair(results: list[tuple[bool, str]]) -> None:

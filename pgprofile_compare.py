@@ -93,6 +93,9 @@ class MetricDiff:
     delta_pct: float | None = None
     unit: str = "count"
     extra: str = ""
+    # Идентификатор объекта внутри key: для запросов — hexqueryid. Без него
+    # несколько запросов одной пары db/user сливаются в одну строку серии.
+    item_id: str = ""
 
 
 @dataclass
@@ -371,6 +374,7 @@ def compare_queries(
         if not _is_significant(diff, min_change_pct):
             continue
 
+        diff.item_id = str(key)
         stats_a = _query_stats_line(stmt_a)
         stats_b = _query_stats_line(stmt_b)
         text = run_b.ctx.queries_by_id.get(key) or run_a.ctx.queries_by_id.get(key, "")
